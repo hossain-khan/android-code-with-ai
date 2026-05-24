@@ -19,7 +19,9 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
 import java.io.File
 import javax.inject.Inject
@@ -55,34 +57,56 @@ class ModelRepositoryImpl
         private var cachedModels: List<AiModel> = emptyList()
 
         override fun getAvailableModels(): Flow<List<AiModel>> =
-            callbackFlow {
+            flow {
                 val allowlist = loadAllowlist()
-                val models =
-                    allowlist.map { entry ->
-                        val localPath = getModelLocalPath(entry)
-                        val file = File(localPath)
-                        val downloadStatus =
-                            if (file.exists()) {
-                                DownloadStatus.DOWNLOADED
-                            } else {
-                                getDownloadStatus(entry.modelId)
-                            }
-
-                        AiModel(
-                            id = entry.modelId,
-                            name = entry.modelId.substringAfterLast("/"),
-                            displayName = entry.modelId.substringAfterLast("/"),
-                            downloadUrl = buildDownloadUrl(entry),
-                            sizeBytes = entry.sizeInBytes,
-                            localPath = localPath.takeIf { file.exists() },
-                            downloadStatus = downloadStatus,
-                            preferredBackend = LlmEngine.Backend.CPU,
-                            minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
-                        )
+                val modelIds = allowlist.map { it.modelId }
+                val progressFlows =
+                    modelIds.map { id ->
+                        workManager.getWorkInfosForUniqueWorkFlow(id)
                     }
-                cachedModels = models
-                trySend(models)
-                awaitClose {}
+
+                combine(progressFlows) { workInfoLists ->
+                    val progressMap = mutableMapOf<String, Pair<DownloadStatus, Int>>()
+                    workInfoLists.forEachIndexed { index, workInfos ->
+                        val modelId = modelIds[index]
+                        val latestWork = workInfos.lastOrNull()
+                        val status =
+                            when (latestWork?.state) {
+                                WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED -> DownloadStatus.DOWNLOADING
+                                WorkInfo.State.FAILED -> DownloadStatus.FAILED
+                                else -> DownloadStatus.NOT_DOWNLOADED
+                            }
+                        val progress = latestWork?.progress?.getInt(ModelDownloadWorker.KEY_PROGRESS, 0) ?: 0
+                        progressMap[modelId] = status to progress
+                    }
+
+                    val models =
+                        allowlist.map { entry ->
+                            val localPath = getModelLocalPath(entry)
+                            val file = File(localPath)
+                            val (status, progress) =
+                                if (file.exists()) {
+                                    DownloadStatus.DOWNLOADED to 100
+                                } else {
+                                    progressMap[entry.modelId] ?: (DownloadStatus.NOT_DOWNLOADED to 0)
+                                }
+
+                            AiModel(
+                                id = entry.modelId,
+                                name = entry.modelId.substringAfterLast("/"),
+                                displayName = entry.modelId.substringAfterLast("/"),
+                                downloadUrl = buildDownloadUrl(entry),
+                                sizeBytes = entry.sizeInBytes,
+                                localPath = localPath.takeIf { file.exists() },
+                                downloadStatus = status,
+                                preferredBackend = LlmEngine.Backend.CPU,
+                                minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
+                                downloadProgress = progress,
+                            )
+                        }
+                    cachedModels = models
+                    emit(models)
+                }.collect {}
             }
 
         override fun getSelectedModel(): AiModel? = cachedModels.find { it.id == selectedModelId }

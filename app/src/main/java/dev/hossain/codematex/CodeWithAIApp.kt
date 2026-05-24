@@ -52,13 +52,15 @@ class CodeWithAIApp :
                 NotificationChannel(
                     "model_download",
                     "Model Downloads",
-                    NotificationManager.IMPORTANCE_LOW,
+                    NotificationManager.IMPORTANCE_DEFAULT,
                 ).apply {
                     description = "Notifications for on-device AI model downloads"
+                    setShowBadge(true)
                 }
 
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(downloadChannel)
+            Timber.d("Created notification channel: model_download")
         }
     }
 }

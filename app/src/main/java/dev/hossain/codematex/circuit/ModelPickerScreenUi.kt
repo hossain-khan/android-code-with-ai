@@ -3,6 +3,7 @@ package dev.hossain.codematex.circuit
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,7 +13,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -88,21 +91,17 @@ private fun ModelPickerLayout(
                         sizeFormatter = sizeFormatter,
                         isCompatible = isCompatible,
                         deviceRamGb = deviceRamGb,
-                        onClick = {
+                        onDownload = {
                             if (isCompatible) {
-                                when (model.downloadStatus) {
-                                    DownloadStatus.NOT_DOWNLOADED, DownloadStatus.FAILED -> {
-                                        state.eventSink(ModelPickerScreen.Event.Download(model))
-                                    }
-
-                                    DownloadStatus.DOWNLOADED -> {
-                                        state.eventSink(ModelPickerScreen.Event.Select(model))
-                                    }
-
-                                    DownloadStatus.DOWNLOADING -> {
-                                        state.eventSink(ModelPickerScreen.Event.CancelDownload(model))
-                                    }
-                                }
+                                state.eventSink(ModelPickerScreen.Event.Download(model))
+                            }
+                        },
+                        onCancel = {
+                            state.eventSink(ModelPickerScreen.Event.CancelDownload(model))
+                        },
+                        onSelect = {
+                            if (isCompatible) {
+                                state.eventSink(ModelPickerScreen.Event.Select(model))
                             }
                         },
                     )
@@ -118,7 +117,9 @@ private fun ModelCard(
     sizeFormatter: DecimalFormat,
     isCompatible: Boolean,
     deviceRamGb: Int,
-    onClick: () -> Unit,
+    onDownload: () -> Unit,
+    onCancel: () -> Unit,
+    onSelect: () -> Unit,
 ) {
     Card(
         modifier =
@@ -130,7 +131,21 @@ private fun ModelCard(
             Text(model.displayName, style = MaterialTheme.typography.titleMedium)
             Text(sizeFormatter.format(model.sizeBytes / 1_000_000), style = MaterialTheme.typography.bodySmall)
             Text("Requires ${model.minDeviceMemoryInGb}GB RAM", style = MaterialTheme.typography.labelSmall)
-            Text(model.downloadStatus.name, style = MaterialTheme.typography.labelSmall)
+
+            if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
+                val progress = model.downloadProgress.coerceIn(0, 100) / 100f
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                )
+                Text(
+                    text = "Downloading: ${model.downloadProgress}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            } else {
+                Text(model.downloadStatus.name, style = MaterialTheme.typography.labelSmall)
+            }
 
             if (!isCompatible) {
                 Surface(
@@ -147,21 +162,40 @@ private fun ModelCard(
                 }
             }
 
-            Button(
-                onClick = onClick,
-                enabled = isCompatible && model.downloadStatus != DownloadStatus.DOWNLOADING,
-                modifier = Modifier.padding(top = 8.dp),
+            Row(
+                modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    when {
-                        !isCompatible -> "Insufficient RAM"
-                        model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download"
-                        model.downloadStatus == DownloadStatus.DOWNLOADING -> "Cancel"
-                        model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select"
-                        model.downloadStatus == DownloadStatus.FAILED -> "Retry"
-                        else -> "Download"
-                    },
-                )
+                if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
+                    OutlinedButton(
+                        onClick = onCancel,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("Cancel")
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            when {
+                                isCompatible && model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> onDownload()
+                                isCompatible && model.downloadStatus == DownloadStatus.FAILED -> onDownload()
+                                isCompatible && model.downloadStatus == DownloadStatus.DOWNLOADED -> onSelect()
+                            }
+                        },
+                        enabled = isCompatible,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            when {
+                                !isCompatible -> "Insufficient RAM"
+                                model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download"
+                                model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select"
+                                model.downloadStatus == DownloadStatus.FAILED -> "Retry"
+                                else -> "Download"
+                            },
+                        )
+                    }
+                }
             }
         }
     }

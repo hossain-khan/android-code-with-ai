@@ -14,6 +14,7 @@ data class AiModel(
     val downloadStatus: DownloadStatus,
     val preferredBackend: LlmEngine.Backend,
     val minDeviceMemoryInGb: Int = 0,
+    val downloadProgress: Int = 0,
 )
 
 enum class DownloadStatus {
