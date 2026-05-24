@@ -79,7 +79,7 @@ class ModelDownloadWorker(
                 var downloadedBytes = outputTmpFile.length()
                 var lastReportedProgress = -1
                 var lastReportedBytes = 0L
-                val reportInterval = 50_000_000L // 50MB
+                val reportInterval = 100_000_000L // 100MB
 
                 while (input.read(buffer).also { bytesRead = it } != -1) {
                     if (isStopped) return Result.failure()
