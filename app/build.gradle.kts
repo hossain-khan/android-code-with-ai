@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.metro)
     alias(libs.plugins.kotlinter)
+    alias(libs.plugins.room)
 }
 
 android {
@@ -97,6 +98,10 @@ android {
     }
 }
 
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 kotlin {
     // See https://kotlinlang.org/docs/gradle-compiler-options.html
     compilerOptions {
@@ -128,6 +133,18 @@ dependencies {
     implementation(libs.javax.inject)
 
     implementation(libs.androidx.work)
+
+    // On-device LLM inference
+    implementation(libs.litertlm)
+
+    // Room persistence
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+
+    // Markdown rendering
+    implementation(libs.richtext.commonmark)
+    implementation(libs.richtext.ui.material3)
 
     // Networking
     implementation(libs.okhttp)
