@@ -13,6 +13,7 @@ data class AiModel(
     val localPath: String?,
     val downloadStatus: DownloadStatus,
     val preferredBackend: LlmEngine.Backend,
+    val minDeviceMemoryInGb: Int = 0,
 )
 
 enum class DownloadStatus {

@@ -14,16 +14,19 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.util.DeviceMemory
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
 
@@ -53,6 +56,8 @@ private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+    val deviceRamGb = remember { DeviceMemory.getDeviceRamGb(context) }
     val sizeFormatter = remember { DecimalFormat("#,### MB") }
 
     Scaffold(
@@ -77,21 +82,30 @@ private fun ModelPickerLayout(
                 contentPadding = PaddingValues(16.dp),
             ) {
                 items(state.models) { model ->
-                    ModelCard(model, sizeFormatter) {
-                        when (model.downloadStatus) {
-                            DownloadStatus.NOT_DOWNLOADED, DownloadStatus.FAILED -> {
-                                state.eventSink(ModelPickerScreen.Event.Download(model))
-                            }
+                    val isCompatible = DeviceMemory.isModelCompatible(model.minDeviceMemoryInGb, deviceRamGb)
+                    ModelCard(
+                        model = model,
+                        sizeFormatter = sizeFormatter,
+                        isCompatible = isCompatible,
+                        deviceRamGb = deviceRamGb,
+                        onClick = {
+                            if (isCompatible) {
+                                when (model.downloadStatus) {
+                                    DownloadStatus.NOT_DOWNLOADED, DownloadStatus.FAILED -> {
+                                        state.eventSink(ModelPickerScreen.Event.Download(model))
+                                    }
 
-                            DownloadStatus.DOWNLOADED -> {
-                                state.eventSink(ModelPickerScreen.Event.Select(model))
-                            }
+                                    DownloadStatus.DOWNLOADED -> {
+                                        state.eventSink(ModelPickerScreen.Event.Select(model))
+                                    }
 
-                            DownloadStatus.DOWNLOADING -> {
-                                state.eventSink(ModelPickerScreen.Event.CancelDownload(model))
+                                    DownloadStatus.DOWNLOADING -> {
+                                        state.eventSink(ModelPickerScreen.Event.CancelDownload(model))
+                                    }
+                                }
                             }
-                        }
-                    }
+                        },
+                    )
                 }
             }
         }
@@ -102,6 +116,8 @@ private fun ModelPickerLayout(
 private fun ModelCard(
     model: AiModel,
     sizeFormatter: DecimalFormat,
+    isCompatible: Boolean,
+    deviceRamGb: Int,
     onClick: () -> Unit,
 ) {
     Card(
@@ -113,17 +129,37 @@ private fun ModelCard(
         Column(modifier = Modifier.padding(16.dp)) {
             Text(model.displayName, style = MaterialTheme.typography.titleMedium)
             Text(sizeFormatter.format(model.sizeBytes / 1_000_000), style = MaterialTheme.typography.bodySmall)
+            Text("Requires ${model.minDeviceMemoryInGb}GB RAM", style = MaterialTheme.typography.labelSmall)
             Text(model.downloadStatus.name, style = MaterialTheme.typography.labelSmall)
+
+            if (!isCompatible) {
+                Surface(
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    shape = MaterialTheme.shapes.small,
+                ) {
+                    Text(
+                        text = "Not compatible: requires ${model.minDeviceMemoryInGb}GB RAM, device has ${deviceRamGb}GB",
+                        modifier = Modifier.padding(8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
+            }
+
             Button(
                 onClick = onClick,
+                enabled = isCompatible && model.downloadStatus != DownloadStatus.DOWNLOADING,
                 modifier = Modifier.padding(top = 8.dp),
             ) {
                 Text(
-                    when (model.downloadStatus) {
-                        DownloadStatus.NOT_DOWNLOADED -> "Download"
-                        DownloadStatus.DOWNLOADING -> "Cancel"
-                        DownloadStatus.DOWNLOADED -> "Select"
-                        DownloadStatus.FAILED -> "Retry"
+                    when {
+                        !isCompatible -> "Insufficient RAM"
+                        model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download"
+                        model.downloadStatus == DownloadStatus.DOWNLOADING -> "Cancel"
+                        model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select"
+                        model.downloadStatus == DownloadStatus.FAILED -> "Retry"
+                        else -> "Download"
                     },
                 )
             }

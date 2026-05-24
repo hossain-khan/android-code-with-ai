@@ -37,6 +37,7 @@ data class ModelEntry(
     val sizeInBytes: Long,
     val taskTypes: List<String>,
     val runtimeType: String,
+    val minDeviceMemoryInGb: Int = 0,
 )
 
 @SingleIn(AppScope::class)
@@ -76,6 +77,7 @@ class ModelRepositoryImpl
                             localPath = localPath.takeIf { file.exists() },
                             downloadStatus = downloadStatus,
                             preferredBackend = LlmEngine.Backend.CPU,
+                            minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
                         )
                     }
                 cachedModels = models
@@ -131,6 +133,7 @@ class ModelRepositoryImpl
                     sizeInBytes = 2_588_147_712,
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
+                    minDeviceMemoryInGb = 8,
                 ),
                 ModelEntry(
                     modelId = "litert-community/gemma-4-E4B-it-litert-lm",
@@ -139,6 +142,7 @@ class ModelRepositoryImpl
                     sizeInBytes = 3_659_530_240,
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
+                    minDeviceMemoryInGb = 12,
                 ),
             )
         }
