@@ -15,7 +15,7 @@ import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
-import dev.hossain.codematex.circuit.InboxScreen
+import dev.hossain.codematex.circuit.HomeScreen
 import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.zacsweers.metro.AppScope
@@ -58,7 +58,7 @@ class MainActivity
             setContent {
                 CodeWithAIAppTheme {
                     // See https://slackhq.github.io/circuit/navigation/
-                    val navStack = rememberSaveableNavStack(root = InboxScreen)
+                    val navStack = rememberSaveableNavStack(root = HomeScreen)
                     val navigator = rememberCircuitNavigator(navStack)
 
                     // See https://slackhq.github.io/circuit/circuit-content/
