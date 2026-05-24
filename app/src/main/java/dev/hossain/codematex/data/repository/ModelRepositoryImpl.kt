@@ -125,18 +125,18 @@ class ModelRepositoryImpl
             // TODO: Fetch from remote URL. For now, return bundled allowlist.
             return listOf(
                 ModelEntry(
-                    modelId = "google/gemma-2-2b-it",
-                    modelFile = "gemma-2-2b-it.task",
-                    commitHash = "main",
-                    sizeInBytes = 2_500_000_000,
+                    modelId = "litert-community/gemma-4-E2B-it-litert-lm",
+                    modelFile = "gemma-4-E2B-it.litertlm",
+                    commitHash = "6e5c4f1e395deb959c494953478fa5cec4b8008f",
+                    sizeInBytes = 2_588_147_712,
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
                 ),
                 ModelEntry(
-                    modelId = "google/gemma-2-9b-it",
-                    modelFile = "gemma-2-9b-it.task",
-                    commitHash = "main",
-                    sizeInBytes = 5_500_000_000,
+                    modelId = "litert-community/gemma-4-E4B-it-litert-lm",
+                    modelFile = "gemma-4-E4B-it.litertlm",
+                    commitHash = "28299f30ee4d43294517a4ac93abd6163412f07f",
+                    sizeInBytes = 3_659_530_240,
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
                 ),
@@ -153,7 +153,7 @@ class ModelRepositoryImpl
 
         private fun getModelLocalPathById(modelId: String): String {
             val normalizedName = modelId.replace("/", "_")
-            return "${modelsDir.absolutePath}/$normalizedName/${modelId.substringAfterLast("/")}.task"
+            return "${modelsDir.absolutePath}/$normalizedName/${modelId.substringAfterLast("/")}.litertlm"
         }
 
         private fun getDownloadStatus(modelId: String): DownloadStatus {
