@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -17,6 +18,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 
 @AssistedInject
 class SessionHistoryPresenter(
@@ -28,6 +30,7 @@ class SessionHistoryPresenter(
     override fun present(): SessionHistoryScreen.State {
         var sessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             sessionRepository
@@ -49,7 +52,9 @@ class SessionHistoryPresenter(
                 }
 
                 is SessionHistoryScreen.Event.DeleteSession -> {
-                    // TODO: Implement delete
+                    scope.launch {
+                        sessionRepository.deleteSession(event.sessionId)
+                    }
                 }
             }
         }

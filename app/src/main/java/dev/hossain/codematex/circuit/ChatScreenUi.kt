@@ -1,8 +1,11 @@
 package dev.hossain.codematex.circuit
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
@@ -13,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -28,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
@@ -84,7 +89,12 @@ private fun ChatLayout(
             reverseLayout = true,
         ) {
             items(state.messages.reversed(), key = { it.id }) { message ->
-                MessageBubble(message)
+                MessageBubble(
+                    message = message,
+                    onCopy = {
+                        state.eventSink(ChatScreen.Event.CopyMessage(it))
+                    },
+                )
             }
         }
 
@@ -126,7 +136,12 @@ private fun ChatLayout(
 }
 
 @Composable
-private fun MessageBubble(message: ChatMessage) {
+private fun MessageBubble(
+    message: ChatMessage,
+    onCopy: (String) -> Unit,
+) {
+    val context = LocalContext.current
+
     Surface(
         modifier =
             Modifier
@@ -141,20 +156,42 @@ private fun MessageBubble(message: ChatMessage) {
             },
         shape = MaterialTheme.shapes.medium,
     ) {
-        Text(
-            text =
-                when (message) {
-                    is ChatMessage.User -> message.content
-                    is ChatMessage.Agent -> message.content.ifEmpty { "..." }
-                    is ChatMessage.Error -> "Error: ${message.message}"
-                    is ChatMessage.System -> message.info
-                },
-            modifier = Modifier.padding(12.dp),
-            color =
-                when (message) {
-                    is ChatMessage.Error -> MaterialTheme.colorScheme.error
-                    else -> MaterialTheme.colorScheme.onSurface
-                },
-        )
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text =
+                        when (message) {
+                            is ChatMessage.User -> message.content
+                            is ChatMessage.Agent -> message.content.ifEmpty { "..." }
+                            is ChatMessage.Error -> "Error: ${message.message}"
+                            is ChatMessage.System -> message.info
+                        },
+                    modifier = Modifier.weight(1f),
+                    color =
+                        when (message) {
+                            is ChatMessage.Error -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.onSurface
+                        },
+                )
+                IconButton(
+                    onClick = {
+                        val content =
+                            when (message) {
+                                is ChatMessage.User -> message.content
+                                is ChatMessage.Agent -> message.content
+                                is ChatMessage.Error -> message.message
+                                is ChatMessage.System -> message.info
+                            }
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        clipboard.setPrimaryClip(ClipData.newPlainText("Chat message", content))
+                    },
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy message")
+                }
+            }
+        }
     }
 }

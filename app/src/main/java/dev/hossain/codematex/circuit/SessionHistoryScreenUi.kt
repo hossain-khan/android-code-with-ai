@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -75,9 +79,15 @@ private fun SessionHistoryLayout(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(state.sessions) { session ->
-                    SessionCard(session) {
-                        state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
-                    }
+                    SessionCard(
+                        session = session,
+                        onClick = {
+                            state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
+                        },
+                        onDelete = {
+                            state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
+                        },
+                    )
                 }
             }
         }
@@ -88,6 +98,7 @@ private fun SessionHistoryLayout(
 private fun SessionCard(
     session: ChatSession,
     onClick: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     Card(
         modifier =
@@ -96,7 +107,16 @@ private fun SessionCard(
                 .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(session.title, style = MaterialTheme.typography.titleSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(session.title, style = MaterialTheme.typography.titleSmall)
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = "Delete session")
+                }
+            }
             Text(session.summary, style = MaterialTheme.typography.bodySmall)
             Row(
                 modifier = Modifier.fillMaxWidth(),

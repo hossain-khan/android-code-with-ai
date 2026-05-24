@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -16,6 +17,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.launch
 
 @AssistedInject
 class SessionDetailPresenter(
@@ -27,6 +29,7 @@ class SessionDetailPresenter(
     override fun present(): SessionDetailScreen.State {
         var session by rememberRetained { mutableStateOf<ChatSession?>(null) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.sessionId) {
             session = sessionRepository.getSession(screen.sessionId)
@@ -42,8 +45,10 @@ class SessionDetailPresenter(
                 }
 
                 SessionDetailScreen.Event.DeleteSession -> {
-                    // TODO: Implement delete with confirmation
-                    navigator.pop()
+                    scope.launch {
+                        sessionRepository.deleteSession(screen.sessionId)
+                        navigator.pop()
+                    }
                 }
 
                 SessionDetailScreen.Event.Back -> {
