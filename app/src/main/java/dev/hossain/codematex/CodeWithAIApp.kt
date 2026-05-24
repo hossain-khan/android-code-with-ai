@@ -1,6 +1,9 @@
 package dev.hossain.codematex
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.os.Build
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.NetworkType
@@ -42,7 +45,24 @@ class CodeWithAIApp :
 
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannels()
         scheduleBackgroundWork()
+    }
+
+    private fun createNotificationChannels() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val downloadChannel =
+                NotificationChannel(
+                    "model_download",
+                    "Model Downloads",
+                    NotificationManager.IMPORTANCE_LOW,
+                ).apply {
+                    description = "Notifications for on-device AI model downloads"
+                }
+
+            val notificationManager = getSystemService(NotificationManager::class.java)
+            notificationManager.createNotificationChannel(downloadChannel)
+        }
     }
 
     /**
