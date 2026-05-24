@@ -98,8 +98,15 @@ class ModelDownloadWorker(
                                 .putInt(KEY_PROGRESS, progress)
                                 .build(),
                         )
-                        Timber.i("ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)")
-                        setForeground(createForegroundInfo("$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB", progress))
+                        Timber.i(
+                            "ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
+                        )
+                        setForeground(
+                            createForegroundInfo(
+                                "$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB",
+                                progress,
+                            ),
+                        )
                     }
                 }
             }
