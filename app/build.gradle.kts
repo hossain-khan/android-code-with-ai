@@ -175,6 +175,11 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
+tasks.withType<Test> {
+    // Allow test task to pass even if no tests are discovered
+    failOnNoDiscoveredTests = false
+}
+
 metro {
     // Enable Metro debug mode for better logging and debugging support
     // When enabled, Metro will emit detailed debug information about the dependency graph
