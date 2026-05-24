@@ -45,12 +45,22 @@ class ModelPickerPresenter(
         val eventSink: (ModelPickerScreen.Event) -> Unit = { event ->
             when (event) {
                 is ModelPickerScreen.Event.Download -> {
-                    // TODO: Trigger download via WorkManager
+                    scope.launch {
+                        modelRepository.downloadModel(event.model)
+                    }
                 }
 
-                is ModelPickerScreen.Event.CancelDownload -> {}
+                is ModelPickerScreen.Event.CancelDownload -> {
+                    scope.launch {
+                        modelRepository.cancelDownload(event.model)
+                    }
+                }
 
-                is ModelPickerScreen.Event.Delete -> {}
+                is ModelPickerScreen.Event.Delete -> {
+                    scope.launch {
+                        modelRepository.deleteModel(event.model)
+                    }
+                }
 
                 is ModelPickerScreen.Event.Select -> {
                     scope.launch {

@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.halilibo.richtext.commonmark.Markdown
+import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.zacsweers.metro.AppScope
@@ -159,23 +161,38 @@ private fun MessageBubble(
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
             ) {
-                Text(
-                    text =
-                        when (message) {
-                            is ChatMessage.User -> message.content
-                            is ChatMessage.Agent -> message.content.ifEmpty { "..." }
-                            is ChatMessage.Error -> "Error: ${message.message}"
-                            is ChatMessage.System -> message.info
-                        },
-                    modifier = Modifier.weight(1f),
-                    color =
-                        when (message) {
-                            is ChatMessage.Error -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.onSurface
-                        },
-                )
+                val messageContent =
+                    when (message) {
+                        is ChatMessage.User -> message.content
+                        is ChatMessage.Agent -> message.content.ifEmpty { "..." }
+                        is ChatMessage.Error -> "Error: ${message.message}"
+                        is ChatMessage.System -> message.info
+                    }
+
+                val messageColor =
+                    when (message) {
+                        is ChatMessage.Error -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurface
+                    }
+
+                when (message) {
+                    is ChatMessage.Agent -> {
+                        RichText {
+                            Markdown(content = messageContent)
+                        }
+                    }
+
+                    else -> {
+                        Text(
+                            text = messageContent,
+                            modifier = Modifier.weight(1f),
+                            color = messageColor,
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick = {
                         val content =
