@@ -23,6 +23,7 @@ private val LightColorScheme =
         tertiary = Pink40,
     )
 
+@Suppress("NewApi") // Dynamic color is available on Android 12+
 @Composable
 fun CodeWithAIAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
