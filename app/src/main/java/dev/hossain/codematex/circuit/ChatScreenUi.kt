@@ -2,9 +2,12 @@ package dev.hossain.codematex.circuit
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -68,13 +71,19 @@ private fun ChatLayout(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    Column(modifier = modifier.fillMaxSize()) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .imePadding()
+                .safeDrawingPadding(),
+    ) {
         LazyColumn(
             modifier = Modifier.weight(1f),
             state = listState,
             reverseLayout = true,
         ) {
-            items(state.messages.reversed(), key = { it.hashCode() }) { message ->
+            items(state.messages.reversed(), key = { it.id }) { message ->
                 MessageBubble(message)
             }
         }
