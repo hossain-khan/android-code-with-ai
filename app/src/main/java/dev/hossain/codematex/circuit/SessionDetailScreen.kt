@@ -14,6 +14,7 @@ data class SessionDetailScreen(
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State
+
         data class Success(
             val session: ChatSession,
             val eventSink: (Event) -> Unit,
@@ -23,7 +24,9 @@ data class SessionDetailScreen(
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
         data object ResumeSession : Event
+
         data object DeleteSession : Event
+
         data object Back : Event
     }
 }

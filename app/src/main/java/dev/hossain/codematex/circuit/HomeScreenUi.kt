@@ -46,6 +46,7 @@ fun HomeScreenContent(
                 CircularProgressIndicator()
             }
         }
+
         is HomeScreen.State.Success -> {
             HomeLayout(state, modifier)
         }
@@ -110,7 +111,10 @@ private fun HomeLayout(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopicChip(topic: CodingTopic, onClick: () -> Unit) {
+private fun TopicChip(
+    topic: CodingTopic,
+    onClick: () -> Unit,
+) {
     FilterChip(
         selected = false,
         onClick = onClick,
@@ -119,11 +123,15 @@ private fun TopicChip(topic: CodingTopic, onClick: () -> Unit) {
 }
 
 @Composable
-private fun SessionCard(session: ChatSession, onClick: () -> Unit) {
+private fun SessionCard(
+    session: ChatSession,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(session.title, style = MaterialTheme.typography.titleSmall)

@@ -13,6 +13,7 @@ data object HomeScreen : Screen {
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State
+
         data class Success(
             val recentSessions: List<ChatSession>,
             val topics: List<CodingTopic>,
@@ -23,9 +24,16 @@ data object HomeScreen : Screen {
 
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
-        data class TopicSelected(val topic: CodingTopic) : Event
-        data class SessionClicked(val sessionId: String) : Event
+        data class TopicSelected(
+            val topic: CodingTopic,
+        ) : Event
+
+        data class SessionClicked(
+            val sessionId: String,
+        ) : Event
+
         data object ManageModels : Event
+
         data object ViewAllSessions : Event
     }
 }

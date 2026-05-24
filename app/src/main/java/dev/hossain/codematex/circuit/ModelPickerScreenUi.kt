@@ -11,8 +11,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -40,6 +40,7 @@ fun ModelPickerScreenContent(
                 CircularProgressIndicator()
             }
         }
+
         is ModelPickerScreen.State.Success -> {
             ModelPickerLayout(state, modifier)
         }
@@ -62,9 +63,10 @@ private fun ModelPickerLayout(
     ) { innerPadding ->
         if (state.models.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize(),
+                modifier =
+                    Modifier
+                        .padding(innerPadding)
+                        .fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("No models available yet")
@@ -80,9 +82,11 @@ private fun ModelPickerLayout(
                             DownloadStatus.NOT_DOWNLOADED, DownloadStatus.FAILED -> {
                                 state.eventSink(ModelPickerScreen.Event.Download(model))
                             }
+
                             DownloadStatus.DOWNLOADED -> {
                                 state.eventSink(ModelPickerScreen.Event.Select(model))
                             }
+
                             DownloadStatus.DOWNLOADING -> {
                                 state.eventSink(ModelPickerScreen.Event.CancelDownload(model))
                             }
@@ -95,11 +99,16 @@ private fun ModelPickerLayout(
 }
 
 @Composable
-private fun ModelCard(model: AiModel, sizeFormatter: DecimalFormat, onClick: () -> Unit) {
+private fun ModelCard(
+    model: AiModel,
+    sizeFormatter: DecimalFormat,
+    onClick: () -> Unit,
+) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(model.displayName, style = MaterialTheme.typography.titleMedium)

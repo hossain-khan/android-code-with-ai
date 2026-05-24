@@ -1,6 +1,8 @@
 package dev.hossain.codematex.data.model
 
-enum class CodingTopic(val displayName: String) {
+enum class CodingTopic(
+    val displayName: String,
+) {
     KOTLIN("Kotlin"),
     PYTHON("Python"),
     JAVASCRIPT("JavaScript"),

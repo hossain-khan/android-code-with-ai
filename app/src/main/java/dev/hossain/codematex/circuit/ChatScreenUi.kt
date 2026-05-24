@@ -42,6 +42,7 @@ fun ChatScreenContent(
                 CircularProgressIndicator()
             }
         }
+
         is ChatScreen.State.Error -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -52,6 +53,7 @@ fun ChatScreenContent(
                 }
             }
         }
+
         is ChatScreen.State.Active -> {
             ChatLayout(state, modifier)
         }
@@ -117,29 +119,33 @@ private fun ChatLayout(
 @Composable
 private fun MessageBubble(message: ChatMessage) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        tonalElevation = when (message) {
-            is ChatMessage.User -> 0.dp
-            is ChatMessage.Agent -> 1.dp
-            is ChatMessage.Error -> 0.dp
-            is ChatMessage.System -> 0.dp
-        },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+        tonalElevation =
+            when (message) {
+                is ChatMessage.User -> 0.dp
+                is ChatMessage.Agent -> 1.dp
+                is ChatMessage.Error -> 0.dp
+                is ChatMessage.System -> 0.dp
+            },
         shape = MaterialTheme.shapes.medium,
     ) {
         Text(
-            text = when (message) {
-                is ChatMessage.User -> message.content
-                is ChatMessage.Agent -> message.content.ifEmpty { "..." }
-                is ChatMessage.Error -> "Error: ${message.message}"
-                is ChatMessage.System -> message.info
-            },
+            text =
+                when (message) {
+                    is ChatMessage.User -> message.content
+                    is ChatMessage.Agent -> message.content.ifEmpty { "..." }
+                    is ChatMessage.Error -> "Error: ${message.message}"
+                    is ChatMessage.System -> message.info
+                },
             modifier = Modifier.padding(12.dp),
-            color = when (message) {
-                is ChatMessage.Error -> MaterialTheme.colorScheme.error
-                else -> MaterialTheme.colorScheme.onSurface
-            },
+            color =
+                when (message) {
+                    is ChatMessage.Error -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onSurface
+                },
         )
     }
 }

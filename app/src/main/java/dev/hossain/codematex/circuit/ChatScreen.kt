@@ -16,6 +16,7 @@ data class ChatScreen(
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State
+
         data class Active(
             val messages: List<ChatMessage>,
             val isGenerating: Boolean,
@@ -24,6 +25,7 @@ data class ChatScreen(
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State
+
         data class Error(
             val message: String,
             val eventSink: (Event) -> Unit,
@@ -32,10 +34,18 @@ data class ChatScreen(
 
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
-        data class SendMessage(val text: String) : Event
+        data class SendMessage(
+            val text: String,
+        ) : Event
+
         data object StopGeneration : Event
+
         data object ResetSession : Event
+
         data object Retry : Event
-        data class CopyMessage(val content: String) : Event
+
+        data class CopyMessage(
+            val content: String,
+        ) : Event
     }
 }

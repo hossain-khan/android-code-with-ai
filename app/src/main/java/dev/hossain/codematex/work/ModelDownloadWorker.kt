@@ -2,8 +2,8 @@ package dev.hossain.codematex.worker
 
 import android.content.Context
 import androidx.work.CoroutineWorker
-import androidx.work.ForegroundInfo
 import androidx.work.Data
+import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
 import dev.hossain.codematex.di.AppWorkerFactory
@@ -25,7 +25,6 @@ class ModelDownloadWorker(
     context: Context,
     @Assisted params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
-
     companion object {
         const val KEY_URL = "url"
         const val KEY_PATH = "path"
@@ -62,7 +61,8 @@ class ModelDownloadWorker(
                     downloadedBytes += bytesRead
 
                     setProgress(
-                        Data.Builder()
+                        Data
+                            .Builder()
                             .putInt(KEY_PROGRESS, (downloadedBytes * 100 / totalBytes).toInt())
                             .build(),
                     )
@@ -74,16 +74,16 @@ class ModelDownloadWorker(
         return Result.success()
     }
 
-    private fun createForegroundInfo(content: String): ForegroundInfo {
-        return ForegroundInfo(
+    private fun createForegroundInfo(content: String): ForegroundInfo =
+        ForegroundInfo(
             1,
-            androidx.core.app.NotificationCompat.Builder(applicationContext, "model_download")
+            androidx.core.app.NotificationCompat
+                .Builder(applicationContext, "model_download")
                 .setContentTitle("Model Download")
                 .setContentText(content)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .build(),
         )
-    }
 
     @WorkerKey(ModelDownloadWorker::class)
     @ContributesIntoMap(

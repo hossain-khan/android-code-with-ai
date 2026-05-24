@@ -15,8 +15,11 @@ interface LlmEngine {
     )
 
     fun stop()
+
     fun resetConversation(systemInstruction: String? = null)
+
     suspend fun restoreHistory(messages: List<ChatMessage>)
+
     fun cleanup()
 
     enum class Backend {

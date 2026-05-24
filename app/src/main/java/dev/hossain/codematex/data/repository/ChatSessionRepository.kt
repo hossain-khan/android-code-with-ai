@@ -7,8 +7,15 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatSessionRepository {
     fun getAllSessions(): Flow<List<ChatSession>>
+
     suspend fun getSession(sessionId: String): ChatSession?
+
     suspend fun getMessages(sessionId: String): List<ChatMessage>
-    suspend fun saveSession(topic: CodingTopic, messages: List<ChatMessage>)
+
+    suspend fun saveSession(
+        topic: CodingTopic,
+        messages: List<ChatMessage>,
+    )
+
     suspend fun deleteSession(sessionId: String)
 }

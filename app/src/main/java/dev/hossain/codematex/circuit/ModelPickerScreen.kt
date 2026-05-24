@@ -12,6 +12,7 @@ data object ModelPickerScreen : Screen {
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State
+
         data class Success(
             val models: List<AiModel>,
             val eventSink: (Event) -> Unit,
@@ -20,9 +21,20 @@ data object ModelPickerScreen : Screen {
 
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
-        data class Download(val model: AiModel) : Event
-        data class CancelDownload(val model: AiModel) : Event
-        data class Delete(val model: AiModel) : Event
-        data class Select(val model: AiModel) : Event
+        data class Download(
+            val model: AiModel,
+        ) : Event
+
+        data class CancelDownload(
+            val model: AiModel,
+        ) : Event
+
+        data class Delete(
+            val model: AiModel,
+        ) : Event
+
+        data class Select(
+            val model: AiModel,
+        ) : Event
     }
 }

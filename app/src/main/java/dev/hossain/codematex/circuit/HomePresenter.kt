@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
@@ -17,7 +18,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import com.slack.circuit.codegen.annotations.CircuitInject
 import kotlinx.coroutines.flow.catch
 
 @AssistedInject
@@ -27,7 +27,6 @@ class HomePresenter(
     private val sessionRepository: ChatSessionRepository,
     private val modelRepository: ModelRepository,
 ) : Presenter<HomeScreen.State> {
-
     @Composable
     override fun present(): HomeScreen.State {
         var recentSessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
@@ -36,7 +35,8 @@ class HomePresenter(
         val hasDownloadedModel = modelRepository.getSelectedModel() != null
 
         LaunchedEffect(Unit) {
-            sessionRepository.getAllSessions()
+            sessionRepository
+                .getAllSessions()
                 .catch { isLoading = false }
                 .collect { sessions ->
                     recentSessions = sessions.take(5)
@@ -49,15 +49,18 @@ class HomePresenter(
                 is HomeScreen.Event.TopicSelected -> {
                     navigator.goTo(ChatScreen(topic = event.topic))
                 }
+
                 is HomeScreen.Event.SessionClicked -> {
                     val session = recentSessions.find { it.id == event.sessionId }
                     if (session != null) {
                         navigator.goTo(ChatScreen(topic = session.topic, sessionId = session.id))
                     }
                 }
+
                 HomeScreen.Event.ManageModels -> {
                     navigator.goTo(ModelPickerScreen)
                 }
+
                 HomeScreen.Event.ViewAllSessions -> {
                     navigator.goTo(SessionHistoryScreen)
                 }

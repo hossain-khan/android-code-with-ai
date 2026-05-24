@@ -1,15 +1,15 @@
 package dev.hossain.codematex.data.repository
 
+import dev.hossain.codematex.data.local.MessageEntity
 import dev.hossain.codematex.data.local.SessionDao
 import dev.hossain.codematex.data.local.SessionEntity
-import dev.hossain.codematex.data.local.MessageEntity
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
-import dev.zacsweers.metro.AppScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -17,85 +17,98 @@ import javax.inject.Inject
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ChatSessionRepositoryImpl @Inject constructor(
-    private val sessionDao: SessionDao,
-    @Suppress("UNUSED_PARAMETER") private val llmEngine: LlmEngine,
-) : ChatSessionRepository {
-    override fun getAllSessions(): Flow<List<ChatSession>> =
-        sessionDao.getAllSessions().map { entities ->
-            entities.map { it.toChatSession() }
+class ChatSessionRepositoryImpl
+    @Inject
+    constructor(
+        private val sessionDao: SessionDao,
+        @Suppress("UNUSED_PARAMETER") private val llmEngine: LlmEngine,
+    ) : ChatSessionRepository {
+        override fun getAllSessions(): Flow<List<ChatSession>> =
+            sessionDao.getAllSessions().map { entities ->
+                entities.map { it.toChatSession() }
+            }
+
+        override suspend fun getSession(sessionId: String): ChatSession? = getAllSessions().first().firstOrNull { it.id == sessionId }
+
+        override suspend fun getMessages(sessionId: String): List<ChatMessage> =
+            sessionDao.getMessages(sessionId).map { it.toChatMessage() }
+
+        override suspend fun saveSession(
+            topic: CodingTopic,
+            messages: List<ChatMessage>,
+        ) {
+            val sessionId = System.currentTimeMillis().toString()
+            val title =
+                messages
+                    .filterIsInstance<ChatMessage.User>()
+                    .firstOrNull()
+                    ?.content
+                    ?.take(50) ?: "Untitled"
+
+            sessionDao.upsertSession(
+                SessionEntity(
+                    id = sessionId,
+                    topic = topic.name,
+                    title = title,
+                    summary = "",
+                    messageCount = messages.size,
+                    lastActiveAt = System.currentTimeMillis(),
+                    modelUsed = "current",
+                ),
+            )
+            sessionDao.insertMessages(
+                messages.mapIndexed { index, msg ->
+                    msg.toMessageEntity(sessionId, index)
+                },
+            )
         }
 
-    override suspend fun getSession(sessionId: String): ChatSession? =
-        getAllSessions().first().firstOrNull { it.id == sessionId }
+        override suspend fun deleteSession(sessionId: String) {
+            sessionDao.deleteMessages(sessionId)
+            sessionDao.deleteSession(sessionId)
+        }
 
-    override suspend fun getMessages(sessionId: String): List<ChatMessage> =
-        sessionDao.getMessages(sessionId).map { it.toChatMessage() }
-
-    override suspend fun saveSession(topic: CodingTopic, messages: List<ChatMessage>) {
-        val sessionId = System.currentTimeMillis().toString()
-        val title = messages.filterIsInstance<ChatMessage.User>()
-            .firstOrNull()?.content?.take(50) ?: "Untitled"
-
-        sessionDao.upsertSession(
-            SessionEntity(
-                id = sessionId,
-                topic = topic.name,
+        private fun SessionEntity.toChatSession(): ChatSession =
+            ChatSession(
+                id = id,
+                topic = CodingTopic.valueOf(topic),
                 title = title,
-                summary = "",
-                messageCount = messages.size,
-                lastActiveAt = System.currentTimeMillis(),
-                modelUsed = "current",
-            ),
-        )
-        sessionDao.insertMessages(
-            messages.mapIndexed { index, msg ->
-                msg.toMessageEntity(sessionId, index)
-            },
-        )
+                summary = summary,
+                messageCount = messageCount,
+                lastActiveAt = lastActiveAt,
+                modelUsed = modelUsed,
+            )
+
+        private fun MessageEntity.toChatMessage(): ChatMessage =
+            when (type) {
+                "user" -> ChatMessage.User(content)
+                "agent" -> ChatMessage.Agent(content)
+                "error" -> ChatMessage.Error(content)
+                "system" -> ChatMessage.System(content)
+                else -> ChatMessage.System(content)
+            }
+
+        private fun ChatMessage.toMessageEntity(
+            sessionId: String,
+            index: Int,
+        ): MessageEntity =
+            MessageEntity(
+                sessionId = sessionId,
+                type =
+                    when (this) {
+                        is ChatMessage.User -> "user"
+                        is ChatMessage.Agent -> "agent"
+                        is ChatMessage.Error -> "error"
+                        is ChatMessage.System -> "system"
+                    },
+                content =
+                    when (this) {
+                        is ChatMessage.User -> content
+                        is ChatMessage.Agent -> content
+                        is ChatMessage.Error -> message
+                        is ChatMessage.System -> info
+                    },
+                timestamp = System.currentTimeMillis(),
+                orderIndex = index,
+            )
     }
-
-    override suspend fun deleteSession(sessionId: String) {
-        sessionDao.deleteMessages(sessionId)
-        sessionDao.deleteSession(sessionId)
-    }
-
-    private fun SessionEntity.toChatSession(): ChatSession =
-        ChatSession(
-            id = id,
-            topic = CodingTopic.valueOf(topic),
-            title = title,
-            summary = summary,
-            messageCount = messageCount,
-            lastActiveAt = lastActiveAt,
-            modelUsed = modelUsed,
-        )
-
-    private fun MessageEntity.toChatMessage(): ChatMessage =
-        when (type) {
-            "user" -> ChatMessage.User(content)
-            "agent" -> ChatMessage.Agent(content)
-            "error" -> ChatMessage.Error(content)
-            "system" -> ChatMessage.System(content)
-            else -> ChatMessage.System(content)
-        }
-
-    private fun ChatMessage.toMessageEntity(sessionId: String, index: Int): MessageEntity =
-        MessageEntity(
-            sessionId = sessionId,
-            type = when (this) {
-                is ChatMessage.User -> "user"
-                is ChatMessage.Agent -> "agent"
-                is ChatMessage.Error -> "error"
-                is ChatMessage.System -> "system"
-            },
-            content = when (this) {
-                is ChatMessage.User -> content
-                is ChatMessage.Agent -> content
-                is ChatMessage.Error -> message
-                is ChatMessage.System -> info
-            },
-            timestamp = System.currentTimeMillis(),
-            orderIndex = index,
-        )
-}
