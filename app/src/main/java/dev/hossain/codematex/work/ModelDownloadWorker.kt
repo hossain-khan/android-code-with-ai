@@ -77,6 +77,9 @@ class ModelDownloadWorker(
                 val buffer = ByteArray(8192)
                 var bytesRead: Int
                 var downloadedBytes = outputTmpFile.length()
+                var lastReportedProgress = -1
+                var lastReportedBytes = 0L
+                val reportInterval = 50_000_000L // 50MB
 
                 while (input.read(buffer).also { bytesRead = it } != -1) {
                     if (isStopped) return Result.failure()
@@ -85,16 +88,18 @@ class ModelDownloadWorker(
                     downloadedBytes += bytesRead
 
                     val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
-                    setProgress(
-                        Data
-                            .Builder()
-                            .putInt(KEY_PROGRESS, progress)
-                            .build(),
-                    )
 
-                    if (progress % 10 == 0) {
-                        Timber.d("ModelDownloadWorker: Progress=$progress% ($downloadedBytes/$totalBytes bytes)")
-                        setForeground(createForegroundInfo("$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB"))
+                    if (progress != lastReportedProgress && (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)) {
+                        lastReportedProgress = progress
+                        lastReportedBytes = downloadedBytes
+                        setProgress(
+                            Data
+                                .Builder()
+                                .putInt(KEY_PROGRESS, progress)
+                                .build(),
+                        )
+                        Timber.i("ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)")
+                        setForeground(createForegroundInfo("$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB", progress))
                     }
                 }
             }
