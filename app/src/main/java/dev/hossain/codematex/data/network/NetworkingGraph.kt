@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 /**
  * Metro bindings for the networking layer contributed to [AppScope].
  *
- * Provides the [OkHttpClient], [Retrofit], and [EmailApiService] as singletons
+ * Provides the [OkHttpClient], [Retrofit], and [Json] as singletons
  * using `@ContributesTo` so they are automatically aggregated into the app's
  * dependency graph without requiring manual wiring.
  *
@@ -54,7 +54,7 @@ interface NetworkingGraph {
         }
 
     /**
-     * Provides a [Retrofit] instance configured with the email demo service base URL,
+     * Provides a [Retrofit] instance configured with a base URL,
      * the shared [OkHttpClient], and the kotlinx-serialization converter.
      */
     @Provides
@@ -65,15 +65,8 @@ interface NetworkingGraph {
     ): Retrofit =
         Retrofit
             .Builder()
-            .baseUrl("https://email-demo.gohk.xyz/")
+            .baseUrl("https://example.com/")
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-
-    /**
-     * Provides the [EmailApiService] Retrofit implementation as a singleton.
-     */
-    @Provides
-    @SingleIn(AppScope::class)
-    fun provideEmailApiService(retrofit: Retrofit): EmailApiService = retrofit.create(EmailApiService::class.java)
 }
