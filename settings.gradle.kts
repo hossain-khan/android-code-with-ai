@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Circuit App Template"
+rootProject.name = "Code With A I"
 include(":app")
