@@ -151,9 +151,52 @@ class LlmEngineImpl(
     }
 
     override suspend fun restoreHistory(messages: List<ChatMessage>) {
-        // LiteRT-LM Conversation doesn't support adding history directly.
-        // Messages are loaded into UI state; the model conversation starts fresh.
-        // TODO: Consider using Session API for history replay if needed.
+        if (engine == null) return
+
+        val conv = conversation ?: return
+
+        val priorMessages = messages.filterIsInstance<ChatMessage.User>() + messages.filterIsInstance<ChatMessage.Agent>()
+        if (priorMessages.isEmpty()) return
+
+        Timber.d("LlmEngineImpl: Restoring ${priorMessages.size} prior messages to conversation context")
+
+        val contextPrompt =
+            buildString {
+                append("Here is the prior conversation context. Do not respond to this message, just acknowledge it internally:\n\n")
+                priorMessages.forEach { msg ->
+                    val (role, text) =
+                        when (msg) {
+                            is ChatMessage.User -> "User" to msg.content
+                            is ChatMessage.Agent -> "Assistant" to msg.content
+                            else -> return@forEach
+                        }
+                    append("$role: $text\n\n")
+                }
+                append("--- End of prior conversation ---")
+            }
+
+        withContext(Dispatchers.Default) {
+            try {
+                conv.sendMessageAsync(
+                    contextPrompt,
+                    object : MessageCallback {
+                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
+                            // Ignore response - we just want to seed context
+                        }
+
+                        override fun onDone() {
+                            Timber.d("LlmEngineImpl: Context restoration complete")
+                        }
+
+                        override fun onError(throwable: Throwable) {
+                            Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
+                        }
+                    },
+                )
+            } catch (e: Exception) {
+                Timber.w(e, "LlmEngineImpl: Failed to restore history")
+            }
+        }
     }
 
     override fun cleanup() {

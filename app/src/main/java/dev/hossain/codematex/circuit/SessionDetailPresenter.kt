@@ -11,6 +11,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.zacsweers.metro.AppScope
@@ -28,11 +29,13 @@ class SessionDetailPresenter(
     @Composable
     override fun present(): SessionDetailScreen.State {
         var session by rememberRetained { mutableStateOf<ChatSession?>(null) }
+        var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.sessionId) {
             session = sessionRepository.getSession(screen.sessionId)
+            messages = sessionRepository.getMessages(screen.sessionId)
             isLoading = false
         }
 
@@ -62,6 +65,7 @@ class SessionDetailPresenter(
         } else if (session != null) {
             SessionDetailScreen.State.Success(
                 session = session!!,
+                messages = messages,
                 eventSink = eventSink,
             )
         } else {

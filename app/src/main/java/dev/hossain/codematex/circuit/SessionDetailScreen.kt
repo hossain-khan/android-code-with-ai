@@ -4,6 +4,7 @@ import android.os.Parcelable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.Screen
+import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import kotlinx.parcelize.Parcelize
 
@@ -17,6 +18,7 @@ data class SessionDetailScreen(
 
         data class Success(
             val session: ChatSession,
+            val messages: List<ChatMessage>,
             val eventSink: (Event) -> Unit,
         ) : State
     }
