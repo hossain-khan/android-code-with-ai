@@ -47,6 +47,7 @@ androidxWork = "2.11.2"
 litertlm = "0.11.0"
 room = "2.7.1"
 richtext = "1.0.0-alpha02"
+timber = "5.0.1"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
@@ -110,6 +111,9 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 # Markdown rendering - https://github.com/halilozercan/compose-richtext
 richtext-commonmark = { group = "com.halilibo.compose-richtext", name = "richtext-commonmark", version.ref = "richtext" }
 richtext-ui-material3 = { group = "com.halilibo.compose-richtext", name = "richtext-ui-material3", version.ref = "richtext" }
+
+# Logging - https://github.com/JakeWharton/timber
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

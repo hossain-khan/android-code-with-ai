@@ -14,6 +14,7 @@ import androidx.work.workDataOf
 import dev.hossain.codematex.di.AppGraph
 import dev.hossain.codematex.work.SampleWorker
 import dev.zacsweers.metro.createGraphFactory
+import timber.log.Timber
 
 /**
  * Application class for the app with key initializations.
@@ -45,6 +46,10 @@ class CodeWithAIApp :
 
     override fun onCreate() {
         super.onCreate()
+        if (BuildConfig.DEBUG) {
+            Timber.plant(Timber.DebugTree())
+        }
+        Timber.d("CodeWithAIApp created")
         createNotificationChannels()
         scheduleBackgroundWork()
     }

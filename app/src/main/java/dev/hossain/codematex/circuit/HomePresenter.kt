@@ -19,6 +19,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.flow.catch
+import timber.log.Timber
 
 @AssistedInject
 class HomePresenter(
@@ -35,10 +36,14 @@ class HomePresenter(
         val hasDownloadedModel = modelRepository.getSelectedModel() != null
 
         LaunchedEffect(Unit) {
+            Timber.d("HomePresenter: Loading sessions")
             sessionRepository
                 .getAllSessions()
-                .catch { isLoading = false }
-                .collect { sessions ->
+                .catch {
+                    Timber.e(it, "HomePresenter: Failed to load sessions")
+                    isLoading = false
+                }.collect { sessions ->
+                    Timber.d("HomePresenter: Loaded ${sessions.size} sessions")
                     recentSessions = sessions.take(5)
                     isLoading = false
                 }

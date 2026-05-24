@@ -13,6 +13,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -28,10 +29,16 @@ class LlmEngineImpl(
         backend: LlmEngine.Backend,
         systemInstruction: String?,
     ) {
+        if (modelPath == "/dev/null") {
+            Timber.w("LlmEngineImpl: Stub model detected - skipping LiteRT-LM initialization")
+            return
+        }
+
         cleanup()
         currentSystemInstruction = systemInstruction
 
         withContext(Dispatchers.Default) {
+            Timber.d("LlmEngineImpl: Initializing engine with path=$modelPath, backend=$backend")
             val engineConfig =
                 EngineConfig(
                     modelPath = modelPath,
@@ -40,6 +47,7 @@ class LlmEngineImpl(
                 )
 
             engine = Engine(engineConfig).also { it.initialize() }
+            Timber.d("LlmEngineImpl: Engine initialized")
 
             val samplerConfig =
                 SamplerConfig(
@@ -68,6 +76,15 @@ class LlmEngineImpl(
         input: String,
         onToken: (partialResult: String, done: Boolean) -> Unit,
     ) {
+        if (engine == null) {
+            Timber.w("LlmEngineImpl: Stub model - returning mock response")
+            onToken(
+                "This is a stub response. In dev mode, the LLM engine is not initialized. Connect a real model file to see actual AI responses.",
+                true,
+            )
+            return
+        }
+
         val conv =
             conversation
                 ?: throw IllegalStateException("Engine not initialized. Call initialize() first.")

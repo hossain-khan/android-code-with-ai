@@ -10,7 +10,9 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.data.model.DevModels
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.runtime.LlmEngine
@@ -19,6 +21,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AssistedInject
 class ChatPresenter(
@@ -37,10 +40,19 @@ class ChatPresenter(
         var pendingInput by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableStateOf(0) }
 
-        val activeModel = modelRepository.getSelectedModel()
+        var activeModel = modelRepository.getSelectedModel()
+
+        if (BuildConfig.DEV_MODE && activeModel == null) {
+            Timber.d("ChatPresenter: DEV_MODE - Auto-selecting stub model")
+            activeModel = DevModels.STUB_MODEL
+        }
 
         LaunchedEffect(activeModel, initTrigger) {
-            if (activeModel == null) return@LaunchedEffect
+            if (activeModel == null) {
+                Timber.w("ChatPresenter: No model selected")
+                return@LaunchedEffect
+            }
+            Timber.d("ChatPresenter: Initializing model=${activeModel.name}, path=${activeModel.localPath}")
             isPreparing = true
             try {
                 llmEngine.initialize(
@@ -48,11 +60,14 @@ class ChatPresenter(
                     backend = activeModel.preferredBackend,
                     systemInstruction = buildSystemPrompt(screen.topic),
                 )
+                Timber.d("ChatPresenter: Model initialized successfully")
                 if (screen.sessionId != null && messages.isEmpty()) {
+                    Timber.d("ChatPresenter: Restoring session=${screen.sessionId}")
                     messages = sessionRepository.getMessages(screen.sessionId)
                     llmEngine.restoreHistory(messages)
                 }
             } catch (e: Exception) {
+                Timber.e(e, "ChatPresenter: Model initialization failed")
                 errorMessage = e.message
             }
             isPreparing = false
@@ -62,6 +77,7 @@ class ChatPresenter(
             val input = pendingInput ?: return@LaunchedEffect
             pendingInput = null
             isGenerating = true
+            Timber.d("ChatPresenter: Sending message: ${input.take(50)}...")
 
             messages = messages + ChatMessage.User(input)
             messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
@@ -78,6 +94,7 @@ class ChatPresenter(
                     }
                     if (done) {
                         isGenerating = false
+                        Timber.d("ChatPresenter: Inference complete, saving session")
                         // Save session outside of callback
                         launch {
                             sessionRepository.saveSession(screen.topic, messages)
@@ -85,6 +102,7 @@ class ChatPresenter(
                     }
                 }
             } catch (e: Exception) {
+                Timber.e(e, "ChatPresenter: Inference failed")
                 isGenerating = false
                 messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
                 initTrigger++

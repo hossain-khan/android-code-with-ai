@@ -30,6 +30,9 @@ android {
         val apiKey = localProperties?.getProperty("SERVICE_API_KEY") ?: "MISSING-KEY"
         buildConfigField("String", "SERVICE_API_KEY", "\"$apiKey\"")
 
+        val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: true
+        buildConfigField("boolean", "DEV_MODE", devMode.toString())
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -146,6 +149,9 @@ dependencies {
     // Markdown rendering
     implementation(libs.richtext.commonmark)
     implementation(libs.richtext.ui.material3)
+
+    // Logging
+    implementation(libs.timber)
 
     // Networking
     implementation(libs.okhttp)
