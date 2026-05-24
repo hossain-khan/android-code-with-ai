@@ -1,5 +1,6 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.runtime.LlmEngine
 
@@ -17,6 +18,7 @@ class FakeLlmEngine : LlmEngine {
         modelPath: String,
         backend: LlmEngine.Backend,
         systemInstruction: String?,
+        config: ModelConfig,
     ) {
         initializeCalls++
     }
@@ -37,7 +39,10 @@ class FakeLlmEngine : LlmEngine {
         stopCalls++
     }
 
-    override fun resetConversation(systemInstruction: String?) {
+    override fun resetConversation(
+        systemInstruction: String?,
+        config: ModelConfig,
+    ) {
         resetCalls++
     }
 
