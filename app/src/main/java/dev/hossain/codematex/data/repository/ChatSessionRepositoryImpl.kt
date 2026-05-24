@@ -45,12 +45,14 @@ class ChatSessionRepositoryImpl
                     ?.content
                     ?.take(50) ?: "Untitled"
 
+            val summary = generateSummary(messages)
+
             sessionDao.upsertSession(
                 SessionEntity(
                     id = sessionId,
                     topic = topic.name,
                     title = title,
-                    summary = "",
+                    summary = summary,
                     messageCount = messages.size,
                     lastActiveAt = System.currentTimeMillis(),
                     modelUsed = "current",
@@ -61,6 +63,37 @@ class ChatSessionRepositoryImpl
                     msg.toMessageEntity(sessionId, index)
                 },
             )
+        }
+
+        private suspend fun generateSummary(messages: List<ChatMessage>): String {
+            val conversationText =
+                messages
+                    .joinToString("\n") { msg ->
+                        when (msg) {
+                            is ChatMessage.User -> "User: ${msg.content}"
+                            is ChatMessage.Agent -> "AI: ${msg.content.take(200)}"
+                            else -> ""
+                        }
+                    }.take(1000)
+
+            if (conversationText.isBlank()) {
+                return "Empty session"
+            }
+
+            var summary = ""
+            try {
+                llmEngine.runInference(
+                    "Summarize this coding learning session in 1-2 sentences: $conversationText",
+                ) { token, done ->
+                    if (!done) {
+                        summary += token
+                    }
+                }
+            } catch (e: Exception) {
+                // Fallback if summary generation fails
+            }
+
+            return summary.ifBlank { "Coding session about ${messages.size} messages" }
         }
 
         override suspend fun deleteSession(sessionId: String) {
