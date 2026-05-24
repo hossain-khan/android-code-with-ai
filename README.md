@@ -1,17 +1,17 @@
 # Code with AI
 
-An on-device AI coding tutor for Android. Chat with local LLMs about programming languages, algorithms, and system design — no internet required after model download.
+An on-device AI coding tutor for Android. Chat with local LLMs about programming languages, algorithms, and system design - no internet required after model download.
 
 ## Features
 
-- **On-Device Inference** — Powered by Google's LiteRT-LM with CPU/GPU/NPU acceleration
-- **Gemma 4 Models** — E2B (2.4GB, 8GB RAM) and E4B (3.4GB, 12GB RAM) from HuggingFace
-- **Coding Topics** — Kotlin, Python, JavaScript, Rust, Go, Swift, Android, Web, Algorithms, System Design
-- **Session Persistence** — Auto-saved chats with AI-generated summaries, full message history review
-- **Markdown Rendering** — AI responses render with proper code block formatting
-- **Download Management** — Foreground service with progress tracking, cancel/resume support
-- **RAM Compatibility** — Incompatible models automatically disabled with clear messaging
-- **Dev Mode** — Stub responses for testing without downloading models
+- **On-Device Inference** - Powered by Google's LiteRT-LM with CPU/GPU/NPU acceleration
+- **Gemma 4 Models** - E2B (2.4GB, 8GB RAM) and E4B (3.4GB, 12GB RAM) from HuggingFace
+- **Coding Topics** - Kotlin, Python, JavaScript, Rust, Go, Swift, Android, Web, Algorithms, System Design
+- **Session Persistence** - Auto-saved chats with AI-generated summaries, full message history review
+- **Markdown Rendering** - AI responses render with proper code block formatting
+- **Download Management** - Foreground service with progress tracking, cancel/resume support
+- **RAM Compatibility** - Incompatible models automatically disabled with clear messaging
+- **Dev Mode** - Stub responses for testing without downloading models
 
 ## Tech Stack
 
@@ -60,7 +60,7 @@ DEV_MODE=false
 
 1. Open the app → tap **Manage Models** (⚙️ icon)
 2. Tap **Download** on Gemma 4 E2B (recommended for 8GB RAM devices)
-3. Wait for download (~2.4GB) — progress shown in notification and UI
+3. Wait for download (~2.4GB) - progress shown in notification and UI
 4. Tap **Select** to activate the model
 5. Pick a coding topic and start chatting
 
@@ -105,4 +105,4 @@ GitHub Actions workflows:
 
 ## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License - see [LICENSE](LICENSE) for details.
