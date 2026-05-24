@@ -9,6 +9,7 @@ import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
+import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -23,11 +24,13 @@ class LlmEngineImpl(
     private var engine: Engine? = null
     private var conversation: Conversation? = null
     private var currentSystemInstruction: String? = null
+    private var currentConfig: ModelConfig = ModelConfig()
 
     override suspend fun initialize(
         modelPath: String,
         backend: LlmEngine.Backend,
         systemInstruction: String?,
+        config: ModelConfig,
     ) {
         if (modelPath == "/dev/null") {
             Timber.w("LlmEngineImpl: Stub model detected - skipping LiteRT-LM initialization")
@@ -36,14 +39,15 @@ class LlmEngineImpl(
 
         cleanup()
         currentSystemInstruction = systemInstruction
+        currentConfig = config
 
         withContext(Dispatchers.Default) {
-            Timber.d("LlmEngineImpl: Initializing engine with path=$modelPath, backend=$backend")
+            Timber.d("LlmEngineImpl: Initializing engine with path=$modelPath, backend=$backend, config=$config")
             val engineConfig =
                 EngineConfig(
                     modelPath = modelPath,
                     backend = backend.toLiteRtBackend(),
-                    maxNumTokens = 2048,
+                    maxNumTokens = config.maxTokens,
                 )
 
             engine = Engine(engineConfig).also { it.initialize() }
@@ -51,9 +55,9 @@ class LlmEngineImpl(
 
             val samplerConfig =
                 SamplerConfig(
-                    topK = 40,
-                    topP = 1.0,
-                    temperature = 0.7,
+                    topK = config.topK,
+                    topP = config.topP.toDouble(),
+                    temperature = config.temperature.toDouble(),
                 )
 
             val conversationConfig =
@@ -124,15 +128,19 @@ class LlmEngineImpl(
         conversation?.cancelProcess()
     }
 
-    override fun resetConversation(systemInstruction: String?) {
+    override fun resetConversation(
+        systemInstruction: String?,
+        config: ModelConfig,
+    ) {
         currentSystemInstruction = systemInstruction
+        currentConfig = config
         conversation?.close()
 
         val samplerConfig =
             SamplerConfig(
-                topK = 40,
-                topP = 1.0,
-                temperature = 0.7,
+                topK = config.topK,
+                topP = config.topP.toDouble(),
+                temperature = config.temperature.toDouble(),
             )
 
         val conversationConfig =

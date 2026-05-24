@@ -11,6 +11,7 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.BuildConfig
+import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DevModels
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -30,6 +31,7 @@ class ChatPresenter(
     private val llmEngine: LlmEngine,
     private val modelRepository: ModelRepository,
     private val sessionRepository: ChatSessionRepository,
+    private val configStore: ModelConfigStore,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -59,6 +61,7 @@ class ChatPresenter(
                     modelPath = activeModel.localPath ?: "",
                     backend = activeModel.preferredBackend,
                     systemInstruction = buildSystemPrompt(screen.topic),
+                    config = configStore.config,
                 )
                 Timber.d("ChatPresenter: Model initialized successfully")
                 if (screen.sessionId != null && messages.isEmpty()) {
@@ -122,7 +125,7 @@ class ChatPresenter(
 
                 ChatScreen.Event.ResetSession -> {
                     messages = emptyList()
-                    llmEngine.resetConversation(buildSystemPrompt(screen.topic))
+                    llmEngine.resetConversation(buildSystemPrompt(screen.topic), configStore.config)
                 }
 
                 ChatScreen.Event.Retry -> {

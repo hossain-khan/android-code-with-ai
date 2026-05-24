@@ -1,5 +1,6 @@
 package dev.hossain.codematex.runtime
 
+import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
 
 interface LlmEngine {
@@ -7,6 +8,7 @@ interface LlmEngine {
         modelPath: String,
         backend: Backend = Backend.CPU,
         systemInstruction: String? = null,
+        config: ModelConfig = ModelConfig(),
     )
 
     suspend fun runInference(
@@ -16,7 +18,10 @@ interface LlmEngine {
 
     fun stop()
 
-    fun resetConversation(systemInstruction: String? = null)
+    fun resetConversation(
+        systemInstruction: String? = null,
+        config: ModelConfig = ModelConfig(),
+    )
 
     suspend fun restoreHistory(messages: List<ChatMessage>)
 

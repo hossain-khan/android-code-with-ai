@@ -33,20 +33,36 @@ data object ModelConfigOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Suppress("FunctionName")
-fun ModelConfigOverlay(): BottomSheetOverlay<Unit, Unit> =
+fun ModelConfigOverlay(
+    initialConfig: ModelConfig = ModelConfig(),
+    onConfigSaved: (ModelConfig) -> Unit = {},
+): BottomSheetOverlay<Unit, Unit> =
     BottomSheetOverlay(
         model = Unit,
         onDismiss = {},
     ) { _, overlayNavigator ->
-        ModelConfigContent(onDismiss = { overlayNavigator.finish(Unit) })
+        ModelConfigContent(
+            initialConfig = initialConfig,
+            onDismiss = {
+                overlayNavigator.finish(Unit)
+            },
+            onSave = { config ->
+                onConfigSaved(config)
+                overlayNavigator.finish(Unit)
+            },
+        )
     }
 
 @Composable
-private fun ModelConfigContent(onDismiss: () -> Unit) {
-    var temperature by remember { mutableFloatStateOf(0.7f) }
-    var topK by remember { mutableFloatStateOf(40f) }
-    var topP by remember { mutableFloatStateOf(1.0f) }
-    var maxTokens by remember { mutableFloatStateOf(2048f) }
+private fun ModelConfigContent(
+    initialConfig: ModelConfig,
+    onDismiss: () -> Unit,
+    onSave: (ModelConfig) -> Unit,
+) {
+    var temperature by remember { mutableFloatStateOf(initialConfig.temperature) }
+    var topK by remember { mutableFloatStateOf(initialConfig.topK.toFloat()) }
+    var topP by remember { mutableFloatStateOf(initialConfig.topP) }
+    var maxTokens by remember { mutableFloatStateOf(initialConfig.maxTokens.toFloat()) }
 
     Column(
         modifier = Modifier.padding(16.dp),
@@ -59,11 +75,30 @@ private fun ModelConfigContent(onDismiss: () -> Unit) {
         ConfigSlider("Top-P", topP, 0f, 1f) { topP = it }
         ConfigSlider("Max Tokens", maxTokens, 128f, 8192f) { maxTokens = it }
 
-        Button(
-            onClick = onDismiss,
-            modifier = Modifier.align(Alignment.End),
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
         ) {
-            Text("Done")
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.padding(end = 8.dp),
+            ) {
+                Text("Cancel")
+            }
+            Button(
+                onClick = {
+                    onSave(
+                        ModelConfig(
+                            temperature = temperature,
+                            topK = topK.toInt(),
+                            topP = topP,
+                            maxTokens = maxTokens.toInt(),
+                        ),
+                    )
+                },
+            ) {
+                Text("Save")
+            }
         }
     }
 }
@@ -83,7 +118,7 @@ private fun ConfigSlider(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(label)
-            Text(value.toString().take(4))
+            Text(if (value == value.toInt().toFloat()) value.toInt().toString() else "%.2f".format(value))
         }
         Slider(
             value = value,

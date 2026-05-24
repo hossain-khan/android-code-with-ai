@@ -1,6 +1,7 @@
 package dev.hossain.codematex.runtime
 
 import android.content.Context
+import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
@@ -14,4 +15,10 @@ interface RuntimeGraph {
     fun provideLlmEngine(
         @ApplicationContext context: Context,
     ): LlmEngine = LlmEngineImpl(context)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideModelConfigStore(
+        @ApplicationContext context: Context,
+    ): ModelConfigStore = ModelConfigStore(context)
 }
