@@ -1,6 +1,7 @@
 package dev.hossain.codematex.worker
 
 import android.content.Context
+import android.content.pm.ServiceInfo
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
@@ -48,6 +49,9 @@ class ModelDownloadWorker(
         connection.connect()
         val totalBytes = connection.contentLengthLong + (outputTmpFile.length().takeIf { it > 0 } ?: 0)
 
+        outputTmpFile.parentFile?.mkdirs()
+        File(outputPath).parentFile?.mkdirs()
+
         FileOutputStream(outputTmpFile, true).use { fos ->
             connection.inputStream.use { input ->
                 val buffer = ByteArray(8192)
@@ -83,6 +87,7 @@ class ModelDownloadWorker(
                 .setContentText(content)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .build(),
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
 
     @WorkerKey(ModelDownloadWorker::class)
