@@ -2,6 +2,9 @@
 
 An on-device AI coding tutor for Android. Chat with local LLMs about programming languages, algorithms, and system design - no internet required after model download.
 
+> [!NOTE]
+> This is in experimental phase now and non-functional.
+
 ## Features
 
 - **On-Device Inference** - Powered by Google's LiteRT-LM with CPU/GPU/NPU acceleration
