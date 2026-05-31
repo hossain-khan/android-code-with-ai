@@ -180,6 +180,10 @@ class ModelRepositoryImpl
         }
 
         private fun getModelLocalPathById(modelId: String): String {
+            loadAllowlist()
+                .firstOrNull { it.modelId == modelId }
+                ?.let { return getModelLocalPath(it) }
+
             val normalizedName = modelId.replace("/", "_")
             return "${modelsDir.absolutePath}/$normalizedName/${modelId.substringAfterLast("/")}.litertlm"
         }
