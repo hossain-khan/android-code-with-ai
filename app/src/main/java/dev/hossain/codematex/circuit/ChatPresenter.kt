@@ -85,7 +85,7 @@ class ChatPresenter(
                     if (!isGenerating) {
                         isGenerating = true
                         val input = event.text
-                        Timber.d("ChatPresenter: Sending message: ${input.take(50)}...")
+                        Timber.d("ChatPresenter: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
 
                         messages = messages + ChatMessage.User(input)
                         messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
@@ -111,6 +111,8 @@ class ChatPresenter(
                                         tokenCount++
                                         if (firstTokenTime == 0L) {
                                             firstTokenTime = System.currentTimeMillis()
+                                            val prefillMs = firstTokenTime - startTime
+                                            Timber.d("ChatPresenter: First token received! Prefill latency (TTFT): ${prefillMs}ms")
                                         }
 
                                         val now = System.currentTimeMillis()
@@ -127,7 +129,20 @@ class ChatPresenter(
 
                                         if (done) {
                                             isGenerating = false
-                                            Timber.d("ChatPresenter: Inference complete, saving session")
+                                            val totalTimeMs = System.currentTimeMillis() - startTime
+                                            val decodeDurationMs = System.currentTimeMillis() - firstTokenTime
+                                            val speedText =
+                                                if (decodeDurationMs >
+                                                    0
+                                                ) {
+                                                    "%.2f".format((tokenCount * 1000f) / decodeDurationMs)
+                                                } else {
+                                                    "N/A"
+                                                }
+                                            Timber.d(
+                                                "ChatPresenter: Inference completed successfully. Total tokens: $tokenCount, TTFT: ${firstTokenTime - startTime}ms, Decode speed: $speedText t/s, Total duration: ${totalTimeMs}ms",
+                                            )
+                                            Timber.d("ChatPresenter: Saving session message history...")
                                             sessionRepository.saveSession(screen.topic, messages)
                                         }
                                     }
@@ -145,11 +160,13 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.StopGeneration -> {
+                    Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
                     llmEngine.stop()
                     isGenerating = false
                 }
 
                 ChatScreen.Event.ResetSession -> {
+                    Timber.d("ChatPresenter: ResetSession event received. Clearing message history and resetting engine...")
                     messages = emptyList()
                     throughputInfo = null
                     llmEngine.resetConversation(buildSystemPrompt(screen.topic), configStore.config)
