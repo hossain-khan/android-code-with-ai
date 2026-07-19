@@ -7,7 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
@@ -58,11 +61,9 @@ class MainActivity
 
             setContent {
                 CodeWithAIAppTheme {
-                    androidx.compose.material3.Surface(
-                        modifier =
-                            androidx.compose.ui.Modifier
-                                .fillMaxSize(),
-                        color = androidx.compose.material3.MaterialTheme.colorScheme.background,
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background,
                     ) {
                         // See https://slackhq.github.io/circuit/navigation/
                         val navStack = rememberSaveableNavStack(root = HomeScreen)
