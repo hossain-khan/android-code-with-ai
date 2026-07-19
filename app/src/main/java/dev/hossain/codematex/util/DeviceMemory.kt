@@ -37,7 +37,8 @@ object DeviceMemory {
                 java.io
                     .File("/proc/self/stat")
                     .readText()
-                    .split(" ")
+                    .trim()
+                    .split(Regex("\\s+"))
             val utime = stat[13].toLong()
             val stime = stat[14].toLong()
             utime + stime
