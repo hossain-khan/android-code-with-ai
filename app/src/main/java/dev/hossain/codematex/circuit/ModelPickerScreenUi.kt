@@ -11,9 +11,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -33,7 +34,7 @@ import dev.hossain.codematex.util.DeviceMemory
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @CircuitInject(screen = ModelPickerScreen::class, scope = AppScope::class)
 @Composable
 fun ModelPickerScreenContent(
@@ -43,7 +44,7 @@ fun ModelPickerScreenContent(
     when (state) {
         is ModelPickerScreen.State.Loading -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularWavyProgressIndicator()
             }
         }
 
@@ -111,6 +112,7 @@ private fun ModelPickerLayout(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ModelCard(
     model: AiModel,
@@ -134,7 +136,7 @@ private fun ModelCard(
 
             if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
                 val progress = model.downloadProgress.coerceIn(0, 100) / 100f
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
                 )

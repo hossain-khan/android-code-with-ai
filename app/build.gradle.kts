@@ -115,6 +115,10 @@ kotlin {
     }
 }
 
+configurations.all {
+    exclude(group = "org.jetbrains.compose.material3")
+}
+
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
