@@ -50,6 +50,8 @@ class FakeLlmEngine : LlmEngine {
         restoreHistoryCalls++
     }
 
+    override fun getActiveBackend(): LlmEngine.Backend? = LlmEngine.Backend.CPU
+
     override fun cleanup() {
         cleanupCalls++
     }
