@@ -47,5 +47,7 @@ data class ChatScreen(
         data class CopyMessage(
             val content: String,
         ) : Event
+
+        data object Back : Event
     }
 }

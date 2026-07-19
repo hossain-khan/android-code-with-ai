@@ -134,6 +134,10 @@ class ChatPresenter(
                 }
 
                 is ChatScreen.Event.CopyMessage -> {}
+
+                ChatScreen.Event.Back -> {
+                    navigator.pop()
+                }
             }
         }
 

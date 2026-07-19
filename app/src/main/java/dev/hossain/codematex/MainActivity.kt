@@ -6,7 +6,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
 import com.slack.circuit.foundation.NavigableCircuitContent
@@ -57,24 +61,29 @@ class MainActivity
 
             setContent {
                 CodeWithAIAppTheme {
-                    // See https://slackhq.github.io/circuit/navigation/
-                    val navStack = rememberSaveableNavStack(root = HomeScreen)
-                    val navigator = rememberCircuitNavigator(navStack)
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background,
+                    ) {
+                        // See https://slackhq.github.io/circuit/navigation/
+                        val navStack = rememberSaveableNavStack(root = HomeScreen)
+                        val navigator = rememberCircuitNavigator(navStack)
 
-                    // See https://slackhq.github.io/circuit/circuit-content/
-                    CircuitCompositionLocals(circuit) {
-                        // See https://slackhq.github.io/circuit/shared-elements/
-                        SharedElementTransitionLayout {
-                            // See https://slackhq.github.io/circuit/overlays/
-                            ContentWithOverlays {
-                                NavigableCircuitContent(
-                                    navigator = navigator,
-                                    navStack = navStack,
-                                    decoratorFactory =
-                                        remember {
-                                            GestureNavigationDecorationFactory()
-                                        },
-                                )
+                        // See https://slackhq.github.io/circuit/circuit-content/
+                        CircuitCompositionLocals(circuit) {
+                            // See https://slackhq.github.io/circuit/shared-elements/
+                            SharedElementTransitionLayout {
+                                // See https://slackhq.github.io/circuit/overlays/
+                                ContentWithOverlays {
+                                    NavigableCircuitContent(
+                                        navigator = navigator,
+                                        navStack = navStack,
+                                        decoratorFactory =
+                                            remember {
+                                                GestureNavigationDecorationFactory()
+                                            },
+                                    )
+                                }
                             }
                         }
                     }
