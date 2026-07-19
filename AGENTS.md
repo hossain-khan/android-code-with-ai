@@ -60,7 +60,15 @@ The chat screen contains a sticky benchmarking dashboard right below the top app
 
 ---
 
-## 5. Development Workflows & Commands
+## 5. UI/UX Design System Guidelines
+
+To ensure a modern, premium, and user-friendly experience, CodeMateX must adhere to the **Material 3 Expressive** design guidelines.
+* **Expressive Tokens**: Implement dynamic theme palettes, shapes, and expressive components (e.g. `CircularWavyProgressIndicator`) following the Material 3 design system. Ensure correct dark/light theme background propagation down screen nodes.
+* **Reference Issue**: For detailed goals and tracking of design improvements, see [GitHub Issue #1](https://github.com/hossain-khan/android-code-with-ai/issues/1).
+
+---
+
+## 6. Development Workflows & Commands
 
 * **Compile Code**:
   ```bash
