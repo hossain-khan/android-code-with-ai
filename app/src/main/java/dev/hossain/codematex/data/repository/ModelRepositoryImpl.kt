@@ -3,8 +3,10 @@
 package dev.hossain.codematex.data.repository
 
 import android.content.Context
+import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -123,9 +125,16 @@ class ModelRepositoryImpl
                     .putString(ModelDownloadWorker.KEY_PATH, model.localPath ?: getModelLocalPathById(model.id))
                     .build()
 
+            val constraints =
+                Constraints
+                    .Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
+
             val request =
                 OneTimeWorkRequestBuilder<ModelDownloadWorker>()
                     .setInputData(data)
+                    .setConstraints(constraints)
                     .build()
 
             workManager.enqueueUniqueWork(
