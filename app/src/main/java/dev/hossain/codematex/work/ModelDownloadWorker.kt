@@ -40,89 +40,107 @@ class ModelDownloadWorker(
 
         setForeground(createForegroundInfo("Starting download..."))
 
-        Timber.d("ModelDownloadWorker: Downloading $url to $outputPath")
+        try {
+            Timber.d("ModelDownloadWorker: Downloading $url to $outputPath")
 
-        val connection = URL(url).openConnection() as HttpURLConnection
+            val connection = URL(url).openConnection() as HttpURLConnection
 
-        if (outputTmpFile.exists() && outputTmpFile.length() > 0) {
-            connection.setRequestProperty("Range", "bytes=${outputTmpFile.length()}-")
-            connection.setRequestProperty("Accept-Encoding", "identity")
-        }
-
-        connection.connect()
-        val responseCode = connection.responseCode
-        Timber.d("ModelDownloadWorker: Response code=$responseCode for $url")
-
-        if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_PARTIAL) {
-            Timber.e("ModelDownloadWorker: Failed with response code $responseCode")
-            return Result.failure()
-        }
-
-        val contentLength = connection.contentLengthLong
-        val totalBytes =
-            if (contentLength > 0) {
-                contentLength + (outputTmpFile.length().takeIf { it > 0 } ?: 0)
-            } else {
-                Timber.w("ModelDownloadWorker: Unknown content length")
-                0L
+            if (outputTmpFile.exists() && outputTmpFile.length() > 0) {
+                connection.setRequestProperty("Range", "bytes=${outputTmpFile.length()}-")
+                connection.setRequestProperty("Accept-Encoding", "identity")
             }
 
-        Timber.d("ModelDownloadWorker: Content-Length=$contentLength, Total=$totalBytes, Resuming from ${outputTmpFile.length()}")
+            connection.connect()
+            val responseCode = connection.responseCode
+            Timber.d("ModelDownloadWorker: Response code=$responseCode for $url")
 
-        outputTmpFile.parentFile?.mkdirs()
-        File(outputPath).parentFile?.mkdirs()
+            if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_PARTIAL) {
+                Timber.e("ModelDownloadWorker: Failed with response code $responseCode")
+                return Result.failure()
+            }
 
-        FileOutputStream(outputTmpFile, true).use { fos ->
-            connection.inputStream.use { input ->
-                val buffer = ByteArray(8192)
-                var bytesRead: Int
-                var downloadedBytes = outputTmpFile.length()
-                var lastReportedProgress = -1
-                var lastReportedBytes = 0L
-                val reportInterval = 100_000_000L // 100MB
+            val contentLength = connection.contentLengthLong
+            val totalBytes =
+                if (contentLength > 0) {
+                    contentLength + (outputTmpFile.length().takeIf { it > 0 } ?: 0)
+                } else {
+                    Timber.w("ModelDownloadWorker: Unknown content length")
+                    0L
+                }
 
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    if (isStopped) return Result.failure()
+            Timber.d("ModelDownloadWorker: Content-Length=$contentLength, Total=$totalBytes, Resuming from ${outputTmpFile.length()}")
 
-                    fos.write(buffer, 0, bytesRead)
-                    downloadedBytes += bytesRead
+            outputTmpFile.parentFile?.mkdirs()
+            File(outputPath).parentFile?.mkdirs()
 
-                    val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
+            FileOutputStream(outputTmpFile, true).use { fos ->
+                connection.inputStream.use { input ->
+                    val buffer = ByteArray(8192)
+                    var bytesRead: Int
+                    var downloadedBytes = outputTmpFile.length()
+                    var lastReportedProgress = -1
+                    var lastReportedBytes = 0L
+                    val reportInterval = 100_000_000L // 100MB
 
-                    if (progress != lastReportedProgress && (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)) {
-                        lastReportedProgress = progress
-                        lastReportedBytes = downloadedBytes
-                        setProgress(
-                            Data
-                                .Builder()
-                                .putInt(KEY_PROGRESS, progress)
-                                .build(),
-                        )
-                        Timber.i(
-                            "ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
-                        )
-                        setForeground(
-                            createForegroundInfo(
-                                "$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB",
-                                progress,
-                            ),
-                        )
+                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                        if (isStopped) return Result.failure()
+
+                        fos.write(buffer, 0, bytesRead)
+                        downloadedBytes += bytesRead
+
+                        val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
+
+                        if (progress != lastReportedProgress &&
+                            (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)
+                        ) {
+                            lastReportedProgress = progress
+                            lastReportedBytes = downloadedBytes
+                            setProgress(
+                                Data
+                                    .Builder()
+                                    .putInt(KEY_PROGRESS, progress)
+                                    .build(),
+                            )
+                            Timber.i(
+                                "ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
+                            )
+                            setForeground(
+                                createForegroundInfo(
+                                    "$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB",
+                                    progress,
+                                ),
+                            )
+                        }
                     }
                 }
             }
-        }
 
-        outputTmpFile.renameTo(File(outputPath))
-        return Result.success()
+            outputTmpFile.renameTo(File(outputPath))
+            return Result.success()
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) {
+                throw e
+            }
+            Timber.e(e, "ModelDownloadWorker: Error downloading model")
+            return if (runAttemptCount < 5) {
+                Result.retry()
+            } else {
+                Result.failure()
+            }
+        }
     }
 
     private fun createForegroundInfo(
         content: String,
         progress: Int = 0,
         maxProgress: Int = 100,
-    ): ForegroundInfo =
-        ForegroundInfo(
-            1,
+    ): ForegroundInfo {
+        val cancelIntent =
+            androidx.work.WorkManager
+                .getInstance(applicationContext)
+                .createCancelPendingIntent(id)
+
+        val notification =
             androidx.core.app.NotificationCompat
                 .Builder(applicationContext, "model_download")
                 .setContentTitle("Model Download")
@@ -130,9 +148,18 @@ class ModelDownloadWorker(
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setOngoing(true)
                 .setProgress(maxProgress, progress, progress <= 0)
-                .build(),
+                .addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel,
+                    "Cancel",
+                    cancelIntent,
+                ).build()
+
+        return ForegroundInfo(
+            1,
+            notification,
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
+    }
 
     @WorkerKey(ModelDownloadWorker::class)
     @ContributesIntoMap(
