@@ -22,6 +22,10 @@ data class ChatScreen(
             val isGenerating: Boolean,
             val isPreparing: Boolean,
             val modelName: String,
+            val activeBackend: String?,
+            val modelSize: String?,
+            val modelMemory: String?,
+            val configInfo: String?,
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State

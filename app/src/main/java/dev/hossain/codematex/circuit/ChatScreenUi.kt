@@ -3,6 +3,7 @@ package dev.hossain.codematex.circuit
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -105,6 +106,8 @@ private fun ChatLayout(
                     .padding(innerPadding)
                     .imePadding(),
         ) {
+            ModelTechnicalInfoPanel(state)
+
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 state = listState,
@@ -229,6 +232,98 @@ private fun MessageBubble(
                 ) {
                     Icon(Icons.Default.ContentCopy, contentDescription = "Copy message")
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ModelTechnicalInfoPanel(
+    state: ChatScreen.State.Active,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        tonalElevation = 1.dp,
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = state.modelName,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        state.modelSize?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        state.modelMemory?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
+                // Backend Badge
+                state.activeBackend?.let { backend ->
+                    val isAccelerated = backend == "GPU" || backend == "NPU"
+                    val containerColor =
+                        if (isAccelerated) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
+                    val textColor =
+                        if (isAccelerated) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        }
+
+                    Surface(
+                        color = containerColor,
+                        shape = MaterialTheme.shapes.extraSmall,
+                    ) {
+                        Text(
+                            text = backend,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = textColor,
+                        )
+                    }
+                }
+            }
+
+            state.configInfo?.let { config ->
+                Text(
+                    text = config,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         }
     }

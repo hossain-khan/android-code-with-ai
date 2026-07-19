@@ -151,11 +151,21 @@ class ChatPresenter(
             }
 
             else -> {
+                val sizeMb = activeModel.sizeBytes / 1_000_000
+                val sizeText = "$sizeMb MB"
+                val memoryText = "Requires ${activeModel.minDeviceMemoryInGb}GB RAM"
+                val config = configStore.config
+                val configText = "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}"
+
                 ChatScreen.State.Active(
                     messages = messages,
                     isGenerating = isGenerating,
                     isPreparing = isPreparing,
-                    modelName = activeModel.name,
+                    modelName = activeModel.displayName,
+                    activeBackend = llmEngine.getActiveBackend()?.name,
+                    modelSize = sizeText,
+                    modelMemory = memoryText,
+                    configInfo = configText,
                     topic = screen.topic,
                     eventSink = eventSink,
                 )

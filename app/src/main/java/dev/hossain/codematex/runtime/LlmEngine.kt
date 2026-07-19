@@ -25,6 +25,8 @@ interface LlmEngine {
 
     suspend fun restoreHistory(messages: List<ChatMessage>)
 
+    fun getActiveBackend(): Backend?
+
     fun cleanup()
 
     enum class Backend {

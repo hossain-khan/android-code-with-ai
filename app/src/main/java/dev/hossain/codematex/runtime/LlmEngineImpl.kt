@@ -33,6 +33,9 @@ class LlmEngineImpl(
     private var conversation: Conversation? = null
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
+    private var activeBackend: LlmEngine.Backend? = null
+
+    override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
     /**
      * Initializes the LiteRT LLM engine.
@@ -101,6 +104,7 @@ class LlmEngineImpl(
 
                     engine = newEngine
                     conversation = newConversation
+                    activeBackend = actualBackend
                     success = true
                     Timber.d("LlmEngineImpl: Engine initialized successfully with backend=$actualBackend")
                 } catch (e: Exception) {
@@ -260,6 +264,7 @@ class LlmEngineImpl(
         engine?.close()
         conversation = null
         engine = null
+        activeBackend = null
     }
 
     private fun LlmEngine.Backend.toLiteRtBackend(): Backend =
