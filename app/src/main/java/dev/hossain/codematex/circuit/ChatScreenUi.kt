@@ -18,7 +18,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +41,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.zacsweers.metro.AppScope
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @CircuitInject(screen = ChatScreen::class, scope = AppScope::class)
 @Composable
 fun ChatScreenContent(
@@ -49,7 +51,7 @@ fun ChatScreenContent(
     when (state) {
         is ChatScreen.State.Loading -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularWavyProgressIndicator()
             }
         }
 
@@ -70,6 +72,7 @@ fun ChatScreenContent(
     }
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChatLayout(
     state: ChatScreen.State.Active,
@@ -104,7 +107,7 @@ private fun ChatLayout(
             Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
                 if (state.isPreparing) {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+                        CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
                     }
                 }
 
