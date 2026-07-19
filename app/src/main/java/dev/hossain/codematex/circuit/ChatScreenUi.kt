@@ -325,6 +325,14 @@ private fun ModelTechnicalInfoPanel(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+
+            state.throughputInfo?.let { throughput ->
+                Text(
+                    text = throughput,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
         }
     }
 }

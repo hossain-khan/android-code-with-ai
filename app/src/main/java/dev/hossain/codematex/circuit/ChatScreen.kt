@@ -26,6 +26,7 @@ data class ChatScreen(
             val modelSize: String?,
             val modelMemory: String?,
             val configInfo: String?,
+            val throughputInfo: String?,
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State

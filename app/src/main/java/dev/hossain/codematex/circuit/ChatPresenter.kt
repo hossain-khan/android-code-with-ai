@@ -41,6 +41,7 @@ class ChatPresenter(
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableStateOf(0) }
+        var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
 
         var activeModel = modelRepository.getSelectedModel()
 
@@ -84,10 +85,15 @@ class ChatPresenter(
                     if (!isGenerating) {
                         isGenerating = true
                         val input = event.text
-                        Timber.d("ChatPresenter: Sending message: ${input.take(50)}...")
+                        Timber.d("ChatPresenter: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
 
                         messages = messages + ChatMessage.User(input)
                         messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
+
+                        var tokenCount = 0
+                        var firstTokenTime = 0L
+                        val startTime = System.currentTimeMillis()
+                        throughputInfo = "Prefilling..."
 
                         scope.launch {
                             try {
@@ -101,9 +107,42 @@ class ChatPresenter(
                                                     isStreaming = !done,
                                                 )
                                         }
+
+                                        tokenCount++
+                                        if (firstTokenTime == 0L) {
+                                            firstTokenTime = System.currentTimeMillis()
+                                            val prefillMs = firstTokenTime - startTime
+                                            Timber.d("ChatPresenter: First token received! Prefill latency (TTFT): ${prefillMs}ms")
+                                        }
+
+                                        val now = System.currentTimeMillis()
+                                        val totalPrefillMs = firstTokenTime - startTime
+                                        val decodeMs = now - firstTokenTime
+
+                                        if (decodeMs > 0) {
+                                            val speed = (tokenCount * 1000f) / decodeMs
+                                            throughputInfo =
+                                                "TTFT: ${totalPrefillMs}ms • Speed: ${"%.1f".format(speed)} t/s ($tokenCount tokens)"
+                                        } else {
+                                            throughputInfo = "TTFT: ${totalPrefillMs}ms • Speed: -- t/s ($tokenCount tokens)"
+                                        }
+
                                         if (done) {
                                             isGenerating = false
-                                            Timber.d("ChatPresenter: Inference complete, saving session")
+                                            val totalTimeMs = System.currentTimeMillis() - startTime
+                                            val decodeDurationMs = System.currentTimeMillis() - firstTokenTime
+                                            val speedText =
+                                                if (decodeDurationMs >
+                                                    0
+                                                ) {
+                                                    "%.2f".format((tokenCount * 1000f) / decodeDurationMs)
+                                                } else {
+                                                    "N/A"
+                                                }
+                                            Timber.d(
+                                                "ChatPresenter: Inference completed successfully. Total tokens: $tokenCount, TTFT: ${firstTokenTime - startTime}ms, Decode speed: $speedText t/s, Total duration: ${totalTimeMs}ms",
+                                            )
+                                            Timber.d("ChatPresenter: Saving session message history...")
                                             sessionRepository.saveSession(screen.topic, messages)
                                         }
                                     }
@@ -112,6 +151,7 @@ class ChatPresenter(
                                 if (e is kotlinx.coroutines.CancellationException) throw e
                                 Timber.e(e, "ChatPresenter: Inference failed")
                                 isGenerating = false
+                                throughputInfo = "Error: ${e.message}"
                                 messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
                                 initTrigger++
                             }
@@ -120,12 +160,15 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.StopGeneration -> {
+                    Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
                     llmEngine.stop()
                     isGenerating = false
                 }
 
                 ChatScreen.Event.ResetSession -> {
+                    Timber.d("ChatPresenter: ResetSession event received. Clearing message history and resetting engine...")
                     messages = emptyList()
+                    throughputInfo = null
                     llmEngine.resetConversation(buildSystemPrompt(screen.topic), configStore.config)
                 }
 
@@ -166,6 +209,7 @@ class ChatPresenter(
                     modelSize = sizeText,
                     modelMemory = memoryText,
                     configInfo = configText,
+                    throughputInfo = throughputInfo,
                     topic = screen.topic,
                     eventSink = eventSink,
                 )
