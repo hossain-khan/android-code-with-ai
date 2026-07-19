@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -39,7 +40,6 @@ class ChatPresenter(
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
-        var pendingInput by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableStateOf(0) }
 
         var activeModel = modelRepository.getSelectedModel()
@@ -76,46 +76,47 @@ class ChatPresenter(
             isPreparing = false
         }
 
-        LaunchedEffect(pendingInput) {
-            val input = pendingInput ?: return@LaunchedEffect
-            pendingInput = null
-            isGenerating = true
-            Timber.d("ChatPresenter: Sending message: ${input.take(50)}...")
-
-            messages = messages + ChatMessage.User(input)
-            messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
-
-            try {
-                llmEngine.runInference(input) { partialToken, done ->
-                    val lastAgent = messages.last() as? ChatMessage.Agent
-                    if (lastAgent != null) {
-                        messages = messages.dropLast(1) +
-                            lastAgent.copy(
-                                content = lastAgent.content + partialToken,
-                                isStreaming = !done,
-                            )
-                    }
-                    if (done) {
-                        isGenerating = false
-                        Timber.d("ChatPresenter: Inference complete, saving session")
-                        // Save session outside of callback
-                        launch {
-                            sessionRepository.saveSession(screen.topic, messages)
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "ChatPresenter: Inference failed")
-                isGenerating = false
-                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
-                initTrigger++
-            }
-        }
+        val scope = rememberCoroutineScope()
 
         val eventSink: (ChatScreen.Event) -> Unit = { event ->
             when (event) {
                 is ChatScreen.Event.SendMessage -> {
-                    pendingInput = event.text
+                    if (!isGenerating) {
+                        isGenerating = true
+                        val input = event.text
+                        Timber.d("ChatPresenter: Sending message: ${input.take(50)}...")
+
+                        messages = messages + ChatMessage.User(input)
+                        messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
+
+                        scope.launch {
+                            try {
+                                llmEngine.runInference(input) { partialToken, done ->
+                                    scope.launch {
+                                        val lastAgent = messages.last() as? ChatMessage.Agent
+                                        if (lastAgent != null) {
+                                            messages = messages.dropLast(1) +
+                                                lastAgent.copy(
+                                                    content = lastAgent.content + partialToken,
+                                                    isStreaming = !done,
+                                                )
+                                        }
+                                        if (done) {
+                                            isGenerating = false
+                                            Timber.d("ChatPresenter: Inference complete, saving session")
+                                            sessionRepository.saveSession(screen.topic, messages)
+                                        }
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                if (e is kotlinx.coroutines.CancellationException) throw e
+                                Timber.e(e, "ChatPresenter: Inference failed")
+                                isGenerating = false
+                                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
+                                initTrigger++
+                            }
+                        }
+                    }
                 }
 
                 ChatScreen.Event.StopGeneration -> {
