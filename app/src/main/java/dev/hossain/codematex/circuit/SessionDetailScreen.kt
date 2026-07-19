@@ -3,7 +3,7 @@ package dev.hossain.codematex.circuit
 import android.os.Parcelable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
-import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import kotlinx.parcelize.Parcelize
@@ -11,7 +11,7 @@ import kotlinx.parcelize.Parcelize
 @Parcelize
 data class SessionDetailScreen(
     val sessionId: String,
-) : Screen {
+) : ParcelableScreen {
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State

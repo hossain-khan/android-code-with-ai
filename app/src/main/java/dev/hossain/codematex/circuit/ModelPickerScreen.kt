@@ -3,12 +3,12 @@ package dev.hossain.codematex.circuit
 import android.os.Parcelable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
-import com.slack.circuit.runtime.screen.Screen
+import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data object ModelPickerScreen : Screen {
+data object ModelPickerScreen : ParcelableScreen {
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State
