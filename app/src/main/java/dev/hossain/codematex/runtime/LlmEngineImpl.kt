@@ -34,6 +34,7 @@ class LlmEngineImpl(
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
     private var activeBackend: LlmEngine.Backend? = null
+    private var activeCallback: MessageCallback? = null
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
@@ -147,8 +148,7 @@ class LlmEngineImpl(
 
         withContext(Dispatchers.Default) {
             suspendCancellableCoroutine { cont ->
-                conv.sendMessageAsync(
-                    input,
+                val callback =
                     object : MessageCallback {
                         override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
                             val text =
@@ -169,8 +169,9 @@ class LlmEngineImpl(
                         override fun onError(throwable: Throwable) {
                             cont.resumeWithException(throwable)
                         }
-                    },
-                )
+                    }
+                activeCallback = callback
+                conv.sendMessageAsync(input, callback)
                 cont.invokeOnCancellation { conv.cancelProcess() }
             }
         }
@@ -237,22 +238,27 @@ class LlmEngineImpl(
 
         withContext(Dispatchers.Default) {
             try {
-                conv.sendMessageAsync(
-                    contextPrompt,
-                    object : MessageCallback {
-                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
-                            // Ignore response - we just want to seed context
-                        }
+                suspendCancellableCoroutine { cont ->
+                    val callback =
+                        object : MessageCallback {
+                            override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
+                                // Ignore response - we just want to seed context
+                            }
 
-                        override fun onDone() {
-                            Timber.d("LlmEngineImpl: Context restoration complete")
-                        }
+                            override fun onDone() {
+                                Timber.d("LlmEngineImpl: Context restoration complete")
+                                cont.resume(Unit)
+                            }
 
-                        override fun onError(throwable: Throwable) {
-                            Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
+                            override fun onError(throwable: Throwable) {
+                                Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
+                                cont.resumeWithException(throwable)
+                            }
                         }
-                    },
-                )
+                    activeCallback = callback
+                    conv.sendMessageAsync(contextPrompt, callback)
+                    cont.invokeOnCancellation { conv.cancelProcess() }
+                }
             } catch (e: Exception) {
                 Timber.w(e, "LlmEngineImpl: Failed to restore history")
             }
@@ -265,6 +271,7 @@ class LlmEngineImpl(
         conversation = null
         engine = null
         activeBackend = null
+        activeCallback = null
     }
 
     private fun LlmEngine.Backend.toLiteRtBackend(): Backend =
