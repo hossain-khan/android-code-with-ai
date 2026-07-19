@@ -73,6 +73,11 @@ class LlmEngineImpl(
                 var newEngine: Engine? = null
                 try {
                     Timber.d("LlmEngineImpl: Attempting to initialize engine with backend=$actualBackend")
+                    Timber.d(
+                        "LlmEngineImpl: Config parameters - MaxTokens: ${config.maxTokens}, " +
+                            "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}, " +
+                            "SystemPrompt length: ${systemInstruction?.length ?: 0}",
+                    )
                     val engineConfig =
                         EngineConfig(
                             modelPath = modelPath,
@@ -151,14 +156,18 @@ class LlmEngineImpl(
                 val callback =
                     object : MessageCallback {
                         override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
-                            val text =
-                                message.contents.contents.joinToString("") { content ->
-                                    when (content) {
-                                        is com.google.ai.edge.litertlm.Content.Text -> content.text
-                                        else -> ""
+                            try {
+                                val text =
+                                    message.contents.contents.joinToString("") { content ->
+                                        when (content) {
+                                            is com.google.ai.edge.litertlm.Content.Text -> content.text
+                                            else -> ""
+                                        }
                                     }
-                                }
-                            onToken(text, false)
+                                onToken(text, false)
+                            } catch (e: Exception) {
+                                Timber.e(e, "LlmEngineImpl: Error processing incoming JNI token message")
+                            }
                         }
 
                         override fun onDone() {
