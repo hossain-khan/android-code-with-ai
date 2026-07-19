@@ -101,7 +101,10 @@ class ModelRepositoryImpl
                                 sizeBytes = entry.sizeInBytes,
                                 localPath = localPath.takeIf { file.exists() },
                                 downloadStatus = status,
-                                preferredBackend = LlmEngine.Backend.CPU,
+                                // Default to GPU for hardware acceleration. LlmEngine handles fallback to CPU
+                                // if the device's GPU delegate fails to initialize.
+                                // See: https://ai.google.dev/gemma/docs/gpu_inference
+                                preferredBackend = LlmEngine.Backend.GPU,
                                 minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
                                 downloadProgress = progress,
                             )

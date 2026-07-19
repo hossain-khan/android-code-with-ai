@@ -18,6 +18,14 @@ import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+/**
+ * Implementation of [LlmEngine] that orchestrates on-device LLM inference using Google's LiteRT-LM.
+ *
+ * LiteRT (formerly TensorFlow Lite) is optimized for edge AI workloads.
+ * For hardware acceleration details and performance optimization guidelines, see:
+ * - LiteRT Android Delegates: https://ai.google.dev/edge/litert/android/delegates
+ * - Gemma On-Device GPU Inference: https://ai.google.dev/gemma/docs/gpu_inference
+ */
 class LlmEngineImpl(
     private val context: Context,
 ) : LlmEngine {
@@ -26,6 +34,18 @@ class LlmEngineImpl(
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
 
+    /**
+     * Initializes the LiteRT LLM engine.
+     *
+     * To ensure peak performance, this method implements a hardware acceleration fallback strategy.
+     * Since on-device LLM inference (e.g. Gemma 2B) is extremely compute-heavy on CPU, it defaults
+     * to GPU or NPU if supported by the device. If the preferred hardware backend fails to initialize
+     * (e.g. due to driver incompatibilities), it automatically falls back sequentially to lower backends
+     * (NPU -> GPU -> CPU) to guarantee execution.
+     *
+     * See:
+     * - LiteRT Hardware Delegates: https://ai.google.dev/edge/litert/android/delegates
+     */
     override suspend fun initialize(
         modelPath: String,
         backend: LlmEngine.Backend,
@@ -42,37 +62,65 @@ class LlmEngineImpl(
         currentConfig = config
 
         withContext(Dispatchers.Default) {
-            Timber.d("LlmEngineImpl: Initializing engine with path=$modelPath, backend=$backend, config=$config")
-            val engineConfig =
-                EngineConfig(
-                    modelPath = modelPath,
-                    backend = backend.toLiteRtBackend(),
-                    maxNumTokens = config.maxTokens,
-                )
+            var actualBackend = backend
+            var success = false
 
-            engine = Engine(engineConfig).also { it.initialize() }
-            Timber.d("LlmEngineImpl: Engine initialized")
+            while (!success) {
+                var newEngine: Engine? = null
+                try {
+                    Timber.d("LlmEngineImpl: Attempting to initialize engine with backend=$actualBackend")
+                    val engineConfig =
+                        EngineConfig(
+                            modelPath = modelPath,
+                            backend = actualBackend.toLiteRtBackend(),
+                            maxNumTokens = config.maxTokens,
+                        )
 
-            val samplerConfig =
-                SamplerConfig(
-                    topK = config.topK,
-                    topP = config.topP.toDouble(),
-                    temperature = config.temperature.toDouble(),
-                )
+                    newEngine = Engine(engineConfig).also { it.initialize() }
 
-            val conversationConfig =
-                ConversationConfig(
-                    systemInstruction =
-                        systemInstruction?.let {
-                            Contents.of(
-                                com.google.ai.edge.litertlm.Content
-                                    .Text(it),
-                            )
-                        },
-                    samplerConfig = samplerConfig,
-                )
+                    val samplerConfig =
+                        SamplerConfig(
+                            topK = config.topK,
+                            topP = config.topP.toDouble(),
+                            temperature = config.temperature.toDouble(),
+                        )
 
-            conversation = engine!!.createConversation(conversationConfig)
+                    val conversationConfig =
+                        ConversationConfig(
+                            systemInstruction =
+                                systemInstruction?.let {
+                                    Contents.of(
+                                        com.google.ai.edge.litertlm.Content
+                                            .Text(it),
+                                    )
+                                },
+                            samplerConfig = samplerConfig,
+                        )
+
+                    val newConversation = newEngine.createConversation(conversationConfig)
+
+                    engine = newEngine
+                    conversation = newConversation
+                    success = true
+                    Timber.d("LlmEngineImpl: Engine initialized successfully with backend=$actualBackend")
+                } catch (e: Exception) {
+                    newEngine?.close()
+                    Timber.w(e, "LlmEngineImpl: Failed to initialize with backend=$actualBackend")
+                    when (actualBackend) {
+                        LlmEngine.Backend.NPU -> {
+                            actualBackend = LlmEngine.Backend.GPU
+                        }
+
+                        LlmEngine.Backend.GPU -> {
+                            actualBackend = LlmEngine.Backend.CPU
+                        }
+
+                        LlmEngine.Backend.CPU -> {
+                            throw e
+                        }
+                    }
+                }
+            }
         }
     }
 
