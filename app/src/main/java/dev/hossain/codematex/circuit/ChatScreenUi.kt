@@ -15,17 +15,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -72,7 +76,7 @@ fun ChatScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ChatLayout(
     state: ChatScreen.State.Active,
@@ -81,60 +85,74 @@ private fun ChatLayout(
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .imePadding()
-                .safeDrawingPadding(),
-    ) {
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            state = listState,
-            reverseLayout = true,
-        ) {
-            items(state.messages.reversed(), key = { it.id }) { message ->
-                MessageBubble(
-                    message = message,
-                    onCopy = {
-                        state.eventSink(ChatScreen.Event.CopyMessage(it))
-                    },
-                )
-            }
-        }
-
-        Surface(tonalElevation = 2.dp) {
-            Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-                if (state.isPreparing) {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
+    Scaffold(
+        modifier = modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = { Text(state.topic.displayName) },
+                navigationIcon = {
+                    IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
+                },
+            )
+        },
+    ) { innerPadding ->
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .imePadding(),
+        ) {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                state = listState,
+                reverseLayout = true,
+            ) {
+                items(state.messages.reversed(), key = { it.id }) { message ->
+                    MessageBubble(
+                        message = message,
+                        onCopy = {
+                            state.eventSink(ChatScreen.Event.CopyMessage(it))
+                        },
+                    )
                 }
+            }
 
-                OutlinedTextField(
-                    value = inputText,
-                    onValueChange = { inputText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Ask about ${state.topic.displayName}...") },
-                    trailingIcon = {
-                        if (state.isGenerating) {
-                            IconButton(onClick = { state.eventSink(ChatScreen.Event.StopGeneration) }) {
-                                Icon(Icons.Default.Stop, contentDescription = "Stop")
-                            }
-                        } else {
-                            IconButton(
-                                enabled = inputText.isNotBlank(),
-                                onClick = {
-                                    state.eventSink(ChatScreen.Event.SendMessage(inputText))
-                                    inputText = ""
-                                },
-                            ) {
-                                Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
-                            }
+            Surface(tonalElevation = 2.dp) {
+                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+                    if (state.isPreparing) {
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
                         }
-                    },
-                    maxLines = 4,
-                )
+                    }
+
+                    OutlinedTextField(
+                        value = inputText,
+                        onValueChange = { inputText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("Ask about ${state.topic.displayName}...") },
+                        trailingIcon = {
+                            if (state.isGenerating) {
+                                IconButton(onClick = { state.eventSink(ChatScreen.Event.StopGeneration) }) {
+                                    Icon(Icons.Default.Stop, contentDescription = "Stop")
+                                }
+                            } else {
+                                IconButton(
+                                    enabled = inputText.isNotBlank(),
+                                    onClick = {
+                                        state.eventSink(ChatScreen.Event.SendMessage(inputText))
+                                        inputText = ""
+                                    },
+                                ) {
+                                    Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
+                                }
+                            }
+                        },
+                        maxLines = 4,
+                    )
+                }
             }
         }
     }
