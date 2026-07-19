@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
@@ -42,6 +43,8 @@ class ChatPresenter(
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
+        var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
+        val context = LocalContext.current
 
         var activeModel = modelRepository.getSelectedModel()
 
@@ -75,6 +78,42 @@ class ChatPresenter(
                 errorMessage = e.message
             }
             isPreparing = false
+        }
+
+        LaunchedEffect(isGenerating) {
+            if (isGenerating) {
+                var prevTicks =
+                    dev.hossain.codematex.util.DeviceMemory
+                        .getProcessCpuTicks()
+                var prevTime = System.currentTimeMillis()
+                val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+
+                while (isGenerating) {
+                    kotlinx.coroutines.delay(1000)
+                    val now = System.currentTimeMillis()
+                    val elapsedSec = (now - prevTime) / 1000f
+                    val currentTicks =
+                        dev.hossain.codematex.util.DeviceMemory
+                            .getProcessCpuTicks()
+
+                    if (elapsedSec > 0.1f) {
+                        val ticksDiff = currentTicks - prevTicks
+                        val cpuUsage = ((ticksDiff / 100f) / elapsedSec) * 100f
+                        val scaledCpu = (cpuUsage / cores).coerceIn(0f, 100f)
+
+                        val mem =
+                            dev.hossain.codematex.util.DeviceMemory
+                                .getMemoryStats(context)
+                        systemStatsInfo =
+                            "CPU: ${"%.0f".format(scaledCpu)}% • RAM: ${"%.1f".format(mem.usedGb)} GB / ${"%.1f".format(mem.totalGb)} GB"
+
+                        prevTicks = currentTicks
+                        prevTime = now
+                    }
+                }
+            } else {
+                systemStatsInfo = null
+            }
         }
 
         val scope = rememberCoroutineScope()
@@ -169,6 +208,7 @@ class ChatPresenter(
                     Timber.d("ChatPresenter: ResetSession event received. Clearing message history and resetting engine...")
                     messages = emptyList()
                     throughputInfo = null
+                    systemStatsInfo = null
                     llmEngine.resetConversation(buildSystemPrompt(screen.topic), configStore.config)
                 }
 
@@ -210,6 +250,7 @@ class ChatPresenter(
                     modelMemory = memoryText,
                     configInfo = configText,
                     throughputInfo = throughputInfo,
+                    systemStatsInfo = systemStatsInfo,
                     topic = screen.topic,
                     eventSink = eventSink,
                 )

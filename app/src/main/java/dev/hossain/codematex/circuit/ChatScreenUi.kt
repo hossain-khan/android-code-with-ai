@@ -3,6 +3,7 @@ package dev.hossain.codematex.circuit
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -242,8 +245,13 @@ private fun ModelTechnicalInfoPanel(
     state: ChatScreen.State.Active,
     modifier: Modifier = Modifier,
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable { isExpanded = !isExpanded },
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         tonalElevation = 1.dp,
     ) {
@@ -256,82 +264,112 @@ private fun ModelTechnicalInfoPanel(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f),
+                ) {
                     Text(
                         text = state.modelName,
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        state.modelSize?.let {
+
+                    // Backend Badge
+                    state.activeBackend?.let { backend ->
+                        val isAccelerated = backend == "GPU" || backend == "NPU"
+                        val containerColor =
+                            if (isAccelerated) {
+                                MaterialTheme.colorScheme.primaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.errorContainer
+                            }
+                        val textColor =
+                            if (isAccelerated) {
+                                MaterialTheme.colorScheme.onPrimaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.onErrorContainer
+                            }
+
+                        Surface(
+                            color = containerColor,
+                            shape = MaterialTheme.shapes.extraSmall,
+                        ) {
                             Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = backend,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                color = textColor,
                             )
                         }
+                    }
+
+                    // Collapsed speed indicator if active
+                    if (!isExpanded && state.throughputInfo != null) {
                         Text(
-                            text = "•",
+                            text = "• Generating...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = if (isExpanded) "Collapse info" else "Expand info",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            if (isExpanded) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    state.modelSize?.let {
+                        Text(
+                            text = it,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        state.modelMemory?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
                     }
-                }
-
-                // Backend Badge
-                state.activeBackend?.let { backend ->
-                    val isAccelerated = backend == "GPU" || backend == "NPU"
-                    val containerColor =
-                        if (isAccelerated) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.errorContainer
-                        }
-                    val textColor =
-                        if (isAccelerated) {
-                            MaterialTheme.colorScheme.onPrimaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.onErrorContainer
-                        }
-
-                    Surface(
-                        color = containerColor,
-                        shape = MaterialTheme.shapes.extraSmall,
-                    ) {
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    state.modelMemory?.let {
                         Text(
-                            text = backend,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            color = textColor,
+                            text = it,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
-            }
 
-            state.configInfo?.let { config ->
-                Text(
-                    text = config,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+                state.configInfo?.let { config ->
+                    Text(
+                        text = config,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
 
-            state.throughputInfo?.let { throughput ->
-                Text(
-                    text = throughput,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                state.throughputInfo?.let { throughput ->
+                    Text(
+                        text = throughput,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+
+                state.systemStatsInfo?.let { stats ->
+                    Text(
+                        text = stats,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
+                }
             }
         }
     }
