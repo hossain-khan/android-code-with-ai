@@ -134,9 +134,13 @@ class ModelDownloadWorker(
         content: String,
         progress: Int = 0,
         maxProgress: Int = 100,
-    ): ForegroundInfo =
-        ForegroundInfo(
-            1,
+    ): ForegroundInfo {
+        val cancelIntent =
+            androidx.work.WorkManager
+                .getInstance(applicationContext)
+                .createCancelPendingIntent(id)
+
+        val notification =
             androidx.core.app.NotificationCompat
                 .Builder(applicationContext, "model_download")
                 .setContentTitle("Model Download")
@@ -144,9 +148,18 @@ class ModelDownloadWorker(
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setOngoing(true)
                 .setProgress(maxProgress, progress, progress <= 0)
-                .build(),
+                .addAction(
+                    android.R.drawable.ic_menu_close_clear_cancel,
+                    "Cancel",
+                    cancelIntent,
+                ).build()
+
+        return ForegroundInfo(
+            1,
+            notification,
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
         )
+    }
 
     @WorkerKey(ModelDownloadWorker::class)
     @ContributesIntoMap(
