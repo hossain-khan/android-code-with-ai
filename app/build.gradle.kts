@@ -31,7 +31,7 @@ android {
         val apiKey = localProperties?.getProperty("SERVICE_API_KEY") ?: "MISSING-KEY"
         buildConfigField("String", "SERVICE_API_KEY", "\"$apiKey\"")
 
-        val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: true
+        val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: false
         buildConfigField("boolean", "DEV_MODE", devMode.toString())
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

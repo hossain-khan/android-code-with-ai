@@ -54,9 +54,39 @@ class ModelRepositoryImpl
     ) : ModelRepository {
         private val workManager = WorkManager.getInstance(context)
         private val modelsDir = File(context.getExternalFilesDir(null), "models")
+        private val prefs = context.getSharedPreferences("model_prefs", Context.MODE_PRIVATE)
 
-        private var selectedModelId: String? = null
-        private var cachedModels: List<AiModel> = emptyList()
+        private var selectedModelId: String?
+            get() = prefs.getString("selected_model_id", null)
+            set(value) {
+                prefs.edit().putString("selected_model_id", value).apply()
+            }
+
+        private var cachedModels: List<AiModel> = initialModelScan()
+
+        private fun initialModelScan(): List<AiModel> =
+            try {
+                val allowlist = loadAllowlist()
+                allowlist.map { entry ->
+                    val localPath = getModelLocalPath(entry)
+                    val file = File(localPath)
+                    val isDownloaded = file.exists()
+                    AiModel(
+                        id = entry.modelId,
+                        name = entry.modelId.substringAfterLast("/"),
+                        displayName = entry.modelId.substringAfterLast("/"),
+                        downloadUrl = buildDownloadUrl(entry),
+                        sizeBytes = entry.sizeInBytes,
+                        localPath = localPath.takeIf { isDownloaded },
+                        downloadStatus = if (isDownloaded) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
+                        preferredBackend = LlmEngine.Backend.GPU,
+                        minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
+                        downloadProgress = if (isDownloaded) 100 else 0,
+                    )
+                }
+            } catch (e: Exception) {
+                emptyList()
+            }
 
         override fun getAvailableModels(): Flow<List<AiModel>> =
             flow {
@@ -114,7 +144,19 @@ class ModelRepositoryImpl
                 }.collect {}
             }
 
-        override fun getSelectedModel(): AiModel? = cachedModels.find { it.id == selectedModelId }
+        override fun getSelectedModel(): AiModel? {
+            val savedId = selectedModelId
+            val savedModel = cachedModels.find { it.id == savedId && it.downloadStatus == DownloadStatus.DOWNLOADED }
+            if (savedModel != null) return savedModel
+
+            // Fallback: auto-select the first available downloaded model
+            val firstDownloaded = cachedModels.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
+            if (firstDownloaded != null) {
+                selectedModelId = firstDownloaded.id
+                return firstDownloaded
+            }
+            return null
+        }
 
         override suspend fun selectModel(model: AiModel) {
             selectedModelId = model.id
