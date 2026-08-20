@@ -23,8 +23,9 @@ import kotlin.coroutines.resumeWithException
  *
  * LiteRT (formerly TensorFlow Lite) is optimized for edge AI workloads.
  * For hardware acceleration details and performance optimization guidelines, see:
- * - LiteRT Android Delegates: https://ai.google.dev/edge/litert/android/delegates
- * - Gemma On-Device GPU Inference: https://ai.google.dev/gemma/docs/gpu_inference
+ * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
+ * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
+ * - Google AI Edge LiteRT-LM: https://github.com/google-ai-edge/LiteRT-LM
  */
 class LlmEngineImpl(
     private val context: Context,
@@ -36,6 +37,7 @@ class LlmEngineImpl(
     private var currentConfig: ModelConfig = ModelConfig()
     private var activeBackend: LlmEngine.Backend? = null
     private var activeCallback: MessageCallback? = null
+    private val unsupportedBackends = mutableSetOf<LlmEngine.Backend>()
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
@@ -49,7 +51,8 @@ class LlmEngineImpl(
      * (NPU -> GPU -> CPU) to guarantee execution.
      *
      * See:
-     * - LiteRT Hardware Delegates: https://ai.google.dev/edge/litert/android/delegates
+     * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
+     * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
      */
     override suspend fun initialize(
         modelPath: String,
@@ -62,6 +65,16 @@ class LlmEngineImpl(
             return
         }
 
+        // If the model is already loaded in memory, reuse the compiled engine and only reset the conversation.
+        // This avoids reloading multi-gigabyte model weights from disk and recompiling delegates (~5ms vs ~5000ms).
+        if (engine != null && currentModelPath == modelPath) {
+            Timber.d("LlmEngineImpl: Reusing already loaded in-memory engine for modelPath=$modelPath")
+            currentSystemInstruction = systemInstruction
+            currentConfig = config
+            resetConversation(systemInstruction, config)
+            return
+        }
+
         cleanup()
         currentModelPath = modelPath
         currentSystemInstruction = systemInstruction
@@ -69,6 +82,10 @@ class LlmEngineImpl(
 
         withContext(Dispatchers.Default) {
             var actualBackend = backend
+            if (unsupportedBackends.contains(actualBackend)) {
+                Timber.d("LlmEngineImpl: Backend $actualBackend is marked unsupported on this device. Starting with CPU.")
+                actualBackend = LlmEngine.Backend.CPU
+            }
             var success = false
 
             while (!success) {
@@ -117,6 +134,7 @@ class LlmEngineImpl(
                     Timber.d("LlmEngineImpl: Engine initialized successfully with backend=$actualBackend")
                 } catch (e: Exception) {
                     newEngine?.close()
+                    unsupportedBackends.add(actualBackend)
                     Timber.w(e, "LlmEngineImpl: Failed to initialize with backend=$actualBackend")
                     when (actualBackend) {
                         LlmEngine.Backend.NPU -> {
@@ -154,6 +172,7 @@ class LlmEngineImpl(
         } catch (e: Exception) {
             val failedBackend = activeBackend
             if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+                unsupportedBackends.add(failedBackend)
                 Timber.w(
                     e,
                     "LlmEngineImpl: Inference failed on hardware acceleration ($failedBackend). Falling back to CPU...",
@@ -259,6 +278,7 @@ class LlmEngineImpl(
         } catch (e: Exception) {
             val failedBackend = activeBackend
             if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+                unsupportedBackends.add(failedBackend)
                 Timber.w(
                     e,
                     "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",

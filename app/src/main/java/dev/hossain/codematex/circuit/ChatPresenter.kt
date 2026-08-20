@@ -53,6 +53,14 @@ class ChatPresenter(
             activeModel = DevModels.STUB_MODEL
         }
 
+        // Instantly load messages from disk into UI state so the user sees their conversation immediately.
+        LaunchedEffect(screen.sessionId) {
+            if (screen.sessionId != null && messages.isEmpty()) {
+                Timber.d("ChatPresenter: Instantly loading messages for session=${screen.sessionId}")
+                messages = sessionRepository.getMessages(screen.sessionId)
+            }
+        }
+
         LaunchedEffect(activeModel, initTrigger) {
             if (activeModel == null) {
                 Timber.w("ChatPresenter: No model selected")
@@ -68,10 +76,16 @@ class ChatPresenter(
                     config = configStore.config,
                 )
                 Timber.d("ChatPresenter: Model initialized successfully")
-                if (screen.sessionId != null && messages.isEmpty()) {
-                    Timber.d("ChatPresenter: Restoring session=${screen.sessionId}")
-                    messages = sessionRepository.getMessages(screen.sessionId)
-                    llmEngine.restoreHistory(messages)
+                if (screen.sessionId != null) {
+                    val sessionMessages =
+                        if (messages.isNotEmpty()) {
+                            messages
+                        } else {
+                            val loaded = sessionRepository.getMessages(screen.sessionId)
+                            messages = loaded
+                            loaded
+                        }
+                    llmEngine.restoreHistory(sessionMessages)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "ChatPresenter: Model initialization failed")

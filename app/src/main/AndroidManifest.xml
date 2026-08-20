@@ -23,6 +23,37 @@
         tools:targetApi="37"
         android:enableOnBackInvokedCallback="true"
         tools:replace="android:appComponentFactory">
+
+        <!--
+            Native Library Access for On-Device GPU Inference (LiteRT / TensorFlow Lite GPU Delegates)
+            
+            Context & Guidelines:
+            1. Android Linker Namespace Isolation: On Android 8.0+ (API 26+), apps cannot dynamically load
+               vendor libraries (/vendor/lib64/) via dlopen() unless declared via <uses-native-library>.
+            2. Hardware Acceleration: Declaring 'libOpenCL.so' and 'libvndksupport.so' allows LiteRT's GPU
+               delegate to access vendor OpenCL drivers on supported chipsets (Qualcomm Snapdragon Adreno,
+               MediaTek / Samsung Exynos Mali).
+            3. Graceful Fallback: Setting android:required="false" is mandatory so that devices without
+               OpenCL drivers (e.g., Google Pixel Tensor devices utilizing Vulkan/WebGPU, or Emulators)
+               can still install and run the app without package installation rejection.
+            
+            Official Documentation & Sources:
+            - Android Native Libraries Manifest Guide:
+              https://developer.android.com/guide/topics/manifest/uses-native-library-element
+            - TensorFlow Lite / LiteRT GPU Delegate Specification (OpenCL on Android):
+              https://www.tensorflow.org/lite/performance/gpu#android
+            - Google AI Edge LiteRT Documentation:
+              https://ai.google.dev/edge/litert
+            - Google AI Edge LiteRT-LM Repository:
+              https://github.com/google-ai-edge/LiteRT-LM
+        -->
+        <uses-native-library
+            android:name="libOpenCL.so"
+            android:required="false" />
+        <uses-native-library
+            android:name="libvndksupport.so"
+            android:required="false" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
