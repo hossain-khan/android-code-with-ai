@@ -29,11 +29,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -66,6 +70,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.halilibo.richtext.commonmark.Markdown
@@ -90,6 +95,10 @@ fun ChatScreenContent(
             }
         }
 
+        is ChatScreen.State.NoModelSelected -> {
+            NoModelSelectedLayout(state = state, modifier = modifier)
+        }
+
         is ChatScreen.State.Error -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(
@@ -106,6 +115,150 @@ fun ChatScreenContent(
 
         is ChatScreen.State.Active -> {
             ChatLayout(state, modifier)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun NoModelSelectedLayout(
+    state: ChatScreen.State.NoModelSelected,
+    modifier: Modifier = Modifier,
+) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val visualInfo = state.topic.visualInfo
+
+    Scaffold(
+        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = visualInfo.accentColor.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+                        ) {
+                            Text(
+                                text = visualInfo.iconGlyph,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = visualInfo.accentColor,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            )
+                        }
+                        Text(
+                            text = state.topic.displayName,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { innerPadding ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Card(
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.92f)
+                        .padding(16.dp),
+                shape = MaterialTheme.shapes.extraLarge,
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+            ) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = visualInfo.accentColor.copy(alpha = 0.18f),
+                        border = BorderStroke(1.5.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                        modifier = Modifier.size(72.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (state.hasDownloadedModels) Icons.Default.Tune else Icons.Default.CloudDownload,
+                                contentDescription = null,
+                                tint = visualInfo.accentColor,
+                                modifier = Modifier.size(36.dp),
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = if (state.hasDownloadedModels) "Select an On-Device Model" else "No AI Model Downloaded",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Text(
+                        text =
+                            if (state.hasDownloadedModels) {
+                                "You have downloaded models ready on your device. Select an active model to start chatting with your AI coding tutor."
+                            } else {
+                                "CodeMateX runs 100% locally on your device for privacy and offline tutoring. Download an open LLM model (e.g. Gemma) to get started."
+                            },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
+                        onClick = { state.eventSink(ChatScreen.Event.OpenModelPicker) },
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = visualInfo.accentColor,
+                                contentColor = MaterialTheme.colorScheme.surface,
+                            ),
+                        shape = MaterialTheme.shapes.large,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (state.hasDownloadedModels) Icons.Default.Tune else Icons.Default.CloudDownload,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Text(
+                                text = if (state.hasDownloadedModels) "Select AI Model" else "Download AI Models",
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

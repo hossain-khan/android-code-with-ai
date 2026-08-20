@@ -17,6 +17,12 @@ data class ChatScreen(
     sealed interface State : CircuitUiState {
         data object Loading : State
 
+        data class NoModelSelected(
+            val hasDownloadedModels: Boolean,
+            val topic: CodingTopic,
+            val eventSink: (Event) -> Unit,
+        ) : State
+
         data class Active(
             val messages: List<ChatMessage>,
             val isGenerating: Boolean,
@@ -53,6 +59,8 @@ data class ChatScreen(
         data class CopyMessage(
             val content: String,
         ) : Event
+
+        data object OpenModelPicker : Event
 
         data object Back : Event
     }

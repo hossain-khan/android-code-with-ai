@@ -1,5 +1,6 @@
 package dev.hossain.codematex.circuit
 
+import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -7,17 +8,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.circuit.overlay.ModelConfigStore
+import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DevModels
+import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -34,6 +37,7 @@ class ChatPresenter(
     private val modelRepository: ModelRepository,
     private val sessionRepository: ChatSessionRepository,
     private val configStore: ModelConfigStore,
+    @param:ApplicationContext private val context: Context,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -44,14 +48,15 @@ class ChatPresenter(
         var initTrigger by rememberRetained { mutableStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
-        val context = LocalContext.current
+        var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
+
+        LaunchedEffect(Unit) {
+            modelRepository.getAvailableModels().collect { models ->
+                availableModels = models
+            }
+        }
 
         var activeModel = modelRepository.getSelectedModel()
-
-        if (BuildConfig.DEV_MODE && activeModel == null) {
-            Timber.d("ChatPresenter: DEV_MODE - Auto-selecting stub model")
-            activeModel = DevModels.STUB_MODEL
-        }
 
         // Instantly load messages from disk into UI state so the user sees their conversation immediately.
         LaunchedEffect(screen.sessionId) {
@@ -181,16 +186,18 @@ class ChatPresenter(
                                         }
 
                                         if (done) {
+                                            Timber.d("ChatPresenter: Generation done callback received.")
                                             isGenerating = false
-                                            val totalTimeMs = System.currentTimeMillis() - startTime
-                                            val decodeDurationMs = System.currentTimeMillis() - firstTokenTime
-                                            val speedText =
-                                                if (decodeDurationMs >
-                                                    0
-                                                ) {
-                                                    "%.2f".format((tokenCount * 1000f) / decodeDurationMs)
+                                            val totalTimeMs = now - startTime
+                                            val decodeTimeSec = (now - firstTokenTime) / 1000f
+                                            val speed = if (decodeTimeSec > 0) tokenCount / decodeTimeSec else 0f
+                                            val speedText = "%.1f".format(speed)
+                                            val ttft = firstTokenTime - startTime
+                                            throughputInfo =
+                                                if (ttft > 0) {
+                                                    "TTFT: ${ttft}ms • Speed: $speedText t/s"
                                                 } else {
-                                                    "N/A"
+                                                    "Speed: $speedText t/s"
                                                 }
                                             Timber.d(
                                                 "ChatPresenter: Inference completed successfully. Total tokens: $tokenCount, TTFT: ${firstTokenTime - startTime}ms, Decode speed: $speedText t/s, Total duration: ${totalTimeMs}ms",
@@ -232,6 +239,10 @@ class ChatPresenter(
 
                 is ChatScreen.Event.CopyMessage -> {}
 
+                ChatScreen.Event.OpenModelPicker -> {
+                    navigator.goTo(ModelPickerScreen)
+                }
+
                 ChatScreen.Event.Back -> {
                     navigator.pop()
                 }
@@ -244,7 +255,13 @@ class ChatPresenter(
             }
 
             activeModel == null -> {
-                ChatScreen.State.Loading
+                val hasDownloadedModels =
+                    availableModels.any { it.downloadStatus == dev.hossain.codematex.data.model.DownloadStatus.DOWNLOADED }
+                ChatScreen.State.NoModelSelected(
+                    hasDownloadedModels = hasDownloadedModels,
+                    topic = screen.topic,
+                    eventSink = eventSink,
+                )
             }
 
             else -> {
