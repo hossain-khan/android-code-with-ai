@@ -31,6 +31,7 @@ class LlmEngineImpl(
 ) : LlmEngine {
     private var engine: Engine? = null
     private var conversation: Conversation? = null
+    private var currentModelPath: String = ""
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
     private var activeBackend: LlmEngine.Backend? = null
@@ -62,6 +63,7 @@ class LlmEngineImpl(
         }
 
         cleanup()
+        currentModelPath = modelPath
         currentSystemInstruction = systemInstruction
         currentConfig = config
 
@@ -147,6 +149,32 @@ class LlmEngineImpl(
             return
         }
 
+        try {
+            executeInference(input, onToken)
+        } catch (e: Exception) {
+            val failedBackend = activeBackend
+            if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+                Timber.w(
+                    e,
+                    "LlmEngineImpl: Inference failed on hardware acceleration ($failedBackend). Falling back to CPU...",
+                )
+                initialize(
+                    modelPath = currentModelPath,
+                    backend = LlmEngine.Backend.CPU,
+                    systemInstruction = currentSystemInstruction,
+                    config = currentConfig,
+                )
+                executeInference(input, onToken)
+            } else {
+                throw e
+            }
+        }
+    }
+
+    private suspend fun executeInference(
+        input: String,
+        onToken: (partialResult: String, done: Boolean) -> Unit,
+    ) {
         val conv =
             conversation
                 ?: throw IllegalStateException("Engine not initialized. Call initialize() first.")
@@ -223,10 +251,33 @@ class LlmEngineImpl(
     override suspend fun restoreHistory(messages: List<ChatMessage>) {
         if (engine == null) return
 
-        val conv = conversation ?: return
-
         val priorMessages = messages.filterIsInstance<ChatMessage.User>() + messages.filterIsInstance<ChatMessage.Agent>()
         if (priorMessages.isEmpty()) return
+
+        try {
+            executeRestoreHistory(priorMessages)
+        } catch (e: Exception) {
+            val failedBackend = activeBackend
+            if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+                Timber.w(
+                    e,
+                    "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",
+                )
+                initialize(
+                    modelPath = currentModelPath,
+                    backend = LlmEngine.Backend.CPU,
+                    systemInstruction = currentSystemInstruction,
+                    config = currentConfig,
+                )
+                executeRestoreHistory(priorMessages)
+            } else {
+                Timber.w(e, "LlmEngineImpl: Failed to restore history")
+            }
+        }
+    }
+
+    private suspend fun executeRestoreHistory(priorMessages: List<ChatMessage>) {
+        val conv = conversation ?: return
 
         Timber.d("LlmEngineImpl: Restoring ${priorMessages.size} prior messages to conversation context")
 
@@ -246,30 +297,26 @@ class LlmEngineImpl(
             }
 
         withContext(Dispatchers.Default) {
-            try {
-                suspendCancellableCoroutine { cont ->
-                    val callback =
-                        object : MessageCallback {
-                            override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
-                                // Ignore response - we just want to seed context
-                            }
-
-                            override fun onDone() {
-                                Timber.d("LlmEngineImpl: Context restoration complete")
-                                cont.resume(Unit)
-                            }
-
-                            override fun onError(throwable: Throwable) {
-                                Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
-                                cont.resumeWithException(throwable)
-                            }
+            suspendCancellableCoroutine { cont ->
+                val callback =
+                    object : MessageCallback {
+                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
+                            // Ignore response - we just want to seed context
                         }
-                    activeCallback = callback
-                    conv.sendMessageAsync(contextPrompt, callback)
-                    cont.invokeOnCancellation { conv.cancelProcess() }
-                }
-            } catch (e: Exception) {
-                Timber.w(e, "LlmEngineImpl: Failed to restore history")
+
+                        override fun onDone() {
+                            Timber.d("LlmEngineImpl: Context restoration complete")
+                            cont.resume(Unit)
+                        }
+
+                        override fun onError(throwable: Throwable) {
+                            Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
+                            cont.resumeWithException(throwable)
+                        }
+                    }
+                activeCallback = callback
+                conv.sendMessageAsync(contextPrompt, callback)
+                cont.invokeOnCancellation { conv.cancelProcess() }
             }
         }
     }
