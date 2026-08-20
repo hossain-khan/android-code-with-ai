@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.metro)
     alias(libs.plugins.kotlinter)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlinx.kover)
 }
 
 android {
@@ -117,6 +118,66 @@ kotlin {
 
 configurations.all {
     exclude(group = "org.jetbrains.compose.material3")
+}
+
+// Kotlin Code Coverage - https://github.com/Kotlin/kotlinx-kover
+kover {
+    // Configure reports for the debug build variant
+    // Key tasks:
+    // - koverHtmlReportDebug - Generates HTML coverage report for 'debug' variant
+    // - koverXmlReportDebug - Generates XML coverage report for 'debug' variant
+    // - koverVerifyDebug - Verifies coverage rules for 'debug' variant
+    reports {
+        // filters for all report types of all build variants
+        filters {
+            excludes {
+                androidGeneratedClasses()
+                // Exclude generated code and UI boilerplate to focus coverage on business logic
+                classes(
+                    // Metro / DI generated factories and binders
+                    "*$$$*",
+                    "*_Factory*",
+                    "*Factory$*",
+                    // Room generated code
+                    "*_Impl*",
+                    // Moshi / Serialization generated adapters
+                    "*JsonAdapter*",
+                    "*Serializer*",
+                    // Circuit generated code
+                    "*Circuit*",
+                    // Compose UI Composables, screens, themes, and views
+                    "*.ui.theme.*",
+                    "*ScreenKt*",
+                    "*ViewKt*",
+                    "*ContentKt*",
+                    "*ComponentsKt*",
+                    "*BottomSheetKt*",
+                    "*PreviewKt*",
+                    "*ComposableSingletons*",
+                    // Android UI entry points
+                    "*Activity*",
+                    "*Application*",
+                )
+                annotatedBy(
+                    "androidx.compose.runtime.Composable",
+                    "androidx.compose.ui.tooling.preview.Preview",
+                    "*Composable",
+                    "*Parcelize",
+                    "*Preview",
+                    "javax.annotation.processing.Generated",
+                )
+            }
+        }
+
+        variant("release") {
+            // verification only for 'release' build variant
+            verify {
+                rule {
+                    minBound(50)
+                }
+            }
+        }
+    }
 }
 
 dependencies {

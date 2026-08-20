@@ -51,6 +51,10 @@ room = "2.7.1"
 richtext = "1.0.0-alpha05"
 timber = "5.0.1"
 
+# Kover - Kotlin code coverage
+# https://github.com/Kotlin/kotlinx-kover
+koverPlugin = "0.9.9"
+
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -145,5 +149,9 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 
 # Room - https://developer.android.com/training/data-storage/room
 room = { id = "androidx.room", version.ref = "room" }
+
+# Kover is a set of solutions for collecting test coverage of Kotlin code compiled for JVM and Android platforms.
+# https://github.com/Kotlin/kotlinx-kover?tab=readme-ov-file#kover-gradle-plugin
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "koverPlugin" }
 
 

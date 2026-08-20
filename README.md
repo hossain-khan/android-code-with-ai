@@ -104,6 +104,7 @@ GitHub Actions workflows:
 - **CI builds** on PRs and `main` branch
 - **Kotlin lint** (kotlinter) + **Android lint** checks
 - **Unit tests** (Presenter tests with Circuit test utilities)
+- **Code coverage** ([Kover](https://github.com/Kotlin/kotlinx-kover)) + Codecov integration
 - **Release builds** (debug-signed, configure production keystore for releases)
 
 ## License
