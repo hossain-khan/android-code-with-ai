@@ -60,11 +60,34 @@ The chat screen contains a sticky benchmarking dashboard right below the top app
 
 ---
 
-## 5. UI/UX Design System Guidelines
+## 5. UI/UX Design System & Adaptive Guidelines
 
-To ensure a modern, premium, and user-friendly experience, CodeMateX must adhere to the **Material 3 Expressive** design guidelines.
-* **Expressive Tokens**: Implement dynamic theme palettes, shapes, and expressive components (e.g. `CircularWavyProgressIndicator`) following the Material 3 design system. Ensure correct dark/light theme background propagation down screen nodes.
-* **Reference Issue**: For detailed goals and tracking of design improvements, see [GitHub Issue #1](https://github.com/hossain-khan/android-code-with-ai/issues/1).
+To ensure a modern, premium, and user-friendly experience, CodeMateX strictly adheres to the **Material 3 Expressive** and **Material You Adaptive** design specifications. **Every agent implementing or modifying UI must consult [docs/DESIGN_GUIDELINES.md](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/docs/DESIGN_GUIDELINES.md) and follow these core rules:**
+
+### A. Material 3 Surface Container Hierarchy
+- Use semantic M3 surface containers rather than arbitrary color overrides:
+  - `surfaceContainerLow`: Standard cards (`TopicCard`, `SessionCard`, `ModelCard`).
+  - `surfaceContainer`: Top app bars, bottom chat input dock, dialog surfaces.
+  - `surfaceContainerHigh` / `surfaceContainerHighest`: Hero banners, highlighted benchmarking panels, chips, glyph badges.
+- Always provide subtle borders on cards using `BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))`. (Note: use `Card` with `border`, do NOT use `border` on `ElevatedCard`).
+
+### B. Material You Adaptive Multi-Pane Design
+- Never design screens exclusively for compact phones. Always inspect window size class:
+  ```kotlin
+  val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
+  val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+  ```
+- **Compact (<600dp)**: Single vertical scrolling feed with compact cards and horizontal carousels.
+- **Medium & Expanded (>=600dp / Foldables & Tablets)**: Multi-column grid (`GridCells.Adaptive(minSize = 340.dp)`) or 2-pane master-detail layout (360dp left control pane + expanded right content pane).
+
+### C. Atmospheric Jetcaster Lighting & Topic Accents
+- Screen scaffolds and hero banners should leverage `Modifier.radialGradientScrim()` from [GradientScrim.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt).
+- Dynamically tint ambient lighting, glyph badges, and borders using the active topic's visual metadata from [TopicTheme.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/theme/TopicTheme.kt).
+
+### D. Expressive Tokens & Empty States
+- Always use `CircularWavyProgressIndicator` / `LinearWavyProgressIndicator` for loading/streaming states.
+- Always provide an expressive empty state with topic glyphs and starter action chips rather than a blank screen.
+- Standardize on `pinnedScrollBehavior` attached to both `TopAppBar` and parent `Scaffold.nestedScroll()`.
 
 ---
 
