@@ -1,35 +1,49 @@
 package dev.hossain.codematex.circuit
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.ManageAccounts
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,12 +52,18 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -80,11 +100,23 @@ private fun HomeLayout(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Code with AI") },
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                        Text("CodeMateX", fontWeight = FontWeight.Bold)
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 actions = {
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ManageModels) }) {
-                        Icon(Icons.Default.ManageAccounts, contentDescription = "Manage Models")
+                        Icon(Icons.Default.Memory, contentDescription = "Manage Models")
                     }
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
@@ -103,25 +135,36 @@ private fun HomeLayout(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                // Left Column: Topics Grid
+                // Left Column: Hero Banner + Topics Grid
                 Column(
                     modifier =
                         Modifier
-                            .weight(1.2f)
-                            .fillMaxHeight()
-                            .verticalScroll(rememberScrollState()),
+                            .weight(1.3f)
+                            .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Text("Choose a topic", style = MaterialTheme.typography.titleLarge)
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    HeroBanner(
+                        hasDownloadedModel = state.hasDownloadedModel,
+                        onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
+                    )
+
+                    Text(
+                        "Explore Topics",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 220.dp),
+                        modifier = Modifier.weight(1f),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        state.topics.forEach { topic ->
-                            TopicChip(topic) {
-                                state.eventSink(HomeScreen.Event.TopicSelected(topic))
-                            }
+                        items(state.topics) { topic ->
+                            TopicCard(
+                                topic = topic,
+                                onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
+                            )
                         }
                     }
                 }
@@ -134,17 +177,43 @@ private fun HomeLayout(
                             .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Text("Recent sessions", style = MaterialTheme.typography.titleLarge)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "Recent Sessions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                        if (state.recentSessions.isNotEmpty()) {
+                            FilledTonalButton(
+                                onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            ) {
+                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+
                     if (state.recentSessions.isEmpty()) {
-                        Box(
+                        Surface(
                             modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
+                            color = MaterialTheme.colorScheme.surfaceContainerLow,
+                            shape = MaterialTheme.shapes.large,
                         ) {
-                            Text(
-                                "No recent sessions yet",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                            Box(
+                                modifier = Modifier.fillMaxSize().padding(24.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    "No recent sessions yet.\nSelect a topic on the left to start coding!",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                )
+                            }
                         }
                     } else {
                         LazyColumn(
@@ -165,25 +234,56 @@ private fun HomeLayout(
             LazyColumn(
                 modifier = Modifier.padding(innerPadding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 item {
-                    Text("Choose a topic", style = MaterialTheme.typography.titleMedium)
+                    HeroBanner(
+                        hasDownloadedModel = state.hasDownloadedModel,
+                        onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
+                    )
                 }
 
                 item {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Choose a Topic",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+                item {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(vertical = 4.dp),
+                    ) {
                         items(state.topics) { topic ->
-                            TopicChip(topic) {
-                                state.eventSink(HomeScreen.Event.TopicSelected(topic))
-                            }
+                            TopicCompactCard(
+                                topic = topic,
+                                onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
+                            )
                         }
                     }
                 }
 
                 if (state.recentSessions.isNotEmpty()) {
                     item {
-                        Text("Recent sessions", style = MaterialTheme.typography.titleMedium)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                "Recent Sessions",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            FilledTonalButton(
+                                onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            ) {
+                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
                     }
 
                     items(state.recentSessions) { session ->
@@ -197,17 +297,223 @@ private fun HomeLayout(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TopicChip(
+private fun HeroBanner(
+    hasDownloadedModel: Boolean,
+    onManageModels: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+        shape = MaterialTheme.shapes.extraLarge,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "On-Device AI Tutor",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Learn & Debug Locally",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color =
+                        if (hasDownloadedModel) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        },
+                    modifier = Modifier.size(40.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            if (hasDownloadedModel) Icons.Default.CheckCircle else Icons.Default.Download,
+                            contentDescription = null,
+                            tint =
+                                if (hasDownloadedModel) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                },
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                }
+            }
+
+            Text(
+                "Run optimized LLMs locally on your device with zero cloud latency and complete code privacy.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            FilledTonalButton(
+                onClick = onManageModels,
+                colors =
+                    ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    ),
+            ) {
+                Icon(
+                    Icons.Default.Memory,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    if (hasDownloadedModel) "Manage AI Models" else "Download AI Model",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TopicCard(
     topic: CodingTopic,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    FilterChip(
-        selected = false,
-        onClick = onClick,
-        label = { Text(topic.displayName) },
-    )
+    val visualInfo = topic.visualInfo
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.3f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = visualInfo.accentColor.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                ) {
+                    Text(
+                        text = visualInfo.iconGlyph,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+
+                Icon(
+                    Icons.AutoMirrored.Default.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            Text(
+                text = topic.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Text(
+                text = visualInfo.tagline,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TopicCompactCard(
+    topic: CodingTopic,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val visualInfo = topic.visualInfo
+    OutlinedCard(
+        modifier =
+            modifier
+                .width(180.dp)
+                .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.small,
+                color = visualInfo.accentColor.copy(alpha = 0.15f),
+            ) {
+                Text(
+                    text = visualInfo.iconGlyph,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = visualInfo.accentColor,
+                )
+            }
+
+            Text(
+                text = topic.displayName,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Text(
+                text = visualInfo.tagline,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
 }
 
 @Composable
@@ -215,6 +521,7 @@ private fun SessionCard(
     session: ChatSession,
     onClick: () -> Unit,
 ) {
+    val visualInfo = session.topic.visualInfo
     Card(
         modifier =
             Modifier
@@ -224,29 +531,66 @@ private fun SessionCard(
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(session.title, style = MaterialTheme.typography.titleSmall)
-            Text(
-                session.summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Topic accent vertical strip
+            Box(
+                modifier =
+                    Modifier
+                        .width(4.dp)
+                        .height(44.dp)
+                        .clip(CircleShape)
+                        .background(visualInfo.accentColor),
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    session.topic.displayName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    session.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    "${session.messageCount} messages",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
+                    session.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        session.topic.displayName,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = visualInfo.accentColor,
+                        fontWeight = FontWeight.Medium,
+                    )
+                    Text(
+                        "${session.messageCount} messages",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
+
+            Icon(
+                Icons.AutoMirrored.Default.ArrowForward,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(16.dp),
+            )
         }
     }
 }

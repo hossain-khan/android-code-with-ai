@@ -3,37 +3,51 @@ package dev.hossain.codematex.circuit
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -50,12 +64,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.halilibo.richtext.commonmark.Markdown
 import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -74,7 +92,10 @@ fun ChatScreenContent(
 
         is ChatScreen.State.Error -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text("Error: ${state.message}", color = MaterialTheme.colorScheme.error)
                     IconButton(onClick = { state.eventSink(ChatScreen.Event.Retry) }) {
                         Text("Retry")
@@ -89,7 +110,12 @@ fun ChatScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalLayoutApi::class,
+)
 @Composable
 private fun ChatLayout(
     state: ChatScreen.State.Active,
@@ -100,12 +126,38 @@ private fun ChatLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    val visualInfo = state.topic.visualInfo
 
     Scaffold(
-        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
-                title = { Text(state.topic.displayName) },
+                title = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = visualInfo.accentColor.copy(alpha = 0.2f),
+                            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                        ) {
+                            Text(
+                                text = visualInfo.iconGlyph,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = visualInfo.accentColor,
+                            )
+                        }
+                        Text(state.topic.displayName, fontWeight = FontWeight.Bold)
+                    }
+                },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
@@ -116,7 +168,6 @@ private fun ChatLayout(
         },
     ) { innerPadding ->
         if (isExpanded) {
-            // Adaptive 2-Pane Supporting Layout for Tablets / Foldables / Large Screens
             Row(
                 modifier =
                     Modifier
@@ -124,25 +175,42 @@ private fun ChatLayout(
                         .padding(innerPadding)
                         .imePadding(),
             ) {
-                // Left/Primary Pane: Chat Conversation Feed & Input
                 Column(
                     modifier =
                         Modifier
                             .weight(1f)
                             .fillMaxHeight(),
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        state = listState,
-                        reverseLayout = true,
-                    ) {
-                        items(state.messages.reversed(), key = { it.id }) { message ->
-                            MessageBubble(
-                                message = message,
-                                onCopy = {
-                                    state.eventSink(ChatScreen.Event.CopyMessage(it))
-                                },
-                            )
+                    if (state.messages.isEmpty()) {
+                        EmptyChatTopicStarters(
+                            visualInfo = visualInfo,
+                            onPromptSelected = { prompt ->
+                                state.eventSink(ChatScreen.Event.SendMessage(prompt))
+                            },
+                            modifier = Modifier.weight(1f),
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.weight(1f),
+                            state = listState,
+                            reverseLayout = true,
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            if (state.isGenerating) {
+                                item {
+                                    GeneratingIndicator(visualInfo.accentColor)
+                                }
+                            }
+                            items(state.messages.reversed(), key = { it.id }) { message ->
+                                MessageBubble(
+                                    message = message,
+                                    visualAccent = visualInfo.accentColor,
+                                    onCopy = {
+                                        state.eventSink(ChatScreen.Event.CopyMessage(it))
+                                    },
+                                )
+                            }
                         }
                     }
 
@@ -157,7 +225,6 @@ private fun ChatLayout(
                     )
                 }
 
-                // Right/Supporting Pane: Telemetry & Benchmark Dashboard
                 Surface(
                     modifier =
                         Modifier
@@ -173,13 +240,13 @@ private fun ChatLayout(
                         Text(
                             text = "Model Telemetry",
                             style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
                         )
                         SupportingBenchmarkingCard(state)
                     }
                 }
             }
         } else {
-            // Compact Single Column Layout
             Column(
                 modifier =
                     Modifier
@@ -189,18 +256,36 @@ private fun ChatLayout(
             ) {
                 ModelTechnicalInfoPanel(state)
 
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    state = listState,
-                    reverseLayout = true,
-                ) {
-                    items(state.messages.reversed(), key = { it.id }) { message ->
-                        MessageBubble(
-                            message = message,
-                            onCopy = {
-                                state.eventSink(ChatScreen.Event.CopyMessage(it))
-                            },
-                        )
+                if (state.messages.isEmpty()) {
+                    EmptyChatTopicStarters(
+                        visualInfo = visualInfo,
+                        onPromptSelected = { prompt ->
+                            state.eventSink(ChatScreen.Event.SendMessage(prompt))
+                        },
+                        modifier = Modifier.weight(1f),
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        state = listState,
+                        reverseLayout = true,
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        if (state.isGenerating) {
+                            item {
+                                GeneratingIndicator(visualInfo.accentColor)
+                            }
+                        }
+                        items(state.messages.reversed(), key = { it.id }) { message ->
+                            MessageBubble(
+                                message = message,
+                                visualAccent = visualInfo.accentColor,
+                                onCopy = {
+                                    state.eventSink(ChatScreen.Event.CopyMessage(it))
+                                },
+                            )
+                        }
                     }
                 }
 
@@ -218,6 +303,134 @@ private fun ChatLayout(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EmptyChatTopicStarters(
+    visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
+    onPromptSelected: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = visualInfo.accentColor.copy(alpha = 0.15f),
+            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+            modifier = Modifier.size(64.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Text(
+                    text = visualInfo.iconGlyph,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    color = visualInfo.accentColor,
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Learn ${visualInfo.topic.displayName}",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+        )
+
+        Text(
+            text = visualInfo.tagline,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 6.dp, bottom = 24.dp),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(bottom = 12.dp),
+        ) {
+            Icon(
+                Icons.Default.Lightbulb,
+                contentDescription = null,
+                tint = visualInfo.accentColor,
+                modifier = Modifier.size(16.dp),
+            )
+            Text(
+                "Suggested Questions",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            visualInfo.starterPrompts.forEach { prompt ->
+                OutlinedCard(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onPromptSelected(prompt) },
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    colors =
+                        CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                ) {
+                    Text(
+                        text = prompt,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun GeneratingIndicator(accentColor: androidx.compose.ui.graphics.Color) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+            border = BorderStroke(1.dp, accentColor.copy(alpha = 0.3f)),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
+                Text(
+                    "Generating response...",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ChatInputField(
@@ -226,11 +439,18 @@ private fun ChatInputField(
     onInputTextChanged: (String) -> Unit,
     onSendMessage: () -> Unit,
 ) {
-    Surface(tonalElevation = 2.dp) {
-        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+    Surface(
+        tonalElevation = 3.dp,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+    ) {
+        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             if (state.isPreparing) {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularWavyProgressIndicator(modifier = Modifier.size(24.dp))
                 }
             }
 
@@ -238,18 +458,48 @@ private fun ChatInputField(
                 value = inputText,
                 onValueChange = onInputTextChanged,
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Ask about ${state.topic.displayName}...") },
+                placeholder = {
+                    Text(
+                        "Ask about ${state.topic.displayName}...",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                },
+                shape = MaterialTheme.shapes.extraLarge,
+                colors =
+                    OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    ),
                 trailingIcon = {
                     if (state.isGenerating) {
-                        IconButton(onClick = { state.eventSink(ChatScreen.Event.StopGeneration) }) {
-                            Icon(Icons.Default.Stop, contentDescription = "Stop")
+                        FilledIconButton(
+                            onClick = { state.eventSink(ChatScreen.Event.StopGeneration) },
+                            colors =
+                                IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                ),
+                            modifier = Modifier.size(36.dp),
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = "Stop", modifier = Modifier.size(18.dp))
                         }
                     } else {
-                        IconButton(
+                        FilledIconButton(
                             enabled = inputText.isNotBlank(),
                             onClick = onSendMessage,
+                            colors =
+                                IconButtonDefaults.filledIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                ),
+                            modifier = Modifier.size(36.dp),
                         ) {
-                            Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
+                            Icon(
+                                Icons.AutoMirrored.Default.Send,
+                                contentDescription = "Send",
+                                modifier = Modifier.size(18.dp),
+                            )
                         }
                     }
                 },
@@ -368,73 +618,103 @@ private fun SupportingBenchmarkingCard(
 @Composable
 private fun MessageBubble(
     message: ChatMessage,
+    visualAccent: androidx.compose.ui.graphics.Color,
     onCopy: (String) -> Unit,
 ) {
     val context = LocalContext.current
 
-    Surface(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 4.dp),
-        tonalElevation =
-            when (message) {
-                is ChatMessage.User -> 0.dp
-                is ChatMessage.Agent -> 1.dp
-                is ChatMessage.Error -> 0.dp
-                is ChatMessage.System -> 0.dp
-            },
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top,
+    if (message is ChatMessage.User) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Surface(
+                shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.padding(start = 48.dp),
             ) {
-                val messageContent =
-                    when (message) {
-                        is ChatMessage.User -> message.content
-                        is ChatMessage.Agent -> message.content.ifEmpty { "..." }
-                        is ChatMessage.Error -> "Error: ${message.message}"
-                        is ChatMessage.System -> message.info
+                Text(
+                    text = message.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+            }
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
+                shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = visualAccent,
+                                modifier = Modifier.size(14.dp),
+                            )
+                            Text(
+                                text = "CodeMateX",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = visualAccent,
+                            )
+                        }
+
+                        IconButton(
+                            modifier = Modifier.size(24.dp),
+                            onClick = {
+                                val content =
+                                    when (message) {
+                                        is ChatMessage.Agent -> message.content
+                                        is ChatMessage.Error -> message.message
+                                        is ChatMessage.System -> message.info
+                                        is ChatMessage.User -> message.content
+                                    }
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Chat message", content))
+                            },
+                        ) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = "Copy message",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline,
+                            )
+                        }
                     }
 
-                val messageColor =
-                    when (message) {
-                        is ChatMessage.Error -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.onSurface
-                    }
+                    val messageContent =
+                        when (message) {
+                            is ChatMessage.Agent -> message.content.ifEmpty { "..." }
+                            is ChatMessage.Error -> "Error: ${message.message}"
+                            is ChatMessage.System -> message.info
+                            is ChatMessage.User -> message.content
+                        }
 
-                when (message) {
-                    is ChatMessage.Agent -> {
+                    Box(modifier = Modifier.padding(top = 8.dp)) {
                         RichText {
                             Markdown(content = messageContent)
                         }
                     }
-
-                    else -> {
-                        Text(
-                            text = messageContent,
-                            modifier = Modifier.weight(1f),
-                            color = messageColor,
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = {
-                        val content =
-                            when (message) {
-                                is ChatMessage.User -> message.content
-                                is ChatMessage.Agent -> message.content
-                                is ChatMessage.Error -> message.message
-                                is ChatMessage.System -> message.info
-                            }
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Chat message", content))
-                    },
-                ) {
-                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy message")
                 }
             }
         }
