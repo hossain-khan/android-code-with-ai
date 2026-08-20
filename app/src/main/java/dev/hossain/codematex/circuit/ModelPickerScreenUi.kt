@@ -1,22 +1,34 @@
 package dev.hossain.codematex.circuit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -33,11 +45,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.util.DeviceMemory
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
@@ -79,29 +93,36 @@ private fun ModelPickerLayout(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { Text("Models") },
+                title = { Text("AI Models", fontWeight = FontWeight.Bold) },
                 scrollBehavior = scrollBehavior,
             )
         },
     ) { innerPadding ->
-        if (state.models.isEmpty()) {
-            Box(
-                modifier =
-                    Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("No models available yet")
+        LazyVerticalGrid(
+            columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
+            modifier = Modifier.padding(innerPadding),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                DeviceMemoryBanner(deviceRamGb = deviceRamGb)
             }
-        } else {
-            LazyVerticalGrid(
-                columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
-                modifier = Modifier.padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
+
+            if (state.models.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(32.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "No AI models available at this time.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
                 items(state.models) { model ->
                     val isCompatible = DeviceMemory.isModelCompatible(model.minDeviceMemoryInGb, deviceRamGb)
                     ModelCard(
@@ -129,6 +150,65 @@ private fun ModelPickerLayout(
     }
 }
 
+@Composable
+private fun DeviceMemoryBanner(
+    deviceRamGb: Int,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+        shape = MaterialTheme.shapes.extraLarge,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(44.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        Icons.Default.Memory,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    "Device Memory",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "$deviceRamGb GB Total RAM",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "Models requiring more RAM than available may be disabled for stability.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun ModelCard(
@@ -146,52 +226,138 @@ private fun ModelCard(
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
+        shape = MaterialTheme.shapes.large,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(model.displayName, style = MaterialTheme.typography.titleMedium)
-            Text(sizeFormatter.format(model.sizeBytes / 1_000_000), style = MaterialTheme.typography.bodySmall)
-            Text("Requires ${model.minDeviceMemoryInGb}GB RAM", style = MaterialTheme.typography.labelSmall)
-
-            if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
-                val progress = model.downloadProgress.coerceIn(0, 100) / 100f
-                LinearWavyProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
-                )
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
-                    text = "Downloading: ${model.downloadProgress}%",
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(top = 4.dp),
+                    model.displayName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                 )
-            } else {
-                Text(model.downloadStatus.name, style = MaterialTheme.typography.labelSmall)
-            }
 
-            if (!isCompatible) {
                 Surface(
-                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    shape = MaterialTheme.shapes.small,
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
                 ) {
                     Text(
-                        text = "Not compatible: requires ${model.minDeviceMemoryInGb}GB RAM, device has ${deviceRamGb}GB",
-                        modifier = Modifier.padding(8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        sizeFormatter.format(model.sizeBytes / 1_000_000),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
             Row(
-                modifier = Modifier.padding(top = 8.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color =
+                        if (isCompatible) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        } else {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.12f)
+                        },
+                ) {
+                    Text(
+                        "Requires ${model.minDeviceMemoryInGb}GB RAM",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        color = if (isCompatible) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                ) {
+                    Text(
+                        "LiteRT-LM",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
+                val progress = model.downloadProgress.coerceIn(0, 100) / 100f
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    LinearWavyProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text(
+                            "Downloading model weights...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            "${model.downloadProgress}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            }
+
+            if (!isCompatible) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                    shape = MaterialTheme.shapes.small,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Text(
+                            "Requires ${model.minDeviceMemoryInGb}GB RAM (Device has ${deviceRamGb}GB)",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
                     OutlinedButton(
                         onClick = onCancel,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text("Cancel")
+                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Cancel Download")
                     }
                 } else {
                     Button(
@@ -203,15 +369,23 @@ private fun ModelCard(
                             }
                         },
                         enabled = isCompatible,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
+                        val icon =
+                            when {
+                                model.downloadStatus == DownloadStatus.DOWNLOADED -> Icons.Default.PlayArrow
+                                model.downloadStatus == DownloadStatus.FAILED -> Icons.Default.CloudDownload
+                                else -> Icons.Default.CloudDownload
+                            }
+                        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             when {
                                 !isCompatible -> "Insufficient RAM"
-                                model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download"
-                                model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select"
-                                model.downloadStatus == DownloadStatus.FAILED -> "Retry"
-                                else -> "Download"
+                                model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download Model"
+                                model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select Model"
+                                model.downloadStatus == DownloadStatus.FAILED -> "Retry Download"
+                                else -> "Download Model"
                             },
                         )
                     }

@@ -1,5 +1,6 @@
 package dev.hossain.codematex.circuit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,11 +40,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
+import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -74,12 +80,16 @@ private fun SessionDetailLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
+    val visualInfo = state.session.topic.visualInfo
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
-                title = { Text("Session Detail") },
+                title = { Text("Session Details", fontWeight = FontWeight.Bold) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { state.eventSink(SessionDetailScreen.Event.Back) }) {
@@ -116,6 +126,7 @@ private fun SessionDetailLayout(
                             .fillMaxHeight(),
                     color = MaterialTheme.colorScheme.surfaceContainerLow,
                     shape = MaterialTheme.shapes.large,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                     tonalElevation = 1.dp,
                 ) {
                     Column(
@@ -132,8 +143,8 @@ private fun SessionDetailLayout(
                                 onClick = { state.eventSink(SessionDetailScreen.Event.ResumeSession) },
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null)
-                                Spacer(modifier = Modifier.padding(4.dp))
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text("Resume Session")
                             }
 
@@ -141,6 +152,8 @@ private fun SessionDetailLayout(
                                 onClick = { state.eventSink(SessionDetailScreen.Event.DeleteSession) },
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text("Delete Session")
                             }
                         }
@@ -157,7 +170,8 @@ private fun SessionDetailLayout(
                     Text(
                         text = "Conversation History",
                         style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 12.dp),
                     )
 
                     if (state.messages.isEmpty()) {
@@ -195,8 +209,9 @@ private fun SessionDetailLayout(
 
                 if (state.messages.isNotEmpty()) {
                     Text(
-                        text = "Conversation",
+                        text = "Conversation History",
                         style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
 
@@ -222,8 +237,8 @@ private fun SessionDetailLayout(
                         onClick = { state.eventSink(SessionDetailScreen.Event.ResumeSession) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = null)
-                        Spacer(modifier = Modifier.padding(4.dp))
+                        Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text("Resume Session")
                     }
 
@@ -231,6 +246,8 @@ private fun SessionDetailLayout(
                         onClick = { state.eventSink(SessionDetailScreen.Event.DeleteSession) },
                         modifier = Modifier.fillMaxWidth(),
                     ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text("Delete Session")
                     }
                 }
@@ -244,16 +261,73 @@ private fun SessionInfoCard(
     session: ChatSession,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    val visualInfo = session.topic.visualInfo
+    Card(
         modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            ),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
-        Text(session.title, style = MaterialTheme.typography.titleLarge)
-        Text(session.summary, style = MaterialTheme.typography.bodyMedium)
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("Topic: ${session.topic.displayName}", style = MaterialTheme.typography.labelMedium)
-            Text("Messages: ${session.messageCount}", style = MaterialTheme.typography.labelMedium)
-            Text("Model: ${session.modelUsed}", style = MaterialTheme.typography.labelMedium)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = visualInfo.accentColor.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                ) {
+                    Text(
+                        text = visualInfo.iconGlyph,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+                Text(
+                    session.topic.displayName,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = visualInfo.accentColor,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Text(
+                session.title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+            )
+
+            Text(
+                session.summary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Model: ${session.modelUsed}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+                Text(
+                    "${session.messageCount} messages",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+            }
         }
     }
 }
@@ -270,17 +344,24 @@ private fun SessionMessageBubble(message: ChatMessage) {
                 is ChatMessage.System -> 0.dp
             },
         shape = MaterialTheme.shapes.medium,
+        color =
+            when (message) {
+                is ChatMessage.User -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                else -> MaterialTheme.colorScheme.surfaceContainerLow
+            },
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(
                 text =
                     when (message) {
                         is ChatMessage.User -> "You"
-                        is ChatMessage.Agent -> "AI"
+                        is ChatMessage.Agent -> "AI Tutor"
                         is ChatMessage.Error -> "Error"
                         is ChatMessage.System -> "System"
                     },
                 style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
                 color =
                     when (message) {
                         is ChatMessage.User -> MaterialTheme.colorScheme.primary
