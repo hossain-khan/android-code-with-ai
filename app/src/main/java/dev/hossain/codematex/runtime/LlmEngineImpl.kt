@@ -23,8 +23,9 @@ import kotlin.coroutines.resumeWithException
  *
  * LiteRT (formerly TensorFlow Lite) is optimized for edge AI workloads.
  * For hardware acceleration details and performance optimization guidelines, see:
- * - LiteRT Android Delegates: https://ai.google.dev/edge/litert/android/delegates
- * - Gemma On-Device GPU Inference: https://ai.google.dev/gemma/docs/gpu_inference
+ * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
+ * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
+ * - Google AI Edge LiteRT-LM: https://github.com/google-ai-edge/LiteRT-LM
  */
 class LlmEngineImpl(
     private val context: Context,
@@ -50,7 +51,8 @@ class LlmEngineImpl(
      * (NPU -> GPU -> CPU) to guarantee execution.
      *
      * See:
-     * - LiteRT Hardware Delegates: https://ai.google.dev/edge/litert/android/delegates
+     * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
+     * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
      */
     override suspend fun initialize(
         modelPath: String,

@@ -40,10 +40,12 @@
             Official Documentation & Sources:
             - Android Native Libraries Manifest Guide:
               https://developer.android.com/guide/topics/manifest/uses-native-library-element
-            - LiteRT Hardware Acceleration & Delegates:
-              https://ai.google.dev/edge/litert/android/delegates
-            - TensorFlow Lite GPU Delegate Specification:
+            - TensorFlow Lite / LiteRT GPU Delegate Specification (OpenCL on Android):
               https://www.tensorflow.org/lite/performance/gpu#android
+            - Google AI Edge LiteRT Documentation:
+              https://ai.google.dev/edge/litert
+            - Google AI Edge LiteRT-LM Repository:
+              https://github.com/google-ai-edge/LiteRT-LM
         -->
         <uses-native-library
             android:name="libOpenCL.so"
