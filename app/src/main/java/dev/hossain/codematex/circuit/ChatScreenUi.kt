@@ -60,6 +60,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,6 +69,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -274,6 +276,15 @@ private fun ChatLayout(
     state: ChatScreen.State.Active,
     modifier: Modifier = Modifier,
 ) {
+    // Keep the screen awake while the model is actively streaming tokens
+    val currentView = LocalView.current
+    DisposableEffect(state.isGenerating) {
+        currentView.keepScreenOn = state.isGenerating
+        onDispose {
+            currentView.keepScreenOn = false
+        }
+    }
+
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
