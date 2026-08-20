@@ -8,11 +8,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -23,6 +25,8 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -34,6 +38,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,8 +48,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import com.halilibo.richtext.commonmark.Markdown
 import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -80,7 +89,7 @@ fun ChatScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 private fun ChatLayout(
     state: ChatScreen.State.Active,
@@ -88,12 +97,16 @@ private fun ChatLayout(
 ) {
     var inputText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
+    val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(state.topic.displayName) },
+                scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -102,63 +115,251 @@ private fun ChatLayout(
             )
         },
     ) { innerPadding ->
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .imePadding(),
-        ) {
-            ModelTechnicalInfoPanel(state)
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                state = listState,
-                reverseLayout = true,
+        if (isExpanded) {
+            // Adaptive 2-Pane Supporting Layout for Tablets / Foldables / Large Screens
+            Row(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .imePadding(),
             ) {
-                items(state.messages.reversed(), key = { it.id }) { message ->
-                    MessageBubble(
-                        message = message,
-                        onCopy = {
-                            state.eventSink(ChatScreen.Event.CopyMessage(it))
+                // Left/Primary Pane: Chat Conversation Feed & Input
+                Column(
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                ) {
+                    LazyColumn(
+                        modifier = Modifier.weight(1f),
+                        state = listState,
+                        reverseLayout = true,
+                    ) {
+                        items(state.messages.reversed(), key = { it.id }) { message ->
+                            MessageBubble(
+                                message = message,
+                                onCopy = {
+                                    state.eventSink(ChatScreen.Event.CopyMessage(it))
+                                },
+                            )
+                        }
+                    }
+
+                    ChatInputField(
+                        state = state,
+                        inputText = inputText,
+                        onInputTextChanged = { inputText = it },
+                        onSendMessage = {
+                            state.eventSink(ChatScreen.Event.SendMessage(inputText))
+                            inputText = ""
                         },
+                    )
+                }
+
+                // Right/Supporting Pane: Telemetry & Benchmark Dashboard
+                Surface(
+                    modifier =
+                        Modifier
+                            .width(360.dp)
+                            .fillMaxHeight(),
+                    color = MaterialTheme.colorScheme.surfaceContainerLow,
+                    tonalElevation = 1.dp,
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Text(
+                            text = "Model Telemetry",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        SupportingBenchmarkingCard(state)
+                    }
+                }
+            }
+        } else {
+            // Compact Single Column Layout
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .imePadding(),
+            ) {
+                ModelTechnicalInfoPanel(state)
+
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    state = listState,
+                    reverseLayout = true,
+                ) {
+                    items(state.messages.reversed(), key = { it.id }) { message ->
+                        MessageBubble(
+                            message = message,
+                            onCopy = {
+                                state.eventSink(ChatScreen.Event.CopyMessage(it))
+                            },
+                        )
+                    }
+                }
+
+                ChatInputField(
+                    state = state,
+                    inputText = inputText,
+                    onInputTextChanged = { inputText = it },
+                    onSendMessage = {
+                        state.eventSink(ChatScreen.Event.SendMessage(inputText))
+                        inputText = ""
+                    },
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ChatInputField(
+    state: ChatScreen.State.Active,
+    inputText: String,
+    onInputTextChanged: (String) -> Unit,
+    onSendMessage: () -> Unit,
+) {
+    Surface(tonalElevation = 2.dp) {
+        Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+            if (state.isPreparing) {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
+                }
+            }
+
+            OutlinedTextField(
+                value = inputText,
+                onValueChange = onInputTextChanged,
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Ask about ${state.topic.displayName}...") },
+                trailingIcon = {
+                    if (state.isGenerating) {
+                        IconButton(onClick = { state.eventSink(ChatScreen.Event.StopGeneration) }) {
+                            Icon(Icons.Default.Stop, contentDescription = "Stop")
+                        }
+                    } else {
+                        IconButton(
+                            enabled = inputText.isNotBlank(),
+                            onClick = onSendMessage,
+                        ) {
+                            Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
+                        }
+                    }
+                },
+                maxLines = 4,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SupportingBenchmarkingCard(
+    state: ChatScreen.State.Active,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = state.modelName,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                state.activeBackend?.let { backend ->
+                    val isAccelerated = backend == "GPU" || backend == "NPU"
+                    val containerColor =
+                        if (isAccelerated) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        }
+                    val textColor =
+                        if (isAccelerated) {
+                            MaterialTheme.colorScheme.onPrimaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.onErrorContainer
+                        }
+
+                    Surface(
+                        color = containerColor,
+                        shape = MaterialTheme.shapes.extraSmall,
+                    ) {
+                        Text(
+                            text = backend,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = textColor,
+                        )
+                    }
+                }
+            }
+
+            state.modelSize?.let {
+                Text(
+                    text = "Size: $it",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            state.modelMemory?.let {
+                Text(
+                    text = "Memory: $it",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            state.configInfo?.let { config ->
+                Text(
+                    text = "Sampler: $config",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            state.throughputInfo?.let { throughput ->
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = MaterialTheme.shapes.small,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = throughput,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(8.dp),
                     )
                 }
             }
 
-            Surface(tonalElevation = 2.dp) {
-                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-                    if (state.isPreparing) {
-                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                            CircularWavyProgressIndicator(modifier = Modifier.padding(8.dp))
-                        }
-                    }
-
-                    OutlinedTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Ask about ${state.topic.displayName}...") },
-                        trailingIcon = {
-                            if (state.isGenerating) {
-                                IconButton(onClick = { state.eventSink(ChatScreen.Event.StopGeneration) }) {
-                                    Icon(Icons.Default.Stop, contentDescription = "Stop")
-                                }
-                            } else {
-                                IconButton(
-                                    enabled = inputText.isNotBlank(),
-                                    onClick = {
-                                        state.eventSink(ChatScreen.Event.SendMessage(inputText))
-                                        inputText = ""
-                                    },
-                                ) {
-                                    Icon(Icons.AutoMirrored.Default.Send, contentDescription = "Send")
-                                }
-                            }
-                        },
-                        maxLines = 4,
-                    )
-                }
+            state.systemStatsInfo?.let { stats ->
+                Text(
+                    text = stats,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                )
             }
         }
     }
