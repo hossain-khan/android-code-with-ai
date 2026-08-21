@@ -60,6 +60,12 @@ private fun AppInfoContent(
             modifier
                 .fillMaxWidth()
                 .padding(16.dp),
+        colors =
+            androidx.compose.material3.CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        shape = MaterialTheme.shapes.large,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
     ) {
         Column(
             modifier =
@@ -87,7 +93,7 @@ private fun AppInfoContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            InfoRow(label = "App Name", value = "Circuit App Template")
+            InfoRow(label = "App Name", value = "CodeMateX")
             InfoRow(label = "Version", value = BuildConfig.VERSION_NAME)
             InfoRow(label = "Package", value = BuildConfig.APPLICATION_ID)
             InfoRow(label = "Built Type", value = BuildConfig.BUILD_TYPE)
