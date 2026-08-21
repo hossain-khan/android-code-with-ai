@@ -42,6 +42,10 @@ data class ModelEntry(
     val taskTypes: List<String>,
     val runtimeType: String,
     val minDeviceMemoryInGb: Int = 0,
+    val publisher: String = "Google LiteRT Community",
+    val license: String = "Apache 2.0",
+    val licenseUrl: String = "https://www.apache.org/licenses/LICENSE-2.0",
+    val description: String = "",
 )
 
 @SingleIn(AppScope::class)
@@ -137,6 +141,11 @@ class ModelRepositoryImpl
                                 preferredBackend = LlmEngine.Backend.GPU,
                                 minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
                                 downloadProgress = progress,
+                                publisher = entry.publisher,
+                                modelRepoUrl = "https://huggingface.co/${entry.modelId}",
+                                license = entry.license,
+                                licenseUrl = entry.licenseUrl,
+                                description = entry.description,
                             )
                         }
                     cachedModels = models
@@ -212,6 +221,11 @@ class ModelRepositoryImpl
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
                     minDeviceMemoryInGb = 8,
+                    publisher = "Google LiteRT Community",
+                    license = "Apache 2.0",
+                    licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
+                    description =
+                        "Lightweight on-device instruction-tuned model optimized for fast mobile code assistance and reasoning.",
                 ),
                 ModelEntry(
                     modelId = "litert-community/gemma-4-E4B-it-litert-lm",
@@ -221,6 +235,11 @@ class ModelRepositoryImpl
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
                     minDeviceMemoryInGb = 12,
+                    publisher = "Google LiteRT Community",
+                    license = "Apache 2.0",
+                    licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
+                    description =
+                        "Higher capacity instruction-tuned model offering deeper coding comprehension and complex multi-turn logic.",
                 ),
             )
         }
