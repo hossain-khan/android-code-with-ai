@@ -1,0 +1,9 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.4.0:
+• Google Play device targeting & 8 GB RAM hardware optimization for smooth on-device AI inference.
+• New dynamic topic filter chips in Session History to easily browse past sessions by category.
+• Keep screen awake feature during live token generation.
+• Enhanced on-device model discovery on cold start with persistent selection.
+• Brand-new Material You adaptive app icon with Android 13+ dynamic theming.
+• Performance and UI refinements across phones and tablets.
