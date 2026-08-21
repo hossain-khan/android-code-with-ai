@@ -9,6 +9,14 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
+/**
+ * Hardware eligibility status for running on-device LLMs.
+ *
+ * References:
+ * - Android Memory Management: https://developer.android.com/topic/performance/memory-overview
+ * - Android 64-bit ABIs: https://developer.android.com/ndk/guides/abis
+ * - Google Play Device Targeting: https://developer.android.com/google/play/device-targeting
+ */
 sealed interface HardwareEligibility {
     data object Eligible : HardwareEligibility
 

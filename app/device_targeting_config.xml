@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    Google Play Device Targeting Configuration (Beta)
+    
+    Context & Purpose:
+    Controls which parts of the Android App Bundle (AAB) are delivered to devices based on
+    hardware capabilities (RAM, device model, system features, and SoC).
+    
+    Configuration Details:
+    - Enforces a minimum of 8 GB RAM (8,000,000,000 bytes) for high-performance AI inference workloads.
+    
+    Official Documentation & Guides:
+    - Google Play Device Targeting Guide:
+      https://developer.android.com/google/play/device-targeting
+    - Play Console Device Exclusion Rules:
+      https://support.google.com/googleplay/android-developer/answer/7353455
+-->
 <config:device-targeting-config xmlns:config="http://schemas.android.com/apk/config">
     <config:device-group name="high_performance_devices">
         <!-- Enforce 8 GB RAM minimum (in bytes) -->
