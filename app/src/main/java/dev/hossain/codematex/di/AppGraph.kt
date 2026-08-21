@@ -58,6 +58,11 @@ interface AppGraph {
         @ApplicationContext context: Context,
     ): WorkManager = WorkManager.getInstance(context)
 
+    @Provides
+    fun providesHardwareEligibilityChecker(
+        checker: dev.hossain.codematex.system.HardwareEligibilityCheckerImpl,
+    ): dev.hossain.codematex.system.HardwareEligibilityChecker = checker
+
     /**
      * Factory for creating the [AppGraph] with runtime inputs.
      *

@@ -34,7 +34,15 @@ android {
         val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: false
         buildConfigField("boolean", "DEV_MODE", devMode.toString())
 
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    bundle {
+        deviceTargetingConfig.set(file("device_targeting_config.xml"))
     }
 
     signingConfigs {

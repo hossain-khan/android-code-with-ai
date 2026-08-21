@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config:device-targeting-config xmlns:config="http://schemas.android.com/apk/config">
+    <config:device-group name="high_performance_devices">
+        <!-- Enforce 8 GB RAM minimum (in bytes) -->
+        <config:device-selector ram-min-bytes="8000000000" />
+    </config:device-group>
+</config:device-targeting-config>

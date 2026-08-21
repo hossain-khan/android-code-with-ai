@@ -14,6 +14,8 @@ import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.system.HardwareEligibility
+import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -27,12 +29,15 @@ class HomePresenter(
     @Assisted private val screen: HomeScreen,
     private val sessionRepository: ChatSessionRepository,
     private val modelRepository: ModelRepository,
+    private val hardwareEligibilityChecker: HardwareEligibilityChecker,
 ) : Presenter<HomeScreen.State> {
     @Composable
     override fun present(): HomeScreen.State {
         var recentSessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        var isWarningDismissed by rememberRetained { mutableStateOf(false) }
 
+        val hardwareEligibility = remember { hardwareEligibilityChecker.checkEligibility() }
         val hasDownloadedModel = modelRepository.getSelectedModel() != null
 
         LaunchedEffect(Unit) {
@@ -69,7 +74,21 @@ class HomePresenter(
                 HomeScreen.Event.ViewAllSessions -> {
                     navigator.goTo(SessionHistoryScreen)
                 }
+
+                HomeScreen.Event.DismissIneligibilityWarning -> {
+                    isWarningDismissed = true
+                }
             }
+        }
+
+        if (hardwareEligibility is HardwareEligibility.Ineligible && !isWarningDismissed) {
+            return HomeScreen.State.IneligibleDevice(
+                reason = hardwareEligibility.reason,
+                detectedRamGb = hardwareEligibility.detectedRamGb,
+                minRequiredRamGb = hardwareEligibility.minRequiredRamGb,
+                is64BitSupported = hardwareEligibility.is64BitSupported,
+                eventSink = eventSink,
+            )
         }
 
         return if (isLoading) {

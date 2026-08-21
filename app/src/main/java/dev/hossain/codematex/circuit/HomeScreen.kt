@@ -14,6 +14,14 @@ data object HomeScreen : ParcelableScreen {
     sealed interface State : CircuitUiState {
         data object Loading : State
 
+        data class IneligibleDevice(
+            val reason: String,
+            val detectedRamGb: Double,
+            val minRequiredRamGb: Double,
+            val is64BitSupported: Boolean,
+            val eventSink: (Event) -> Unit,
+        ) : State
+
         data class Success(
             val recentSessions: List<ChatSession>,
             val topics: List<CodingTopic>,
@@ -35,5 +43,7 @@ data object HomeScreen : ParcelableScreen {
         data object ManageModels : Event
 
         data object ViewAllSessions : Event
+
+        data object DismissIneligibilityWarning : Event
     }
 }

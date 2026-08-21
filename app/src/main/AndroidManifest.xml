@@ -9,6 +9,27 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <!--
+        Hardware Requirements for On-Device Large Language Model Inference
+        
+        Context & Guidelines:
+        1. Vulkan 1.1+ (0x401000) & Vulkan Compute: Modern on-device AI runtimes (LiteRT-LM) require
+           high-throughput GPU compute capabilities for token generation and prefill acceleration.
+        2. Google Play Filtering: Directs Google Play to filter out older budget hardware lacking
+           Vulkan compute extensions.
+        
+        Official Documentation & Sources:
+        - Android Vulkan Guide: https://developer.android.com/ndk/guides/graphics/getting-started
+        - Google Play Feature Filters: https://developer.android.com/google/play/filters
+    -->
+    <uses-feature
+        android:name="android.hardware.vulkan.version"
+        android:version="0x401000"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.vulkan.compute"
+        android:required="true" />
+
     <application
         android:name=".CodeWithAIApp"
         android:appComponentFactory=".di.ComposeAppComponentFactory"
