@@ -34,7 +34,19 @@ android {
         val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: false
         buildConfigField("boolean", "DEV_MODE", devMode.toString())
 
+        // Target modern 64-bit ARM architecture (and x86_64 for modern emulators/development)
+        // Reference: https://developer.android.com/ndk/guides/abis
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a", "x86_64"))
+        }
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Google Play Device Targeting: Restrict App Bundle distribution to high-RAM devices
+    // Reference: https://developer.android.com/google/play/device-targeting
+    bundle {
+        deviceTargetingConfig.set(file("device_targeting_config.xml"))
     }
 
     signingConfigs {
