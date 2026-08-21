@@ -11,16 +11,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,42 +91,128 @@ private fun SessionHistoryLayout(
         topBar = {
             TopAppBar(
                 title = { Text("Session History", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { state.eventSink(SessionHistoryScreen.Event.Back) }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                        )
+                    }
+                },
                 scrollBehavior = scrollBehavior,
             )
         },
     ) { innerPadding ->
-        if (state.sessions.isEmpty()) {
-            Box(
-                modifier =
-                    Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    "No sessions yet",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+        Column(
+            modifier =
+                Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+        ) {
+            // Display horizontal filter chips if there are 2 or more unique topic categories
+            if (state.availableTopics.size >= 2) {
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    item {
+                        FilterChip(
+                            selected = state.selectedTopic == null,
+                            onClick = {
+                                state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(null))
+                            },
+                            label = {
+                                Text("All (${state.allSessions.size})")
+                            },
+                            leadingIcon =
+                                if (state.selectedTopic == null) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize),
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
+                        )
+                    }
+
+                    items(state.availableTopics) { topic ->
+                        val visualInfo = topic.visualInfo
+                        val count = state.allSessions.count { it.topic == topic }
+                        val isSelected = state.selectedTopic == topic
+
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = {
+                                state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(topic))
+                            },
+                            label = {
+                                Text("${topic.displayName} ($count)")
+                            },
+                            leadingIcon = {
+                                Surface(
+                                    shape = CircleShape,
+                                    color =
+                                        if (isSelected) {
+                                            visualInfo.accentColor.copy(alpha = 0.3f)
+                                        } else {
+                                            visualInfo.accentColor.copy(alpha = 0.15f)
+                                        },
+                                ) {
+                                    Text(
+                                        text = visualInfo.iconGlyph,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Bold,
+                                        color = visualInfo.accentColor,
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
             }
-        } else {
-            LazyVerticalGrid(
-                columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
-                modifier = Modifier.padding(innerPadding),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(state.sessions) { session ->
-                    SessionCard(
-                        session = session,
-                        onClick = {
-                            state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
-                        },
-                        onDelete = {
-                            state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
-                        },
+
+            if (state.sessions.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text =
+                            if (state.selectedTopic != null) {
+                                "No sessions found for ${state.selectedTopic.displayName}"
+                            } else {
+                                "No sessions yet"
+                            },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(state.sessions, key = { it.id }) { session ->
+                        SessionCard(
+                            session = session,
+                            onClick = {
+                                state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
+                            },
+                            onDelete = {
+                                state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
+                            },
+                        )
+                    }
                 }
             }
         }
