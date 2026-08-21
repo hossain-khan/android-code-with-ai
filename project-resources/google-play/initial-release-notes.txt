@@ -1,4 +1,4 @@
-=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+=== GOOGLE PLAY STORE INITIAL RELEASE NOTES (Max 500 characters) ===
 
 Welcome to CodeMateX — your 100% private, on-device AI coding tutor!
 
