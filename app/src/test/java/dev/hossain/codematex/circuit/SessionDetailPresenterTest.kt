@@ -8,6 +8,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+/**
+ * Unit tests for [SessionDetailPresenter].
+ */
 class SessionDetailPresenterTest {
     private val testMessages =
         listOf(

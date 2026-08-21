@@ -4,6 +4,9 @@ import android.content.ContextWrapper
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
+/**
+ * Unit tests for [ModelConfigStore].
+ */
 class ModelConfigStoreTest {
     private val store = ModelConfigStore(ContextWrapper(null))
 

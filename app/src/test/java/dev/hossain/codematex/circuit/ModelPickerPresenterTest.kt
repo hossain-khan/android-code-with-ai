@@ -8,6 +8,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Unit tests for [ModelPickerPresenter].
+ */
 class ModelPickerPresenterTest {
     private val downloadedModel =
         testModel(id = "google/gemma-2-2b-it", downloadStatus = DownloadStatus.DOWNLOADED)

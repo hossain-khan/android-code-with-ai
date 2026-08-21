@@ -13,6 +13,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Unit tests for [ChatPresenter].
+ */
 class ChatPresenterTest {
     private val fakeContext: Context = ContextWrapper(null)
 
