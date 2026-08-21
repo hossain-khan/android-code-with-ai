@@ -44,6 +44,10 @@ class ModelPickerPresenter(
 
         val eventSink: (ModelPickerScreen.Event) -> Unit = { event ->
             when (event) {
+                is ModelPickerScreen.Event.Back -> {
+                    navigator.pop()
+                }
+
                 is ModelPickerScreen.Event.Download -> {
                     scope.launch {
                         modelRepository.downloadModel(event.model)

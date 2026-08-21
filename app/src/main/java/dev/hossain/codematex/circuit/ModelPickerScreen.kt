@@ -21,6 +21,8 @@ data object ModelPickerScreen : ParcelableScreen {
 
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
+        data object Back : Event
+
         data class Download(
             val model: AiModel,
         ) : Event
