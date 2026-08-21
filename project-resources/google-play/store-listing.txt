@@ -58,3 +58,10 @@ To deliver responsive on-device LLM inference without taxing the operating syste
 • Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration.
 
 Level up your engineering skills today with a private, powerful AI tutor right in your pocket.
+
+--------------------------------------------------------------------------------
+STORE LISTING URLS & LEGAL
+--------------------------------------------------------------------------------
+• Website: https://liquidlabs.ca/android/codematex/index.html
+• Privacy Policy: https://liquidlabs.ca/android/codematex/privacy.html
+• Terms of Service: https://liquidlabs.ca/android/codematex/terms-of-service.html
