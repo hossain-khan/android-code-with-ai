@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.6.0:
+• Educational Notification Permission: Stay updated on background AI model downloads with live progress alerts.
+• Markdown Chat Bubble Typography: Compact, highly legible font scaling and syntax-highlighted code containers.
+• About CodeMateX Sheet: Transparent architecture breakdown, offline privacy guarantees, and open-source model provenance.
+• Cryptographically signed with production release keys.
