@@ -9,7 +9,7 @@ Refer to this checklist when preparing visual marketing assets for the Google Pl
 | Asset | Dimensions | Format | Max Size | Status in Repo |
 | :--- | :--- | :--- | :--- | :--- |
 | **App Icon (High-Res)** | `512 x 512 px` | 32-bit PNG (no alpha/transparency on background) | 1 MB | `app/src/main/ic_launcher-playstore.png` |
-| **Feature Graphic** | `1024 x 500 px` | JPEG or 24-bit PNG (no alpha) | 15 MB | Needed for Play Store listing |
+| **Feature Graphic** | `1024 x 500 px` | JPEG or 24-bit PNG (no alpha) | 15 MB | `project-resources/google-play/feature-graphic.jpg` |
 | **Phone Screenshots** | Minimum `1080 x 1920 px` (16:9 or 9:16) | JPEG or 24-bit PNG | 8 MB / image | Minimum 2 required (Recommended: 4–8) |
 | **7-inch Tablet Screenshots** | Minimum `1200 x 1920 px` | JPEG or 24-bit PNG | 8 MB / image | Minimum 1 required |
 | **10-inch Tablet Screenshots**| Minimum `1600 x 2560 px` | JPEG or 24-bit PNG | 8 MB / image | Minimum 1 required |
