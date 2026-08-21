@@ -1,138 +1,297 @@
 package dev.hossain.codematex.circuit.overlay
 
-// -------------------------------------------------------------------------------------
-//
-// THIS IS AN EXAMPLE FILE WITH CIRCUIT OVERLAYS EXAMPLE
-// Read more about it at: https://slackhq.github.io/circuit/overlays/
-//
-// You should delete this file and create your own screens with presenters.
-//
-//  -------------------------------------------------------------------------------------
-
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Gavel
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.slack.circuitx.overlays.BottomSheetOverlay
 import dev.hossain.codematex.BuildConfig
-import dev.hossain.codematex.R
+import dev.hossain.codematex.ui.component.radialGradientScrim
 
 /**
- * App information overlay that shows as a bottom sheet.
+ * Material 3 Modal Bottom Sheet displaying rich app architecture, privacy commitments, and legal links.
  */
 @OptIn(ExperimentalMaterial3Api::class)
-@Suppress("FunctionName")
-fun AppInfoOverlay(onDismiss: () -> Unit = {}): BottomSheetOverlay<Unit, Unit> =
-    BottomSheetOverlay(
-        model = Unit,
-        onDismiss = {
-            onDismiss()
-        },
-    ) { _, overlayNavigator ->
-        AppInfoContent(
-            onDismiss = { overlayNavigator.finish(Unit) },
-        )
-    }
-
 @Composable
-private fun AppInfoContent(
+fun AppInfoBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        modifier = modifier,
+    ) {
+        AppInfoSheetContent(
+            onDismiss = onDismiss,
+            modifier = Modifier.radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+        )
+    }
+}
+
+@Composable
+private fun AppInfoSheetContent(
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val uriHandler = LocalUriHandler.current
+    val scrollState = rememberScrollState()
+
+    Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-        colors =
-            androidx.compose.material3.CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        shape = MaterialTheme.shapes.large,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                .padding(horizontal = 24.dp)
+                .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        // App Header: Icon Glyph + Title + Version Badge
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.size(56.dp),
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Icon(
-                    painter = painterResource(id = R.drawable.baseline_info_24),
-                    contentDescription = "App Info",
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "App Information",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.size(28.dp),
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            InfoRow(label = "App Name", value = "CodeMateX")
-            InfoRow(label = "Version", value = BuildConfig.VERSION_NAME)
-            InfoRow(label = "Package", value = BuildConfig.APPLICATION_ID)
-            InfoRow(label = "Built Type", value = BuildConfig.BUILD_TYPE)
-            InfoRow(label = "Framework", value = "Circuit + Compose + Metro")
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onDismiss,
-                modifier = Modifier.fillMaxWidth(),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = "CodeMateX",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = "On-Device AI Code Assistant & Tutor",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                modifier = Modifier.padding(top = 4.dp),
             ) {
-                Text("Close")
+                Text(
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.BUILD_TYPE})",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                )
             }
+        }
+
+        // Core Pillars / Highlights Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+            shape = MaterialTheme.shapes.large,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                PillarRow(
+                    icon = Icons.Default.Security,
+                    title = "100% On-Device & Private",
+                    description = "Zero telemetry, zero cloud prompt logging. All token generation runs strictly in local device memory.",
+                )
+                PillarRow(
+                    icon = Icons.Default.Memory,
+                    title = "Google LiteRT-LM Runtime",
+                    description = "Optimized on-device LLM runtime with OpenCL GPU hardware acceleration and XNNPack CPU delegates.",
+                )
+                PillarRow(
+                    icon = Icons.Default.Code,
+                    title = "Open-Source Models",
+                    description = "Powered by Gemma 2B & 4B instruction-tuned models distributed via Hugging Face under Apache 2.0.",
+                )
+            }
+        }
+
+        // Links Section
+        Text(
+            text = "Official Links & Legal",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            LinkCard(
+                icon = Icons.Default.Language,
+                title = "Official Portfolio",
+                url = "https://liquidlabs.ca/android/codematex/index.html",
+                onClick = { uriHandler.openUri("https://liquidlabs.ca/android/codematex/index.html") },
+            )
+            LinkCard(
+                icon = Icons.Default.PrivacyTip,
+                title = "Privacy Policy",
+                url = "https://liquidlabs.ca/android/codematex/privacy.html",
+                onClick = { uriHandler.openUri("https://liquidlabs.ca/android/codematex/privacy.html") },
+            )
+            LinkCard(
+                icon = Icons.Default.Gavel,
+                title = "Terms of Service",
+                url = "https://liquidlabs.ca/android/codematex/terms-of-service.html",
+                onClick = { uriHandler.openUri("https://liquidlabs.ca/android/codematex/terms-of-service.html") },
+            )
+            LinkCard(
+                icon = Icons.Default.Code,
+                title = "Open Source Repository (GitHub)",
+                url = "https://github.com/hossain-khan/android-code-with-ai",
+                onClick = { uriHandler.openUri("https://github.com/hossain-khan/android-code-with-ai") },
+            )
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Button(
+            onClick = onDismiss,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Close")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun PillarRow(
+    icon: ImageVector,
+    title: String,
+    description: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+            modifier = Modifier.size(32.dp),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }
 
 @Composable
-private fun InfoRow(
-    label: String,
-    value: String,
+private fun LinkCard(
+    icon: ImageVector,
+    title: String,
+    url: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+    Surface(
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
+        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Row(
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium,
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                contentDescription = "Open Link",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(14.dp),
+            )
+        }
     }
 }
