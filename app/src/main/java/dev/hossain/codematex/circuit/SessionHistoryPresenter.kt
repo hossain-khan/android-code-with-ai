@@ -12,6 +12,7 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.ChatSession
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -29,6 +30,7 @@ class SessionHistoryPresenter(
     @Composable
     override fun present(): SessionHistoryScreen.State {
         var sessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
+        var selectedTopic by rememberRetained { mutableStateOf<CodingTopic?>(null) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         val scope = rememberCoroutineScope()
 
@@ -41,6 +43,25 @@ class SessionHistoryPresenter(
                     isLoading = false
                 }
         }
+
+        val availableTopics =
+            remember(sessions) {
+                sessions.map { it.topic }.distinct()
+            }
+
+        // If the selected topic no longer exists in sessions (e.g. after deletion), reset filter
+        if (selectedTopic != null && !availableTopics.contains(selectedTopic)) {
+            selectedTopic = null
+        }
+
+        val filteredSessions =
+            remember(sessions, selectedTopic) {
+                if (selectedTopic == null) {
+                    sessions
+                } else {
+                    sessions.filter { it.topic == selectedTopic }
+                }
+            }
 
         val eventSink: (SessionHistoryScreen.Event) -> Unit = { event ->
             when (event) {
@@ -56,6 +77,14 @@ class SessionHistoryPresenter(
                         sessionRepository.deleteSession(event.sessionId)
                     }
                 }
+
+                is SessionHistoryScreen.Event.SelectTopicFilter -> {
+                    selectedTopic = if (selectedTopic == event.topic) null else event.topic
+                }
+
+                SessionHistoryScreen.Event.Back -> {
+                    navigator.pop()
+                }
             }
         }
 
@@ -63,7 +92,10 @@ class SessionHistoryPresenter(
             SessionHistoryScreen.State.Loading
         } else {
             SessionHistoryScreen.State.Success(
-                sessions = sessions,
+                sessions = filteredSessions,
+                allSessions = sessions,
+                availableTopics = availableTopics,
+                selectedTopic = selectedTopic,
                 eventSink = eventSink,
             )
         }
