@@ -21,7 +21,7 @@ class HomePresenterTest {
     private val fakeModelRepo = FakeModelRepository()
 
     @Test
-    fun whenDeviceIsEligible_emitsSuccessState() =
+    fun `given device is eligible - emits success state`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val presenter =
@@ -40,7 +40,7 @@ class HomePresenterTest {
         }
 
     @Test
-    fun whenDeviceIsIneligible_emitsIneligibleDeviceState_andDismissTransitionsToSuccess() =
+    fun `given device is ineligible - emits ineligible device state and dismiss transitions to success`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val ineligible =
@@ -72,7 +72,7 @@ class HomePresenterTest {
         }
 
     @Test
-    fun topicSelected_navigatesToChatScreen() =
+    fun `given topic selected event - navigates to chat screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val presenter =
@@ -92,7 +92,7 @@ class HomePresenterTest {
         }
 
     @Test
-    fun manageModels_navigatesToModelPickerScreen() =
+    fun `given manage models event - navigates to model picker screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val presenter =
@@ -112,7 +112,7 @@ class HomePresenterTest {
         }
 
     @Test
-    fun viewAllSessions_navigatesToSessionHistoryScreen() =
+    fun `given view all sessions event - navigates to session history screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val presenter =

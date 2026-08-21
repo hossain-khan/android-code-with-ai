@@ -5,17 +5,19 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.runtime.LlmEngine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class FakeModelRepository(
     private val availableModels: List<AiModel> = emptyList(),
     private var selectedModel: AiModel? = null,
+    private val getException: Exception? = null,
 ) : ModelRepository {
     var downloadCalls = mutableListOf<AiModel>()
     var cancelDownloadCalls = mutableListOf<AiModel>()
     var deleteCalls = mutableListOf<AiModel>()
 
-    override fun getAvailableModels(): Flow<List<AiModel>> = flowOf(availableModels)
+    override fun getAvailableModels(): Flow<List<AiModel>> = getException?.let { flow { throw it } } ?: flowOf(availableModels)
 
     override fun getSelectedModel(): AiModel? = selectedModel
 
