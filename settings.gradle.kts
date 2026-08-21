@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Code With AI"
+rootProject.name = "CodeMateX"
 include(":app")
