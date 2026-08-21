@@ -2,11 +2,41 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!--
+        Network Connectivity Permissions
+        
+        Context & Guidelines:
+        - INTERNET: Required to download on-device LLM model weights from Hugging Face / Cloudflare CDN.
+        - ACCESS_NETWORK_STATE: Allows WorkManager and OkHttp to detect active network connectivity (e.g. unmetered Wi-Fi).
+        
+        Official Documentation:
+        - https://developer.android.com/training/basics/network-ops/connecting
+    -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
+        Foreground Service & Notification Permissions (Android 14+ / API 34+ Data Sync Policy)
+        
+        Context & Guidelines:
+        1. Model Weights Transfer (2.6GB–3.7GB): On-device LLM weights require multi-minute downloads.
+           A Foreground Service prevents Android's background execution limits (Doze mode, process killer)
+           from killing downloads prematurely.
+        2. FOREGROUND_SERVICE_DATA_SYNC: Mandated on Android 14+ (API 34+) when running WorkManager jobs
+           with foregroundServiceType="dataSync".
+        3. POST_NOTIFICATIONS: Android 13+ (API 33+) runtime permission to display the ongoing download progress bar
+           and cancel action notification in the system notification shade.
+        4. WAKE_LOCK: Prevents CPU from going to sleep while streaming model weights chunks to disk.
+        
+        Official Documentation & Play Console Policy:
+        - Android 14 Foreground Service Types: https://developer.android.com/about/versions/14/changes/fgs-types-special-use#data-sync
+        - Android Notification Runtime Permission: https://developer.android.com/develop/ui/views/notifications/notification-permission
+        - WorkManager Foreground Services: https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running
+        - Play Console Policy Justification Guide: project-resources/google-play/foreground-service-declaration.md
+    -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <!--
