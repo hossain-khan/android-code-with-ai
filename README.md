@@ -1,6 +1,6 @@
 [![Android CI](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml) [![Android Release Build](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml) [![codecov](https://codecov.io/gh/hossain-khan/android-code-with-ai/graph/badge.svg?token=F4QSYSTLTX)](https://codecov.io/gh/hossain-khan/android-code-with-ai)
 
-# Code with AI
+# CodeMateX - Code with AI
 
 An on-device AI coding tutor for Android. Chat with local LLMs about programming languages, algorithms, and system design - no internet required after model download.
 
