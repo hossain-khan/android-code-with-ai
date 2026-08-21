@@ -150,6 +150,15 @@ Every screen with dynamic lists MUST include an expressive empty state:
 - Clear title and explanatory subtitle.
 - Interactive prompt chips or primary action button.
 
+### E. Markdown Rendering & Code Blocks
+LLM responses are rendered in native Compose using **`compose-richtext`** ([github.com/halilozercan/compose-richtext](https://github.com/halilozercan/compose-richtext)):
+- **Artifacts**: `com.halilibo.compose-richtext:richtext-commonmark` & `richtext-ui-material3` (CommonMark AST parser).
+- **Typography Sizing**: Scaled to ensure high readability within compact mobile chat bubbles:
+  - Base body text: `MaterialTheme.typography.bodyMedium` (`14.sp`, `20.sp` line height).
+  - Headings (H1–H6): Scaled proportionally (H1: `16.sp Bold`, H2: `15.sp Bold`, H3: `14.5.sp SemiBold`).
+  - Code Blocks: Monospace `12.5.sp` with `surfaceContainerLowest` container background and rounded 8.dp corners.
+  - Spacing: Compact `paragraphSpacing = 6.sp`.
+
 ---
 
 ## 6. AI Agent Implementation Checklist

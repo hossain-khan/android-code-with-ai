@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,6 +53,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -67,15 +69,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import com.halilibo.richtext.commonmark.Markdown
+import com.halilibo.richtext.ui.CodeBlockStyle
+import com.halilibo.richtext.ui.RichTextStyle
 import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
@@ -874,13 +881,62 @@ private fun MessageBubble(
                             is ChatMessage.User -> message.content
                         }
 
-                    Box(modifier = Modifier.padding(top = 8.dp)) {
-                        RichText {
-                            Markdown(content = messageContent)
-                        }
-                    }
+                    ChatMessageMarkdown(
+                        content = messageContent,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
                 }
             }
+        }
+    }
+}
+
+/**
+ * Markdown rendering component for chat message bubbles using [compose-richtext](https://github.com/halilozercan/compose-richtext).
+ *
+ * Configured with compact font scaling and monospace code formatting optimized for mobile chat bubble readability.
+ */
+@Composable
+private fun ChatMessageMarkdown(
+    content: String,
+    modifier: Modifier = Modifier,
+) {
+    val currentTheme = MaterialTheme.colorScheme
+    val chatMarkdownStyle =
+        remember(currentTheme) {
+            RichTextStyle(
+                paragraphSpacing = 6.sp,
+                headingStyle = { level: Int, defaultStyle: TextStyle ->
+                    when (level) {
+                        0 -> defaultStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        1 -> defaultStyle.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        2 -> defaultStyle.copy(fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
+                        else -> defaultStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                codeBlockStyle =
+                    CodeBlockStyle(
+                        textStyle =
+                            TextStyle(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.5.sp,
+                                lineHeight = 16.sp,
+                            ),
+                        modifier =
+                            Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(currentTheme.surfaceContainerLowest)
+                                .padding(8.dp),
+                    ),
+            )
+        }
+
+    ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp)) {
+        RichText(
+            style = chatMarkdownStyle,
+            modifier = modifier,
+        ) {
+            Markdown(content = content)
         }
     }
 }
