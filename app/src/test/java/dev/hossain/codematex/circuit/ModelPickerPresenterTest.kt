@@ -15,7 +15,7 @@ class ModelPickerPresenterTest {
         testModel(id = "google/gemma-4-e2b", downloadStatus = DownloadStatus.NOT_DOWNLOADED, localPath = null)
 
     @Test
-    fun whenModelsLoad_emitsSuccessWithModelList() =
+    fun `given models load - emits success with model list`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel, remoteModel))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -28,7 +28,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun whenModelLoadFails_emitsSuccessWithEmptyList() =
+    fun `given model load fails - emits success with empty list`() =
         runTest {
             val fakeRepo = FakeModelRepository(getException = IllegalStateException("Storage error"))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -41,7 +41,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun back_popsNavigator() =
+    fun `given back event - pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -55,7 +55,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun download_startsModelDownload() =
+    fun `given download event - starts model download`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -69,7 +69,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun cancelDownload_cancelsModelDownload() =
+    fun `given cancel download event - cancels model download`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -83,7 +83,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun delete_deletesModel() =
+    fun `given delete event - deletes model`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
             val navigator = FakeNavigator(ModelPickerScreen)
@@ -97,7 +97,7 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun select_selectsModelAndPopsNavigator() =
+    fun `given select event - selects model and pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
             val navigator = FakeNavigator(ModelPickerScreen)

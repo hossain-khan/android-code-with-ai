@@ -16,7 +16,7 @@ class SessionDetailPresenterTest {
         )
 
     @Test
-    fun whenSessionExists_emitsSuccessWithSessionAndMessages() =
+    fun `given session exists - emits success with session and message`() =
         runTest {
             val session = testSession(id = "s1", topic = CodingTopic.KOTLIN)
             val fakeRepo = FakeChatSessionRepository(sessions = listOf(session), messages = testMessages)
@@ -31,7 +31,7 @@ class SessionDetailPresenterTest {
         }
 
     @Test
-    fun whenSessionMissing_staysLoading() =
+    fun `given session missing - stays loading`() =
         runTest {
             val fakeRepo = FakeChatSessionRepository(sessions = emptyList())
             val navigator = FakeNavigator(SessionDetailScreen("unknown"))
@@ -43,7 +43,7 @@ class SessionDetailPresenterTest {
         }
 
     @Test
-    fun resumeSession_navigatesToChatScreen() =
+    fun `given resume session event - navigates to chat screen`() =
         runTest {
             val session = testSession(id = "s1", topic = CodingTopic.PYTHON)
             val fakeRepo = FakeChatSessionRepository(sessions = listOf(session), messages = testMessages)
@@ -61,7 +61,7 @@ class SessionDetailPresenterTest {
         }
 
     @Test
-    fun deleteSession_deletesSessionAndPopsNavigator() =
+    fun `given delete session event - deletes session and pops navigator`() =
         runTest {
             val session = testSession(id = "s1")
             val fakeRepo = FakeChatSessionRepository(sessions = listOf(session))
@@ -77,7 +77,7 @@ class SessionDetailPresenterTest {
         }
 
     @Test
-    fun back_popsNavigator() =
+    fun `given back event - pops navigator`() =
         runTest {
             val session = testSession(id = "s1")
             val fakeRepo = FakeChatSessionRepository(sessions = listOf(session))

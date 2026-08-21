@@ -21,7 +21,7 @@ class ChatPresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
 
     @Test
-    fun noModelSelected_whenNoDownloadedModels_returnsNoModelSelectedWithFalse() =
+    fun `given no downloaded models - emits no model selected with false`() =
         runTest {
             val fakeModelRepo =
                 FakeModelRepository(
@@ -48,7 +48,7 @@ class ChatPresenterTest {
         }
 
     @Test
-    fun noModelSelected_whenModelsDownloaded_returnsNoModelSelectedWithTrue() =
+    fun `given models downloaded - emits no model selected with true`() =
         runTest {
             val fakeModelRepo =
                 FakeModelRepository(
@@ -75,7 +75,7 @@ class ChatPresenterTest {
         }
 
     @Test
-    fun openModelPicker_navigatesToModelPickerScreen() =
+    fun `given open model picker event - navigates to model picker screen`() =
         runTest {
             val fakeModelRepo =
                 FakeModelRepository(

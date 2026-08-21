@@ -10,7 +10,7 @@ import org.junit.Test
 
 class SessionHistoryPresenterTest {
     @Test
-    fun computesAvailableTopicsAndFiltersCorrectly() =
+    fun `given sessions with multiple topics - computes available topics and filters correctly`() =
         runTest {
             val sessions =
                 listOf(
@@ -49,7 +49,7 @@ class SessionHistoryPresenterTest {
         }
 
     @Test
-    fun openSession_navigatesToChatScreen() =
+    fun `given open session event - navigates to chat screen`() =
         runTest {
             val sessions = listOf(testSession(id = "s1", topic = CodingTopic.KOTLIN))
             val fakeRepo = FakeChatSessionRepository(sessions = sessions)
@@ -72,7 +72,7 @@ class SessionHistoryPresenterTest {
         }
 
     @Test
-    fun back_popsNavigator() =
+    fun `given back event - pops navigator`() =
         runTest {
             val fakeRepo = FakeChatSessionRepository(sessions = emptyList())
             val navigator = FakeNavigator(SessionHistoryScreen)

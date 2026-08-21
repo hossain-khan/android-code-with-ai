@@ -43,7 +43,7 @@ class ChatSessionRepositoryImplTest {
     )
 
     @Test
-    fun getAllSessions_mapsEntitiesToChatSessions() =
+    fun `given session entities - get all sessions maps entities to chat sessions`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1", topic = "PYTHON")))
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -60,7 +60,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun getSession_whenSessionExists_returnsMatchingSession() =
+    fun `given session exists - get session returns matching session`() =
         runTest {
             val dao =
                 FakeSessionDao(
@@ -72,7 +72,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun getSession_whenSessionMissing_returnsNull() =
+    fun `given session missing - get session returns null`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1")))
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -81,7 +81,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun getMessages_mapsEntityTypesToChatMessages() =
+    fun `given message entities of all types - get messages maps entity types to chat messages`() =
         runTest {
             val dao =
                 FakeSessionDao(
@@ -124,7 +124,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_usesFirstUserMessageAsTitle() =
+    fun `given user message present - save session uses first user message as title`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -143,7 +143,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_truncatesLongTitlesToFiftyCharacters() =
+    fun `given long user message - save session truncates title to fifty characters`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -155,7 +155,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_withoutUserMessage_titleIsUntitled() =
+    fun `given no user message - save session title is untitled`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -166,7 +166,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_generatesSummaryWithLlm() =
+    fun `given llm responds - save session generates summary with llm`() =
         runTest {
             val dao = FakeSessionDao()
             // Real engine emits tokens with done=false, then a final empty token with done=true.
@@ -184,7 +184,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_whenLlmFails_usesFallbackSummary() =
+    fun `given llm fails - save session uses fallback summary`() =
         runTest {
             val dao = FakeSessionDao()
             fakeEngine.shouldThrow = RuntimeException("Inference failed")
@@ -201,7 +201,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_withEmptyMessages_summaryIsEmptySessionAndLlmNotCalled() =
+    fun `given empty messages - save session summary is empty session and llm is not called`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -213,7 +213,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_mapsMessageTypesAndOrderToEntities() =
+    fun `given all message types - save session maps message types and order to entities`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -237,7 +237,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun saveSession_upsertsSessionBeforeInsertingMessages() =
+    fun `given messages to save - save session upserts session before inserting messages`() =
         runTest {
             val dao = FakeSessionDao()
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
@@ -248,7 +248,7 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun deleteSession_deletesMessagesBeforeSession() =
+    fun `given existing session - delete session deletes messages before session`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1")))
             val repository = ChatSessionRepositoryImpl(dao, fakeEngine)

@@ -6,25 +6,25 @@ import org.junit.Test
 
 class DeviceMemoryTest {
     @Test
-    fun isModelCompatible_whenModelHasNoRequirement_isAlwaysCompatible() {
+    fun `given model has no ram requirement - is model compatible is always true`() {
         assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 0, deviceRamGb = 0))
         assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 0, deviceRamGb = 4))
     }
 
     @Test
-    fun isModelCompatible_whenDeviceMeetsRequirement_isCompatible() {
+    fun `given device meets ram requirement - is model compatible is true`() {
         assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 8))
         assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 12))
     }
 
     @Test
-    fun isModelCompatible_whenDeviceBelowRequirement_isNotCompatible() {
+    fun `given device below ram requirement - is model compatible is false`() {
         assertFalse(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 7))
         assertFalse(DeviceMemory.isModelCompatible(modelMinRamGb = 12, deviceRamGb = 8))
     }
 
     @Test
-    fun getProcessCpuTicks_neverReturnsNegativeValue() {
+    fun `given any platform - get process cpu ticks never returns negative value`() {
         // On platforms without /proc (e.g. macOS dev machines) this falls back to 0.
         assertTrue(DeviceMemory.getProcessCpuTicks() >= 0L)
     }

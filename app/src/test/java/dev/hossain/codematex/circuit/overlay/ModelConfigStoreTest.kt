@@ -8,12 +8,12 @@ class ModelConfigStoreTest {
     private val store = ModelConfigStore(ContextWrapper(null))
 
     @Test
-    fun config_byDefault_returnsDefaultModelConfig() {
+    fun `given default state - config returns default model config`() {
         assertEquals(ModelConfig(), store.config)
     }
 
     @Test
-    fun updateConfig_updatesCurrentConfig() {
+    fun `given new config - update config updates current config`() {
         val newConfig = ModelConfig(temperature = 0.2f, topK = 10, topP = 0.9f, maxTokens = 512)
 
         store.updateConfig(newConfig)
