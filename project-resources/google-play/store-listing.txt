@@ -1,0 +1,60 @@
+=== GOOGLE PLAY STORE LISTING METADATA ===
+
+--------------------------------------------------------------------------------
+APP TITLE (Max 30 characters)
+--------------------------------------------------------------------------------
+CodeMateX - AI Coding Tutor
+
+--------------------------------------------------------------------------------
+SHORT DESCRIPTION (Max 80 characters)
+--------------------------------------------------------------------------------
+100% private, on-device AI coding tutor for Android, Kotlin, Python & more.
+
+--------------------------------------------------------------------------------
+FULL DESCRIPTION (Max 4000 characters)
+--------------------------------------------------------------------------------
+CodeMateX is your intelligent, 100% on-device AI coding companion and tutor. Built for mobile engineers, students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
+
+No cloud servers. No subscriptions. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, debugging, and architecture guidance without sending a single byte of your code or queries over the internet.
+
+✨ KEY FEATURES
+
+🧠 100% Local On-Device AI
+• Powered by Google LiteRT-LM (supporting optimized Gemma 2B and lightweight models).
+• Zero latency from cloud network roundtrips.
+• Fully functional offline—code on planes, trains, or anywhere without Wi-Fi.
+
+🛡️ Complete Privacy & Security
+• Your code, prompts, and conversation history never leave your phone.
+• No accounts, tracking, or cloud data collection required.
+
+💻 Specialized Developer Tutoring Topics
+Get targeted assistance with interactive topic tracks tailored for modern development:
+• Kotlin Programming & Language Idioms
+• Android Jetpack & Modern Architecture (MVI / MVVM)
+• Jetpack Compose & Material 3 UI/UX
+• Kotlin Coroutines, Asynchronous Flow & Concurrency
+• Bug Triaging & Stacktrace Debugging
+• System Design, Algorithms & Data Structures
+• Python, Swift, Rust, and Web Technologies
+
+📊 Real-Time Technical Benchmarking Dashboard
+Inspect hardware execution in real time:
+• Hardware Backend acceleration badges (NPU, GPU OpenCL/Vulkan, and CPU).
+• Prefill Latency / Time-to-First-Token (TTFT) in milliseconds.
+• Active decode throughput in tokens per second (t/s).
+• Active model memory footprint and parameter boundaries.
+
+🎨 Modern Material 3 Expressive Design
+• Built entirely with Jetpack Compose following Material 3 Expressive guidelines.
+• Atmospheric ambient lighting and dynamic topic visual branding.
+• Responsive adaptive layout optimized for compact phones, foldables, and large tablets.
+• Dynamic topic filter chips for rapid session management.
+
+⚙️ HARDWARE REQUIREMENTS
+To deliver responsive on-device LLM inference without taxing the operating system, CodeMateX is optimized for modern high-performance devices:
+• RAM: 8 GB RAM minimum (devices with 6 GB or less may experience instability).
+• Processor: 64-bit architecture (ARM64-v8a).
+• Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration.
+
+Level up your engineering skills today with a private, powerful AI tutor right in your pocket.
