@@ -1,5 +1,8 @@
 package dev.hossain.codematex.circuit
 
+import android.Manifest
+import android.content.Context
+import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -32,6 +35,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -47,21 +52,30 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
@@ -100,6 +114,8 @@ private fun HomeLayout(
     state: HomeScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
+    NotificationPermissionHandler()
+
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
@@ -808,5 +824,85 @@ private fun IneligibleDeviceLayout(
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalPermissionsApi::class)
+@Composable
+private fun NotificationPermissionHandler() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE) }
+    var hasPrompted by remember { mutableStateOf(prefs.getBoolean("has_prompted_notifications", false)) }
+    val permissionState = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+    var showRationaleDialog by remember {
+        mutableStateOf(!hasPrompted && !permissionState.status.isGranted)
+    }
+
+    if (showRationaleDialog && !permissionState.status.isGranted) {
+        AlertDialog(
+            onDismissRequest = {
+                showRationaleDialog = false
+                hasPrompted = true
+                prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+            },
+            icon = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.NotificationsActive,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            },
+            title = {
+                Text(
+                    text = "Stay Updated on Downloads",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            text = {
+                Text(
+                    text =
+                        "CodeMateX downloads multi-gigabyte on-device AI models (2.6GB–3.7GB) to run locally on your phone.\n\n" +
+                            "Enable notifications to track real-time download progress and get alerted when your offline AI tutor is ready.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showRationaleDialog = false
+                        hasPrompted = true
+                        prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+                        permissionState.launchPermissionRequest()
+                    },
+                ) {
+                    Text("Enable Notifications")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showRationaleDialog = false
+                        hasPrompted = true
+                        prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+                    },
+                ) {
+                    Text("Not Now")
+                }
+            },
+        )
     }
 }
