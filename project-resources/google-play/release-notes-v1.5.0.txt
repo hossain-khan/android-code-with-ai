@@ -1,0 +1,8 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.5.0:
+• Official CodeMateX app branding and metadata update.
+• R8 code minification & resource shrinking for smaller download sizes and faster startup.
+• Rich AI Model cards with provenance, Apache 2.0 open-source licensing, and direct Hugging Face links.
+• Material 3 Expressive count pill badges on topic carousels.
+• Hardware compatibility diagnostic guardrails and UI refinements.
