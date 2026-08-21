@@ -13,6 +13,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Unit tests for [ChatSessionRepositoryImpl].
+ */
 class ChatSessionRepositoryImplTest {
     private val fakeEngine = FakeLlmEngine()
 

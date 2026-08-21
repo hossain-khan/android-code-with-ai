@@ -4,6 +4,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+/**
+ * Unit tests for [DeviceMemory].
+ */
 class DeviceMemoryTest {
     @Test
     fun `given model has no ram requirement - is model compatible is always true`() {

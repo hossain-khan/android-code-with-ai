@@ -16,6 +16,9 @@ class FakeHardwareEligibilityChecker(
     override fun checkEligibility(): HardwareEligibility = result
 }
 
+/**
+ * Unit tests for [HomePresenter].
+ */
 class HomePresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeModelRepo = FakeModelRepository()

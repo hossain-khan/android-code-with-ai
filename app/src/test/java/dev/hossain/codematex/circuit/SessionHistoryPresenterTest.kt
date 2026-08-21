@@ -8,6 +8,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
+/**
+ * Unit tests for [SessionHistoryPresenter].
+ */
 class SessionHistoryPresenterTest {
     @Test
     fun `given sessions with multiple topics - computes available topics and filters correctly`() =
