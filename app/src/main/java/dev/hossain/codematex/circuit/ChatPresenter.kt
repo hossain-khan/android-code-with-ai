@@ -45,14 +45,15 @@ class ChatPresenter(
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
+        var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
 
         LaunchedEffect(Unit) {
+            activeModel = modelRepository.getSelectedModel()
             modelRepository.getAvailableModels().collect { models ->
                 availableModels = models
+                activeModel = modelRepository.getSelectedModel()
             }
         }
-
-        var activeModel = modelRepository.getSelectedModel()
 
         // Instantly load messages from disk into UI state so the user sees their conversation immediately.
         LaunchedEffect(screen.sessionId) {
@@ -63,16 +64,17 @@ class ChatPresenter(
         }
 
         LaunchedEffect(activeModel, initTrigger) {
-            if (activeModel == null) {
+            val model = activeModel
+            if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
                 return@LaunchedEffect
             }
-            Timber.d("ChatPresenter: Initializing model=${activeModel.name}, path=${activeModel.localPath}")
+            Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}")
             isPreparing = true
             errorMessage = null
             val result =
                 chatInferenceOrchestrator.initialize(
-                    model = activeModel,
+                    model = model,
                     topic = screen.topic,
                     sessionId = screen.sessionId,
                     existingMessages = messages,
@@ -208,9 +210,15 @@ class ChatPresenter(
             }
 
             else -> {
-                val sizeMb = activeModel.sizeBytes / 1_000_000
+                val model =
+                    activeModel
+                        ?: return@present ChatScreen.State.Error(
+                            "No model available",
+                            eventSink,
+                        )
+                val sizeMb = model.sizeBytes / 1_000_000
                 val sizeText = "$sizeMb MB"
-                val memoryText = "Requires ${activeModel.minDeviceMemoryInGb}GB RAM"
+                val memoryText = "Requires ${model.minDeviceMemoryInGb}GB RAM"
                 val config = configStore.config
                 val configText = "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}"
 
@@ -218,7 +226,7 @@ class ChatPresenter(
                     messages = messages,
                     isGenerating = isGenerating,
                     isPreparing = isPreparing,
-                    modelName = activeModel.displayName,
+                    modelName = model.displayName,
                     activeBackend = chatInferenceOrchestrator.getActiveBackend()?.name,
                     modelSize = sizeText,
                     modelMemory = memoryText,
