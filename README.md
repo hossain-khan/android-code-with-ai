@@ -1,114 +1,118 @@
-[![Android CI](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml) [![Android Release Build](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml) [![codecov](https://codecov.io/gh/hossain-khan/android-code-with-ai/graph/badge.svg?token=F4QSYSTLTX)](https://codecov.io/gh/hossain-khan/android-code-with-ai)
+[![Android CI](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml) [![Android Release Build](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml) [![codecov](https://codecov.io/gh/hossain-khan/android-code-with-ai/graph/badge.svg?token=F4QSYSTLTX)](https://codecov.io/gh/hossain-khan/android-code-with-ai) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 # CodeMateX - Code with AI
 
-An on-device AI coding tutor for Android. Chat with local LLMs about programming languages, algorithms, and system design - no internet required after model download.
+An **on-device AI coding tutor** for Android. Chat privately with locally-executed Large Language Models (LLMs) about programming languages, algorithms, architecture, and system design — **100% offline, private, and with zero subscription fees**.
 
-> [!NOTE]
-> This is in experimental phase now and non-functional.
+---
 
-## Features
+## ✨ Features
 
-- **On-Device Inference** - Powered by Google's LiteRT-LM with CPU/GPU/NPU acceleration
-- **Gemma 4 Models** - E2B (2.4GB, 8GB RAM) and E4B (3.4GB, 12GB RAM) from HuggingFace
-- **Coding Topics** - Kotlin, Python, JavaScript, Rust, Go, Swift, Android, Web, Algorithms, System Design
-- **Session Persistence** - Auto-saved chats with AI-generated summaries, full message history review
-- **Markdown Rendering** - AI responses render with proper code block formatting
-- **Download Management** - Foreground service with progress tracking, cancel/resume support
-- **RAM Compatibility** - Incompatible models automatically disabled with clear messaging
-- **Dev Mode** - Stub responses for testing without downloading models
+- 🧠 **On-Device Inference** - Powered by Google's **LiteRT-LM** runtime with hardware acceleration across GPU, NPU, and CPU via XNNPack delegates.
+- 🤖 **Gemma 4 Models** - Support for **Gemma 4 E2B** (2.6 GB, 8 GB RAM) and **Gemma 4 E4B** (3.7 GB, 12 GB RAM) instruction-tuned weights.
+- 🛡️ **Hardware Fallback Engine** - Automated recovery loop (NPU ➔ GPU ➔ CPU) preventing crashes on devices with missing OpenCL drivers.
+- 🎨 **Material 3 Expressive & Adaptive** - Dynamic atmospheric gradient lighting, topic theme accents, and multi-pane adaptive layouts for phones, foldables, and tablets.
+- 💬 **Live Telemetry & Streaming** - Real-time Time-to-First-Token (TTFT) and decode throughput tracking (tokens/sec) directly in the chat interface.
+- ⌨️ **Fluid Chat Experience** - Markdown code syntax rendering, in-context notification permissions, and smart keyboard auto-dismissal.
+- 💾 **Session History & Auto-Summaries** - Persistent multi-turn conversation storage in Room database with AI-generated session summaries.
+- 📥 **Resilient Model Downloader** - Background WorkManager service featuring HTTP Range byte chunking, automatic resume, and cancellation support.
+- 🛠️ **Dev Mode** - Instant stub simulation for testing and UI development without downloading multi-gigabyte weights.
 
-## Tech Stack
+---
 
-| Layer | Technology |
-|-------|------------|
-| UI | Jetpack Compose + Material 3 |
-| Architecture | Circuit UDF (Unidirectional Data Flow) |
-| DI | Metro (KSP-based, faster than Hilt) |
-| Navigation | Circuit type-safe Screen objects |
-| Persistence | Room Database (sessions + messages) |
-| Background | WorkManager (model downloads) |
-| Inference | LiteRT-LM 0.11.0 |
-| Logging | Timber |
+## 🛠️ Tech Stack
 
-## Getting Started
+| Layer | Technology | Description |
+|---|---|---|
+| **UI & Layout** | **Jetpack Compose + Material 3 Expressive** | Modern declarative UI with adaptive multi-pane window sizing |
+| **Architecture** | **Slack Circuit** | MVI-based Presenter/UI pattern with unidirectional data flow |
+| **Dependency Injection** | **Metro** | KSP-based compile-time dependency injection |
+| **Inference Runtime** | **Google LiteRT-LM (0.11.0)** | High-performance edge AI model runtime |
+| **Persistence** | **Room Database** | Type-safe SQLite persistence for sessions and chat messages |
+| **Background Processing** | **AndroidX WorkManager** | Foreground downloads with progress notifications |
+| **Permissions** | **Accompanist Permissions** | Contextual runtime permissions for notification alerts |
+| **Code Coverage** | **Kover + Codecov** | Automated test verification and coverage reporting |
+| **Logging** | **Timber** | Lightweight, build-type aware structured logging |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
-- Android Studio Meerkat or later
+- Android Studio Ladybug / Meerkat or later
 - JDK 17+
-- Android SDK 37 (target), min SDK 28
+- Android SDK 37 (Target), min SDK 28
 
 ### Build & Run
 
 ```bash
-# Clone the repo
+# Clone the repository
 git clone https://github.com/hossain-khan/android-code-with-ai.git
 cd android-code-with-ai
+
+# Format code and run all checks
+./gradlew formatKotlin && ./gradlew check
 
 # Build debug APK
 ./gradlew assembleDebug
 
-# Install on device
+# Install on connected device or emulator
 ./gradlew installDebug
 ```
 
 ### Dev Mode
-
-By default, `DEV_MODE=true` in `local.properties` returns stub responses without a model file. Set to `false` for real inference:
+By default, `DEV_MODE=true` in `local.properties` provides instant mock AI responses without downloading weights. Set to `false` when running actual on-device models:
 
 ```properties
 # local.properties
 DEV_MODE=false
 ```
 
-### Model Download
+---
 
-1. Open the app → tap **Manage Models** (⚙️ icon)
-2. Tap **Download** on Gemma 4 E2B (recommended for 8GB RAM devices)
-3. Wait for download (~2.4GB) - progress shown in notification and UI
-4. Tap **Select** to activate the model
-5. Pick a coding topic and start chatting
-
-## Architecture
-
-```
-MainActivity (Circuit host)
-├── HomeScreen → Topic picker + recent sessions
-├── ChatScreen → Streaming chat with LLM
-├── ModelPickerScreen → Download/select models
-├── SessionHistoryScreen → Past sessions list
-└── SessionDetailScreen → Session messages + resume
-
-DI: Metro @ContributesTo aggregation (no manual module wiring)
-State: Circuit Presenter + rememberRetained (survives config changes)
-```
-
-## Project Structure
+## 🏛️ Architecture & Project Structure
 
 ```
 app/src/main/java/dev/hossain/codematex/
-├── circuit/                    # Screens (Presenter + UI)
-│   ├── overlay/                # Bottom sheet overlays
-│   └── ...
+├── circuit/                    # Circuit Screens, Presenters, and UI components
+│   ├── ChatPresenter.kt        # State management for chat sessions
+│   ├── ChatInferenceOrchestrator.kt # Inference lifecycle & token streaming
+│   ├── SystemStatsMonitor.kt   # CPU/RAM hardware monitor
+│   ├── ThroughputTracker.kt    # TTFT and tokens/sec calculator
+│   └── overlay/                # Bottom sheet dialogs and overlays
 ├── data/
-│   ├── model/                  # Domain models (AiModel, ChatMessage, etc.)
-│   ├── repository/             # Repository implementations
-│   └── local/                  # Room database
-├── runtime/                    # LiteRT-LM engine wrapper
-├── worker/                     # ModelDownloadWorker
-├── di/                         # Metro DI graph
-└── ui/theme/                   # Material 3 theme
+│   ├── local/                  # Room Database, DAOs, and Entities
+│   ├── model/                  # Domain models (AiModel, ChatMessage, CodingTopic)
+│   ├── network/                # OkHttpClient and Retrofit network configuration
+│   └── repository/             # Model and Session repository implementations
+├── domain/
+│   └── summary/                # Session summary generators and LLM prompt formatters
+├── runtime/                    # LiteRT-LM engine wrapper, factory, and fallback strategy
+├── worker/                     # ModelDownloadWorker & HttpModelDownloader
+├── di/                         # Metro DI scopes and contributors
+└── ui/
+    ├── component/              # Reusable UI widgets & gradient scrims
+    └── theme/                  # M3 Expressive theme, typography, and topic visual info
 ```
 
-## CI/CD
+---
 
-GitHub Actions workflows:
-- **CI builds** on PRs and `main` branch
-- **Kotlin lint** (kotlinter) + **Android lint** checks
-- **Unit tests** (Presenter tests with Circuit test utilities)
-- **Code coverage** ([Kover](https://github.com/Kotlin/kotlinx-kover)) + Codecov integration
-- **Release builds** (debug-signed, configure production keystore for releases)
+## 📚 Documentation & Guides
 
-## License
+- 🎨 **[Design Guidelines](docs/DESIGN_GUIDELINES.md)** - Material 3 Expressive specifications, adaptive layouts, and topic color systems.
+- 🚢 **[Release Process Guide](RELEASE.md)** - Step-by-step release lifecycle, versioning rules, and CI/CD cryptographic validation.
+- 🤖 **[AI Agent Guide](AGENTS.md)** - Project overview, JNI memory safety constraints, and core workflows for autonomous developers.
 
-MIT License - see [LICENSE](LICENSE) for details.
+---
+
+## 🔒 Security & CI/CD Verification
+
+GitHub Actions automates continuous verification on every PR and tag:
+- **Continuous Integration ([`android.yml`](.github/workflows/android.yml))**: Automated Kotlin formatting checks (`kotlinter`), Android Lint, JVM unit tests, and Kover coverage thresholds.
+- **Production Releases ([`android-release.yml`](.github/workflows/android-release.yml))**: Automated production keystore signing with cryptographic `apksigner` SHA-256 certificate fingerprint verification before attaching binaries to GitHub Releases.
+
+---
+
+## 📄 License
+
+CodeMateX is open source software licensed under the [MIT License](LICENSE).
