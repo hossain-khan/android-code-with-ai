@@ -6,7 +6,7 @@ import dev.hossain.codematex.data.local.SessionEntity
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.domain.summary.SessionSummaryGenerator
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
@@ -21,7 +21,7 @@ class ChatSessionRepositoryImpl
     @Inject
     constructor(
         private val sessionDao: SessionDao,
-        @Suppress("UNUSED_PARAMETER") private val llmEngine: LlmEngine,
+        private val summaryGenerator: SessionSummaryGenerator,
     ) : ChatSessionRepository {
         override fun getAllSessions(): Flow<List<ChatSession>> =
             sessionDao.getAllSessions().map { entities ->
@@ -43,9 +43,9 @@ class ChatSessionRepositoryImpl
                     .filterIsInstance<ChatMessage.User>()
                     .firstOrNull()
                     ?.content
-                    ?.take(50) ?: "Untitled"
+                    ?.take(TITLE_MAX_LENGTH) ?: "Untitled"
 
-            val summary = generateSummary(messages)
+            val summary = summaryGenerator.generateSummary(messages)
 
             sessionDao.upsertSession(
                 SessionEntity(
@@ -63,37 +63,6 @@ class ChatSessionRepositoryImpl
                     msg.toMessageEntity(sessionId, index)
                 },
             )
-        }
-
-        private suspend fun generateSummary(messages: List<ChatMessage>): String {
-            val conversationText =
-                messages
-                    .joinToString("\n") { msg ->
-                        when (msg) {
-                            is ChatMessage.User -> "User: ${msg.content}"
-                            is ChatMessage.Agent -> "AI: ${msg.content.take(200)}"
-                            else -> ""
-                        }
-                    }.take(1000)
-
-            if (conversationText.isBlank()) {
-                return "Empty session"
-            }
-
-            var summary = ""
-            try {
-                llmEngine.runInference(
-                    "Summarize this coding learning session in 1-2 sentences: $conversationText",
-                ) { token, done ->
-                    if (!done) {
-                        summary += token
-                    }
-                }
-            } catch (e: Exception) {
-                // Fallback if summary generation fails
-            }
-
-            return summary.ifBlank { "Coding session about ${messages.size} messages" }
         }
 
         override suspend fun deleteSession(sessionId: String) {
@@ -144,4 +113,8 @@ class ChatSessionRepositoryImpl
                 timestamp = System.currentTimeMillis(),
                 orderIndex = index,
             )
+
+        private companion object {
+            private const val TITLE_MAX_LENGTH = 50
+        }
     }

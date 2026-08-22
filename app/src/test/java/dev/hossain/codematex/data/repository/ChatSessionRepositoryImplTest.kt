@@ -1,23 +1,29 @@
 package dev.hossain.codematex.data.repository
 
-import dev.hossain.codematex.circuit.FakeLlmEngine
 import dev.hossain.codematex.data.local.FakeSessionDao
 import dev.hossain.codematex.data.local.MessageEntity
 import dev.hossain.codematex.data.local.SessionEntity
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.domain.summary.FakeSessionSummaryGenerator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /**
  * Unit tests for [ChatSessionRepositoryImpl].
  */
 class ChatSessionRepositoryImplTest {
-    private val fakeEngine = FakeLlmEngine()
+    private lateinit var summaryGenerator: FakeSessionSummaryGenerator
+
+    @Before
+    fun setUp() {
+        summaryGenerator = FakeSessionSummaryGenerator()
+    }
 
     private fun testSessionEntity(
         id: String = "s1",
@@ -49,7 +55,7 @@ class ChatSessionRepositoryImplTest {
     fun `given session entities - get all sessions maps entities to chat sessions`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1", topic = "PYTHON")))
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             val sessions = repository.getAllSessions().first()
             assertEquals(1, sessions.size)
@@ -69,7 +75,7 @@ class ChatSessionRepositoryImplTest {
                 FakeSessionDao(
                     sessions = listOf(testSessionEntity(id = "s1"), testSessionEntity(id = "s2")),
                 )
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             assertEquals("s2", repository.getSession("s2")?.id)
         }
@@ -78,7 +84,7 @@ class ChatSessionRepositoryImplTest {
     fun `given session missing - get session returns null`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1")))
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             assertNull(repository.getSession("unknown"))
         }
@@ -98,7 +104,7 @@ class ChatSessionRepositoryImplTest {
                             testMessageEntity(sessionId = "other", type = "user", content = "x", orderIndex = 0),
                         ),
                 )
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             val messages = repository.getMessages("s1")
             assertEquals(5, messages.size)
@@ -130,7 +136,7 @@ class ChatSessionRepositoryImplTest {
     fun `given user message present - save session uses first user message as title`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
             val messages =
                 listOf(
                     ChatMessage.User("Explain Kotlin coroutines"),
@@ -149,7 +155,7 @@ class ChatSessionRepositoryImplTest {
     fun `given long user message - save session truncates title to fifty characters`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
             val longMessage = "a".repeat(100)
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User(longMessage)))
@@ -161,7 +167,7 @@ class ChatSessionRepositoryImplTest {
     fun `given no user message - save session title is untitled`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.Agent("Hello!")))
 
@@ -169,12 +175,11 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
-    fun `given llm responds - save session generates summary with llm`() =
+    fun `given summary generator returns summary - save session stores summary`() =
         runTest {
             val dao = FakeSessionDao()
-            // Real engine emits tokens with done=false, then a final empty token with done=true.
-            fakeEngine.responseTokens = listOf("Generated ", "summary", "")
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            summaryGenerator.summaryToReturn = "Generated summary"
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
             val messages =
                 listOf(
                     ChatMessage.User("Explain Kotlin coroutines"),
@@ -184,42 +189,47 @@ class ChatSessionRepositoryImplTest {
             repository.saveSession(CodingTopic.KOTLIN, messages)
 
             assertEquals("Generated summary", dao.upsertedSessions.single().summary)
+            assertEquals(1, summaryGenerator.generateSummaryCalls)
         }
 
     @Test
-    fun `given llm fails - save session uses fallback summary`() =
+    fun `given summary generator throws - save session propagates exception`() =
         runTest {
             val dao = FakeSessionDao()
-            fakeEngine.shouldThrow = RuntimeException("Inference failed")
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            summaryGenerator.shouldThrow = RuntimeException("Summary failed")
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
             val messages =
                 listOf(
                     ChatMessage.User("Explain Kotlin coroutines"),
                     ChatMessage.Agent("Coroutines are lightweight threads."),
                 )
 
-            repository.saveSession(CodingTopic.KOTLIN, messages)
-
-            assertEquals("Coding session about 2 messages", dao.upsertedSessions.single().summary)
+            try {
+                repository.saveSession(CodingTopic.KOTLIN, messages)
+                throw AssertionError("Expected exception to be thrown")
+            } catch (e: RuntimeException) {
+                assertEquals("Summary failed", e.message)
+            }
         }
 
     @Test
-    fun `given empty messages - save session summary is empty session and llm is not called`() =
+    fun `given empty messages - save session stores generated summary`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            summaryGenerator.summaryToReturn = "Empty session"
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             repository.saveSession(CodingTopic.KOTLIN, emptyList())
 
             assertEquals("Empty session", dao.upsertedSessions.single().summary)
-            assertNull(fakeEngine.lastInput)
+            assertEquals(1, summaryGenerator.generateSummaryCalls)
         }
 
     @Test
     fun `given all message types - save session maps message types and order to entities`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
             val messages =
                 listOf(
                     ChatMessage.User("question"),
@@ -243,7 +253,7 @@ class ChatSessionRepositoryImplTest {
     fun `given messages to save - save session upserts session before inserting messages`() =
         runTest {
             val dao = FakeSessionDao()
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
 
@@ -254,7 +264,7 @@ class ChatSessionRepositoryImplTest {
     fun `given existing session - delete session deletes messages before session`() =
         runTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1")))
-            val repository = ChatSessionRepositoryImpl(dao, fakeEngine)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             repository.deleteSession("s1")
 
