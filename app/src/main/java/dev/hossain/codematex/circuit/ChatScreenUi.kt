@@ -637,6 +637,14 @@ private fun ChatInputField(
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             if (state.isPreparing) {
+                val shortModelName = state.modelName.removeSuffix("-litert-lm")
+                val labelText =
+                    if (shortModelName.isNotBlank()) {
+                        "Initializing $shortModelName model..."
+                    } else {
+                        "Initializing model..."
+                    }
+
                 Row(
                     modifier =
                         Modifier
@@ -648,7 +656,7 @@ private fun ChatInputField(
                     CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Preparing model...",
+                        text = labelText,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
