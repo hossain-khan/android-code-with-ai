@@ -2,12 +2,18 @@ package dev.hossain.codematex.util
 
 import android.app.ActivityManager
 import android.content.Context
+import java.io.File
 
 object DeviceMemory {
-    fun getDeviceRamGb(context: Context): Int {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    fun getDeviceRamGb(context: Context): Int =
+        getDeviceRamGb { memoryInfo ->
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.getMemoryInfo(memoryInfo)
+        }
+
+    fun getDeviceRamGb(getMemoryInfo: (ActivityManager.MemoryInfo) -> Unit): Int {
         val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memoryInfo)
+        getMemoryInfo(memoryInfo)
         return (memoryInfo.totalMem / (1024 * 1024 * 1024)).toInt()
     }
 
@@ -21,21 +27,25 @@ object DeviceMemory {
         val totalGb: Float,
     )
 
-    fun getMemoryStats(context: Context): MemoryStats {
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    fun getMemoryStats(context: Context): MemoryStats =
+        getMemoryStats { memoryInfo ->
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            activityManager.getMemoryInfo(memoryInfo)
+        }
+
+    fun getMemoryStats(getMemoryInfo: (ActivityManager.MemoryInfo) -> Unit): MemoryStats {
         val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memoryInfo)
+        getMemoryInfo(memoryInfo)
         val totalGb = memoryInfo.totalMem / 1_000_000_000f
         val availGb = memoryInfo.availMem / 1_000_000_000f
         val usedGb = totalGb - availGb
         return MemoryStats(usedGb, totalGb)
     }
 
-    fun getProcessCpuTicks(): Long =
+    fun getProcessCpuTicks(statFilePath: String = "/proc/self/stat"): Long =
         try {
             val stat =
-                java.io
-                    .File("/proc/self/stat")
+                File(statFilePath)
                     .readText()
                     .trim()
                     .split(Regex("\\s+"))
