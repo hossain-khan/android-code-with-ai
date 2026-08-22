@@ -35,7 +35,7 @@ git checkout -b chore/bump-version-X.Y.Z
 ---
 
 ### Step 2: Bump Version in `app/build.gradle.kts`
-Open [`app/build.gradle.kts`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/build.gradle.kts) and update `defaultConfig`:
+Open [`app/build.gradle.kts`](app/build.gradle.kts) and update `defaultConfig`:
 - Increment `versionCode` by `1` (must always be monotonically increasing for Google Play).
 - Set `versionName` to the semantic version string (e.g., `"1.8.0"`).
 
@@ -53,7 +53,7 @@ defaultConfig {
 ---
 
 ### Step 3: Create Google Play Release Notes
-Create a new release notes file under [`project-resources/google-play/release-notes-vX.Y.Z.txt`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/project-resources/google-play/).
+Create a new release notes file under [`project-resources/google-play/release-notes-vX.Y.Z.txt`](project-resources/google-play/).
 
 > [!IMPORTANT]
 > **Google Play Console Character Limit**: Release notes must be **strictly under 500 characters** per language.
@@ -141,7 +141,7 @@ gh release create X.Y.Z \
 
 ## 3. Automated CI/CD Pipeline (`android-release.yml`)
 
-When a GitHub Release is published, [`.github/workflows/android-release.yml`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/.github/workflows/android-release.yml) automatically executes:
+When a GitHub Release is published, [`.github/workflows/android-release.yml`](.github/workflows/android-release.yml) automatically executes:
 
 1. **Builds Release Binaries**:
    - Compiles `assembleRelease` (producing `app-vX.Y.Z.apk`).

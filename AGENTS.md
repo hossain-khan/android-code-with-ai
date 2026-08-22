@@ -8,8 +8,8 @@ Welcome! This guide outlines the project structure, design patterns, core workfl
 CodeMateX is a native Android application that runs optimized Large Language Models (e.g., Gemma 2B) locally on the user's device using Google's **LiteRT-LM** runtime.
 
 * **Architecture**: Slack's **Circuit** framework (MVI-based Presenter/UI pattern), facilitating clear separation between State, UI Event handlers, and Composable rendering.
-* **State Management**: Presenters (like [ChatPresenter](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/circuit/ChatPresenter.kt)) yield a state stream that triggers unidirectional UI redraws.
-* **Engine Core**: [LlmEngine](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/runtime/LlmEngine.kt) interfaces with the native LiteRT-LM runtime wrapper to manage inference loops, system prompting, context restoration, and token extraction.
+* **State Management**: Presenters (like [ChatPresenter](app/src/main/java/dev/hossain/codematex/circuit/ChatPresenter.kt)) yield a state stream that triggers unidirectional UI redraws.
+* **Engine Core**: [LlmEngine](app/src/main/java/dev/hossain/codematex/runtime/LlmEngine.kt) interfaces with the native LiteRT-LM runtime wrapper to manage inference loops, system prompting, context restoration, and token extraction.
 
 ---
 
@@ -18,7 +18,7 @@ CodeMateX is a native Android application that runs optimized Large Language Mod
 On-device inference relies heavily on JNI transitions between JVM Kotlin code and C++ native memory allocations. **Violating these constraints will cause immediate segmentation faults (SIGSEGV) or native application crashes.**
 
 ### A. Callback Object Retention (JNI GC Race)
-* **Rule**: Always retain JNI callback structures (like `MessageCallback` instances passed to `sendMessageAsync`) in a class-level member variable (e.g. `activeCallback` in [LlmEngineImpl](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/runtime/LlmEngineImpl.kt)).
+* **Rule**: Always retain JNI callback structures (like `MessageCallback` instances passed to `sendMessageAsync`) in a class-level member variable (e.g. `activeCallback` in [LlmEngineImpl](app/src/main/java/dev/hossain/codematex/runtime/LlmEngineImpl.kt)).
 * **Rationale**: LiteRT's `sendMessageAsync` runs native background threads. If a callback object is created locally within a suspended coroutine scope, the JVM may garbage-collect the callback instance as soon as the coroutine resumes (returning from the Kotlin method). However, the native C++ thread may still be unwinding the callback call stack. Keeping a class-level strong reference prevents GC until the next message is initiated or cleanup occurs.
 
 ### B. Defensively Wrap JNI Inputs
@@ -52,7 +52,7 @@ graph TD
 
 ## 4. Sticky Technical Benchmarking Panel
 
-The chat screen contains a sticky benchmarking dashboard right below the top app bar in [ChatScreenUi.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/circuit/ChatScreenUi.kt). It provides:
+The chat screen contains a sticky benchmarking dashboard right below the top app bar in [ChatScreenUi.kt](app/src/main/java/dev/hossain/codematex/circuit/ChatScreenUi.kt). It provides:
 1. **Model Specs**: File size and memory boundaries (e.g. `2588 MB • Requires 4GB RAM`).
 2. **Settings**: Sampler settings (`Temp`, `Top-K`, `Top-P`).
 3. **Execution Backend**: CPU, GPU, or NPU badge (green-tinted if hardware-accelerated, red-tinted warning if running on CPU).
@@ -62,7 +62,7 @@ The chat screen contains a sticky benchmarking dashboard right below the top app
 
 ## 5. UI/UX Design System & Adaptive Guidelines
 
-To ensure a modern, premium, and user-friendly experience, CodeMateX strictly adheres to the **Material 3 Expressive** and **Material You Adaptive** design specifications. **Every agent implementing or modifying UI must consult [docs/DESIGN_GUIDELINES.md](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/docs/DESIGN_GUIDELINES.md) and follow these core rules:**
+To ensure a modern, premium, and user-friendly experience, CodeMateX strictly adheres to the **Material 3 Expressive** and **Material You Adaptive** design specifications. **Every agent implementing or modifying UI must consult [docs/DESIGN_GUIDELINES.md](docs/DESIGN_GUIDELINES.md) and follow these core rules:**
 
 ### A. Material 3 Surface Container Hierarchy
 - Use semantic M3 surface containers rather than arbitrary color overrides:
@@ -81,8 +81,8 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
 - **Medium & Expanded (>=600dp / Foldables & Tablets)**: Multi-column grid (`GridCells.Adaptive(minSize = 340.dp)`) or 2-pane master-detail layout (360dp left control pane + expanded right content pane).
 
 ### C. Atmospheric Jetcaster Lighting & Topic Accents
-- Screen scaffolds and hero banners should leverage `Modifier.radialGradientScrim()` from [GradientScrim.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt).
-- Dynamically tint ambient lighting, glyph badges, and borders using the active topic's visual metadata from [TopicTheme.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/theme/TopicTheme.kt).
+- Screen scaffolds and hero banners should leverage `Modifier.radialGradientScrim()` from [GradientScrim.kt](app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt).
+- Dynamically tint ambient lighting, glyph badges, and borders using the active topic's visual metadata from [TopicTheme.kt](app/src/main/java/dev/hossain/codematex/ui/theme/TopicTheme.kt).
 
 ### D. Expressive Tokens & Empty States
 - Always use `CircularWavyProgressIndicator` / `LinearWavyProgressIndicator` for loading/streaming states.
@@ -109,3 +109,19 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
   ```bash
   ./gradlew check
   ```
+
+---
+
+## 7. Release Process & Versioning
+
+Whenever preparing or cutting a new application release, **all agents must strictly follow the workflow detailed in [RELEASE.md](RELEASE.md)**:
+
+1. **Branching**: Create `chore/bump-version-X.Y.Z` off `main`.
+2. **Version Bump**: Increment `versionCode` by `1` and update `versionName = "X.Y.Z"` in [`app/build.gradle.kts`](app/build.gradle.kts).
+3. **Play Store Notes**: Draft user-facing release notes under `project-resources/google-play/release-notes-vX.Y.Z.txt` (**strictly under 500 characters**).
+4. **Verification**: Run `./gradlew formatKotlin && ./gradlew check`.
+5. **PR & Merge**: Open a PR, merge into `main`, and pull latest `main`.
+6. **Tag & Publish**: Create git tag `X.Y.Z` (`git tag X.Y.Z && git push origin X.Y.Z`) and publish a GitHub Release (`gh release create X.Y.Z ...`).
+7. **CI/CD Automation**: GitHub Actions ([`.github/workflows/android-release.yml`](.github/workflows/android-release.yml)) will build, sign with the production keystore, cryptographically verify the signature with `apksigner` against the expected SHA-256 certificate fingerprint, and attach the verified release APK & AAB to the release.
+
+

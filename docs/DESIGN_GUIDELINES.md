@@ -46,7 +46,7 @@ CodeMateX uses Material 3 dynamic color palettes with defined surface container 
 
 ### Topic Visual Identity & Dynamic Accents
 
-Every coding topic defined in [`CodingTopic.kt`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/data/model/CodingTopic.kt) has visual metadata in [`TopicTheme.kt`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/theme/TopicTheme.kt):
+Every coding topic defined in [`CodingTopic.kt`](../app/src/main/java/dev/hossain/codematex/data/model/CodingTopic.kt) has visual metadata in [`TopicTheme.kt`](../app/src/main/java/dev/hossain/codematex/ui/theme/TopicTheme.kt):
 
 ```kotlin
 val visualInfo = topic.visualInfo
@@ -56,7 +56,7 @@ val visualInfo = topic.visualInfo
 // visualInfo.starterPrompts -> Interactive prompt suggestions
 ```
 
-### Ambient Gradient Scrims ([GradientScrim.kt](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt))
+### Ambient Gradient Scrims ([GradientScrim.kt](../app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt))
 
 Use radial gradient scrims on screen scaffolds and hero banners:
 ```kotlin
