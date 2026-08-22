@@ -1,0 +1,170 @@
+# Release Process Guide: CodeMateX
+
+This document outlines the standard release lifecycle and CI/CD automation workflow for **CodeMateX**. All AI agents and maintainers must follow these steps to ensure consistent versioning, signed binary verification, and smooth Play Store deployment.
+
+---
+
+## 1. Overview & Release Architecture
+
+```mermaid
+graph TD
+    A[Checkout chore/bump-version-X.Y.Z] --> B[Bump versionCode & versionName in app/build.gradle.kts]
+    B --> C[Draft Google Play Release Notes in project-resources/google-play/]
+    C --> D[Run ./gradlew formatKotlin && ./gradlew check]
+    D --> E[Open & Merge Pull Request to main]
+    E --> F[Tag Release vX.Y.Z on main]
+    F --> G[Publish GitHub Release]
+    G --> H[GitHub Actions: android-release.yml triggers]
+    H --> I[Build Signed APK & AAB with Production Keystore]
+    I --> J[apksigner verifies Signature & SHA-256 Certificate Fingerprint]
+    J --> K[Attach Verified APK & AAB to GitHub Release]
+```
+
+---
+
+## 2. Step-by-Step Release Procedure
+
+### Step 1: Create a Release Branch
+Ensure `main` is up to date and create a dedicated version bump branch:
+```bash
+git checkout main
+git pull --rebase
+git checkout -b chore/bump-version-X.Y.Z
+```
+
+---
+
+### Step 2: Bump Version in `app/build.gradle.kts`
+Open [`app/build.gradle.kts`](app/build.gradle.kts) and update `defaultConfig`:
+- Increment `versionCode` by `1` (must always be monotonically increasing for Google Play).
+- Set `versionName` to the semantic version string (e.g., `"1.8.0"`).
+
+```kotlin
+defaultConfig {
+    applicationId = "dev.hossain.codematex"
+    minSdk = libs.versions.minSdk.get().toInt()
+    targetSdk = libs.versions.targetSdk.get().toInt()
+    versionCode = 9          // <-- Increment
+    versionName = "1.8.0"    // <-- Set new semantic version
+    // ...
+}
+```
+
+---
+
+### Step 3: Create Google Play Release Notes
+Create a new release notes file under [`project-resources/google-play/release-notes-vX.Y.Z.txt`](project-resources/google-play/).
+
+> [!IMPORTANT]
+> **Google Play Console Character Limit**: Release notes must be **strictly under 500 characters** per language.
+
+**Template**:
+```text
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in vX.Y.Z:
+• Feature 1: Description of key user-facing feature.
+• Feature 2: Performance or UX improvement.
+• Feature 3: Bug fix or architectural optimization.
+```
+
+---
+
+### Step 4: Run Code Quality & Verification Checks
+Execute formatting and complete test verification locally:
+```bash
+./gradlew formatKotlin && ./gradlew check
+```
+
+Ensure that:
+- Spotless Kotlin formatting passes without modifications.
+- Android Lint passes with 0 errors.
+- All JVM unit tests pass (100% success).
+- Kover coverage verification passes.
+
+---
+
+### Step 5: Commit, Push, and Open Pull Request
+Commit the version bump and release notes:
+```bash
+git add app/build.gradle.kts project-resources/google-play/release-notes-vX.Y.Z.txt
+git commit -m "Bump version to X.Y.Z (versionCode N) with release notes"
+git push -u origin chore/bump-version-X.Y.Z
+```
+
+Create a Pull Request with `gh pr create`:
+```bash
+gh pr create \
+  --title "Bump version to X.Y.Z (versionCode N) and add release notes" \
+  --body "## Summary
+Prepares CodeMateX vX.Y.Z (versionCode = N).
+
+### What's Changed:
+- Bullet point 1
+- Bullet point 2
+
+### Verification:
+- Passed ./gradlew formatKotlin && ./gradlew check."
+```
+
+---
+
+### Step 6: Merge PR & Sync `main`
+Once reviewed and approved:
+1. Merge the Pull Request on GitHub.
+2. Pull latest `main` locally:
+```bash
+git checkout main
+git pull --rebase
+git branch -d chore/bump-version-X.Y.Z
+```
+
+---
+
+### Step 7: Tag & Publish Release
+Create and push the git tag:
+```bash
+git tag X.Y.Z
+git push origin X.Y.Z
+```
+
+Publish the official GitHub Release:
+```bash
+gh release create X.Y.Z \
+  --title "CodeMateX vX.Y.Z" \
+  --notes "## What's Changed in vX.Y.Z:
+- Summary of improvements
+- Bug fixes and optimizations"
+```
+
+---
+
+## 3. Automated CI/CD Pipeline (`android-release.yml`)
+
+When a GitHub Release is published, [`.github/workflows/android-release.yml`](.github/workflows/android-release.yml) automatically executes:
+
+1. **Builds Release Binaries**:
+   - Compiles `assembleRelease` (producing `app-vX.Y.Z.apk`).
+   - Compiles `bundleRelease` (producing `app-vX.Y.Z.aab`).
+2. **Signs with Production Keystore**:
+   - Decodes base64-encoded release keystore from repository secrets (`RELEASE_KEYSTORE_BASE64`).
+3. **Cryptographic Validation**:
+   - Runs `apksigner verify --verbose --print-certs` on the generated release APK.
+   - Extracts the SHA-256 certificate fingerprint and asserts it strictly matches the production key:
+     ```text
+     c0547bb27a85df762bf6a96e2f1837c76891eb294efb70f05f778fef1db441e8
+     ```
+   - Automatically fails the build if signed with a debug certificate or mismatched key.
+4. **Artifact Publishing**:
+   - Uploads `app-vX.Y.Z.apk` and `app-vX.Y.Z.aab` directly to the GitHub Release.
+
+---
+
+## 4. Release History & Cadence Reference
+
+| Version | `versionCode` | Release Date | Key Highlights |
+| :---: | :---: | :---: | :--- |
+| `1.7.0` | `8` | 2026-08-22 | SOLID architecture refactor (P1-P6), HTTP range downloader, JNI safety, M3 input dock. |
+| `1.6.0` | `7` | 2026-08-21 | Production release keystore enforcement, initial Google Play release notes, Markdown chat typography. |
+| `1.5.0` | `6` | 2026-08-20 | Atmospheric M3 Jetcaster redesign, multi-pane adaptive layouts, wavy progress indicators. |
+| `1.4.0` | `5` | 2026-08-19 | On-device LiteRT-LM runtime integration, Gemma 2B/4B model allowlist. |
