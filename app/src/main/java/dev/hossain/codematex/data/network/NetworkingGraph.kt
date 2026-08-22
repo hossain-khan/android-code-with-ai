@@ -31,24 +31,20 @@ interface NetworkingGraph {
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun provideOkHttpClient(): OkHttpClient {
-        val loggingLevel =
-            if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BODY
-            } else {
-                HttpLoggingInterceptor.Level.NONE
-            }
-
-        return OkHttpClient
+    fun provideOkHttpClient(): OkHttpClient =
+        OkHttpClient
             .Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor().apply {
-                    level = loggingLevel
-                },
-            ).connectTimeout(30, TimeUnit.SECONDS)
+            .apply {
+                if (BuildConfig.DEBUG) {
+                    addInterceptor(
+                        HttpLoggingInterceptor().apply {
+                            level = HttpLoggingInterceptor.Level.BODY
+                        },
+                    )
+                }
+            }.connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
-    }
 
     /**
      * Provides a [Json] instance configured to be lenient with unknown keys,

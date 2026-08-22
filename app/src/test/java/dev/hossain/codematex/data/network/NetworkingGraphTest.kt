@@ -22,15 +22,12 @@ class NetworkingGraphTest {
         assertEquals(TimeUnit.SECONDS.toMillis(30), client.readTimeoutMillis.toLong())
 
         val loggingInterceptor = client.interceptors.filterIsInstance<HttpLoggingInterceptor>().firstOrNull()
-        assertNotNull(loggingInterceptor)
-
-        val expectedLevel =
-            if (BuildConfig.DEBUG) {
-                HttpLoggingInterceptor.Level.BODY
-            } else {
-                HttpLoggingInterceptor.Level.NONE
-            }
-        assertEquals(expectedLevel, loggingInterceptor?.level)
+        if (BuildConfig.DEBUG) {
+            org.junit.Assert.assertNotNull(loggingInterceptor)
+            assertEquals(HttpLoggingInterceptor.Level.BODY, loggingInterceptor?.level)
+        } else {
+            org.junit.Assert.assertNull(loggingInterceptor)
+        }
     }
 
     @Test
