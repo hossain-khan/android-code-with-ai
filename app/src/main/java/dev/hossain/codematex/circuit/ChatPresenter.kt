@@ -1,6 +1,5 @@
 package dev.hossain.codematex.circuit
 
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -20,8 +19,8 @@ import dev.hossain.codematex.data.model.DevModels
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
-import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.system.DeviceMemoryProvider
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -37,7 +36,7 @@ class ChatPresenter(
     private val modelRepository: ModelRepository,
     private val sessionRepository: ChatSessionRepository,
     private val configStore: ModelConfigStore,
-    @param:ApplicationContext private val context: Context,
+    private val deviceMemoryProvider: DeviceMemoryProvider,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -101,9 +100,7 @@ class ChatPresenter(
 
         LaunchedEffect(isGenerating) {
             if (isGenerating) {
-                var prevTicks =
-                    dev.hossain.codematex.util.DeviceMemory
-                        .getProcessCpuTicks()
+                var prevTicks = deviceMemoryProvider.getProcessCpuTicks()
                 var prevTime = System.currentTimeMillis()
                 val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
 
@@ -111,18 +108,14 @@ class ChatPresenter(
                     kotlinx.coroutines.delay(1000)
                     val now = System.currentTimeMillis()
                     val elapsedSec = (now - prevTime) / 1000f
-                    val currentTicks =
-                        dev.hossain.codematex.util.DeviceMemory
-                            .getProcessCpuTicks()
+                    val currentTicks = deviceMemoryProvider.getProcessCpuTicks()
 
                     if (elapsedSec > 0.1f) {
                         val ticksDiff = currentTicks - prevTicks
                         val cpuUsage = ((ticksDiff / 100f) / elapsedSec) * 100f
                         val scaledCpu = (cpuUsage / cores).coerceIn(0f, 100f)
 
-                        val mem =
-                            dev.hossain.codematex.util.DeviceMemory
-                                .getMemoryStats(context)
+                        val mem = deviceMemoryProvider.getMemoryStats()
                         systemStatsInfo =
                             "CPU: ${"%.0f".format(scaledCpu)}% • RAM: ${"%.1f".format(mem.usedGb)} GB / ${"%.1f".format(mem.totalGb)} GB"
 

@@ -7,6 +7,7 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.system.FakeDeviceMemoryProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,6 +23,7 @@ class ChatPresenterTest {
     private val configStore = ModelConfigStore(fakeContext)
     private val fakeEngine = FakeLlmEngine()
     private val fakeSessionRepo = FakeChatSessionRepository()
+    private val fakeDeviceMemoryProvider = FakeDeviceMemoryProvider()
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -40,7 +42,7 @@ class ChatPresenterTest {
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    context = fakeContext,
+                    deviceMemoryProvider = fakeDeviceMemoryProvider,
                 )
 
             presenter.test {
@@ -67,7 +69,7 @@ class ChatPresenterTest {
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    context = fakeContext,
+                    deviceMemoryProvider = fakeDeviceMemoryProvider,
                 )
 
             presenter.test {
@@ -94,7 +96,7 @@ class ChatPresenterTest {
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    context = fakeContext,
+                    deviceMemoryProvider = fakeDeviceMemoryProvider,
                 )
 
             presenter.test {
