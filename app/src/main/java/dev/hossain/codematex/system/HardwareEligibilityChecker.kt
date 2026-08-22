@@ -1,11 +1,9 @@
 package dev.hossain.codematex.system
 
-import android.app.ActivityManager
-import android.content.Context
 import android.os.Build
 import dev.hossain.codematex.BuildConfig
-import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 
@@ -34,22 +32,22 @@ interface HardwareEligibilityChecker {
 
 @Inject
 @SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
 class HardwareEligibilityCheckerImpl(
-    @ApplicationContext private val context: Context,
+    private val deviceMemoryProvider: DeviceMemoryProvider,
+    private val is64BitSupported: () -> Boolean = { Build.SUPPORTED_64_BIT_ABIS.isNotEmpty() },
+    private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
 ) : HardwareEligibilityChecker {
     override fun checkEligibility(): HardwareEligibility {
         // In DEV_MODE, bypass hardware restrictions so developers can test on emulators
-        if (BuildConfig.DEV_MODE) {
+        if (isDevMode()) {
             return HardwareEligibility.Eligible
         }
 
-        val is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
-        val memoryInfo = ActivityManager.MemoryInfo()
-        activityManager?.getMemoryInfo(memoryInfo)
-
-        val totalMem = memoryInfo.totalMem
-        val detectedGb = totalMem / (1024.0 * 1024.0 * 1024.0)
+        val is64Bit = is64BitSupported()
+        val memoryStats = deviceMemoryProvider.getMemoryStats()
+        // Round to two decimals to avoid Float->Double precision issues at the threshold.
+        val detectedGb = kotlin.math.round(memoryStats.totalGb.toDouble() * 100) / 100.0
 
         // 1. 64-bit Architecture Verification
         if (!is64Bit) {
@@ -63,11 +61,12 @@ class HardwareEligibilityCheckerImpl(
         // 2. RAM Verification
         // Note: Devices sold with 8 GB RAM typically report ~7.2 GB - 7.5 GB to the kernel
         // due to hardware and baseband reservations.
-        val minRequiredRamBytes = (7.2 * 1024 * 1024 * 1024).toLong()
-        if (totalMem < minRequiredRamBytes) {
+        val minRequiredRamGb = 7.2
+        if (detectedGb < minRequiredRamGb) {
             return HardwareEligibility.Ineligible(
                 reason = "On-device AI models require at least 8 GB RAM for stable execution.",
                 detectedRamGb = detectedGb,
+                minRequiredRamGb = minRequiredRamGb,
                 is64BitSupported = true,
             )
         }

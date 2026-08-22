@@ -2,14 +2,11 @@ package dev.hossain.codematex.system
 
 import dev.hossain.codematex.util.DeviceMemory
 
-/**
- * In-memory fake of [DeviceMemoryProvider] for unit tests.
- */
-class FakeDeviceMemoryProvider(
-    private val memoryStats: DeviceMemory.MemoryStats = DeviceMemory.MemoryStats(usedGb = 2.5f, totalGb = 8.0f),
-    private val cpuTicks: Long = 1_000L,
-) : DeviceMemoryProvider {
-    override fun getMemoryStats(): DeviceMemory.MemoryStats = memoryStats
+class FakeDeviceMemoryProvider : DeviceMemoryProvider {
+    var returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 4.0f, totalGb = 8.0f)
+    var returnedProcessCpuTicks = 1234L
 
-    override fun getProcessCpuTicks(): Long = cpuTicks
+    override fun getMemoryStats(): DeviceMemory.MemoryStats = returnedMemoryStats
+
+    override fun getProcessCpuTicks(): Long = returnedProcessCpuTicks
 }

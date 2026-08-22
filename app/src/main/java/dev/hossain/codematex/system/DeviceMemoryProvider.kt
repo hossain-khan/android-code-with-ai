@@ -33,8 +33,10 @@ class DeviceMemoryProviderImpl
     @Inject
     constructor(
         @param:ApplicationContext private val context: Context,
+        private val memoryStatsProvider: (Context) -> DeviceMemory.MemoryStats = DeviceMemory::getMemoryStats,
+        private val cpuTicksProvider: () -> Long = DeviceMemory::getProcessCpuTicks,
     ) : DeviceMemoryProvider {
-        override fun getMemoryStats(): DeviceMemory.MemoryStats = DeviceMemory.getMemoryStats(context)
+        override fun getMemoryStats(): DeviceMemory.MemoryStats = memoryStatsProvider(context)
 
-        override fun getProcessCpuTicks(): Long = DeviceMemory.getProcessCpuTicks()
+        override fun getProcessCpuTicks(): Long = cpuTicksProvider()
     }
