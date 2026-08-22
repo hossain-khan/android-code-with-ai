@@ -182,8 +182,6 @@ class ChatPresenter(
                     initTrigger++
                 }
 
-                is ChatScreen.Event.CopyMessage -> {}
-
                 ChatScreen.Event.OpenModelPicker -> {
                     navigator.goTo(ModelPickerScreen)
                 }

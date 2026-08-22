@@ -105,12 +105,6 @@ fun ChatScreenContent(
     modifier: Modifier = Modifier,
 ) {
     when (state) {
-        is ChatScreen.State.Loading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularWavyProgressIndicator()
-            }
-        }
-
         is ChatScreen.State.NoModelSelected -> {
             NoModelSelectedLayout(state = state, modifier = modifier)
         }
@@ -388,9 +382,6 @@ private fun ChatLayout(
                                 MessageBubble(
                                     message = message,
                                     visualAccent = visualInfo.accentColor,
-                                    onCopy = {
-                                        state.eventSink(ChatScreen.Event.CopyMessage(it))
-                                    },
                                 )
                             }
                         }
@@ -469,9 +460,6 @@ private fun ChatLayout(
                             MessageBubble(
                                 message = message,
                                 visualAccent = visualInfo.accentColor,
-                                onCopy = {
-                                    state.eventSink(ChatScreen.Event.CopyMessage(it))
-                                },
                             )
                         }
                     }
@@ -842,7 +830,6 @@ private fun SupportingBenchmarkingCard(
 private fun MessageBubble(
     message: ChatMessage,
     visualAccent: androidx.compose.ui.graphics.Color,
-    onCopy: (String) -> Unit,
 ) {
     val context = LocalContext.current
 

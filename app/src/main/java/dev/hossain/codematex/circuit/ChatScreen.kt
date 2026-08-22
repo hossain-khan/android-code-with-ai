@@ -15,8 +15,6 @@ data class ChatScreen(
 ) : ParcelableScreen {
     @kotlinx.serialization.Serializable
     sealed interface State : CircuitUiState {
-        data object Loading : State
-
         data class NoModelSelected(
             val hasDownloadedModels: Boolean,
             val topic: CodingTopic,
@@ -55,10 +53,6 @@ data class ChatScreen(
         data object ResetSession : Event
 
         data object Retry : Event
-
-        data class CopyMessage(
-            val content: String,
-        ) : Event
 
         data object OpenModelPicker : Event
 
