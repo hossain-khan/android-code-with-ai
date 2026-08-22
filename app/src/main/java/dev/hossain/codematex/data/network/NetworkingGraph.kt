@@ -1,6 +1,7 @@
 package dev.hossain.codematex.data.network
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import dev.hossain.codematex.BuildConfig
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -25,21 +26,29 @@ import java.util.concurrent.TimeUnit
 interface NetworkingGraph {
     /**
      * Provides a configured [OkHttpClient] with:
-     * - HTTP request/response logging (body level)
+     * - HTTP request/response logging (BODY level in debug, NONE in release)
      * - 30-second connect and read timeouts
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient
+    fun provideOkHttpClient(): OkHttpClient {
+        val loggingLevel =
+            if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
+
+        return OkHttpClient
             .Builder()
             .addInterceptor(
                 HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
+                    level = loggingLevel
                 },
             ).connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .build()
+    }
 
     /**
      * Provides a [Json] instance configured to be lenient with unknown keys,
