@@ -17,117 +17,93 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.binding
 import timber.log.Timber
-import java.io.File
-import java.io.FileOutputStream
-import java.net.HttpURLConnection
-import java.net.URL
 
 @AssistedInject
 class ModelDownloadWorker(
     context: Context,
     @Assisted params: WorkerParameters,
+    private val modelDownloader: ModelDownloader,
 ) : CoroutineWorker(context, params) {
     companion object {
         const val KEY_URL = "url"
         const val KEY_PATH = "path"
         const val KEY_PROGRESS = "progress"
+
+        /**
+         * Downloads a model file using [modelDownloader] and reports progress
+         * via [onProgress].
+         *
+         * This function is extracted from [doWork] so the coordination logic
+         * can be unit-tested on the JVM without initializing the WorkManager
+         * framework.
+         */
+        suspend fun executeDownload(
+            url: String,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (Int) -> Unit,
+        ): Result =
+            try {
+                Timber.d("ModelDownloadWorker: Starting download of $url to $outputPath")
+
+                val result =
+                    modelDownloader.download(
+                        url = url,
+                        outputPath = outputPath,
+                        onProgress = { progress ->
+                            if (isStopped()) throw kotlinx.coroutines.CancellationException("Worker stopped")
+                            onProgress(progress)
+                        },
+                        shouldCancel = isStopped,
+                    )
+
+                result
+                    .onSuccess {
+                        Timber.d("ModelDownloadWorker: Download completed successfully")
+                    }.onFailure { error ->
+                        Timber.e(error, "ModelDownloadWorker: Download failed")
+                    }.getOrThrow()
+
+                Result.success()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "ModelDownloadWorker: Error during download work")
+                Result.failure()
+            }
     }
 
     override suspend fun doWork(): Result {
         val url = inputData.getString(KEY_URL) ?: return Result.failure()
         val outputPath = inputData.getString(KEY_PATH) ?: return Result.failure()
-        val outputTmpFile = File("$outputPath.codematextmp")
 
         setForeground(createForegroundInfo("Starting download..."))
 
-        try {
-            Timber.d("ModelDownloadWorker: Downloading $url to $outputPath")
+        val result =
+            executeDownload(
+                url = url,
+                outputPath = outputPath,
+                modelDownloader = modelDownloader,
+                isStopped = { isStopped },
+                onProgress = { progress -> reportProgress(progress) },
+            )
 
-            val connection = URL(url).openConnection() as HttpURLConnection
-
-            if (outputTmpFile.exists() && outputTmpFile.length() > 0) {
-                connection.setRequestProperty("Range", "bytes=${outputTmpFile.length()}-")
-                connection.setRequestProperty("Accept-Encoding", "identity")
-            }
-
-            connection.connect()
-            val responseCode = connection.responseCode
-            Timber.d("ModelDownloadWorker: Response code=$responseCode for $url")
-
-            if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_PARTIAL) {
-                Timber.e("ModelDownloadWorker: Failed with response code $responseCode")
-                return Result.failure()
-            }
-
-            val contentLength = connection.contentLengthLong
-            val totalBytes =
-                if (contentLength > 0) {
-                    contentLength + (outputTmpFile.length().takeIf { it > 0 } ?: 0)
-                } else {
-                    Timber.w("ModelDownloadWorker: Unknown content length")
-                    0L
-                }
-
-            Timber.d("ModelDownloadWorker: Content-Length=$contentLength, Total=$totalBytes, Resuming from ${outputTmpFile.length()}")
-
-            outputTmpFile.parentFile?.mkdirs()
-            File(outputPath).parentFile?.mkdirs()
-
-            FileOutputStream(outputTmpFile, true).use { fos ->
-                connection.inputStream.use { input ->
-                    val buffer = ByteArray(8192)
-                    var bytesRead: Int
-                    var downloadedBytes = outputTmpFile.length()
-                    var lastReportedProgress = -1
-                    var lastReportedBytes = 0L
-                    val reportInterval = 100_000_000L // 100MB
-
-                    while (input.read(buffer).also { bytesRead = it } != -1) {
-                        if (isStopped) return Result.failure()
-
-                        fos.write(buffer, 0, bytesRead)
-                        downloadedBytes += bytesRead
-
-                        val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
-
-                        if (progress != lastReportedProgress &&
-                            (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)
-                        ) {
-                            lastReportedProgress = progress
-                            lastReportedBytes = downloadedBytes
-                            setProgress(
-                                Data
-                                    .Builder()
-                                    .putInt(KEY_PROGRESS, progress)
-                                    .build(),
-                            )
-                            Timber.i(
-                                "ModelDownloadWorker: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
-                            )
-                            setForeground(
-                                createForegroundInfo(
-                                    "$progress% - ${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB",
-                                    progress,
-                                ),
-                            )
-                        }
-                    }
-                }
-            }
-
-            outputTmpFile.renameTo(File(outputPath))
-            return Result.success()
-        } catch (e: Exception) {
-            if (e is kotlinx.coroutines.CancellationException) {
-                throw e
-            }
-            Timber.e(e, "ModelDownloadWorker: Error downloading model")
-            return if (runAttemptCount < 5) {
-                Result.retry()
-            } else {
-                Result.failure()
-            }
+        return if (result == Result.failure() && runAttemptCount < 5) {
+            Result.retry()
+        } else {
+            result
         }
+    }
+
+    private suspend fun reportProgress(progress: Int) {
+        setProgress(
+            Data
+                .Builder()
+                .putInt(KEY_PROGRESS, progress)
+                .build(),
+        )
+        setForeground(createForegroundInfo("$progress%", progress))
     }
 
     private fun createForegroundInfo(
