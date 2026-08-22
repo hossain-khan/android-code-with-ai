@@ -109,3 +109,18 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
   ```bash
   ./gradlew check
   ```
+
+---
+
+## 7. Release Process & Versioning
+
+Whenever preparing or cutting a new application release, **all agents must strictly follow the workflow detailed in [RELEASE.md](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/RELEASE.md)**:
+
+1. **Branching**: Create `chore/bump-version-X.Y.Z` off `main`.
+2. **Version Bump**: Increment `versionCode` by `1` and update `versionName = "X.Y.Z"` in [`app/build.gradle.kts`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/app/build.gradle.kts).
+3. **Play Store Notes**: Draft user-facing release notes under `project-resources/google-play/release-notes-vX.Y.Z.txt` (**strictly under 500 characters**).
+4. **Verification**: Run `./gradlew formatKotlin && ./gradlew check`.
+5. **PR & Merge**: Open a PR, merge into `main`, and pull latest `main`.
+6. **Tag & Publish**: Create git tag `X.Y.Z` (`git tag X.Y.Z && git push origin X.Y.Z`) and publish a GitHub Release (`gh release create X.Y.Z ...`).
+7. **CI/CD Automation**: GitHub Actions ([`.github/workflows/android-release.yml`](file:///Users/hossain/dev/repos/android-apps/android-code-with-ai/.github/workflows/android-release.yml)) will build, sign with the production keystore, cryptographically verify the signature with `apksigner` against the expected SHA-256 certificate fingerprint, and attach the verified release APK & AAB to the release.
+
