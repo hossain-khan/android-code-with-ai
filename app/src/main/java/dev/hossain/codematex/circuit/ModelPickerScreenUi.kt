@@ -1,5 +1,7 @@
 package dev.hossain.codematex.circuit
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +60,9 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.circuit.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.data.model.AiModel
@@ -87,7 +92,11 @@ fun ModelPickerScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalPermissionsApi::class,
+)
 @Composable
 private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
@@ -100,6 +109,13 @@ private fun ModelPickerLayout(
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     var showAppInfo by remember { mutableStateOf(false) }
+
+    val notificationPermissionState =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            null
+        }
 
     if (showAppInfo) {
         AppInfoBottomSheet(onDismiss = { showAppInfo = false })
@@ -167,6 +183,11 @@ private fun ModelPickerLayout(
                         deviceRamGb = deviceRamGb,
                         onDownload = {
                             if (isCompatible) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                    notificationPermissionState?.status?.isGranted == false
+                                ) {
+                                    notificationPermissionState.launchPermissionRequest()
+                                }
                                 state.eventSink(ModelPickerScreen.Event.Download(model))
                             }
                         },
