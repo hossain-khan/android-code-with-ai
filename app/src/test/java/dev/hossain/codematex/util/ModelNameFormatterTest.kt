@@ -23,4 +23,24 @@ class ModelNameFormatterTest {
     fun `handles blank string gracefully`() {
         assertEquals("", formatShortModelName(""))
     }
+
+    @Test
+    fun `removes only -litert-lm suffix when -it is not present`() {
+        assertEquals("Gemma-4-e2b", formatShortModelName("gemma-4-e2b-litert-lm"))
+    }
+
+    @Test
+    fun `removes only -it suffix when -litert-lm is not present`() {
+        assertEquals("Gemma-4-E2B", formatShortModelName("gemma-4-E2B-it"))
+    }
+
+    @Test
+    fun `does not modify string without known suffixes`() {
+        assertEquals("Custom-Model", formatShortModelName("Custom-Model"))
+    }
+
+    @Test
+    fun `capitalizes first character only`() {
+        assertEquals("Gemma-4-E2B", formatShortModelName("gemma-4-E2B-it-litert-lm"))
+    }
 }
