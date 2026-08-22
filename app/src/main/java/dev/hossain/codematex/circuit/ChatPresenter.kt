@@ -37,6 +37,7 @@ class ChatPresenter(
     private val sessionRepository: ChatSessionRepository,
     private val configStore: ModelConfigStore,
     private val deviceMemoryProvider: DeviceMemoryProvider,
+    private val topicPromptProvider: TopicPromptProvider,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -76,7 +77,7 @@ class ChatPresenter(
                 llmEngine.initialize(
                     modelPath = activeModel.localPath ?: "",
                     backend = activeModel.preferredBackend,
-                    systemInstruction = buildSystemPrompt(screen.topic),
+                    systemInstruction = topicPromptProvider.buildSystemPrompt(screen.topic),
                     config = configStore.config,
                 )
                 Timber.d("ChatPresenter: Model initialized successfully")
@@ -223,7 +224,7 @@ class ChatPresenter(
                     messages = emptyList()
                     throughputInfo = null
                     systemStatsInfo = null
-                    llmEngine.resetConversation(buildSystemPrompt(screen.topic), configStore.config)
+                    llmEngine.resetConversation(topicPromptProvider.buildSystemPrompt(screen.topic), configStore.config)
                 }
 
                 ChatScreen.Event.Retry -> {
@@ -281,12 +282,6 @@ class ChatPresenter(
             }
         }
     }
-
-    private fun buildSystemPrompt(topic: dev.hossain.codematex.data.model.CodingTopic): String =
-        """You are a coding tutor specializing in ${topic.displayName}.
-           |Explain concepts clearly with examples. Use markdown for code blocks.
-           |Keep explanations concise but thorough.
-        """.trimMargin()
 
     @CircuitInject(ChatScreen::class, AppScope::class)
     @AssistedFactory
