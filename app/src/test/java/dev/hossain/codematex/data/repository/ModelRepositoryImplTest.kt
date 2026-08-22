@@ -20,18 +20,21 @@ class ModelRepositoryImplTest {
     private fun createRepository(
         existingPaths: Set<String> = emptySet(),
         selectedModelId: String? = null,
+        allowlist: List<ModelEntry> = FakeModelAllowlistDataSource.defaultAllowlist(),
     ): Pair<ModelRepositoryImpl, TestDependencies> {
         val fileStorage = FakeModelFileStorage(existingPaths = existingPaths)
         val selectionStore = FakeModelSelectionStore(selectedModelId)
         val downloadTracker = FakeModelDownloadTracker()
-        val repository = ModelRepositoryImpl(fileStorage, selectionStore, downloadTracker)
-        return repository to TestDependencies(fileStorage, selectionStore, downloadTracker)
+        val allowlistDataSource = FakeModelAllowlistDataSource(allowlist)
+        val repository = ModelRepositoryImpl(fileStorage, selectionStore, downloadTracker, allowlistDataSource)
+        return repository to TestDependencies(fileStorage, selectionStore, downloadTracker, allowlistDataSource)
     }
 
     private data class TestDependencies(
         val fileStorage: FakeModelFileStorage,
         val selectionStore: FakeModelSelectionStore,
         val downloadTracker: FakeModelDownloadTracker,
+        val allowlistDataSource: FakeModelAllowlistDataSource,
     )
 
     private fun testModel(
@@ -327,5 +330,43 @@ class ModelRepositoryImplTest {
 
             assertNotNull(selected)
             assertEquals("litert-community/gemma-4-E2B-it-litert-lm", selected?.id)
+        }
+
+    @Test
+    fun `getAvailableModels uses injected allowlist data source`() =
+        runTest {
+            val customEntry =
+                ModelEntry(
+                    modelId = "custom/model",
+                    modelFile = "custom.litertlm",
+                    commitHash = "abc123",
+                    sizeInBytes = 1_000,
+                    taskTypes = listOf("llm_chat"),
+                    runtimeType = "LITERT_LM",
+                )
+            val (repository, _) = createRepository(allowlist = listOf(customEntry))
+
+            val models = repository.getAvailableModels().first()
+
+            assertEquals(1, models.size)
+            assertEquals("custom/model", models.single().id)
+            assertEquals(
+                "custom.litertlm",
+                models
+                    .single()
+                    .downloadUrl
+                    .substringAfterLast("/")
+                    .substringBefore("?"),
+            )
+        }
+
+    @Test
+    fun `getAvailableModels returns empty list when allowlist is empty`() =
+        runTest {
+            val (repository, _) = createRepository(allowlist = emptyList())
+
+            val models = repository.getAvailableModels().first()
+
+            assertTrue(models.isEmpty())
         }
 }
