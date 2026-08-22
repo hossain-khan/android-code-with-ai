@@ -26,6 +26,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
@@ -72,10 +74,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -298,6 +304,8 @@ private fun ChatLayout(
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND)
     val visualInfo = state.topic.visualInfo
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
 
     Scaffold(
         modifier =
@@ -356,6 +364,8 @@ private fun ChatLayout(
                         EmptyChatTopicStarters(
                             visualInfo = visualInfo,
                             onPromptSelected = { prompt ->
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
                                 state.eventSink(ChatScreen.Event.SendMessage(prompt))
                             },
                             modifier = Modifier.weight(1f),
@@ -390,8 +400,12 @@ private fun ChatLayout(
                         inputText = inputText,
                         onInputTextChanged = { inputText = it },
                         onSendMessage = {
-                            state.eventSink(ChatScreen.Event.SendMessage(inputText))
-                            inputText = ""
+                            if (inputText.isNotBlank()) {
+                                keyboardController?.hide()
+                                focusManager.clearFocus()
+                                state.eventSink(ChatScreen.Event.SendMessage(inputText))
+                                inputText = ""
+                            }
                         },
                     )
                 }
@@ -431,6 +445,8 @@ private fun ChatLayout(
                     EmptyChatTopicStarters(
                         visualInfo = visualInfo,
                         onPromptSelected = { prompt ->
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
                             state.eventSink(ChatScreen.Event.SendMessage(prompt))
                         },
                         modifier = Modifier.weight(1f),
@@ -465,8 +481,12 @@ private fun ChatLayout(
                     inputText = inputText,
                     onInputTextChanged = { inputText = it },
                     onSendMessage = {
-                        state.eventSink(ChatScreen.Event.SendMessage(inputText))
-                        inputText = ""
+                        if (inputText.isNotBlank()) {
+                            keyboardController?.hide()
+                            focusManager.clearFocus()
+                            state.eventSink(ChatScreen.Event.SendMessage(inputText))
+                            inputText = ""
+                        }
                     },
                 )
             }
@@ -635,6 +655,19 @@ private fun ChatInputField(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                 },
+                keyboardOptions =
+                    KeyboardOptions(
+                        imeAction = ImeAction.Send,
+                        capitalization = KeyboardCapitalization.Sentences,
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onSend = {
+                            if (inputText.isNotBlank() && !state.isGenerating) {
+                                onSendMessage()
+                            }
+                        },
+                    ),
                 shape = MaterialTheme.shapes.extraLarge,
                 colors =
                     OutlinedTextFieldDefaults.colors(
