@@ -1,7 +1,5 @@
 package dev.hossain.codematex.runtime
 
-import com.google.ai.edge.litertlm.Conversation
-import com.google.ai.edge.litertlm.Engine
 import dev.hossain.codematex.circuit.overlay.ModelConfig
 
 class FakeLlmEngineFactory : LlmEngineFactory {
@@ -42,8 +40,8 @@ class FakeLlmEngineFactory : LlmEngineFactory {
     }
 
     fun createFakeSession(
-        engine: Engine,
-        conversation: Conversation,
+        engine: InferenceEngine,
+        conversation: InferenceConversation,
         backend: LlmEngine.Backend,
     ): LlmEngineSession = LlmEngineSession(engine, conversation, backend)
 }

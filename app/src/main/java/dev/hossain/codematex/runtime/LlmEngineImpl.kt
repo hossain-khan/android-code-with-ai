@@ -1,13 +1,12 @@
 package dev.hossain.codematex.runtime
 
 import com.google.ai.edge.litertlm.Contents
-import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
-import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -31,9 +30,10 @@ import kotlin.coroutines.resumeWithException
  */
 class LlmEngineImpl(
     private val llmEngineFactory: LlmEngineFactory,
+    private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : LlmEngine {
-    private var engine: Engine? = null
-    private var conversation: Conversation? = null
+    private var engine: InferenceEngine? = null
+    private var conversation: InferenceConversation? = null
     private var currentModelPath: String = ""
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
@@ -138,7 +138,7 @@ class LlmEngineImpl(
             conversation
                 ?: throw IllegalStateException("Engine not initialized. Call initialize() first.")
 
-        withContext(Dispatchers.Default) {
+        withContext(dispatcher) {
             suspendCancellableCoroutine { cont ->
                 val callback =
                     object : MessageCallback {
@@ -250,7 +250,7 @@ class LlmEngineImpl(
                 append("--- End of prior conversation ---")
             }
 
-        withContext(Dispatchers.Default) {
+        withContext(dispatcher) {
             suspendCancellableCoroutine { cont ->
                 val callback =
                     object : MessageCallback {

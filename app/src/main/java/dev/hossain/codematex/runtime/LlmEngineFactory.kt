@@ -3,7 +3,6 @@ package dev.hossain.codematex.runtime
 import android.content.Context
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Contents
-import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
@@ -22,8 +21,8 @@ import javax.inject.Inject
  * Result of creating a LiteRT-LM engine session.
  */
 data class LlmEngineSession(
-    val engine: Engine,
-    val conversation: Conversation,
+    val engine: InferenceEngine,
+    val conversation: InferenceConversation,
     val backend: LlmEngine.Backend,
 )
 
@@ -110,7 +109,12 @@ class DefaultLlmEngineFactory
                         val conversation = engine.createConversation(conversationConfig)
 
                         Timber.d("LlmEngineFactory: Engine initialized successfully with backend=$actualBackend")
-                        session = LlmEngineSession(engine, conversation, actualBackend)
+                        session =
+                            LlmEngineSession(
+                                DefaultInferenceEngine(engine),
+                                DefaultInferenceConversation(conversation),
+                                actualBackend,
+                            )
                     } catch (e: Exception) {
                         Timber.e(e, "LlmEngineFactory: Failed to initialize engine with backend=$actualBackend")
                         backendFallbackStrategy.markUnsupported(actualBackend)
