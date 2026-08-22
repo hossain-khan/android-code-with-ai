@@ -2,30 +2,18 @@
 
 package dev.hossain.codematex.data.repository
 
-import android.content.Context
-import androidx.work.Constraints
-import androidx.work.Data
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.worker.ModelDownloadWorker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.serialization.Serializable
-import java.io.File
 import javax.inject.Inject
 
 @Serializable
@@ -54,27 +42,18 @@ data class ModelEntry(
 class ModelRepositoryImpl
     @Inject
     constructor(
-        @param:ApplicationContext private val context: Context,
+        private val fileStorage: ModelFileStorage,
+        private val selectionStore: ModelSelectionStore,
+        private val downloadTracker: ModelDownloadTracker,
     ) : ModelRepository {
-        private val workManager = WorkManager.getInstance(context)
-        private val modelsDir = File(context.getExternalFilesDir(null), "models")
-        private val prefs = context.getSharedPreferences("model_prefs", Context.MODE_PRIVATE)
-
-        private var selectedModelId: String?
-            get() = prefs.getString("selected_model_id", null)
-            set(value) {
-                prefs.edit().putString("selected_model_id", value).apply()
-            }
-
         private var cachedModels: List<AiModel> = initialModelScan()
 
         private fun initialModelScan(): List<AiModel> =
             try {
                 val allowlist = loadAllowlist()
                 allowlist.map { entry ->
-                    val localPath = getModelLocalPath(entry)
-                    val file = File(localPath)
-                    val isDownloaded = file.exists()
+                    val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
+                    val isDownloaded = fileStorage.modelExists(localPath)
                     AiModel(
                         id = entry.modelId,
                         name = entry.modelId.substringAfterLast("/"),
@@ -96,10 +75,7 @@ class ModelRepositoryImpl
             flow {
                 val allowlist = loadAllowlist()
                 val modelIds = allowlist.map { it.modelId }
-                val progressFlows =
-                    modelIds.map { id ->
-                        workManager.getWorkInfosForUniqueWorkFlow(id)
-                    }
+                val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
 
                 combine(progressFlows) { workInfoLists ->
                     val progressMap = mutableMapOf<String, Pair<DownloadStatus, Int>>()
@@ -118,10 +94,10 @@ class ModelRepositoryImpl
 
                     val models =
                         allowlist.map { entry ->
-                            val localPath = getModelLocalPath(entry)
-                            val file = File(localPath)
+                            val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
+                            val isDownloaded = fileStorage.modelExists(localPath)
                             val (status, progress) =
-                                if (file.exists()) {
+                                if (isDownloaded) {
                                     DownloadStatus.DOWNLOADED to 100
                                 } else {
                                     progressMap[entry.modelId] ?: (DownloadStatus.NOT_DOWNLOADED to 0)
@@ -133,7 +109,7 @@ class ModelRepositoryImpl
                                 displayName = entry.modelId.substringAfterLast("/"),
                                 downloadUrl = buildDownloadUrl(entry),
                                 sizeBytes = entry.sizeInBytes,
-                                localPath = localPath.takeIf { file.exists() },
+                                localPath = localPath.takeIf { isDownloaded },
                                 downloadStatus = status,
                                 // Default to GPU for hardware acceleration. LlmEngine handles fallback to CPU
                                 // if the device's GPU delegate fails to initialize.
@@ -154,59 +130,37 @@ class ModelRepositoryImpl
             }
 
         override fun getSelectedModel(): AiModel? {
-            val savedId = selectedModelId
+            val savedId = selectionStore.selectedModelId
             val savedModel = cachedModels.find { it.id == savedId && it.downloadStatus == DownloadStatus.DOWNLOADED }
             if (savedModel != null) return savedModel
 
             // Fallback: auto-select the first available downloaded model
             val firstDownloaded = cachedModels.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
             if (firstDownloaded != null) {
-                selectedModelId = firstDownloaded.id
+                selectionStore.selectedModelId = firstDownloaded.id
                 return firstDownloaded
             }
             return null
         }
 
         override suspend fun selectModel(model: AiModel) {
-            selectedModelId = model.id
+            selectionStore.selectedModelId = model.id
         }
 
         override suspend fun downloadModel(model: AiModel) {
-            val data =
-                Data
-                    .Builder()
-                    .putString(ModelDownloadWorker.KEY_URL, model.downloadUrl)
-                    .putString(ModelDownloadWorker.KEY_PATH, model.localPath ?: getModelLocalPathById(model.id))
-                    .build()
-
-            val constraints =
-                Constraints
-                    .Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-
-            val request =
-                OneTimeWorkRequestBuilder<ModelDownloadWorker>()
-                    .setInputData(data)
-                    .setConstraints(constraints)
-                    .build()
-
-            workManager.enqueueUniqueWork(
-                model.id,
-                ExistingWorkPolicy.REPLACE,
-                request,
-            )
+            val path = model.localPath ?: getModelLocalPathById(model.id)
+            downloadTracker.enqueueDownload(model.id, model.downloadUrl, path)
         }
 
         override suspend fun cancelDownload(model: AiModel) {
-            workManager.cancelUniqueWork(model.id)
+            downloadTracker.cancelDownload(model.id)
         }
 
         override suspend fun deleteModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
-            File(path).delete()
-            if (selectedModelId == model.id) {
-                selectedModelId = null
+            fileStorage.deleteModel(path)
+            if (selectionStore.selectedModelId == model.id) {
+                selectionStore.selectedModelId = null
             }
         }
 
@@ -247,27 +201,11 @@ class ModelRepositoryImpl
         private fun buildDownloadUrl(entry: ModelEntry): String =
             "https://huggingface.co/${entry.modelId}/resolve/${entry.commitHash}/${entry.modelFile}?download=true"
 
-        private fun getModelLocalPath(entry: ModelEntry): String {
-            val normalizedName = entry.modelId.replace("/", "_")
-            return "${modelsDir.absolutePath}/$normalizedName/${entry.modelFile}"
-        }
-
         private fun getModelLocalPathById(modelId: String): String {
             loadAllowlist()
                 .firstOrNull { it.modelId == modelId }
-                ?.let { return getModelLocalPath(it) }
+                ?.let { return fileStorage.getLocalPath(it.modelId, it.modelFile) }
 
-            val normalizedName = modelId.replace("/", "_")
-            return "${modelsDir.absolutePath}/$normalizedName/${modelId.substringAfterLast("/")}.litertlm"
-        }
-
-        private fun getDownloadStatus(modelId: String): DownloadStatus {
-            val workInfos = workManager.getWorkInfosForUniqueWork(modelId).get()
-            val latestWork = workInfos.lastOrNull()
-            return when (latestWork?.state) {
-                WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED -> DownloadStatus.DOWNLOADING
-                WorkInfo.State.FAILED -> DownloadStatus.FAILED
-                else -> DownloadStatus.NOT_DOWNLOADED
-            }
+            return fileStorage.getLocalPath(modelId, "${modelId.substringAfterLast("/")}.litertlm")
         }
     }
