@@ -94,6 +94,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.visualInfo
+import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -637,7 +638,7 @@ private fun ChatInputField(
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             if (state.isPreparing) {
-                val shortModelName = state.modelName.removeSuffix("-litert-lm")
+                val shortModelName = formatShortModelName(state.modelName)
                 val labelText =
                     if (shortModelName.isNotBlank()) {
                         "Initializing $shortModelName model..."
