@@ -21,10 +21,9 @@ class ChatPresenterTest {
     private val fakeContext: Context = ContextWrapper(null)
 
     private val configStore = ModelConfigStore(fakeContext)
-    private val fakeEngine = FakeLlmEngine()
     private val fakeSessionRepo = FakeChatSessionRepository()
-    private val fakeDeviceMemoryProvider = FakeDeviceMemoryProvider()
-    private val fakeTopicPromptProvider = FakeTopicPromptProvider()
+    private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
+    private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -39,12 +38,11 @@ class ChatPresenterTest {
                 ChatPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
-                    llmEngine = fakeEngine,
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    deviceMemoryProvider = fakeDeviceMemoryProvider,
-                    topicPromptProvider = fakeTopicPromptProvider,
+                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -67,12 +65,11 @@ class ChatPresenterTest {
                 ChatPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.ANDROID),
-                    llmEngine = fakeEngine,
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    deviceMemoryProvider = fakeDeviceMemoryProvider,
-                    topicPromptProvider = fakeTopicPromptProvider,
+                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -95,12 +92,11 @@ class ChatPresenterTest {
                 ChatPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
-                    llmEngine = fakeEngine,
                     modelRepository = fakeModelRepo,
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
-                    deviceMemoryProvider = fakeDeviceMemoryProvider,
-                    topicPromptProvider = fakeTopicPromptProvider,
+                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {

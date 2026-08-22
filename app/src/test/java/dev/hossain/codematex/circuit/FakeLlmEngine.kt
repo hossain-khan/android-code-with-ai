@@ -20,6 +20,7 @@ class FakeLlmEngine : LlmEngine {
         systemInstruction: String?,
         config: ModelConfig,
     ) {
+        if (shouldThrow != null) throw shouldThrow!!
         initializeCalls++
     }
 

@@ -11,20 +11,17 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
-import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
-import dev.hossain.codematex.data.model.DevModels
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
-import dev.hossain.codematex.runtime.LlmEngine
-import dev.hossain.codematex.system.DeviceMemoryProvider
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -32,12 +29,11 @@ import timber.log.Timber
 class ChatPresenter(
     @Assisted private val navigator: Navigator,
     @Assisted private val screen: ChatScreen,
-    private val llmEngine: LlmEngine,
     private val modelRepository: ModelRepository,
     private val sessionRepository: ChatSessionRepository,
     private val configStore: ModelConfigStore,
-    private val deviceMemoryProvider: DeviceMemoryProvider,
-    private val topicPromptProvider: TopicPromptProvider,
+    private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
+    private val systemStatsMonitor: SystemStatsMonitor,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -73,57 +69,33 @@ class ChatPresenter(
             }
             Timber.d("ChatPresenter: Initializing model=${activeModel.name}, path=${activeModel.localPath}")
             isPreparing = true
-            try {
-                llmEngine.initialize(
-                    modelPath = activeModel.localPath ?: "",
-                    backend = activeModel.preferredBackend,
-                    systemInstruction = topicPromptProvider.buildSystemPrompt(screen.topic),
-                    config = configStore.config,
+            errorMessage = null
+            val result =
+                chatInferenceOrchestrator.initialize(
+                    model = activeModel,
+                    topic = screen.topic,
+                    sessionId = screen.sessionId,
+                    existingMessages = messages,
                 )
-                Timber.d("ChatPresenter: Model initialized successfully")
-                if (screen.sessionId != null) {
-                    val sessionMessages =
-                        if (messages.isNotEmpty()) {
-                            messages
-                        } else {
-                            val loaded = sessionRepository.getMessages(screen.sessionId)
-                            messages = loaded
-                            loaded
-                        }
-                    llmEngine.restoreHistory(sessionMessages)
+            result
+                .onSuccess { loadedMessages ->
+                    if (loadedMessages.isNotEmpty()) {
+                        messages = loadedMessages
+                    }
+                    Timber.d("ChatPresenter: Model initialized successfully")
+                }.onFailure { error ->
+                    Timber.e(error, "ChatPresenter: Model initialization failed")
+                    errorMessage = error.message
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "ChatPresenter: Model initialization failed")
-                errorMessage = e.message
-            }
             isPreparing = false
         }
 
         LaunchedEffect(isGenerating) {
             if (isGenerating) {
-                var prevTicks = deviceMemoryProvider.getProcessCpuTicks()
-                var prevTime = System.currentTimeMillis()
-                val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
-
-                while (isGenerating) {
-                    kotlinx.coroutines.delay(1000)
-                    val now = System.currentTimeMillis()
-                    val elapsedSec = (now - prevTime) / 1000f
-                    val currentTicks = deviceMemoryProvider.getProcessCpuTicks()
-
-                    if (elapsedSec > 0.1f) {
-                        val ticksDiff = currentTicks - prevTicks
-                        val cpuUsage = ((ticksDiff / 100f) / elapsedSec) * 100f
-                        val scaledCpu = (cpuUsage / cores).coerceIn(0f, 100f)
-
-                        val mem = deviceMemoryProvider.getMemoryStats()
-                        systemStatsInfo =
-                            "CPU: ${"%.0f".format(scaledCpu)}% • RAM: ${"%.1f".format(mem.usedGb)} GB / ${"%.1f".format(mem.totalGb)} GB"
-
-                        prevTicks = currentTicks
-                        prevTime = now
-                    }
-                }
+                systemStatsMonitor.monitorWhileActive(
+                    isActive = { isGenerating },
+                    onStats = { systemStatsInfo = it },
+                )
             } else {
                 systemStatsInfo = null
             }
@@ -141,68 +113,45 @@ class ChatPresenter(
 
                         messages = messages + ChatMessage.User(input)
                         messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
-
-                        var tokenCount = 0
-                        var firstTokenTime = 0L
-                        val startTime = System.currentTimeMillis()
                         throughputInfo = "Prefilling..."
 
                         scope.launch {
                             try {
-                                llmEngine.runInference(input) { partialToken, done ->
-                                    scope.launch {
-                                        val lastAgent = messages.last() as? ChatMessage.Agent
-                                        if (lastAgent != null) {
-                                            messages = messages.dropLast(1) +
-                                                lastAgent.copy(
-                                                    content = lastAgent.content + partialToken,
-                                                    isStreaming = !done,
-                                                )
+                                val throughputTracker = ThroughputTracker()
+                                chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
+                                    when (inferenceEvent) {
+                                        is ChatInferenceEvent.Token -> {
+                                            val lastAgent = messages.last() as? ChatMessage.Agent
+                                            if (lastAgent != null) {
+                                                messages = messages.dropLast(1) +
+                                                    lastAgent.copy(
+                                                        content = lastAgent.content + inferenceEvent.partialToken,
+                                                        isStreaming = true,
+                                                    )
+                                            }
+                                            throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
                                         }
 
-                                        tokenCount++
-                                        if (firstTokenTime == 0L) {
-                                            firstTokenTime = System.currentTimeMillis()
-                                            val prefillMs = firstTokenTime - startTime
-                                            Timber.d("ChatPresenter: First token received! Prefill latency (TTFT): ${prefillMs}ms")
-                                        }
-
-                                        val now = System.currentTimeMillis()
-                                        val totalPrefillMs = firstTokenTime - startTime
-                                        val decodeMs = now - firstTokenTime
-
-                                        if (decodeMs > 0) {
-                                            val speed = (tokenCount * 1000f) / decodeMs
-                                            throughputInfo =
-                                                "TTFT: ${totalPrefillMs}ms • Speed: ${"%.1f".format(speed)} t/s ($tokenCount tokens)"
-                                        } else {
-                                            throughputInfo = "TTFT: ${totalPrefillMs}ms • Speed: -- t/s ($tokenCount tokens)"
-                                        }
-
-                                        if (done) {
-                                            Timber.d("ChatPresenter: Generation done callback received.")
+                                        ChatInferenceEvent.Done -> {
+                                            val lastAgent = messages.last() as? ChatMessage.Agent
+                                            if (lastAgent != null) {
+                                                messages = messages.dropLast(1) +
+                                                    lastAgent.copy(
+                                                        content = lastAgent.content,
+                                                        isStreaming = false,
+                                                    )
+                                            }
+                                            throughputTracker.recordToken("")
+                                            throughputInfo = throughputTracker.finalize()
                                             isGenerating = false
-                                            val totalTimeMs = now - startTime
-                                            val decodeTimeSec = (now - firstTokenTime) / 1000f
-                                            val speed = if (decodeTimeSec > 0) tokenCount / decodeTimeSec else 0f
-                                            val speedText = "%.1f".format(speed)
-                                            val ttft = firstTokenTime - startTime
-                                            throughputInfo =
-                                                if (ttft > 0) {
-                                                    "TTFT: ${ttft}ms • Speed: $speedText t/s"
-                                                } else {
-                                                    "Speed: $speedText t/s"
-                                                }
-                                            Timber.d(
-                                                "ChatPresenter: Inference completed successfully. Total tokens: $tokenCount, TTFT: ${firstTokenTime - startTime}ms, Decode speed: $speedText t/s, Total duration: ${totalTimeMs}ms",
-                                            )
                                             Timber.d("ChatPresenter: Saving session message history...")
                                             sessionRepository.saveSession(screen.topic, messages)
                                         }
                                     }
                                 }
+                            } catch (e: CancellationException) {
+                                throw e
                             } catch (e: Exception) {
-                                if (e is kotlinx.coroutines.CancellationException) throw e
                                 Timber.e(e, "ChatPresenter: Inference failed")
                                 isGenerating = false
                                 throughputInfo = "Error: ${e.message}"
@@ -215,7 +164,7 @@ class ChatPresenter(
 
                 ChatScreen.Event.StopGeneration -> {
                     Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
-                    llmEngine.stop()
+                    chatInferenceOrchestrator.stop()
                     isGenerating = false
                 }
 
@@ -224,7 +173,7 @@ class ChatPresenter(
                     messages = emptyList()
                     throughputInfo = null
                     systemStatsInfo = null
-                    llmEngine.resetConversation(topicPromptProvider.buildSystemPrompt(screen.topic), configStore.config)
+                    chatInferenceOrchestrator.resetConversation(screen.topic)
                 }
 
                 ChatScreen.Event.Retry -> {
@@ -250,7 +199,7 @@ class ChatPresenter(
 
             activeModel == null -> {
                 val hasDownloadedModels =
-                    availableModels.any { it.downloadStatus == dev.hossain.codematex.data.model.DownloadStatus.DOWNLOADED }
+                    availableModels.any { it.downloadStatus == DownloadStatus.DOWNLOADED }
                 ChatScreen.State.NoModelSelected(
                     hasDownloadedModels = hasDownloadedModels,
                     topic = screen.topic,
@@ -270,7 +219,7 @@ class ChatPresenter(
                     isGenerating = isGenerating,
                     isPreparing = isPreparing,
                     modelName = activeModel.displayName,
-                    activeBackend = llmEngine.getActiveBackend()?.name,
+                    activeBackend = chatInferenceOrchestrator.getActiveBackend()?.name,
                     modelSize = sizeText,
                     modelMemory = memoryText,
                     configInfo = configText,
