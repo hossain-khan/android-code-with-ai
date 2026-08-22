@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.7.0:
+• Enhanced Download Resilience: Resumable model downloads with automatic chunking and network recovery.
+• Performance & Speed: Lightweight release network stack with zero overhead.
+• Hardware Fallback Optimization: Seamless GPU, NPU, and CPU fallback loops with real-time memory monitoring.
+• Architecture & Stability: Modular presenter engine with comprehensive automated test coverage.
