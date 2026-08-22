@@ -12,9 +12,7 @@ import dev.zacsweers.metro.SingleIn
 interface RuntimeGraph {
     @Provides
     @SingleIn(AppScope::class)
-    fun provideLlmEngine(
-        @ApplicationContext context: Context,
-    ): LlmEngine = LlmEngineImpl(context)
+    fun provideLlmEngine(llmEngineFactory: LlmEngineFactory): LlmEngine = LlmEngineImpl(llmEngineFactory)
 
     @Provides
     @SingleIn(AppScope::class)

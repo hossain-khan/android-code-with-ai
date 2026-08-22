@@ -1,12 +1,9 @@
 package dev.hossain.codematex.runtime
 
-import android.content.Context
-import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
-import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.circuit.overlay.ModelConfig
@@ -26,9 +23,14 @@ import kotlin.coroutines.resumeWithException
  * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
  * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
  * - Google AI Edge LiteRT-LM: https://github.com/google-ai-edge/LiteRT-LM
+ *
+ * @param llmEngineFactory Factory responsible for creating the native engine session with
+ * hardware backend fallback. Consolidating fallback logic in the factory keeps this class
+ * focused on inference orchestration and prevents duplication across initialization,
+ * inference, and history restoration.
  */
 class LlmEngineImpl(
-    private val context: Context,
+    private val llmEngineFactory: LlmEngineFactory,
 ) : LlmEngine {
     private var engine: Engine? = null
     private var conversation: Conversation? = null
@@ -37,22 +39,14 @@ class LlmEngineImpl(
     private var currentConfig: ModelConfig = ModelConfig()
     private var activeBackend: LlmEngine.Backend? = null
     private var activeCallback: MessageCallback? = null
-    private val unsupportedBackends = mutableSetOf<LlmEngine.Backend>()
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
     /**
      * Initializes the LiteRT LLM engine.
      *
-     * To ensure peak performance, this method implements a hardware acceleration fallback strategy.
-     * Since on-device LLM inference (e.g. Gemma 2B) is extremely compute-heavy on CPU, it defaults
-     * to GPU or NPU if supported by the device. If the preferred hardware backend fails to initialize
-     * (e.g. due to driver incompatibilities), it automatically falls back sequentially to lower backends
-     * (NPU -> GPU -> CPU) to guarantee execution.
-     *
-     * See:
-     * - Google AI Edge LiteRT: https://ai.google.dev/edge/litert
-     * - TensorFlow Lite GPU Delegate: https://www.tensorflow.org/lite/performance/gpu#android
+     * Hardware backend fallback is delegated to [llmEngineFactory], which tries the preferred
+     * backend and falls back through NPU -> GPU -> CPU as needed.
      */
     override suspend fun initialize(
         modelPath: String,
@@ -80,78 +74,17 @@ class LlmEngineImpl(
         currentSystemInstruction = systemInstruction
         currentConfig = config
 
-        withContext(Dispatchers.Default) {
-            var actualBackend = backend
-            if (unsupportedBackends.contains(actualBackend)) {
-                Timber.d("LlmEngineImpl: Backend $actualBackend is marked unsupported on this device. Starting with CPU.")
-                actualBackend = LlmEngine.Backend.CPU
-            }
-            var success = false
+        val session =
+            llmEngineFactory.createSession(
+                modelPath = modelPath,
+                preferredBackend = backend,
+                systemInstruction = systemInstruction,
+                config = config,
+            )
 
-            while (!success) {
-                var newEngine: Engine? = null
-                try {
-                    Timber.d("LlmEngineImpl: Attempting to initialize engine with backend=$actualBackend")
-                    Timber.d(
-                        "LlmEngineImpl: Config parameters - MaxTokens: ${config.maxTokens}, " +
-                            "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}, " +
-                            "SystemPrompt length: ${systemInstruction?.length ?: 0}",
-                    )
-                    val engineConfig =
-                        EngineConfig(
-                            modelPath = modelPath,
-                            backend = actualBackend.toLiteRtBackend(),
-                            maxNumTokens = config.maxTokens,
-                        )
-
-                    newEngine = Engine(engineConfig).also { it.initialize() }
-
-                    val samplerConfig =
-                        SamplerConfig(
-                            topK = config.topK,
-                            topP = config.topP.toDouble(),
-                            temperature = config.temperature.toDouble(),
-                        )
-
-                    val conversationConfig =
-                        ConversationConfig(
-                            systemInstruction =
-                                systemInstruction?.let {
-                                    Contents.of(
-                                        com.google.ai.edge.litertlm.Content
-                                            .Text(it),
-                                    )
-                                },
-                            samplerConfig = samplerConfig,
-                        )
-
-                    val newConversation = newEngine.createConversation(conversationConfig)
-
-                    engine = newEngine
-                    conversation = newConversation
-                    activeBackend = actualBackend
-                    success = true
-                    Timber.d("LlmEngineImpl: Engine initialized successfully with backend=$actualBackend")
-                } catch (e: Exception) {
-                    newEngine?.close()
-                    unsupportedBackends.add(actualBackend)
-                    Timber.w(e, "LlmEngineImpl: Failed to initialize with backend=$actualBackend")
-                    when (actualBackend) {
-                        LlmEngine.Backend.NPU -> {
-                            actualBackend = LlmEngine.Backend.GPU
-                        }
-
-                        LlmEngine.Backend.GPU -> {
-                            actualBackend = LlmEngine.Backend.CPU
-                        }
-
-                        LlmEngine.Backend.CPU -> {
-                            throw e
-                        }
-                    }
-                }
-            }
-        }
+        engine = session.engine
+        conversation = session.conversation
+        activeBackend = session.backend
     }
 
     override suspend fun runInference(
@@ -172,22 +105,29 @@ class LlmEngineImpl(
         } catch (e: Exception) {
             val failedBackend = activeBackend
             if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
-                unsupportedBackends.add(failedBackend)
                 Timber.w(
                     e,
                     "LlmEngineImpl: Inference failed on hardware acceleration ($failedBackend). Falling back to CPU...",
                 )
-                initialize(
-                    modelPath = currentModelPath,
-                    backend = LlmEngine.Backend.CPU,
-                    systemInstruction = currentSystemInstruction,
-                    config = currentConfig,
-                )
+                recreateSessionWithCpu()
                 executeInference(input, onToken)
             } else {
                 throw e
             }
         }
+    }
+
+    private suspend fun recreateSessionWithCpu() {
+        val session =
+            llmEngineFactory.createSession(
+                modelPath = currentModelPath,
+                preferredBackend = LlmEngine.Backend.CPU,
+                systemInstruction = currentSystemInstruction,
+                config = currentConfig,
+            )
+        engine = session.engine
+        conversation = session.conversation
+        activeBackend = session.backend
     }
 
     private suspend fun executeInference(
@@ -278,17 +218,11 @@ class LlmEngineImpl(
         } catch (e: Exception) {
             val failedBackend = activeBackend
             if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
-                unsupportedBackends.add(failedBackend)
                 Timber.w(
                     e,
                     "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",
                 )
-                initialize(
-                    modelPath = currentModelPath,
-                    backend = LlmEngine.Backend.CPU,
-                    systemInstruction = currentSystemInstruction,
-                    config = currentConfig,
-                )
+                recreateSessionWithCpu()
                 executeRestoreHistory(priorMessages)
             } else {
                 Timber.w(e, "LlmEngineImpl: Failed to restore history")
@@ -349,11 +283,4 @@ class LlmEngineImpl(
         activeBackend = null
         activeCallback = null
     }
-
-    private fun LlmEngine.Backend.toLiteRtBackend(): Backend =
-        when (this) {
-            LlmEngine.Backend.CPU -> Backend.CPU()
-            LlmEngine.Backend.GPU -> Backend.GPU()
-            LlmEngine.Backend.NPU -> Backend.NPU(context.applicationInfo.nativeLibraryDir)
-        }
 }
