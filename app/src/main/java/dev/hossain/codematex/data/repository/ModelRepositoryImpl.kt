@@ -1,5 +1,3 @@
-@file:Suppress("OPT_IN_USAGE_FUTURE_ERROR")
-
 package dev.hossain.codematex.data.repository
 
 import androidx.work.WorkInfo
@@ -13,28 +11,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.serialization.Serializable
 import javax.inject.Inject
-
-@Serializable
-data class ModelAllowlist(
-    val models: List<ModelEntry>,
-)
-
-@Serializable
-data class ModelEntry(
-    val modelId: String,
-    val modelFile: String,
-    val commitHash: String,
-    val sizeInBytes: Long,
-    val taskTypes: List<String>,
-    val runtimeType: String,
-    val minDeviceMemoryInGb: Int = 0,
-    val publisher: String = "Google LiteRT Community",
-    val license: String = "Apache 2.0",
-    val licenseUrl: String = "https://www.apache.org/licenses/LICENSE-2.0",
-    val description: String = "",
-)
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
@@ -45,27 +22,14 @@ class ModelRepositoryImpl
         private val fileStorage: ModelFileStorage,
         private val selectionStore: ModelSelectionStore,
         private val downloadTracker: ModelDownloadTracker,
+        private val allowlistDataSource: ModelAllowlistDataSource,
     ) : ModelRepository {
         private var cachedModels: List<AiModel> = initialModelScan()
 
         private fun initialModelScan(): List<AiModel> =
             try {
-                val allowlist = loadAllowlist()
-                allowlist.map { entry ->
-                    val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
-                    val isDownloaded = fileStorage.modelExists(localPath)
-                    AiModel(
-                        id = entry.modelId,
-                        name = entry.modelId.substringAfterLast("/"),
-                        displayName = entry.modelId.substringAfterLast("/"),
-                        downloadUrl = buildDownloadUrl(entry),
-                        sizeBytes = entry.sizeInBytes,
-                        localPath = localPath.takeIf { isDownloaded },
-                        downloadStatus = if (isDownloaded) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
-                        preferredBackend = LlmEngine.Backend.GPU,
-                        minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
-                        downloadProgress = if (isDownloaded) 100 else 0,
-                    )
+                allowlistDataSource.loadAllowlist().map { entry ->
+                    buildAiModel(entry)
                 }
             } catch (e: Exception) {
                 emptyList()
@@ -73,7 +37,13 @@ class ModelRepositoryImpl
 
         override fun getAvailableModels(): Flow<List<AiModel>> =
             flow {
-                val allowlist = loadAllowlist()
+                val allowlist = allowlistDataSource.loadAllowlist()
+                if (allowlist.isEmpty()) {
+                    cachedModels = emptyList()
+                    emit(emptyList())
+                    return@flow
+                }
+
                 val modelIds = allowlist.map { it.modelId }
                 val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
 
@@ -103,26 +73,7 @@ class ModelRepositoryImpl
                                     progressMap[entry.modelId] ?: (DownloadStatus.NOT_DOWNLOADED to 0)
                                 }
 
-                            AiModel(
-                                id = entry.modelId,
-                                name = entry.modelId.substringAfterLast("/"),
-                                displayName = entry.modelId.substringAfterLast("/"),
-                                downloadUrl = buildDownloadUrl(entry),
-                                sizeBytes = entry.sizeInBytes,
-                                localPath = localPath.takeIf { isDownloaded },
-                                downloadStatus = status,
-                                // Default to GPU for hardware acceleration. LlmEngine handles fallback to CPU
-                                // if the device's GPU delegate fails to initialize.
-                                // See: https://ai.google.dev/gemma/docs/gpu_inference
-                                preferredBackend = LlmEngine.Backend.GPU,
-                                minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
-                                downloadProgress = progress,
-                                publisher = entry.publisher,
-                                modelRepoUrl = "https://huggingface.co/${entry.modelId}",
-                                license = entry.license,
-                                licenseUrl = entry.licenseUrl,
-                                description = entry.description,
-                            )
+                            buildAiModel(entry, localPath, isDownloaded, status, progress)
                         }
                     cachedModels = models
                     emit(models)
@@ -164,45 +115,37 @@ class ModelRepositoryImpl
             }
         }
 
-        private fun loadAllowlist(): List<ModelEntry> {
-            // TODO: Fetch from remote URL. For now, return bundled allowlist.
-            return listOf(
-                ModelEntry(
-                    modelId = "litert-community/gemma-4-E2B-it-litert-lm",
-                    modelFile = "gemma-4-E2B-it.litertlm",
-                    commitHash = "6e5c4f1e395deb959c494953478fa5cec4b8008f",
-                    sizeInBytes = 2_588_147_712,
-                    taskTypes = listOf("llm_chat"),
-                    runtimeType = "LITERT_LM",
-                    minDeviceMemoryInGb = 8,
-                    publisher = "Google LiteRT Community",
-                    license = "Apache 2.0",
-                    licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
-                    description =
-                        "Lightweight on-device instruction-tuned model optimized for fast mobile code assistance and reasoning.",
-                ),
-                ModelEntry(
-                    modelId = "litert-community/gemma-4-E4B-it-litert-lm",
-                    modelFile = "gemma-4-E4B-it.litertlm",
-                    commitHash = "28299f30ee4d43294517a4ac93abd6163412f07f",
-                    sizeInBytes = 3_659_530_240,
-                    taskTypes = listOf("llm_chat"),
-                    runtimeType = "LITERT_LM",
-                    minDeviceMemoryInGb = 12,
-                    publisher = "Google LiteRT Community",
-                    license = "Apache 2.0",
-                    licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
-                    description =
-                        "Higher capacity instruction-tuned model offering deeper coding comprehension and complex multi-turn logic.",
-                ),
+        private fun buildAiModel(
+            entry: ModelEntry,
+            localPath: String = fileStorage.getLocalPath(entry.modelId, entry.modelFile),
+            isDownloaded: Boolean = fileStorage.modelExists(localPath),
+            status: DownloadStatus = if (isDownloaded) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
+            progress: Int = if (isDownloaded) 100 else 0,
+        ): AiModel =
+            AiModel(
+                id = entry.modelId,
+                name = entry.modelId.substringAfterLast("/"),
+                displayName = entry.modelId.substringAfterLast("/"),
+                downloadUrl = buildDownloadUrl(entry),
+                sizeBytes = entry.sizeInBytes,
+                localPath = localPath.takeIf { isDownloaded },
+                downloadStatus = status,
+                preferredBackend = LlmEngine.Backend.GPU,
+                minDeviceMemoryInGb = entry.minDeviceMemoryInGb,
+                downloadProgress = progress,
+                publisher = entry.publisher,
+                modelRepoUrl = "https://huggingface.co/${entry.modelId}",
+                license = entry.license,
+                licenseUrl = entry.licenseUrl,
+                description = entry.description,
             )
-        }
 
         private fun buildDownloadUrl(entry: ModelEntry): String =
             "https://huggingface.co/${entry.modelId}/resolve/${entry.commitHash}/${entry.modelFile}?download=true"
 
         private fun getModelLocalPathById(modelId: String): String {
-            loadAllowlist()
+            allowlistDataSource
+                .loadAllowlist()
                 .firstOrNull { it.modelId == modelId }
                 ?.let { return fileStorage.getLocalPath(it.modelId, it.modelFile) }
 
