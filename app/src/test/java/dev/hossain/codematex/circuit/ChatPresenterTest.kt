@@ -24,6 +24,7 @@ class ChatPresenterTest {
     private val fakeEngine = FakeLlmEngine()
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeDeviceMemoryProvider = FakeDeviceMemoryProvider()
+    private val fakeTopicPromptProvider = FakeTopicPromptProvider()
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -43,6 +44,7 @@ class ChatPresenterTest {
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
                     deviceMemoryProvider = fakeDeviceMemoryProvider,
+                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -70,6 +72,7 @@ class ChatPresenterTest {
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
                     deviceMemoryProvider = fakeDeviceMemoryProvider,
+                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -97,6 +100,7 @@ class ChatPresenterTest {
                     sessionRepository = fakeSessionRepo,
                     configStore = configStore,
                     deviceMemoryProvider = fakeDeviceMemoryProvider,
+                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
