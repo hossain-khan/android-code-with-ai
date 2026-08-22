@@ -94,6 +94,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.visualInfo
+import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -637,11 +638,29 @@ private fun ChatInputField(
     ) {
         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
             if (state.isPreparing) {
-                Box(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    contentAlignment = Alignment.Center,
+                val shortModelName = formatShortModelName(state.modelName)
+                val labelText =
+                    if (shortModelName.isNotBlank()) {
+                        "Initializing $shortModelName model..."
+                    } else {
+                        "Initializing model..."
+                    }
+
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    CircularWavyProgressIndicator(modifier = Modifier.size(24.dp))
+                    CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = labelText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
             }
 
