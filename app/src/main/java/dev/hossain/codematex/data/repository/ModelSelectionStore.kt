@@ -5,6 +5,9 @@ import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 /**
@@ -18,6 +21,11 @@ interface ModelSelectionStore {
      * The id of the currently selected model, or `null` if none is selected.
      */
     var selectedModelId: String?
+
+    /**
+     * Observable flow of the currently selected model id.
+     */
+    val selectedModelIdFlow: Flow<String?>
 }
 
 @SingleIn(AppScope::class)
@@ -28,10 +36,13 @@ class ModelSelectionStoreImpl
         @param:ApplicationContext private val context: Context,
     ) : ModelSelectionStore {
         private val prefs = context.getSharedPreferences("model_prefs", Context.MODE_PRIVATE)
+        private val _selectedModelIdFlow = MutableStateFlow(prefs.getString("selected_model_id", null))
+        override val selectedModelIdFlow: Flow<String?> = _selectedModelIdFlow.asStateFlow()
 
         override var selectedModelId: String?
-            get() = prefs.getString("selected_model_id", null)
+            get() = _selectedModelIdFlow.value
             set(value) {
                 prefs.edit().putString("selected_model_id", value).apply()
+                _selectedModelIdFlow.value = value
             }
     }

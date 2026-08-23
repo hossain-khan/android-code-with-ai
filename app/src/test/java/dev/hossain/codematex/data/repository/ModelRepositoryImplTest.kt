@@ -202,6 +202,25 @@ class ModelRepositoryImplTest {
         }
 
     @Test
+    fun `getAvailableModels marks selected model with isSelected true`() =
+        runTest {
+            val path =
+                "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm"
+            val (repository, _) =
+                createRepository(
+                    existingPaths = setOf(path),
+                    selectedModelId = "litert-community/gemma-4-E2B-it-litert-lm",
+                )
+
+            val models = repository.getAvailableModels().first()
+            val selectedModel = models.first { it.id == "litert-community/gemma-4-E2B-it-litert-lm" }
+            val otherModel = models.first { it.id == "litert-community/gemma-4-E4B-it-litert-lm" }
+
+            assertTrue(selectedModel.isSelected)
+            assertFalse(otherModel.isSelected)
+        }
+
+    @Test
     fun `downloadModel enqueues work with local path when available`() =
         runTest {
             val (repository, deps) = createRepository()
