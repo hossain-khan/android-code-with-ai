@@ -502,6 +502,7 @@ private fun ChatLayout(
                     if (state.messages.isEmpty()) {
                         EmptyChatTopicStarters(
                             visualInfo = visualInfo,
+                            enabled = !state.isPreparing && !state.isGenerating,
                             onPromptSelected = { prompt ->
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
@@ -583,6 +584,7 @@ private fun ChatLayout(
                 if (state.messages.isEmpty()) {
                     EmptyChatTopicStarters(
                         visualInfo = visualInfo,
+                        enabled = !state.isPreparing && !state.isGenerating,
                         onPromptSelected = { prompt ->
                             keyboardController?.hide()
                             focusManager.clearFocus()
@@ -637,6 +639,7 @@ private fun ChatLayout(
 @Composable
 private fun EmptyChatTopicStarters(
     visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
+    enabled: Boolean = true,
     onPromptSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -709,19 +712,37 @@ private fun EmptyChatTopicStarters(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable { onPromptSelected(prompt) },
+                            .clickable(enabled = enabled) { onPromptSelected(prompt) },
                     shape = MaterialTheme.shapes.medium,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    border =
+                        BorderStroke(
+                            1.dp,
+                            if (enabled) {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                            },
+                        ),
                     colors =
                         CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                            containerColor =
+                                if (enabled) {
+                                    MaterialTheme.colorScheme.surfaceContainerLow
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.5f)
+                                },
                         ),
                 ) {
                     Text(
                         text = prompt,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color =
+                            if (enabled) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            },
                     )
                 }
             }
@@ -750,10 +771,13 @@ private fun GeneratingIndicator(accentColor: androidx.compose.ui.graphics.Color)
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
+                CircularWavyProgressIndicator(
+                    modifier = Modifier.size(16.dp),
+                    color = accentColor,
+                )
                 Text(
-                    "Generating response...",
-                    style = MaterialTheme.typography.labelSmall,
+                    text = "Thinking...",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -820,7 +844,7 @@ private fun ChatInputField(
                 keyboardActions =
                     KeyboardActions(
                         onSend = {
-                            if (inputText.isNotBlank() && !state.isGenerating) {
+                            if (inputText.isNotBlank() && !state.isGenerating && !state.isPreparing) {
                                 onSendMessage()
                             }
                         },
@@ -847,7 +871,7 @@ private fun ChatInputField(
                         }
                     } else {
                         FilledIconButton(
-                            enabled = inputText.isNotBlank(),
+                            enabled = inputText.isNotBlank() && !state.isPreparing,
                             onClick = onSendMessage,
                             colors =
                                 IconButtonDefaults.filledIconButtonColors(

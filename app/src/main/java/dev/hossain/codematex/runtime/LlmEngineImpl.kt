@@ -92,12 +92,7 @@ class LlmEngineImpl(
         onToken: (partialResult: String, done: Boolean) -> Unit,
     ) {
         if (engine == null) {
-            Timber.w("LlmEngineImpl: Stub model - returning mock response")
-            onToken(
-                "This is a stub response. In dev mode, the LLM engine is not initialized. Connect a real model file to see actual AI responses.",
-                true,
-            )
-            return
+            throw IllegalStateException("LLM engine is not initialized. Please wait for model initialization to complete.")
         }
 
         try {

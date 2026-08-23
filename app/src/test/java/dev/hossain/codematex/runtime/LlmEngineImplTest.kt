@@ -108,18 +108,10 @@ class LlmEngineImplTest {
             assertEquals("Second prompt", systemContent?.text)
         }
 
-    @Test
-    fun `runInference returns stub response when engine is not initialized`() =
+    @Test(expected = IllegalStateException::class)
+    fun `runInference throws IllegalStateException when engine is not initialized`() =
         runEngineTest {
-            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
-
-            engine.runInference("Hello") { partial, done ->
-                emittedTokens.add(partial to done)
-            }
-
-            assertEquals(1, emittedTokens.size)
-            assertEquals(true, emittedTokens.single().second)
-            assertTrue(emittedTokens.single().first.contains("stub response"))
+            engine.runInference("Hello") { _, _ -> }
         }
 
     @Test
