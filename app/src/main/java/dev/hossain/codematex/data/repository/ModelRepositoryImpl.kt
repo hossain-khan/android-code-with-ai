@@ -101,7 +101,7 @@ class ModelRepositoryImpl
         override suspend fun downloadModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
             val candidateUrls = listOf(model.downloadUrl) + model.fallbackDownloadUrls
-            downloadTracker.enqueueDownload(model.id, candidateUrls, path)
+            downloadTracker.enqueueDownload(model.id, candidateUrls, path, model.sha256)
         }
 
         override suspend fun cancelDownload(model: AiModel) {
@@ -143,6 +143,7 @@ class ModelRepositoryImpl
                 license = entry.license,
                 licenseUrl = entry.licenseUrl,
                 description = entry.description,
+                sha256 = entry.sha256,
             )
 
         private fun buildDownloadUrl(entry: ModelEntry): String =

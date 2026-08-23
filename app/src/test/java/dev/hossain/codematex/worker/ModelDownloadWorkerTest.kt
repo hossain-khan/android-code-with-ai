@@ -146,4 +146,25 @@ class ModelDownloadWorkerTest {
             assertEquals(urls, fakeDownloader.multiUrlDownloads.single().urls)
             assertEquals("/models/model.bin", fakeDownloader.multiUrlDownloads.single().outputPath)
         }
+
+    @Test
+    fun `given expectedSha256 provided - execute download forwards checksum to downloader`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            val urls = listOf("https://r2.example.com/model.bin")
+            val expectedSha256 = "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c"
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    urls = urls,
+                    outputPath = "/models/model.bin",
+                    expectedSha256 = expectedSha256,
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            assertEquals(WorkResult.success(), result)
+            assertEquals(expectedSha256, fakeDownloader.multiUrlDownloads.single().expectedSha256)
+        }
 }

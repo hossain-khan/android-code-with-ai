@@ -11,12 +11,13 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 import javax.inject.Inject
 
 /**
  * Production implementation of [ModelDownloader] that downloads model files
  * over HTTP using [HttpURLConnection] with support for resuming partial
- * downloads.
+ * downloads and verifying SHA-256 digests.
  */
 @ContributesBinding(AppScope::class)
 class HttpModelDownloader
@@ -25,6 +26,7 @@ class HttpModelDownloader
         override suspend fun download(
             urls: List<String>,
             outputPath: String,
+            expectedSha256: String?,
             onProgress: suspend (percent: Int) -> Unit,
             shouldCancel: () -> Boolean,
         ): Result<Unit> {
@@ -35,7 +37,7 @@ class HttpModelDownloader
             var lastError: Throwable = IllegalStateException("Download failed for all candidate URLs")
             for ((index, url) in urls.withIndex()) {
                 Timber.d("HttpModelDownloader: Trying candidate URL (${index + 1}/${urls.size}): $url")
-                val result = download(url, outputPath, onProgress, shouldCancel)
+                val result = download(url, outputPath, expectedSha256, onProgress, shouldCancel)
                 if (result.isSuccess) {
                     return result
                 }
@@ -55,6 +57,7 @@ class HttpModelDownloader
         override suspend fun download(
             url: String,
             outputPath: String,
+            expectedSha256: String?,
             onProgress: suspend (percent: Int) -> Unit,
             shouldCancel: () -> Boolean,
         ): Result<Unit> =
@@ -135,6 +138,21 @@ class HttpModelDownloader
                         }
                     }
 
+                    if (expectedSha256 != null) {
+                        Timber.d("HttpModelDownloader: Verifying SHA-256 checksum against $expectedSha256")
+                        val actualHash = computeSha256(outputTmpFile, shouldCancel)
+                        if (!actualHash.equals(expectedSha256, ignoreCase = true)) {
+                            Timber.e("HttpModelDownloader: Checksum mismatch! Expected=$expectedSha256, Actual=$actualHash")
+                            outputTmpFile.delete()
+                            return@withContext Result.failure(
+                                SecurityException(
+                                    "SHA-256 checksum mismatch: expected $expectedSha256, calculated $actualHash",
+                                ),
+                            )
+                        }
+                        Timber.d("HttpModelDownloader: Checksum verified successfully")
+                    }
+
                     outputTmpFile.renameTo(File(outputPath))
                     Timber.d("HttpModelDownloader: Download completed for $url")
                     Result.success(Unit)
@@ -145,4 +163,20 @@ class HttpModelDownloader
                     Result.failure(e)
                 }
             }
+
+        private fun computeSha256(
+            file: File,
+            shouldCancel: () -> Boolean,
+        ): String {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val buffer = ByteArray(65536)
+            file.inputStream().use { input ->
+                var bytesRead: Int
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    if (shouldCancel()) throw CancellationException("Cancelled during checksum calculation")
+                    digest.update(buffer, 0, bytesRead)
+                }
+            }
+            return digest.digest().joinToString("") { "%02x".format(it) }
+        }
     }

@@ -29,6 +29,7 @@ class ModelDownloadWorker(
         const val KEY_URLS = "urls"
         const val KEY_PATH = "path"
         const val KEY_PROGRESS = "progress"
+        const val KEY_SHA256 = "sha256"
 
         /**
          * Downloads a model file from [urls] using [modelDownloader] and reports progress
@@ -41,6 +42,7 @@ class ModelDownloadWorker(
         suspend fun executeDownload(
             urls: List<String>,
             outputPath: String,
+            expectedSha256: String? = null,
             modelDownloader: ModelDownloader,
             isStopped: () -> Boolean,
             onProgress: suspend (Int) -> Unit,
@@ -52,6 +54,7 @@ class ModelDownloadWorker(
                     modelDownloader.download(
                         urls = urls,
                         outputPath = outputPath,
+                        expectedSha256 = expectedSha256,
                         onProgress = { progress ->
                             if (isStopped()) throw kotlinx.coroutines.CancellationException("Worker stopped")
                             onProgress(progress)
@@ -75,12 +78,20 @@ class ModelDownloadWorker(
             }
 
         suspend fun executeDownload(
+            urls: List<String>,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (Int) -> Unit,
+        ): Result = executeDownload(urls, outputPath, null, modelDownloader, isStopped, onProgress)
+
+        suspend fun executeDownload(
             url: String,
             outputPath: String,
             modelDownloader: ModelDownloader,
             isStopped: () -> Boolean,
             onProgress: suspend (Int) -> Unit,
-        ): Result = executeDownload(listOf(url), outputPath, modelDownloader, isStopped, onProgress)
+        ): Result = executeDownload(listOf(url), outputPath, null, modelDownloader, isStopped, onProgress)
     }
 
     override suspend fun doWork(): Result {
@@ -89,6 +100,7 @@ class ModelDownloadWorker(
                 ?: listOfNotNull(inputData.getString(KEY_URL))
         if (urls.isEmpty()) return Result.failure()
         val outputPath = inputData.getString(KEY_PATH) ?: return Result.failure()
+        val expectedSha256 = inputData.getString(KEY_SHA256)
 
         setForeground(createForegroundInfo("Starting download..."))
 
@@ -96,6 +108,7 @@ class ModelDownloadWorker(
             executeDownload(
                 urls = urls,
                 outputPath = outputPath,
+                expectedSha256 = expectedSha256,
                 modelDownloader = modelDownloader,
                 isStopped = { isStopped },
                 onProgress = { progress -> reportProgress(progress) },

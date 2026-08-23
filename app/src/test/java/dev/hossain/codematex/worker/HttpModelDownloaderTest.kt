@@ -7,11 +7,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
 import java.net.InetSocketAddress
+import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.createTempDirectory
 
@@ -262,6 +264,95 @@ class HttpModelDownloaderTest {
 
             assertTrue(result.isFailure)
             assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
+    @Test
+    fun `given matching sha256 checksum - download succeeds and creates final file`() =
+        runTest {
+            val content = "valid model content".toByteArray()
+            val expectedSha256 =
+                MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(content)
+                    .joinToString("") { "%02x".format(it) }
+
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    expectedSha256 = expectedSha256,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertEquals(Result.success(Unit), result)
+            assertTrue(File(outputPath).exists())
+            assertEquals(content.size.toLong(), File(outputPath).length())
+            assertFalse(File("$outputPath.codematextmp").exists())
+        }
+
+    @Test
+    fun `given mismatching sha256 checksum - download fails and deletes temp file`() =
+        runTest {
+            val content = "corrupt model content".toByteArray()
+            val wrongSha256 = "0000000000000000000000000000000000000000000000000000000000000000"
+
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    expectedSha256 = wrongSha256,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is SecurityException)
+            assertFalse(File(outputPath).exists())
+            assertFalse(File("$outputPath.codematextmp").exists())
+        }
+
+    @Test
+    fun `given primary url has checksum mismatch - fallback url with valid checksum succeeds`() =
+        runTest {
+            val badContent = "bad content from primary mirror".toByteArray()
+            val goodContent = "good verified content from fallback mirror".toByteArray()
+            val expectedSha256 =
+                MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(goodContent)
+                    .joinToString("") { "%02x".format(it) }
+
+            server.createContext("/primary.bin", ModelFileHandler(badContent))
+            server.createContext("/fallback.bin", ModelFileHandler(goodContent))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    urls = listOf(serverUrl("/primary.bin"), serverUrl("/fallback.bin")),
+                    outputPath = outputPath,
+                    expectedSha256 = expectedSha256,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertEquals(Result.success(Unit), result)
+            assertTrue(File(outputPath).exists())
+            assertEquals(goodContent.size.toLong(), File(outputPath).length())
+            assertTrue(goodContent.contentEquals(File(outputPath).readBytes()))
+            assertFalse(File("$outputPath.codematextmp").exists())
         }
 
     private class ModelFileHandler(

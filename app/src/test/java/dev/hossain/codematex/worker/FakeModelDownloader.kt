@@ -17,31 +17,35 @@ class FakeModelDownloader : ModelDownloader {
     data class DownloadCall(
         val url: String,
         val outputPath: String,
+        val expectedSha256: String? = null,
     )
 
     data class MultiUrlDownloadCall(
         val urls: List<String>,
         val outputPath: String,
+        val expectedSha256: String? = null,
     )
 
     override suspend fun download(
         urls: List<String>,
         outputPath: String,
+        expectedSha256: String?,
         onProgress: suspend (percent: Int) -> Unit,
         shouldCancel: () -> Boolean,
     ): Result<Unit> {
-        multiUrlDownloads += MultiUrlDownloadCall(urls, outputPath)
-        return super.download(urls, outputPath, onProgress, shouldCancel)
+        multiUrlDownloads += MultiUrlDownloadCall(urls, outputPath, expectedSha256)
+        return super.download(urls, outputPath, expectedSha256, onProgress, shouldCancel)
     }
 
     override suspend fun download(
         url: String,
         outputPath: String,
+        expectedSha256: String?,
         onProgress: suspend (percent: Int) -> Unit,
         shouldCancel: () -> Boolean,
     ): Result<Unit> {
         coroutineContext.ensureActive()
-        downloads += DownloadCall(url, outputPath)
+        downloads += DownloadCall(url, outputPath, expectedSha256)
 
         progressToReport.forEach { progress ->
             coroutineContext.ensureActive()

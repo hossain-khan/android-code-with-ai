@@ -10,38 +10,44 @@ package dev.hossain.codematex.worker
  */
 interface ModelDownloader {
     /**
-     * Downloads the resource from candidate [urls] (trying in order) to [outputPath].
+     * Downloads the resource from candidate [urls] (trying in order) to [outputPath],
+     * optionally verifying file integrity against [expectedSha256].
      */
     suspend fun download(
         urls: List<String>,
         outputPath: String,
+        expectedSha256: String? = null,
         onProgress: suspend (percent: Int) -> Unit,
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> =
         if (urls.isEmpty()) {
             Result.failure(IllegalArgumentException("No download URLs provided"))
         } else {
-            download(urls.first(), outputPath, onProgress, shouldCancel)
+            download(urls.first(), outputPath, expectedSha256, onProgress, shouldCancel)
         }
 
     /**
-     * Downloads the resource at [url] to [outputPath].
-     *
-     * The implementation is responsible for:
-     * - resuming partial downloads when a temporary file already exists,
-     * - streaming bytes to disk,
-     * - invoking [onProgress] with values in the range 0..100 when the total
-     *   size is known, or -1 when it is unknown,
-     * - checking [shouldCancel] frequently and aborting cleanly if it returns
-     *   true.
-     *
-     * @return [Result.success] when the download completes and the output file
-     *         is ready, or [Result.failure] otherwise.
+     * Downloads the resource at [url] to [outputPath], optionally verifying file integrity against [expectedSha256].
      */
+    suspend fun download(
+        url: String,
+        outputPath: String,
+        expectedSha256: String? = null,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean = { false },
+    ): Result<Unit>
+
+    suspend fun download(
+        urls: List<String>,
+        outputPath: String,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean = { false },
+    ): Result<Unit> = download(urls, outputPath, null, onProgress, shouldCancel)
+
     suspend fun download(
         url: String,
         outputPath: String,
         onProgress: suspend (percent: Int) -> Unit,
         shouldCancel: () -> Boolean = { false },
-    ): Result<Unit>
+    ): Result<Unit> = download(url, outputPath, null, onProgress, shouldCancel)
 }
