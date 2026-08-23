@@ -6,24 +6,34 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
 import java.security.MessageDigest
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
  * Production implementation of [ModelDownloader] that downloads model files
- * over HTTP using [HttpURLConnection] with support for resuming partial
+ * over HTTP using [OkHttpClient] with support for resuming partial
  * downloads and verifying SHA-256 digests.
  */
 @ContributesBinding(AppScope::class)
 class HttpModelDownloader
     @Inject
-    constructor() : ModelDownloader {
+    constructor(
+        private val okHttpClient: OkHttpClient =
+            OkHttpClient
+                .Builder()
+                .followRedirects(true)
+                .followSslRedirects(true)
+                .connectTimeout(60, TimeUnit.SECONDS)
+                .readTimeout(60, TimeUnit.SECONDS)
+                .build(),
+    ) : ModelDownloader {
         internal var spaceChecker: (File) -> Long = { it.usableSpace }
 
         override suspend fun download(
@@ -70,110 +80,114 @@ class HttpModelDownloader
                 try {
                     Timber.d("HttpModelDownloader: Downloading $url to $outputPath")
 
-                    val connection = URL(url).openConnection() as HttpURLConnection
+                    val requestBuilder = Request.Builder().url(url)
 
                     if (outputTmpFile.exists() && outputTmpFile.length() > 0) {
-                        connection.setRequestProperty("Range", "bytes=${outputTmpFile.length()}-")
-                        connection.setRequestProperty("Accept-Encoding", "identity")
+                        requestBuilder.header("Range", "bytes=${outputTmpFile.length()}-")
+                        requestBuilder.header("Accept-Encoding", "identity")
                     }
 
-                    connection.connect()
-                    val responseCode = connection.responseCode
-                    Timber.d("HttpModelDownloader: Response code=$responseCode for $url")
+                    val response = okHttpClient.newCall(requestBuilder.build()).execute()
 
-                    if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_PARTIAL) {
-                        Timber.e("HttpModelDownloader: Failed with response code $responseCode")
-                        return@withContext Result.failure(
-                            IllegalStateException("HTTP $responseCode"),
-                        )
-                    }
+                    response.use { resp ->
+                        val responseCode = resp.code
+                        Timber.d("HttpModelDownloader: Response code=$responseCode for $url")
 
-                    val isResuming = responseCode == HttpURLConnection.HTTP_PARTIAL
-                    val initialBytes = if (isResuming) outputTmpFile.length() else 0L
-
-                    val contentLength = connection.contentLengthLong
-                    val totalBytes =
-                        if (contentLength > 0) {
-                            contentLength + initialBytes
-                        } else {
-                            Timber.w("HttpModelDownloader: Unknown content length")
-                            0L
-                        }
-
-                    val targetDir = (File(outputPath).parentFile ?: outputTmpFile.parentFile ?: File(".")).apply { mkdirs() }
-                    val availableSpace = spaceChecker(targetDir)
-                    val requiredBytes = if (isResuming) contentLength else totalBytes
-
-                    if (availableSpace > 0 && requiredBytes > 0 && availableSpace < requiredBytes) {
-                        Timber.e(
-                            "HttpModelDownloader: Insufficient storage space. Required=$requiredBytes B, Available=$availableSpace B",
-                        )
-                        return@withContext Result.failure(
-                            IOException(
-                                "Insufficient storage space: available $availableSpace bytes, required $requiredBytes bytes",
-                            ),
-                        )
-                    }
-
-                    Timber.d(
-                        "HttpModelDownloader: Content-Length=$contentLength, Total=$totalBytes, isResuming=$isResuming, Starting from $initialBytes",
-                    )
-
-                    outputTmpFile.parentFile?.mkdirs()
-                    File(outputPath).parentFile?.mkdirs()
-
-                    FileOutputStream(outputTmpFile, isResuming).use { fos ->
-                        connection.inputStream.use { input ->
-                            val buffer = ByteArray(8192)
-                            var bytesRead: Int
-                            var downloadedBytes = initialBytes
-                            var lastReportedProgress = -1
-                            var lastReportedBytes = initialBytes
-                            val reportInterval = 100_000_000L // 100MB
-
-                            while (input.read(buffer).also { bytesRead = it } != -1) {
-                                ensureActive()
-                                if (shouldCancel()) {
-                                    throw CancellationException("Download cancelled")
-                                }
-
-                                fos.write(buffer, 0, bytesRead)
-                                downloadedBytes += bytesRead
-
-                                val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
-
-                                if (progress != lastReportedProgress &&
-                                    (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)
-                                ) {
-                                    lastReportedProgress = progress
-                                    lastReportedBytes = downloadedBytes
-                                    onProgress(progress)
-                                    Timber.i(
-                                        "HttpModelDownloader: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (expectedSha256 != null) {
-                        Timber.d("HttpModelDownloader: Verifying SHA-256 checksum against $expectedSha256")
-                        val actualHash = computeSha256(outputTmpFile, shouldCancel)
-                        if (!actualHash.equals(expectedSha256, ignoreCase = true)) {
-                            Timber.e("HttpModelDownloader: Checksum mismatch! Expected=$expectedSha256, Actual=$actualHash")
-                            outputTmpFile.delete()
+                        if (responseCode != 200 && responseCode != 206) {
+                            Timber.e("HttpModelDownloader: Failed with response code $responseCode")
                             return@withContext Result.failure(
-                                SecurityException(
-                                    "SHA-256 checksum mismatch: expected $expectedSha256, calculated $actualHash",
+                                IllegalStateException("HTTP $responseCode"),
+                            )
+                        }
+
+                        val body = resp.body
+                        val isResuming = responseCode == 206
+                        val initialBytes = if (isResuming) outputTmpFile.length() else 0L
+
+                        val contentLength = body.contentLength()
+                        val totalBytes =
+                            if (contentLength > 0) {
+                                contentLength + initialBytes
+                            } else {
+                                Timber.w("HttpModelDownloader: Unknown content length")
+                                0L
+                            }
+
+                        val targetDir = (File(outputPath).parentFile ?: outputTmpFile.parentFile ?: File(".")).apply { mkdirs() }
+                        val availableSpace = spaceChecker(targetDir)
+                        val requiredBytes = if (isResuming) contentLength else totalBytes
+
+                        if (availableSpace > 0 && requiredBytes > 0 && availableSpace < requiredBytes) {
+                            Timber.e(
+                                "HttpModelDownloader: Insufficient storage space. Required=$requiredBytes B, Available=$availableSpace B",
+                            )
+                            return@withContext Result.failure(
+                                IOException(
+                                    "Insufficient storage space: available $availableSpace bytes, required $requiredBytes bytes",
                                 ),
                             )
                         }
-                        Timber.d("HttpModelDownloader: Checksum verified successfully")
-                    }
 
-                    outputTmpFile.renameTo(File(outputPath))
-                    Timber.d("HttpModelDownloader: Download completed for $url")
-                    Result.success(Unit)
+                        Timber.d(
+                            "HttpModelDownloader: Content-Length=$contentLength, Total=$totalBytes, isResuming=$isResuming, Starting from $initialBytes",
+                        )
+
+                        outputTmpFile.parentFile?.mkdirs()
+                        File(outputPath).parentFile?.mkdirs()
+
+                        FileOutputStream(outputTmpFile, isResuming).use { fos ->
+                            body.byteStream().use { input ->
+                                val buffer = ByteArray(8192)
+                                var bytesRead: Int
+                                var downloadedBytes = initialBytes
+                                var lastReportedProgress = -1
+                                var lastReportedBytes = initialBytes
+                                val reportInterval = 100_000_000L // 100MB
+
+                                while (input.read(buffer).also { bytesRead = it } != -1) {
+                                    ensureActive()
+                                    if (shouldCancel()) {
+                                        throw CancellationException("Download cancelled")
+                                    }
+
+                                    fos.write(buffer, 0, bytesRead)
+                                    downloadedBytes += bytesRead
+
+                                    val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
+
+                                    if (progress != lastReportedProgress &&
+                                        (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)
+                                    ) {
+                                        lastReportedProgress = progress
+                                        lastReportedBytes = downloadedBytes
+                                        onProgress(progress)
+                                        Timber.i(
+                                            "HttpModelDownloader: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (expectedSha256 != null) {
+                            Timber.d("HttpModelDownloader: Verifying SHA-256 checksum against $expectedSha256")
+                            val actualHash = computeSha256(outputTmpFile, shouldCancel)
+                            if (!actualHash.equals(expectedSha256, ignoreCase = true)) {
+                                Timber.e("HttpModelDownloader: Checksum mismatch! Expected=$expectedSha256, Actual=$actualHash")
+                                outputTmpFile.delete()
+                                return@withContext Result.failure(
+                                    SecurityException(
+                                        "SHA-256 checksum mismatch: expected $expectedSha256, calculated $actualHash",
+                                    ),
+                                )
+                            }
+                            Timber.d("HttpModelDownloader: Checksum verified successfully")
+                        }
+
+                        outputTmpFile.renameTo(File(outputPath))
+                        Timber.d("HttpModelDownloader: Download completed for $url")
+                        Result.success(Unit)
+                    }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
