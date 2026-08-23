@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 interface NetworkingGraph {
     /**
      * Provides a configured [OkHttpClient] with:
-     * - HTTP request/response logging (BODY level in debug, NONE in release)
+     * - HTTP request/response header logging (HEADERS level in debug, NONE in release to avoid buffering large payloads)
      * - 30-second connect and read timeouts
      */
     @Provides
@@ -38,7 +38,11 @@ interface NetworkingGraph {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(
                         HttpLoggingInterceptor().apply {
-                            level = HttpLoggingInterceptor.Level.BODY
+                            // Note: Do NOT use Level.BODY here. Level.BODY attempts to buffer the full response
+                            // payload into an in-memory byte buffer (okio.Buffer) in RAM before logging.
+                            // Downloading multi-gigabyte on-device LLM model files (e.g. 2.5GB Gemma weights)
+                            // with Level.BODY will immediately exhaust the JVM heap limit and cause OutOfMemoryError.
+                            level = HttpLoggingInterceptor.Level.HEADERS
                         },
                     )
                 }
