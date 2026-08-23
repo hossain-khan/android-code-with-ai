@@ -1,0 +1,5 @@
+What's New in v1.9.0:
+• AI Tutor Personas: Choose from Senior Architect, Beginner Tutor, Code Reviewer, or Interview Coach.
+• Interactive Learning: 1-tap "Quiz Me", "Find the Bug", and "Optimize" learning actions.
+• Fast & Concise Responses: Optimized default prompting for brief, high-signal, mobile-friendly answers.
+• UI & Performance: Smoother model loading and telemetry indicators.
