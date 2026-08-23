@@ -4,6 +4,7 @@ import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LlmEngine.Backend
@@ -58,6 +59,7 @@ interface ChatInferenceOrchestrator {
         topic: CodingTopic,
         sessionId: String?,
         existingMessages: List<ChatMessage>,
+        persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     ): Result<List<ChatMessage>>
 
     /**
@@ -66,9 +68,12 @@ interface ChatInferenceOrchestrator {
     fun stop()
 
     /**
-     * Resets the conversation using the system prompt for [topic].
+     * Resets the conversation using the system prompt for [topic] and [persona].
      */
-    fun resetConversation(topic: CodingTopic)
+    fun resetConversation(
+        topic: CodingTopic,
+        persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
+    )
 
     /**
      * Returns the currently active backend, or null if the engine is not
@@ -101,13 +106,14 @@ class DefaultChatInferenceOrchestrator
             topic: CodingTopic,
             sessionId: String?,
             existingMessages: List<ChatMessage>,
+            persona: TutorPersona,
         ): Result<List<ChatMessage>> =
             try {
-                Timber.d("ChatInferenceOrchestrator: Initializing model=${model.name}, path=${model.localPath}")
+                Timber.d("ChatInferenceOrchestrator: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
                 llmEngine.initialize(
                     modelPath = model.localPath ?: "",
                     backend = model.preferredBackend,
-                    systemInstruction = topicPromptProvider.buildSystemPrompt(topic),
+                    systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona),
                     config = configStore.config,
                 )
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
@@ -137,10 +143,13 @@ class DefaultChatInferenceOrchestrator
             llmEngine.stop()
         }
 
-        override fun resetConversation(topic: CodingTopic) {
-            Timber.d("ChatInferenceOrchestrator: Resetting conversation")
+        override fun resetConversation(
+            topic: CodingTopic,
+            persona: TutorPersona,
+        ) {
+            Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
             llmEngine.resetConversation(
-                topicPromptProvider.buildSystemPrompt(topic),
+                topicPromptProvider.buildSystemPrompt(topic, persona),
                 configStore.config,
             )
         }
