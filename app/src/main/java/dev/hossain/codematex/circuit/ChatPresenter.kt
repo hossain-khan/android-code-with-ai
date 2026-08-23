@@ -14,9 +14,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
-import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.zacsweers.metro.AppScope
@@ -36,14 +34,12 @@ class ChatPresenter(
     private val configStore: ModelConfigStore,
     private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
     private val systemStatsMonitor: SystemStatsMonitor,
-    private val topicPromptProvider: TopicPromptProvider,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
-        var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
@@ -73,13 +69,13 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger, persona) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
                 return@LaunchedEffect
             }
-            Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
+            Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}")
             isPreparing = true
             errorMessage = null
             try {
@@ -89,7 +85,6 @@ class ChatPresenter(
                         topic = screen.topic,
                         sessionId = screen.sessionId,
                         existingMessages = messages,
-                        persona = persona,
                     )
                 result
                     .onSuccess { loadedMessages ->
@@ -181,179 +176,6 @@ class ChatPresenter(
                     }
                 }
 
-                is ChatScreen.Event.SelectPersona -> {
-                    if (persona != event.persona) {
-                        Timber.d("ChatPresenter: Switching persona to ${event.persona.name}")
-                        persona = event.persona
-                        messages =
-                            messages +
-                            ChatMessage.System("Switched tutor persona to ${event.persona.iconGlyph} ${event.persona.displayName}")
-                        chatInferenceOrchestrator.resetConversation(screen.topic, event.persona)
-                    }
-                }
-
-                ChatScreen.Event.QuizMe -> {
-                    val prompt = topicPromptProvider.buildQuizPrompt(screen.topic)
-                    if (!isGenerating && !isPreparing) {
-                        isGenerating = true
-                        messages = messages + ChatMessage.User("Quiz Me 🎯")
-                        messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
-                        throughputInfo = "Prefilling..."
-
-                        scope.launch {
-                            try {
-                                val throughputTracker = ThroughputTracker()
-                                chatInferenceOrchestrator.sendMessage(prompt).collect { inferenceEvent ->
-                                    when (inferenceEvent) {
-                                        is ChatInferenceEvent.Token -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content + inferenceEvent.partialToken,
-                                                        isStreaming = true,
-                                                    )
-                                            }
-                                            throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
-                                        }
-
-                                        ChatInferenceEvent.Done -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content,
-                                                        isStreaming = false,
-                                                    )
-                                            }
-                                            throughputTracker.recordToken("")
-                                            throughputInfo = throughputTracker.finalize()
-                                            isGenerating = false
-                                            sessionRepository.saveSession(screen.topic, messages)
-                                        }
-                                    }
-                                }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.e(e, "ChatPresenter: Quiz inference failed")
-                                isGenerating = false
-                                throughputInfo = "Error: ${e.message}"
-                                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
-                                initTrigger++
-                            }
-                        }
-                    }
-                }
-
-                ChatScreen.Event.FindTheBug -> {
-                    val prompt = topicPromptProvider.buildBugFinderPrompt(screen.topic)
-                    if (!isGenerating && !isPreparing) {
-                        isGenerating = true
-                        messages = messages + ChatMessage.User("Find the Bug 🐛")
-                        messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
-                        throughputInfo = "Prefilling..."
-
-                        scope.launch {
-                            try {
-                                val throughputTracker = ThroughputTracker()
-                                chatInferenceOrchestrator.sendMessage(prompt).collect { inferenceEvent ->
-                                    when (inferenceEvent) {
-                                        is ChatInferenceEvent.Token -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content + inferenceEvent.partialToken,
-                                                        isStreaming = true,
-                                                    )
-                                            }
-                                            throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
-                                        }
-
-                                        ChatInferenceEvent.Done -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content,
-                                                        isStreaming = false,
-                                                    )
-                                            }
-                                            throughputTracker.recordToken("")
-                                            throughputInfo = throughputTracker.finalize()
-                                            isGenerating = false
-                                            sessionRepository.saveSession(screen.topic, messages)
-                                        }
-                                    }
-                                }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.e(e, "ChatPresenter: Bug finder inference failed")
-                                isGenerating = false
-                                throughputInfo = "Error: ${e.message}"
-                                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
-                                initTrigger++
-                            }
-                        }
-                    }
-                }
-
-                ChatScreen.Event.OptimizeCode -> {
-                    val prompt = topicPromptProvider.buildOptimizerPrompt(screen.topic)
-                    if (!isGenerating && !isPreparing) {
-                        isGenerating = true
-                        messages = messages + ChatMessage.User("Optimize Techniques ⚡")
-                        messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
-                        throughputInfo = "Prefilling..."
-
-                        scope.launch {
-                            try {
-                                val throughputTracker = ThroughputTracker()
-                                chatInferenceOrchestrator.sendMessage(prompt).collect { inferenceEvent ->
-                                    when (inferenceEvent) {
-                                        is ChatInferenceEvent.Token -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content + inferenceEvent.partialToken,
-                                                        isStreaming = true,
-                                                    )
-                                            }
-                                            throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
-                                        }
-
-                                        ChatInferenceEvent.Done -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages = messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content,
-                                                        isStreaming = false,
-                                                    )
-                                            }
-                                            throughputTracker.recordToken("")
-                                            throughputInfo = throughputTracker.finalize()
-                                            isGenerating = false
-                                            sessionRepository.saveSession(screen.topic, messages)
-                                        }
-                                    }
-                                }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.e(e, "ChatPresenter: Optimizer inference failed")
-                                isGenerating = false
-                                throughputInfo = "Error: ${e.message}"
-                                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
-                                initTrigger++
-                            }
-                        }
-                    }
-                }
-
                 ChatScreen.Event.StopGeneration -> {
                     Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
                     chatInferenceOrchestrator.stop()
@@ -369,7 +191,7 @@ class ChatPresenter(
                     messages = emptyList()
                     throughputInfo = null
                     systemStatsInfo = null
-                    chatInferenceOrchestrator.resetConversation(screen.topic, persona)
+                    chatInferenceOrchestrator.resetConversation(screen.topic)
                 }
 
                 ChatScreen.Event.Retry -> {
@@ -422,7 +244,6 @@ class ChatPresenter(
                     isGenerating = isGenerating,
                     isPreparing = isPreparing,
                     modelName = model.displayName,
-                    persona = persona,
                     activeBackend = chatInferenceOrchestrator.getActiveBackend()?.name,
                     modelSize = sizeText,
                     modelMemory = memoryText,

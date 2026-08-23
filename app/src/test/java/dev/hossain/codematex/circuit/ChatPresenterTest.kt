@@ -7,7 +7,6 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.circuit.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.FakeDeviceMemoryProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -25,7 +24,6 @@ class ChatPresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
-    private val fakeTopicPromptProvider = FakeTopicPromptProvider()
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -45,7 +43,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -73,7 +70,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -101,7 +97,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -112,7 +107,7 @@ class ChatPresenterTest {
         }
 
     @Test
-    fun `given model is selected - emits active state with model details and default persona`() =
+    fun `given model is selected - emits active state with model details`() =
         runTest {
             val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
             val fakeModelRepo =
@@ -130,7 +125,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -138,39 +132,6 @@ class ChatPresenterTest {
                 assertFalse(state.isPreparing)
                 assertFalse(state.isGenerating)
                 assertEquals(CodingTopic.KOTLIN, state.topic)
-                assertEquals(TutorPersona.SENIOR_ENGINEER, state.persona)
-            }
-        }
-
-    @Test
-    fun `given select persona event - updates active persona and resets engine`() =
-        runTest {
-            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
-            val presenter =
-                ChatPresenter(
-                    navigator = navigator,
-                    screen = ChatScreen(CodingTopic.KOTLIN),
-                    modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                state.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.BEGINNER_FRIENDLY))
-
-                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(TutorPersona.BEGINNER_FRIENDLY, updatedState.persona)
-                assertTrue(fakeChatInferenceOrchestrator.resetConversationPersonas.contains(TutorPersona.BEGINNER_FRIENDLY))
             }
         }
 }
