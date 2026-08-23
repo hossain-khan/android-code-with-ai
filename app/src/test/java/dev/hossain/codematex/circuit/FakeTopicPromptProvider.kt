@@ -1,6 +1,7 @@
 package dev.hossain.codematex.circuit
 
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.TutorPersona
 
 /**
  * In-memory fake of [TopicPromptProvider] for unit tests.
@@ -9,9 +10,20 @@ class FakeTopicPromptProvider(
     private val prompt: String = "Default system prompt",
 ) : TopicPromptProvider {
     val requestedTopics = mutableListOf<CodingTopic>()
+    val requestedPersonas = mutableListOf<TutorPersona>()
 
-    override fun buildSystemPrompt(topic: CodingTopic): String {
+    override fun buildSystemPrompt(
+        topic: CodingTopic,
+        persona: TutorPersona,
+    ): String {
         requestedTopics += topic
-        return "[$topic] $prompt"
+        requestedPersonas += persona
+        return "[$topic][$persona] $prompt"
     }
+
+    override fun buildQuizPrompt(topic: CodingTopic): String = "Quiz for $topic"
+
+    override fun buildBugFinderPrompt(topic: CodingTopic): String = "Bug for $topic"
+
+    override fun buildOptimizerPrompt(topic: CodingTopic): String = "Optimize for $topic"
 }

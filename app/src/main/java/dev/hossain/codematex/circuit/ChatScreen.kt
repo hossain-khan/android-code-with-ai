@@ -6,6 +6,7 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -28,6 +29,7 @@ data class ChatScreen(
             val isGenerating: Boolean,
             val isPreparing: Boolean,
             val modelName: String,
+            val persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
             val activeBackend: String?,
             val modelSize: String?,
             val modelMemory: String?,
@@ -50,6 +52,16 @@ data class ChatScreen(
         data class SendMessage(
             val text: String,
         ) : Event
+
+        data class SelectPersona(
+            val persona: TutorPersona,
+        ) : Event
+
+        data object QuizMe : Event
+
+        data object FindTheBug : Event
+
+        data object OptimizeCode : Event
 
         data object StopGeneration : Event
 
