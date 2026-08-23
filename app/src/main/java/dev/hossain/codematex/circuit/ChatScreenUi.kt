@@ -61,8 +61,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -552,21 +550,6 @@ private fun ChatLayout(
                                 focusManager.clearFocus()
                                 state.eventSink(ChatScreen.Event.SendMessage(prompt))
                             },
-                            onQuizMe = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                state.eventSink(ChatScreen.Event.QuizMe)
-                            },
-                            onFindTheBug = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                state.eventSink(ChatScreen.Event.FindTheBug)
-                            },
-                            onOptimize = {
-                                keyboardController?.hide()
-                                focusManager.clearFocus()
-                                state.eventSink(ChatScreen.Event.OptimizeCode)
-                            },
                             modifier = Modifier.weight(1f),
                         )
                     } else {
@@ -649,21 +632,6 @@ private fun ChatLayout(
                             focusManager.clearFocus()
                             state.eventSink(ChatScreen.Event.SendMessage(prompt))
                         },
-                        onQuizMe = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            state.eventSink(ChatScreen.Event.QuizMe)
-                        },
-                        onFindTheBug = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            state.eventSink(ChatScreen.Event.FindTheBug)
-                        },
-                        onOptimize = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            state.eventSink(ChatScreen.Event.OptimizeCode)
-                        },
                         modifier = Modifier.weight(1f),
                     )
                 } else {
@@ -715,9 +683,6 @@ private fun EmptyChatTopicStarters(
     visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
     enabled: Boolean = true,
     onPromptSelected: (String) -> Unit,
-    onQuizMe: () -> Unit,
-    onFindTheBug: () -> Unit,
-    onOptimize: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -757,71 +722,14 @@ private fun EmptyChatTopicStarters(
             text = visualInfo.tagline,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 6.dp, bottom = 20.dp),
+            modifier = Modifier.padding(top = 6.dp, bottom = 24.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(bottom = 8.dp),
-        ) {
-            Icon(
-                Icons.Default.Psychology,
-                contentDescription = null,
-                tint = visualInfo.accentColor,
-                modifier = Modifier.size(16.dp),
-            )
-            Text(
-                "Interactive Modes",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            SuggestionChip(
-                onClick = onQuizMe,
-                enabled = enabled,
-                label = { Text("Quiz Me 🎯", style = MaterialTheme.typography.labelSmall) },
-                colors =
-                    SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ),
-                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
-            )
-
-            SuggestionChip(
-                onClick = onFindTheBug,
-                enabled = enabled,
-                label = { Text("Find Bug 🐛", style = MaterialTheme.typography.labelSmall) },
-                colors =
-                    SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ),
-                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
-            )
-
-            SuggestionChip(
-                onClick = onOptimize,
-                enabled = enabled,
-                label = { Text("Optimize ⚡", style = MaterialTheme.typography.labelSmall) },
-                colors =
-                    SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                    ),
-                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
-            )
-        }
-
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = Modifier.padding(bottom = 10.dp),
+            modifier = Modifier.padding(bottom = 12.dp),
         ) {
             Icon(
                 Icons.Default.Lightbulb,

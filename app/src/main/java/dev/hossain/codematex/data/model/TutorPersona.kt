@@ -29,15 +29,6 @@ enum class TutorPersona(
         description =
             "Supportive, analogy-driven explanations with commented code snippets breaking down foundational syntax step-by-step.",
     ),
-    CODE_REVIEWER(
-        id = "code_reviewer",
-        displayName = "Code Reviewer",
-        shortName = "Reviewer",
-        iconGlyph = "🔍",
-        tagline = "Idiomatic style, anti-patterns & safety",
-        description =
-            "Critiques code for idiomatic conventions, edge cases, potential bugs, memory leaks, and coroutine safety.",
-    ),
     INTERVIEW_COACH(
         id = "interview_coach",
         displayName = "Interview Coach",

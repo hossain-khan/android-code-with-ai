@@ -57,12 +57,6 @@ data class ChatScreen(
             val persona: TutorPersona,
         ) : Event
 
-        data object QuizMe : Event
-
-        data object FindTheBug : Event
-
-        data object OptimizeCode : Event
-
         data object StopGeneration : Event
 
         data object ResetSession : Event
