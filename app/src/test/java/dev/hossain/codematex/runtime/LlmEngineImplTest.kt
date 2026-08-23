@@ -208,6 +208,41 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `runInference does not fall back to CPU when inference is cancelled`() =
+        runEngineTest {
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
+            val job =
+                launch {
+                    engine.runInference("Hello") { partial, done ->
+                        emittedTokens.add(partial to done)
+                    }
+                }
+
+            val gpuMessage = gpuConversation.sentMessages.single()
+            gpuMessage.callback.onMessage(textMessage("Hello"))
+            gpuMessage.callback.onError(java.util.concurrent.CancellationException("Task cancelled"))
+            job.join()
+
+            assertEquals(1, factory.createSessionRequests.size)
+            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertEquals(listOf("Hello" to false, "" to true), emittedTokens)
+        }
+
+    @Test
     fun `runInference rethrows when inference fails on CPU`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()
