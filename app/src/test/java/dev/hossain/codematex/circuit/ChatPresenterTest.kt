@@ -105,4 +105,33 @@ class ChatPresenterTest {
                 assertEquals(ModelPickerScreen, navigator.awaitNextScreen())
             }
         }
+
+    @Test
+    fun `given model is selected - emits active state with model details`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                    configStore = configStore,
+                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertFalse(state.isPreparing)
+                assertFalse(state.isGenerating)
+                assertEquals(CodingTopic.KOTLIN, state.topic)
+            }
+        }
 }

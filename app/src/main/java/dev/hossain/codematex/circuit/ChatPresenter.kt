@@ -120,7 +120,7 @@ class ChatPresenter(
         val eventSink: (ChatScreen.Event) -> Unit = { event ->
             when (event) {
                 is ChatScreen.Event.SendMessage -> {
-                    if (!isGenerating) {
+                    if (!isGenerating && !isPreparing) {
                         isGenerating = true
                         val input = event.text
                         Timber.d("ChatPresenter: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
