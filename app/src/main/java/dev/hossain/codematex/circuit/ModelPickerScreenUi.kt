@@ -79,6 +79,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.util.DeviceMemory
+import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
 
@@ -312,7 +313,7 @@ private fun ModelCard(
             },
             title = {
                 Text(
-                    text = "Delete ${model.displayName}?",
+                    text = "Delete ${formatShortModelName(model.displayName)}?",
                     style = MaterialTheme.typography.headlineSmall,
                 )
             },
@@ -321,7 +322,7 @@ private fun ModelCard(
                 Text(
                     text =
                         "Are you sure you want to delete this model? " +
-                            "This will permanently remove the model file from your device and free up $formattedSize MB of storage space.",
+                            "This will permanently remove the model file from your device and free up $formattedSize of storage space.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
@@ -368,7 +369,7 @@ private fun ModelCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // Header Row: Model Title + Selected Badge + Size Badge
+            // Header Row: Model Title + Size Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -381,48 +382,17 @@ private fun ModelCard(
                     modifier = Modifier.weight(1f, fill = false),
                 )
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
                 ) {
-                    if (model.isSelected) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.size(12.dp),
-                                )
-                                Text(
-                                    text = "Selected",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-                    }
-
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    ) {
-                        Text(
-                            text = sizeFormatter.format(model.sizeBytes / 1_000_000),
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                    }
+                    Text(
+                        text = sizeFormatter.format(model.sizeBytes / 1_000_000),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                    )
                 }
             }
 
