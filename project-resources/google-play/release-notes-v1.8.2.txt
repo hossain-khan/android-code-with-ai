@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.8.2:
+• Model Management: Delete downloaded models to free up device storage with a confirmation dialog.
+• Model Selection UI: Active model is highlighted with a dedicated badge, accent border, and status button.
+• Download Notifications: Shows model name during download and deep links directly to the AI Models screen.
+• Stability: Instant reactive UI state updates for downloads, selections, and deletions.
