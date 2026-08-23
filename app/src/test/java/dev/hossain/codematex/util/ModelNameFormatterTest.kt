@@ -5,13 +5,18 @@ import org.junit.Test
 
 class ModelNameFormatterTest {
     @Test
-    fun `formats gemma-4-E2B-it-litert-lm to Gemma-4-E2B`() {
-        assertEquals("Gemma-4-E2B", formatShortModelName("gemma-4-E2B-it-litert-lm"))
+    fun `formats gemma-4-E2B-it-litert-lm to Gemma 4-E2B IT`() {
+        assertEquals("Gemma 4-E2B IT", formatShortModelName("gemma-4-E2B-it-litert-lm"))
     }
 
     @Test
-    fun `formats gemma-4-E4B-it-litert-lm to Gemma-4-E4B`() {
-        assertEquals("Gemma-4-E4B", formatShortModelName("gemma-4-E4B-it-litert-lm"))
+    fun `formats gemma-4-E4B-it-litert-lm to Gemma 4-E4B IT`() {
+        assertEquals("Gemma 4-E4B IT", formatShortModelName("gemma-4-E4B-it-litert-lm"))
+    }
+
+    @Test
+    fun `formats gemma-2b-it-litert-lm to Gemma 2B IT`() {
+        assertEquals("Gemma 2B IT", formatShortModelName("gemma-2b-it-litert-lm"))
     }
 
     @Test
@@ -26,21 +31,16 @@ class ModelNameFormatterTest {
 
     @Test
     fun `removes only -litert-lm suffix when -it is not present`() {
-        assertEquals("Gemma-4-e2b", formatShortModelName("gemma-4-e2b-litert-lm"))
+        assertEquals("Gemma 4-e2b", formatShortModelName("gemma-4-e2b-litert-lm"))
     }
 
     @Test
     fun `removes only -it suffix when -litert-lm is not present`() {
-        assertEquals("Gemma-4-E2B", formatShortModelName("gemma-4-E2B-it"))
+        assertEquals("Gemma 4-E2B IT", formatShortModelName("gemma-4-E2B-it"))
     }
 
     @Test
     fun `does not modify string without known suffixes`() {
         assertEquals("Custom-Model", formatShortModelName("Custom-Model"))
-    }
-
-    @Test
-    fun `capitalizes first character only`() {
-        assertEquals("Gemma-4-E2B", formatShortModelName("gemma-4-E2B-it-litert-lm"))
     }
 }

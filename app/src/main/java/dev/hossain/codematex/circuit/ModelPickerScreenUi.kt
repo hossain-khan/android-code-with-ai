@@ -79,6 +79,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.util.DeviceMemory
+import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
 
@@ -312,7 +313,7 @@ private fun ModelCard(
             },
             title = {
                 Text(
-                    text = "Delete ${model.displayName}?",
+                    text = "Delete ${formatShortModelName(model.displayName)}?",
                     style = MaterialTheme.typography.headlineSmall,
                 )
             },
@@ -321,7 +322,7 @@ private fun ModelCard(
                 Text(
                     text =
                         "Are you sure you want to delete this model? " +
-                            "This will permanently remove the model file from your device and free up $formattedSize MB of storage space.",
+                            "This will permanently remove the model file from your device and free up $formattedSize of storage space.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
