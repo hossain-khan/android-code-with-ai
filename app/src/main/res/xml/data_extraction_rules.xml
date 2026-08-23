@@ -5,15 +5,19 @@
 -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
+        <!--
+            Exclude multi-gigabyte on-device LLM model binaries (2.6GB–3.7GB)
+            from Google Drive cloud backup.
         -->
+        <exclude domain="external" path="models" />
+        <exclude domain="file" path="models" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!--
+            Exclude multi-gigabyte models from device-to-device transfers to avoid
+            prolonged transfer times; models will be re-downloaded on-demand.
+        -->
+        <exclude domain="external" path="models" />
+        <exclude domain="file" path="models" />
     </device-transfer>
-    -->
 </data-extraction-rules>
