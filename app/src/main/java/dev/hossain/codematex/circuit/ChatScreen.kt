@@ -40,6 +40,7 @@ data class ChatScreen(
 
         data class Error(
             val message: String,
+            val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State
     }

@@ -10,6 +10,7 @@ import dev.hossain.codematex.runtime.LlmEngine.Backend
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -124,6 +125,8 @@ class DefaultChatInferenceOrchestrator
                     }
 
                 Result.success(messagesToDisplay)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Timber.e(e, "ChatInferenceOrchestrator: Model initialization failed")
                 Result.failure(e)
