@@ -3,7 +3,6 @@ package dev.hossain.codematex.circuit
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.runtime.LlmEngine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -19,7 +18,6 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
     var initializeCalls = mutableListOf<InitializeCall>()
     var stopCalls = 0
     var resetConversationTopics = mutableListOf<CodingTopic>()
-    var resetConversationPersonas = mutableListOf<TutorPersona>()
     var sendMessageInputs = mutableListOf<String>()
 
     data class InitializeCall(
@@ -27,7 +25,6 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         val topic: CodingTopic,
         val sessionId: String?,
         val existingMessages: List<ChatMessage>,
-        val persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     )
 
     override suspend fun initialize(
@@ -35,9 +32,8 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         topic: CodingTopic,
         sessionId: String?,
         existingMessages: List<ChatMessage>,
-        persona: TutorPersona,
     ): Result<List<ChatMessage>> {
-        initializeCalls += InitializeCall(model, topic, sessionId, existingMessages, persona)
+        initializeCalls += InitializeCall(model, topic, sessionId, existingMessages)
         return initializeResult
     }
 
@@ -45,12 +41,8 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         stopCalls++
     }
 
-    override fun resetConversation(
-        topic: CodingTopic,
-        persona: TutorPersona,
-    ) {
+    override fun resetConversation(topic: CodingTopic) {
         resetConversationTopics += topic
-        resetConversationPersonas += persona
     }
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackendValue
