@@ -102,6 +102,12 @@ class LlmEngineImpl(
 
         try {
             executeInference(input, onToken)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            Timber.d("LlmEngineImpl: Inference was cancelled by user")
+            throw e
+        } catch (e: java.util.concurrent.CancellationException) {
+            Timber.d("LlmEngineImpl: Inference was cancelled by user (Java CancellationException)")
+            throw e
         } catch (e: Exception) {
             val failedBackend = activeBackend
             if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
@@ -163,7 +169,16 @@ class LlmEngineImpl(
                         }
 
                         override fun onError(throwable: Throwable) {
-                            cont.resumeWithException(throwable)
+                            if (throwable is java.util.concurrent.CancellationException ||
+                                throwable is kotlinx.coroutines.CancellationException ||
+                                throwable.message?.contains("cancel", ignoreCase = true) == true
+                            ) {
+                                Timber.d("LlmEngineImpl: LiteRT-LM reported task cancellation")
+                                onToken("", true)
+                                cont.resume(Unit)
+                            } else {
+                                cont.resumeWithException(throwable)
+                            }
                         }
                     }
                 activeCallback = callback

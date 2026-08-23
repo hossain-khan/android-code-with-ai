@@ -180,6 +180,10 @@ class ChatPresenter(
                     Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
                     chatInferenceOrchestrator.stop()
                     isGenerating = false
+                    val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                    if (lastAgent != null && lastAgent.isStreaming) {
+                        messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                    }
                 }
 
                 ChatScreen.Event.ResetSession -> {
