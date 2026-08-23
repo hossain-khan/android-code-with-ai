@@ -20,10 +20,4 @@ class FakeTopicPromptProvider(
         requestedPersonas += persona
         return "[$topic][$persona] $prompt"
     }
-
-    override fun buildQuizPrompt(topic: CodingTopic): String = "Quiz for $topic"
-
-    override fun buildBugFinderPrompt(topic: CodingTopic): String = "Bug for $topic"
-
-    override fun buildOptimizerPrompt(topic: CodingTopic): String = "Optimize for $topic"
 }

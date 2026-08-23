@@ -21,21 +21,6 @@ interface TopicPromptProvider {
         topic: CodingTopic,
         persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     ): String
-
-    /**
-     * Builds an interactive "Quiz Me" challenge prompt for [topic].
-     */
-    fun buildQuizPrompt(topic: CodingTopic): String
-
-    /**
-     * Builds an interactive "Find the Bug" puzzle prompt for [topic].
-     */
-    fun buildBugFinderPrompt(topic: CodingTopic): String
-
-    /**
-     * Builds an interactive "Optimize" prompt for [topic].
-     */
-    fun buildOptimizerPrompt(topic: CodingTopic): String
 }
 
 @SingleIn(AppScope::class)
@@ -70,17 +55,6 @@ Instructions:
                     """.trimMargin()
                 }
 
-                TutorPersona.CODE_REVIEWER -> {
-                    """You are a meticulous senior code reviewer specializing in ${topic.displayName}.
-
-Instructions:
-1. Review code and questions focusing on idiomatic style, potential bugs, edge cases, and memory/coroutine safety.
-2. Point out anti-patterns or code smells and suggest concrete, improved code in markdown code blocks.
-3. Highlight testability, security, and clean code practices in concise bullet points.
-4. Be constructive, direct, and actionable.
-                    """.trimMargin()
-                }
-
                 TutorPersona.INTERVIEW_COACH -> {
                     """You are a technical interview coach specializing in ${topic.displayName} and algorithms.
 
@@ -92,13 +66,4 @@ Instructions:
                     """.trimMargin()
                 }
             }
-
-        override fun buildQuizPrompt(topic: CodingTopic): String =
-            "Generate a quick 1-question multiple-choice technical quiz about ${topic.displayName} with 4 options (A, B, C, D) to test my understanding. Do not reveal the answer yet."
-
-        override fun buildBugFinderPrompt(topic: CodingTopic): String =
-            "Show a short ${topic.displayName} code snippet containing a subtle bug or anti-pattern. Ask me to find and explain the bug without revealing the answer immediately."
-
-        override fun buildOptimizerPrompt(topic: CodingTopic): String =
-            "What are the top performance and memory optimization techniques in ${topic.displayName}? Provide 1 concise code snippet and key bullet points."
     }

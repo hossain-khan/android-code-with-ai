@@ -25,7 +25,6 @@ class ChatPresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
-    private val fakeTopicPromptProvider = FakeTopicPromptProvider()
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -45,7 +44,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -73,7 +71,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -101,7 +98,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -130,7 +126,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
@@ -161,7 +156,6 @@ class ChatPresenterTest {
                     configStore = configStore,
                     chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
                     systemStatsMonitor = fakeSystemStatsMonitor,
-                    topicPromptProvider = fakeTopicPromptProvider,
                 )
 
             presenter.test {
