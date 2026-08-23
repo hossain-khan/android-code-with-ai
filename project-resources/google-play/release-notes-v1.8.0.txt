@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.8.0:
+• Fast Model CDN: Cloudflare R2 primary mirror with multi-mirror automatic fallback.
+• Integrity Verification: Cryptographic SHA-256 verification guarantees corruption-free model weights.
+• Download Hardening: Modern OkHttp 5 streaming, pre-flight disk space validation, and detailed error reporting.
+• Cellular Protection: Wi-Fi only download toggle with WorkManager unmetered network constraints.
