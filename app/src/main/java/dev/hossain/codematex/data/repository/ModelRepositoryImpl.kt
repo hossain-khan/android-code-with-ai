@@ -48,7 +48,7 @@ class ModelRepositoryImpl
                 val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
 
                 combine(progressFlows) { workInfoLists ->
-                    val progressMap = mutableMapOf<String, Pair<DownloadStatus, Int>>()
+                    val progressMap = mutableMapOf<String, Triple<DownloadStatus, Int, String?>>()
                     workInfoLists.forEachIndexed { index, workInfos ->
                         val modelId = modelIds[index]
                         val latestWork = workInfos.lastOrNull()
@@ -59,21 +59,27 @@ class ModelRepositoryImpl
                                 else -> DownloadStatus.NOT_DOWNLOADED
                             }
                         val progress = latestWork?.progress?.getInt(ModelDownloadWorker.KEY_PROGRESS, 0) ?: 0
-                        progressMap[modelId] = status to progress
+                        val errorMessage =
+                            if (status == DownloadStatus.FAILED) {
+                                latestWork?.outputData?.getString(ModelDownloadWorker.KEY_ERROR_MESSAGE)
+                            } else {
+                                null
+                            }
+                        progressMap[modelId] = Triple(status, progress, errorMessage)
                     }
 
                     val models =
                         allowlist.map { entry ->
                             val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
                             val isDownloaded = fileStorage.modelExists(localPath)
-                            val (status, progress) =
+                            val (status, progress, errorMessage) =
                                 if (isDownloaded) {
-                                    DownloadStatus.DOWNLOADED to 100
+                                    Triple(DownloadStatus.DOWNLOADED, 100, null)
                                 } else {
-                                    progressMap[entry.modelId] ?: (DownloadStatus.NOT_DOWNLOADED to 0)
+                                    progressMap[entry.modelId] ?: Triple(DownloadStatus.NOT_DOWNLOADED, 0, null)
                                 }
 
-                            buildAiModel(entry, localPath, isDownloaded, status, progress)
+                            buildAiModel(entry, localPath, isDownloaded, status, progress, errorMessage)
                         }
                     cachedModels = models
                     emit(models)
@@ -122,6 +128,7 @@ class ModelRepositoryImpl
             isDownloaded: Boolean = fileStorage.modelExists(localPath),
             status: DownloadStatus = if (isDownloaded) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
             progress: Int = if (isDownloaded) 100 else 0,
+            downloadErrorMessage: String? = null,
         ): AiModel =
             AiModel(
                 id = entry.modelId,
@@ -144,6 +151,7 @@ class ModelRepositoryImpl
                 licenseUrl = entry.licenseUrl,
                 description = entry.description,
                 sha256 = entry.sha256,
+                downloadErrorMessage = downloadErrorMessage,
             )
 
         private fun buildDownloadUrl(entry: ModelEntry): String =

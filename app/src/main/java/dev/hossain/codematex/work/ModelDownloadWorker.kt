@@ -30,13 +30,10 @@ class ModelDownloadWorker(
         const val KEY_PATH = "path"
         const val KEY_PROGRESS = "progress"
         const val KEY_SHA256 = "sha256"
+        const val KEY_ERROR_MESSAGE = "error_message"
 
         /**
-         * Downloads a model file from [urls] using [modelDownloader] and reports progress
-         * via [onProgress].
-         *
-         * This function is extracted from [doWork] so the coordination logic
-         * can be unit-tested on the JVM without initializing the WorkManager
+         * Pure business logic for executing a model download, separated from the WorkManager
          * framework.
          */
         suspend fun executeDownload(
@@ -74,7 +71,12 @@ class ModelDownloadWorker(
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ModelDownloadWorker: Error during download work")
-                Result.failure()
+                val errorData =
+                    Data
+                        .Builder()
+                        .putString(KEY_ERROR_MESSAGE, e.localizedMessage ?: e.message ?: "Download failed")
+                        .build()
+                Result.failure(errorData)
             }
 
         suspend fun executeDownload(
@@ -98,8 +100,16 @@ class ModelDownloadWorker(
         val urls =
             inputData.getStringArray(KEY_URLS)?.toList()
                 ?: listOfNotNull(inputData.getString(KEY_URL))
-        if (urls.isEmpty()) return Result.failure()
-        val outputPath = inputData.getString(KEY_PATH) ?: return Result.failure()
+        if (urls.isEmpty()) {
+            return Result.failure(
+                Data.Builder().putString(KEY_ERROR_MESSAGE, "No download URLs provided").build(),
+            )
+        }
+        val outputPath =
+            inputData.getString(KEY_PATH)
+                ?: return Result.failure(
+                    Data.Builder().putString(KEY_ERROR_MESSAGE, "Missing output path").build(),
+                )
         val expectedSha256 = inputData.getString(KEY_SHA256)
 
         setForeground(createForegroundInfo("Starting download..."))
@@ -114,7 +124,7 @@ class ModelDownloadWorker(
                 onProgress = { progress -> reportProgress(progress) },
             )
 
-        return if (result == Result.failure() && runAttemptCount < 5) {
+        return if (result != Result.success() && runAttemptCount < 5) {
             Result.retry()
         } else {
             result
