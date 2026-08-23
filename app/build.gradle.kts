@@ -20,8 +20,8 @@ android {
         applicationId = "dev.hossain.codematex"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.targetSdk.get().toInt()
-        versionCode = 9
-        versionName = "1.8.0"
+        versionCode = 10
+        versionName = "1.8.1"
 
         // Read key or other properties from local.properties
         val localProperties =
