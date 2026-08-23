@@ -39,4 +39,12 @@ class TopicPromptProviderTest {
             pythonPrompt,
         )
     }
+
+    @Test
+    fun `buildSystemPrompt includes conciseness and brevity instructions`() {
+        val prompt = provider.buildSystemPrompt(CodingTopic.GO)
+
+        assertTrue(prompt.contains("concise"))
+        assertTrue(prompt.contains("under 150 words"))
+    }
 }
