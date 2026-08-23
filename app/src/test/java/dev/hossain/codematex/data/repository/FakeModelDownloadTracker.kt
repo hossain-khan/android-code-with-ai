@@ -11,9 +11,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeModelDownloadTracker : ModelDownloadTracker {
     private val workInfoFlows = mutableMapOf<String, MutableStateFlow<List<WorkInfo>>>()
     val enqueuedDownloads = mutableListOf<Triple<String, String, String>>()
+    val enqueuedMultiUrlDownloads = mutableListOf<Triple<String, List<String>, String>>()
     val cancelledDownloads = mutableListOf<String>()
 
     override fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>> = workInfoFlows.getOrPut(modelId) { MutableStateFlow(emptyList()) }
+
+    override fun enqueueDownload(
+        modelId: String,
+        urls: List<String>,
+        path: String,
+    ) {
+        enqueuedMultiUrlDownloads += Triple(modelId, urls, path)
+        enqueuedDownloads += Triple(modelId, urls.firstOrNull() ?: "", path)
+    }
 
     override fun enqueueDownload(
         modelId: String,
@@ -21,6 +31,7 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         path: String,
     ) {
         enqueuedDownloads += Triple(modelId, url, path)
+        enqueuedMultiUrlDownloads += Triple(modelId, listOf(url), path)
     }
 
     override fun cancelDownload(modelId: String) {

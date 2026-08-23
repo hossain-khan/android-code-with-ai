@@ -26,11 +26,12 @@ class ModelDownloadWorker(
 ) : CoroutineWorker(context, params) {
     companion object {
         const val KEY_URL = "url"
+        const val KEY_URLS = "urls"
         const val KEY_PATH = "path"
         const val KEY_PROGRESS = "progress"
 
         /**
-         * Downloads a model file using [modelDownloader] and reports progress
+         * Downloads a model file from [urls] using [modelDownloader] and reports progress
          * via [onProgress].
          *
          * This function is extracted from [doWork] so the coordination logic
@@ -38,18 +39,18 @@ class ModelDownloadWorker(
          * framework.
          */
         suspend fun executeDownload(
-            url: String,
+            urls: List<String>,
             outputPath: String,
             modelDownloader: ModelDownloader,
             isStopped: () -> Boolean,
             onProgress: suspend (Int) -> Unit,
         ): Result =
             try {
-                Timber.d("ModelDownloadWorker: Starting download of $url to $outputPath")
+                Timber.d("ModelDownloadWorker: Starting download with candidate URLs=$urls to $outputPath")
 
                 val result =
                     modelDownloader.download(
-                        url = url,
+                        urls = urls,
                         outputPath = outputPath,
                         onProgress = { progress ->
                             if (isStopped()) throw kotlinx.coroutines.CancellationException("Worker stopped")
@@ -62,7 +63,7 @@ class ModelDownloadWorker(
                     .onSuccess {
                         Timber.d("ModelDownloadWorker: Download completed successfully")
                     }.onFailure { error ->
-                        Timber.e(error, "ModelDownloadWorker: Download failed")
+                        Timber.e(error, "ModelDownloadWorker: Download failed for all URLs")
                     }.getOrThrow()
 
                 Result.success()
@@ -72,17 +73,28 @@ class ModelDownloadWorker(
                 Timber.e(e, "ModelDownloadWorker: Error during download work")
                 Result.failure()
             }
+
+        suspend fun executeDownload(
+            url: String,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (Int) -> Unit,
+        ): Result = executeDownload(listOf(url), outputPath, modelDownloader, isStopped, onProgress)
     }
 
     override suspend fun doWork(): Result {
-        val url = inputData.getString(KEY_URL) ?: return Result.failure()
+        val urls =
+            inputData.getStringArray(KEY_URLS)?.toList()
+                ?: listOfNotNull(inputData.getString(KEY_URL))
+        if (urls.isEmpty()) return Result.failure()
         val outputPath = inputData.getString(KEY_PATH) ?: return Result.failure()
 
         setForeground(createForegroundInfo("Starting download..."))
 
         val result =
             executeDownload(
-                url = url,
+                urls = urls,
                 outputPath = outputPath,
                 modelDownloader = modelDownloader,
                 isStopped = { isStopped },

@@ -28,13 +28,22 @@ interface ModelDownloadTracker {
     fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>>
 
     /**
+     * Enqueues a download for [modelId] from [urls] to [path], trying candidate URLs in order.
+     */
+    fun enqueueDownload(
+        modelId: String,
+        urls: List<String>,
+        path: String,
+    )
+
+    /**
      * Enqueues a download for [modelId] from [url] to [path].
      */
     fun enqueueDownload(
         modelId: String,
         url: String,
         path: String,
-    )
+    ) = enqueueDownload(modelId, listOf(url), path)
 
     /**
      * Cancels the download identified by [modelId].
@@ -53,13 +62,14 @@ class ModelDownloadTrackerImpl
 
         override fun enqueueDownload(
             modelId: String,
-            url: String,
+            urls: List<String>,
             path: String,
         ) {
             val data =
                 Data
                     .Builder()
-                    .putString(ModelDownloadWorker.KEY_URL, url)
+                    .putStringArray(ModelDownloadWorker.KEY_URLS, urls.toTypedArray())
+                    .putString(ModelDownloadWorker.KEY_URL, urls.firstOrNull() ?: "")
                     .putString(ModelDownloadWorker.KEY_PATH, path)
                     .build()
 

@@ -29,6 +29,12 @@ class LocalModelAllowlistDataSource
                     licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
                     description =
                         "Lightweight on-device instruction-tuned model optimized for fast mobile code assistance and reasoning.",
+                    downloadUrl =
+                        "https://light-llm-storage.gohk.xyz/models/litert-community/gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
+                    fallbackDownloadUrls =
+                        listOf(
+                            "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/6e5c4f1e395deb959c494953478fa5cec4b8008f/gemma-4-E2B-it.litertlm?download=true",
+                        ),
                 ),
                 ModelEntry(
                     modelId = "litert-community/gemma-4-E4B-it-litert-lm",
@@ -43,6 +49,12 @@ class LocalModelAllowlistDataSource
                     licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
                     description =
                         "Higher capacity instruction-tuned model offering deeper coding comprehension and complex multi-turn logic.",
+                    downloadUrl =
+                        "https://light-llm-storage.gohk.xyz/models/litert-community/gemma-4-E4B-it-litert-lm/gemma-4-E4B-it.litertlm",
+                    fallbackDownloadUrls =
+                        listOf(
+                            "https://huggingface.co/litert-community/gemma-4-E4B-it-litert-lm/resolve/28299f30ee4d43294517a4ac93abd6163412f07f/gemma-4-E4B-it.litertlm?download=true",
+                        ),
                 ),
             )
     }
