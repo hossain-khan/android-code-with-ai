@@ -28,12 +28,14 @@ interface ModelDownloadTracker {
     fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>>
 
     /**
-     * Enqueues a download for [modelId] from [urls] to [path], trying candidate URLs in order.
+     * Enqueues a download for [modelId] from [urls] to [path], trying candidate URLs in order
+     * and optionally verifying against [expectedSha256].
      */
     fun enqueueDownload(
         modelId: String,
         urls: List<String>,
         path: String,
+        expectedSha256: String? = null,
     )
 
     /**
@@ -43,7 +45,8 @@ interface ModelDownloadTracker {
         modelId: String,
         url: String,
         path: String,
-    ) = enqueueDownload(modelId, listOf(url), path)
+        expectedSha256: String? = null,
+    ) = enqueueDownload(modelId, listOf(url), path, expectedSha256)
 
     /**
      * Cancels the download identified by [modelId].
@@ -64,14 +67,20 @@ class ModelDownloadTrackerImpl
             modelId: String,
             urls: List<String>,
             path: String,
+            expectedSha256: String?,
         ) {
-            val data =
+            val builder =
                 Data
                     .Builder()
                     .putStringArray(ModelDownloadWorker.KEY_URLS, urls.toTypedArray())
                     .putString(ModelDownloadWorker.KEY_URL, urls.firstOrNull() ?: "")
                     .putString(ModelDownloadWorker.KEY_PATH, path)
-                    .build()
+
+            if (expectedSha256 != null) {
+                builder.putString(ModelDownloadWorker.KEY_SHA256, expectedSha256)
+            }
+
+            val data = builder.build()
 
             val constraints =
                 Constraints

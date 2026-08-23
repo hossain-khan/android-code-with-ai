@@ -317,6 +317,7 @@ class ModelRepositoryImplTest {
             assertTrue(model.downloadUrl.contains("light-llm-storage.gohk.xyz"))
             assertTrue(model.downloadUrl.contains("gemma-4-E2B-it.litertlm"))
             assertTrue(model.fallbackDownloadUrls.single().contains("huggingface.co"))
+            assertEquals("181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c", model.sha256)
         }
 
     @Test

@@ -21,6 +21,7 @@ data class AiModel(
     val license: String = "Apache 2.0",
     val licenseUrl: String = "https://www.apache.org/licenses/LICENSE-2.0",
     val description: String = "",
+    val sha256: String? = null,
 )
 
 enum class DownloadStatus {

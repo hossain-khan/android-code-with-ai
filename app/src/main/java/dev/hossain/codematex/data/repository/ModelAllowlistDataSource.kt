@@ -22,6 +22,7 @@ data class ModelEntry(
     val description: String = "",
     val downloadUrl: String? = null,
     val fallbackDownloadUrls: List<String> = emptyList(),
+    val sha256: String? = null,
 )
 
 /**

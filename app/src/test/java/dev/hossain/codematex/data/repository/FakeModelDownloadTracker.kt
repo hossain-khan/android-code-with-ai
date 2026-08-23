@@ -12,7 +12,15 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
     private val workInfoFlows = mutableMapOf<String, MutableStateFlow<List<WorkInfo>>>()
     val enqueuedDownloads = mutableListOf<Triple<String, String, String>>()
     val enqueuedMultiUrlDownloads = mutableListOf<Triple<String, List<String>, String>>()
+    val enqueuedRequests = mutableListOf<DownloadRequest>()
     val cancelledDownloads = mutableListOf<String>()
+
+    data class DownloadRequest(
+        val modelId: String,
+        val urls: List<String>,
+        val path: String,
+        val expectedSha256: String?,
+    )
 
     override fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>> = workInfoFlows.getOrPut(modelId) { MutableStateFlow(emptyList()) }
 
@@ -20,7 +28,9 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         modelId: String,
         urls: List<String>,
         path: String,
+        expectedSha256: String?,
     ) {
+        enqueuedRequests += DownloadRequest(modelId, urls, path, expectedSha256)
         enqueuedMultiUrlDownloads += Triple(modelId, urls, path)
         enqueuedDownloads += Triple(modelId, urls.firstOrNull() ?: "", path)
     }
@@ -29,9 +39,9 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         modelId: String,
         url: String,
         path: String,
+        expectedSha256: String?,
     ) {
-        enqueuedDownloads += Triple(modelId, url, path)
-        enqueuedMultiUrlDownloads += Triple(modelId, listOf(url), path)
+        enqueueDownload(modelId, listOf(url), path, expectedSha256)
     }
 
     override fun cancelDownload(modelId: String) {
