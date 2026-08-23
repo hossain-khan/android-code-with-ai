@@ -214,6 +214,12 @@ class ModelRepositoryImplTest {
             assertEquals(model.id, id)
             assertEquals(model.downloadUrl, url)
             assertEquals("/models/custom/task", path)
+            assertEquals(
+                model.displayName,
+                deps.downloadTracker.enqueuedRequests
+                    .single()
+                    .modelName,
+            )
         }
 
     @Test

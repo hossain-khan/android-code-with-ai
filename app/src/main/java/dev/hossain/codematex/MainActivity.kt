@@ -1,6 +1,7 @@
 package dev.hossain.codematex
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,7 +10,11 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.foundation.CircuitCompositionLocals
@@ -17,9 +22,11 @@ import com.slack.circuit.foundation.NavigableCircuitContent
 import com.slack.circuit.foundation.navstack.rememberSaveableNavStack
 import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.overlay.ContentWithOverlays
+import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
 import dev.hossain.codematex.circuit.HomeScreen
+import dev.hossain.codematex.circuit.ModelPickerScreen
 import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.zacsweers.metro.AppScope
@@ -54,10 +61,13 @@ class MainActivity
     constructor(
         private val circuit: Circuit,
     ) : ComponentActivity() {
+        private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
+
         @OptIn(ExperimentalSharedTransitionApi::class)
         override fun onCreate(savedInstanceState: Bundle?) {
             enableEdgeToEdge()
             super.onCreate(savedInstanceState)
+            handleIntent(intent)
 
             setContent {
                 CodeWithAIAppTheme {
@@ -65,9 +75,31 @@ class MainActivity
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background,
                     ) {
-                        // See https://slackhq.github.io/circuit/navigation/
-                        val navStack = rememberSaveableNavStack(root = HomeScreen)
+                        // Cold-start deep link initialization: if launched directly via deep link,
+                        // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
+                        val initialStack =
+                            remember {
+                                if (pendingDeepLinkScreen != null) {
+                                    val target = pendingDeepLinkScreen!!
+                                    pendingDeepLinkScreen = null
+                                    listOf(HomeScreen, target)
+                                } else {
+                                    listOf(HomeScreen)
+                                }
+                            }
+                        val navStack = rememberSaveableNavStack(initialStack)
                         val navigator = rememberCircuitNavigator(navStack)
+
+                        // Warm-start deep link handling: navigate to the deep-linked screen if already running
+                        LaunchedEffect(pendingDeepLinkScreen) {
+                            val target = pendingDeepLinkScreen
+                            if (target != null) {
+                                if (navStack.topRecord?.screen != target) {
+                                    navigator.goTo(target)
+                                }
+                                pendingDeepLinkScreen = null
+                            }
+                        }
 
                         // See https://slackhq.github.io/circuit/circuit-content/
                         CircuitCompositionLocals(circuit) {
@@ -89,5 +121,24 @@ class MainActivity
                     }
                 }
             }
+        }
+
+        override fun onNewIntent(intent: Intent) {
+            super.onNewIntent(intent)
+            handleIntent(intent)
+        }
+
+        private fun handleIntent(intent: Intent?) {
+            val uri = intent?.data
+            if ((uri?.scheme == "codematex" && uri.host == "models") ||
+                intent?.getStringExtra(EXTRA_TARGET_SCREEN) == SCREEN_MODELS
+            ) {
+                pendingDeepLinkScreen = ModelPickerScreen
+            }
+        }
+
+        companion object {
+            const val EXTRA_TARGET_SCREEN = "extra_target_screen"
+            const val SCREEN_MODELS = "models"
         }
     }
