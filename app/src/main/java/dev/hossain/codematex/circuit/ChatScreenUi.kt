@@ -958,7 +958,7 @@ private fun SupportingBenchmarkingCard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    text = state.modelName,
+                    text = formatShortModelName(state.modelName),
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.onSurface,
                 )
@@ -1227,7 +1227,7 @@ private fun ModelTechnicalInfoPanel(
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = state.modelName,
+                        text = formatShortModelName(state.modelName),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                     )
@@ -1261,13 +1261,22 @@ private fun ModelTechnicalInfoPanel(
                         }
                     }
 
-                    // Collapsed speed indicator if active
-                    if (!isExpanded && state.throughputInfo != null) {
-                        Text(
-                            text = "• Generating...",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
+                    // Collapsed speed indicator if active or benchmark metrics when done
+                    if (!isExpanded) {
+                        if (state.isGenerating) {
+                            Text(
+                                text = "• Generating...",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        } else if (state.throughputInfo != null) {
+                            Text(
+                                text = "• ${state.throughputInfo}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                            )
+                        }
                     }
                 }
 
