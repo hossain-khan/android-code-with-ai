@@ -88,6 +88,41 @@ class HttpModelDownloaderTest {
         }
 
     @Test
+    fun `given partial file exists but server returns 200 OK - download truncates and writes full file without appending`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            // Server always returns 200 OK with full content, ignoring Range request header
+            server.createContext("/model.bin") { exchange ->
+                exchange.sendResponseHeaders(200, content.size.toLong())
+                exchange.responseBody.use { output ->
+                    output.write(content)
+                }
+            }
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val tmpFile = File("$outputPath.codematextmp")
+            val stalePartialContent = ByteArray(400) { 0xFF.toByte() }
+            tmpFile.parentFile?.mkdirs()
+            tmpFile.writeBytes(stalePartialContent)
+
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertEquals(Result.success(Unit), result)
+            assertTrue(File(outputPath).exists())
+            // Must be exactly 1000 bytes, not 1400 bytes!
+            assertEquals(1_000L, File(outputPath).length())
+            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+        }
+
+    @Test
     fun `given server returns error - download returns failure`() =
         runTest {
             server.createContext("/model.bin") { exchange ->

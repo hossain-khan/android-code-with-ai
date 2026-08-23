@@ -82,29 +82,32 @@ class HttpModelDownloader
                         )
                     }
 
+                    val isResuming = responseCode == HttpURLConnection.HTTP_PARTIAL
+                    val initialBytes = if (isResuming) outputTmpFile.length() else 0L
+
                     val contentLength = connection.contentLengthLong
                     val totalBytes =
                         if (contentLength > 0) {
-                            contentLength + (outputTmpFile.length().takeIf { it > 0 } ?: 0)
+                            contentLength + initialBytes
                         } else {
                             Timber.w("HttpModelDownloader: Unknown content length")
                             0L
                         }
 
                     Timber.d(
-                        "HttpModelDownloader: Content-Length=$contentLength, Total=$totalBytes, Resuming from ${outputTmpFile.length()}",
+                        "HttpModelDownloader: Content-Length=$contentLength, Total=$totalBytes, isResuming=$isResuming, Starting from $initialBytes",
                     )
 
                     outputTmpFile.parentFile?.mkdirs()
                     File(outputPath).parentFile?.mkdirs()
 
-                    FileOutputStream(outputTmpFile, true).use { fos ->
+                    FileOutputStream(outputTmpFile, isResuming).use { fos ->
                         connection.inputStream.use { input ->
                             val buffer = ByteArray(8192)
                             var bytesRead: Int
-                            var downloadedBytes = outputTmpFile.length()
+                            var downloadedBytes = initialBytes
                             var lastReportedProgress = -1
-                            var lastReportedBytes = 0L
+                            var lastReportedBytes = initialBytes
                             val reportInterval = 100_000_000L // 100MB
 
                             while (input.read(buffer).also { bytesRead = it } != -1) {
