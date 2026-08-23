@@ -1,12 +1,16 @@
 package dev.hossain.codematex.worker
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.net.Uri
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
 import androidx.work.WorkerParameters
+import dev.hossain.codematex.MainActivity
 import dev.hossain.codematex.di.AppWorkerFactory
 import dev.hossain.codematex.di.AppWorkerFactory.WorkerInstanceFactory
 import dev.hossain.codematex.di.WorkerKey
@@ -31,6 +35,8 @@ class ModelDownloadWorker(
         const val KEY_PROGRESS = "progress"
         const val KEY_SHA256 = "sha256"
         const val KEY_ERROR_MESSAGE = "error_message"
+        const val KEY_MODEL_ID = "model_id"
+        const val KEY_MODEL_NAME = "model_name"
 
         /**
          * Pure business logic for executing a model download, separated from the WorkManager
@@ -154,17 +160,43 @@ class ModelDownloadWorker(
         progress: Int = 0,
         maxProgress: Int = 100,
     ): ForegroundInfo {
+        val modelName =
+            inputData.getString(KEY_MODEL_NAME)
+                ?: inputData.getString(KEY_MODEL_ID)?.substringAfterLast("/")
+                ?: "AI Model"
+
         val cancelIntent =
             androidx.work.WorkManager
                 .getInstance(applicationContext)
                 .createCancelPendingIntent(id)
 
+        val deepLinkIntent =
+            Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse("codematex://models"),
+                applicationContext,
+                MainActivity::class.java,
+            ).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(MainActivity.EXTRA_TARGET_SCREEN, MainActivity.SCREEN_MODELS)
+            }
+
+        val contentPendingIntent =
+            PendingIntent.getActivity(
+                applicationContext,
+                0,
+                deepLinkIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+
         val notification =
             androidx.core.app.NotificationCompat
                 .Builder(applicationContext, "model_download")
-                .setContentTitle("Model Download")
+                .setContentTitle("Downloading $modelName")
                 .setContentText(content)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
+                .setContentIntent(contentPendingIntent)
+                .setAutoCancel(true)
                 .setOngoing(true)
                 .setProgress(maxProgress, progress, progress <= 0)
                 .addAction(

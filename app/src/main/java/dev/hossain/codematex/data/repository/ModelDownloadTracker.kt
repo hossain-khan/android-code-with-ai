@@ -36,6 +36,7 @@ interface ModelDownloadTracker {
         urls: List<String>,
         path: String,
         expectedSha256: String? = null,
+        modelName: String? = null,
     )
 
     /**
@@ -46,7 +47,8 @@ interface ModelDownloadTracker {
         url: String,
         path: String,
         expectedSha256: String? = null,
-    ) = enqueueDownload(modelId, listOf(url), path, expectedSha256)
+        modelName: String? = null,
+    ) = enqueueDownload(modelId, listOf(url), path, expectedSha256, modelName)
 
     /**
      * Cancels the download identified by [modelId].
@@ -69,10 +71,13 @@ class ModelDownloadTrackerImpl
             urls: List<String>,
             path: String,
             expectedSha256: String?,
+            modelName: String?,
         ) {
             val builder =
                 Data
                     .Builder()
+                    .putString(ModelDownloadWorker.KEY_MODEL_ID, modelId)
+                    .putString(ModelDownloadWorker.KEY_MODEL_NAME, modelName ?: modelId.substringAfterLast("/"))
                     .putStringArray(ModelDownloadWorker.KEY_URLS, urls.toTypedArray())
                     .putString(ModelDownloadWorker.KEY_URL, urls.firstOrNull() ?: "")
                     .putString(ModelDownloadWorker.KEY_PATH, path)

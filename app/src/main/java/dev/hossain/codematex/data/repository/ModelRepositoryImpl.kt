@@ -107,7 +107,13 @@ class ModelRepositoryImpl
         override suspend fun downloadModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
             val candidateUrls = listOf(model.downloadUrl) + model.fallbackDownloadUrls
-            downloadTracker.enqueueDownload(model.id, candidateUrls, path, model.sha256)
+            downloadTracker.enqueueDownload(
+                modelId = model.id,
+                urls = candidateUrls,
+                path = path,
+                expectedSha256 = model.sha256,
+                modelName = model.displayName,
+            )
         }
 
         override suspend fun cancelDownload(model: AiModel) {
