@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
@@ -23,6 +24,8 @@ import javax.inject.Inject
 class HttpModelDownloader
     @Inject
     constructor() : ModelDownloader {
+        internal var spaceChecker: (File) -> Long = { it.usableSpace }
+
         override suspend fun download(
             urls: List<String>,
             outputPath: String,
@@ -96,6 +99,21 @@ class HttpModelDownloader
                             Timber.w("HttpModelDownloader: Unknown content length")
                             0L
                         }
+
+                    val targetDir = (File(outputPath).parentFile ?: outputTmpFile.parentFile ?: File(".")).apply { mkdirs() }
+                    val availableSpace = spaceChecker(targetDir)
+                    val requiredBytes = if (isResuming) contentLength else totalBytes
+
+                    if (availableSpace > 0 && requiredBytes > 0 && availableSpace < requiredBytes) {
+                        Timber.e(
+                            "HttpModelDownloader: Insufficient storage space. Required=$requiredBytes B, Available=$availableSpace B",
+                        )
+                        return@withContext Result.failure(
+                            IOException(
+                                "Insufficient storage space: available $availableSpace bytes, required $requiredBytes bytes",
+                            ),
+                        )
+                    }
 
                     Timber.d(
                         "HttpModelDownloader: Content-Length=$contentLength, Total=$totalBytes, isResuming=$isResuming, Starting from $initialBytes",
