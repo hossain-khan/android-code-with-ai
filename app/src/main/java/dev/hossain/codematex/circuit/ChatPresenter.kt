@@ -48,10 +48,16 @@ class ChatPresenter(
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
 
         LaunchedEffect(Unit) {
-            activeModel = modelRepository.getSelectedModel()
+            val initial = modelRepository.getSelectedModel()
+            if (initial != null) {
+                activeModel = initial
+            }
             modelRepository.getAvailableModels().collect { models ->
                 availableModels = models
-                activeModel = modelRepository.getSelectedModel()
+                val selected = modelRepository.getSelectedModel()
+                if (selected?.id != activeModel?.id || selected?.localPath != activeModel?.localPath) {
+                    activeModel = selected
+                }
             }
         }
 
@@ -63,7 +69,7 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel, initTrigger) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
@@ -72,24 +78,30 @@ class ChatPresenter(
             Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}")
             isPreparing = true
             errorMessage = null
-            val result =
-                chatInferenceOrchestrator.initialize(
-                    model = model,
-                    topic = screen.topic,
-                    sessionId = screen.sessionId,
-                    existingMessages = messages,
-                )
-            result
-                .onSuccess { loadedMessages ->
-                    if (loadedMessages.isNotEmpty()) {
-                        messages = loadedMessages
+            try {
+                val result =
+                    chatInferenceOrchestrator.initialize(
+                        model = model,
+                        topic = screen.topic,
+                        sessionId = screen.sessionId,
+                        existingMessages = messages,
+                    )
+                result
+                    .onSuccess { loadedMessages ->
+                        if (loadedMessages.isNotEmpty()) {
+                            messages = loadedMessages
+                        }
+                        Timber.d("ChatPresenter: Model initialized successfully")
+                    }.onFailure { error ->
+                        Timber.e(error, "ChatPresenter: Model initialization failed")
+                        errorMessage = error.message
                     }
-                    Timber.d("ChatPresenter: Model initialized successfully")
-                }.onFailure { error ->
-                    Timber.e(error, "ChatPresenter: Model initialization failed")
-                    errorMessage = error.message
-                }
-            isPreparing = false
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                Timber.d("ChatPresenter: Model initialization cancelled")
+                throw e
+            } finally {
+                isPreparing = false
+            }
         }
 
         LaunchedEffect(isGenerating) {
@@ -196,7 +208,7 @@ class ChatPresenter(
 
         return when {
             errorMessage != null -> {
-                ChatScreen.State.Error(errorMessage!!, eventSink)
+                ChatScreen.State.Error(errorMessage!!, screen.topic, eventSink)
             }
 
             activeModel == null -> {
@@ -214,6 +226,7 @@ class ChatPresenter(
                     activeModel
                         ?: return@present ChatScreen.State.Error(
                             "No model available",
+                            screen.topic,
                             eventSink,
                         )
                 val sizeMb = model.sizeBytes / 1_000_000

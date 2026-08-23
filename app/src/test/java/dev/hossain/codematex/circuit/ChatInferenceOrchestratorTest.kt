@@ -115,6 +115,19 @@ class ChatInferenceOrchestratorTest {
         assertEquals(1, fakeEngine.resetCalls)
     }
 
+    @Test(expected = kotlinx.coroutines.CancellationException::class)
+    fun `initialize rethrows CancellationException when coroutine cancelled`() =
+        runTest {
+            fakeEngine.shouldThrow = kotlinx.coroutines.CancellationException("The coroutine scope left the composition")
+
+            createOrchestrator().initialize(
+                model = testModel(),
+                topic = CodingTopic.KOTLIN,
+                sessionId = null,
+                existingMessages = emptyList(),
+            )
+        }
+
     @Test
     fun `getActiveBackend returns engine backend`() {
         assertEquals(LlmEngine.Backend.CPU, createOrchestrator().getActiveBackend())
