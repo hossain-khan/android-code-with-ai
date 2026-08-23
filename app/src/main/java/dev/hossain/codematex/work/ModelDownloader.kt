@@ -10,6 +10,21 @@ package dev.hossain.codematex.worker
  */
 interface ModelDownloader {
     /**
+     * Downloads the resource from candidate [urls] (trying in order) to [outputPath].
+     */
+    suspend fun download(
+        urls: List<String>,
+        outputPath: String,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean = { false },
+    ): Result<Unit> =
+        if (urls.isEmpty()) {
+            Result.failure(IllegalArgumentException("No download URLs provided"))
+        } else {
+            download(urls.first(), outputPath, onProgress, shouldCancel)
+        }
+
+    /**
      * Downloads the resource at [url] to [outputPath].
      *
      * The implementation is responsible for:

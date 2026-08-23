@@ -100,7 +100,8 @@ class ModelRepositoryImpl
 
         override suspend fun downloadModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
-            downloadTracker.enqueueDownload(model.id, model.downloadUrl, path)
+            val candidateUrls = listOf(model.downloadUrl) + model.fallbackDownloadUrls
+            downloadTracker.enqueueDownload(model.id, candidateUrls, path)
         }
 
         override suspend fun cancelDownload(model: AiModel) {
@@ -126,7 +127,11 @@ class ModelRepositoryImpl
                 id = entry.modelId,
                 name = entry.modelId.substringAfterLast("/"),
                 displayName = entry.modelId.substringAfterLast("/"),
-                downloadUrl = buildDownloadUrl(entry),
+                downloadUrl = entry.downloadUrl ?: buildDownloadUrl(entry),
+                fallbackDownloadUrls =
+                    entry.fallbackDownloadUrls.ifEmpty {
+                        listOf(buildFallbackDownloadUrl(entry))
+                    },
                 sizeBytes = entry.sizeInBytes,
                 localPath = localPath.takeIf { isDownloaded },
                 downloadStatus = status,
@@ -141,6 +146,9 @@ class ModelRepositoryImpl
             )
 
         private fun buildDownloadUrl(entry: ModelEntry): String =
+            "https://light-llm-storage.gohk.xyz/models/${entry.modelId}/${entry.modelFile}"
+
+        private fun buildFallbackDownloadUrl(entry: ModelEntry): String =
             "https://huggingface.co/${entry.modelId}/resolve/${entry.commitHash}/${entry.modelFile}?download=true"
 
         private fun getModelLocalPathById(modelId: String): String {

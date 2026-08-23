@@ -9,6 +9,7 @@ data class AiModel(
     val name: String,
     val displayName: String,
     val downloadUrl: String,
+    val fallbackDownloadUrls: List<String> = emptyList(),
     val sizeBytes: Long,
     val localPath: String?,
     val downloadStatus: DownloadStatus,

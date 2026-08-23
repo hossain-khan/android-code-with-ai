@@ -23,6 +23,36 @@ class HttpModelDownloader
     @Inject
     constructor() : ModelDownloader {
         override suspend fun download(
+            urls: List<String>,
+            outputPath: String,
+            onProgress: suspend (percent: Int) -> Unit,
+            shouldCancel: () -> Boolean,
+        ): Result<Unit> {
+            if (urls.isEmpty()) {
+                return Result.failure(IllegalArgumentException("No download URLs provided"))
+            }
+
+            var lastError: Throwable = IllegalStateException("Download failed for all candidate URLs")
+            for ((index, url) in urls.withIndex()) {
+                Timber.d("HttpModelDownloader: Trying candidate URL (${index + 1}/${urls.size}): $url")
+                val result = download(url, outputPath, onProgress, shouldCancel)
+                if (result.isSuccess) {
+                    return result
+                }
+                val error = result.exceptionOrNull()
+                if (error is CancellationException) {
+                    throw error
+                }
+                if (error != null) {
+                    lastError = error
+                    Timber.w(error, "HttpModelDownloader: Candidate URL failed ($url), attempting fallback if available")
+                }
+            }
+
+            return Result.failure(lastError)
+        }
+
+        override suspend fun download(
             url: String,
             outputPath: String,
             onProgress: suspend (percent: Int) -> Unit,

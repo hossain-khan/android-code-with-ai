@@ -314,8 +314,9 @@ class ModelRepositoryImplTest {
             assertEquals("Apache 2.0", model.license)
             assertEquals("https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm", model.modelRepoUrl)
             assertTrue(model.description.isNotBlank())
-            assertTrue(model.downloadUrl.contains("huggingface.co"))
+            assertTrue(model.downloadUrl.contains("light-llm-storage.gohk.xyz"))
             assertTrue(model.downloadUrl.contains("gemma-4-E2B-it.litertlm"))
+            assertTrue(model.fallbackDownloadUrls.single().contains("huggingface.co"))
         }
 
     @Test

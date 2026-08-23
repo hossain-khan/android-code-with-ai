@@ -8,6 +8,7 @@ import kotlin.coroutines.coroutineContext
  */
 class FakeModelDownloader : ModelDownloader {
     val downloads = mutableListOf<DownloadCall>()
+    val multiUrlDownloads = mutableListOf<MultiUrlDownloadCall>()
     val progressReports = mutableListOf<Int>()
     var nextResult: Result<Unit> = Result.success(Unit)
     var progressToReport: List<Int> = emptyList()
@@ -17,6 +18,21 @@ class FakeModelDownloader : ModelDownloader {
         val url: String,
         val outputPath: String,
     )
+
+    data class MultiUrlDownloadCall(
+        val urls: List<String>,
+        val outputPath: String,
+    )
+
+    override suspend fun download(
+        urls: List<String>,
+        outputPath: String,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean,
+    ): Result<Unit> {
+        multiUrlDownloads += MultiUrlDownloadCall(urls, outputPath)
+        return super.download(urls, outputPath, onProgress, shouldCancel)
+    }
 
     override suspend fun download(
         url: String,

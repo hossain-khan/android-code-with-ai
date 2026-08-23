@@ -20,6 +20,8 @@ data class ModelEntry(
     val license: String = "Apache 2.0",
     val licenseUrl: String = "https://www.apache.org/licenses/LICENSE-2.0",
     val description: String = "",
+    val downloadUrl: String? = null,
+    val fallbackDownloadUrls: List<String> = emptyList(),
 )
 
 /**

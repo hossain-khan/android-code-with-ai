@@ -125,4 +125,25 @@ class ModelDownloadWorkerTest {
 
             assertEquals(WorkResult.success(), result)
         }
+
+    @Test
+    fun `given multiple candidate urls - execute download passes candidate urls to downloader`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            val urls = listOf("https://r2.example.com/model.bin", "https://hf.example.com/model.bin")
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    urls = urls,
+                    outputPath = "/models/model.bin",
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            assertEquals(WorkResult.success(), result)
+            assertEquals(1, fakeDownloader.multiUrlDownloads.size)
+            assertEquals(urls, fakeDownloader.multiUrlDownloads.single().urls)
+            assertEquals("/models/model.bin", fakeDownloader.multiUrlDownloads.single().outputPath)
+        }
 }

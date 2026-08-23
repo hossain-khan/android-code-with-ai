@@ -158,6 +158,77 @@ class HttpModelDownloaderTest {
             assertTrue(progressReports.last() == 100)
         }
 
+    @Test
+    fun `given primary url fails - fallback url succeeds and writes full file`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            server.createContext("/bad-primary.bin") { exchange ->
+                exchange.sendResponseHeaders(500, 0)
+                exchange.close()
+            }
+            server.createContext("/good-fallback.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    urls = listOf(serverUrl("/bad-primary.bin"), serverUrl("/good-fallback.bin")),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertEquals(Result.success(Unit), result)
+            assertTrue(File(outputPath).exists())
+            assertEquals(content.size.toLong(), File(outputPath).length())
+            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+        }
+
+    @Test
+    fun `given all candidate urls fail - download returns failure`() =
+        runTest {
+            server.createContext("/bad1.bin") { exchange ->
+                exchange.sendResponseHeaders(500, 0)
+                exchange.close()
+            }
+            server.createContext("/bad2.bin") { exchange ->
+                exchange.sendResponseHeaders(404, 0)
+                exchange.close()
+            }
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    urls = listOf(serverUrl("/bad1.bin"), serverUrl("/bad2.bin")),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+        }
+
+    @Test
+    fun `given empty urls list - download returns failure`() =
+        runTest {
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+
+            val result =
+                downloader.download(
+                    urls = emptyList(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+        }
+
     private class ModelFileHandler(
         private val content: ByteArray,
     ) : HttpHandler {
