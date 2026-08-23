@@ -81,15 +81,24 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
     }
 
     /**
-     * Convenience helper to emit a single FAILED [WorkInfo].
+     * Convenience helper to emit a single FAILED [WorkInfo] with optional error message.
      */
-    fun emitFailed(modelId: String) {
+    fun emitFailed(
+        modelId: String,
+        errorMessage: String? = null,
+    ) {
+        val outputData =
+            if (errorMessage != null) {
+                Data.Builder().putString(dev.hossain.codematex.worker.ModelDownloadWorker.KEY_ERROR_MESSAGE, errorMessage).build()
+            } else {
+                Data.EMPTY
+            }
         val workInfo =
             WorkInfo(
                 java.util.UUID.randomUUID(),
                 WorkInfo.State.FAILED,
                 emptySet<String>(),
-                Data.EMPTY,
+                outputData,
                 Data.EMPTY,
                 0,
                 0,

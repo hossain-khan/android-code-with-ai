@@ -371,4 +371,18 @@ class ModelRepositoryImplTest {
 
             assertTrue(models.isEmpty())
         }
+
+    @Test
+    fun `getAvailableModels populates downloadErrorMessage when WorkInfo fails with error data`() =
+        runTest {
+            val (repository, deps) = createRepository()
+            val modelId = "litert-community/gemma-4-E2B-it-litert-lm"
+            deps.downloadTracker.emitFailed(modelId, "SHA-256 checksum mismatch: expected abc, calculated xyz")
+
+            val models = repository.getAvailableModels().first()
+            val failedModel = models.first { it.id == modelId }
+
+            assertEquals(DownloadStatus.FAILED, failedModel.downloadStatus)
+            assertEquals("SHA-256 checksum mismatch: expected abc, calculated xyz", failedModel.downloadErrorMessage)
+        }
 }

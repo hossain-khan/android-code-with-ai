@@ -39,10 +39,10 @@ class ModelDownloadWorkerTest {
         }
 
     @Test
-    fun `given download fails - execute download returns failure`() =
+    fun `given download fails - execute download returns failure with error message`() =
         runTest {
             val fakeDownloader = FakeModelDownloader()
-            fakeDownloader.nextResult = kotlin.Result.failure(IllegalStateException("boom"))
+            fakeDownloader.nextResult = kotlin.Result.failure(IllegalStateException("SHA-256 checksum mismatch"))
 
             val result =
                 ModelDownloadWorker.executeDownload(
@@ -53,7 +53,12 @@ class ModelDownloadWorkerTest {
                     onProgress = {},
                 )
 
-            assertEquals(WorkResult.failure(), result)
+            val expectedErrorData =
+                androidx.work.Data
+                    .Builder()
+                    .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "SHA-256 checksum mismatch")
+                    .build()
+            assertEquals(WorkResult.failure(expectedErrorData), result)
         }
 
     @Test
