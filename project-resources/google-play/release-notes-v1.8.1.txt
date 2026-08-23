@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.8.1:
+• Chat Initialization Fix: Fixed coroutine cancellation when opening conversations.
+• Stop Generation Resilience: Manual stop preserves hardware acceleration without CPU fallback.
+• Download Memory Optimization: Zero memory buffering for multi-gigabyte model downloads.
+• Error Layout Redesign: Material 3 error container with one-tap retry and model picker navigation.
