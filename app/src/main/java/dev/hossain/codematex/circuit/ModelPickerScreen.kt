@@ -15,6 +15,7 @@ data object ModelPickerScreen : ParcelableScreen {
 
         data class Success(
             val models: List<AiModel>,
+            val downloadOverWifiOnly: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -22,6 +23,10 @@ data object ModelPickerScreen : ParcelableScreen {
     @kotlinx.serialization.Serializable
     sealed interface Event : CircuitUiEvent {
         data object Back : Event
+
+        data class ToggleWifiOnly(
+            val enabled: Boolean,
+        ) : Event
 
         data class Download(
             val model: AiModel,

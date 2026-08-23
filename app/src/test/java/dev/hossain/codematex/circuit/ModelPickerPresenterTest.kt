@@ -3,8 +3,10 @@ package dev.hossain.codematex.circuit
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.repository.FakeModelDownloadPreferences
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -18,15 +20,37 @@ class ModelPickerPresenterTest {
         testModel(id = "google/gemma-4-e2b", downloadStatus = DownloadStatus.NOT_DOWNLOADED, localPath = null)
 
     @Test
-    fun `given models load - emits success with model list`() =
+    fun `given models load - emits success with model list and wifi only state`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel, remoteModel))
+            val fakePrefs = FakeModelDownloadPreferences(downloadOverWifiOnly = true)
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 assertEquals(listOf(downloadedModel, remoteModel), state.models)
+                assertTrue(state.downloadOverWifiOnly)
+            }
+        }
+
+    @Test
+    fun `given toggle wifi only event - updates preferences and state`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakePrefs = FakeModelDownloadPreferences(downloadOverWifiOnly = true)
+            val navigator = FakeNavigator(ModelPickerScreen)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertTrue(state.downloadOverWifiOnly)
+
+                state.eventSink(ModelPickerScreen.Event.ToggleWifiOnly(false))
+
+                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertFalse(updatedState.downloadOverWifiOnly)
+                assertFalse(fakePrefs.downloadOverWifiOnly)
             }
         }
 
@@ -34,8 +58,9 @@ class ModelPickerPresenterTest {
     fun `given model load fails - emits success with empty list`() =
         runTest {
             val fakeRepo = FakeModelRepository(getException = IllegalStateException("Storage error"))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
@@ -47,8 +72,9 @@ class ModelPickerPresenterTest {
     fun `given back event - pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
@@ -61,8 +87,9 @@ class ModelPickerPresenterTest {
     fun `given download event - starts model download`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
@@ -75,8 +102,9 @@ class ModelPickerPresenterTest {
     fun `given cancel download event - cancels model download`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
@@ -89,8 +117,9 @@ class ModelPickerPresenterTest {
     fun `given delete event - deletes model`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
@@ -103,8 +132,9 @@ class ModelPickerPresenterTest {
     fun `given select event - selects model and pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo)
+            val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success

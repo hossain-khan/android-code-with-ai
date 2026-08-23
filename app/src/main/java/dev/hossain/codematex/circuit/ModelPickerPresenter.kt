@@ -12,6 +12,7 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -25,11 +26,13 @@ class ModelPickerPresenter(
     @Assisted private val navigator: Navigator,
     @Assisted private val screen: ModelPickerScreen,
     private val modelRepository: ModelRepository,
+    private val downloadPreferences: ModelDownloadPreferences,
 ) : Presenter<ModelPickerScreen.State> {
     @Composable
     override fun present(): ModelPickerScreen.State {
         var models by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        var downloadOverWifiOnly by rememberRetained { mutableStateOf(downloadPreferences.downloadOverWifiOnly) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
@@ -46,6 +49,11 @@ class ModelPickerPresenter(
             when (event) {
                 is ModelPickerScreen.Event.Back -> {
                     navigator.pop()
+                }
+
+                is ModelPickerScreen.Event.ToggleWifiOnly -> {
+                    downloadPreferences.downloadOverWifiOnly = event.enabled
+                    downloadOverWifiOnly = event.enabled
                 }
 
                 is ModelPickerScreen.Event.Download -> {
@@ -80,6 +88,7 @@ class ModelPickerPresenter(
         } else {
             ModelPickerScreen.State.Success(
                 models = models,
+                downloadOverWifiOnly = downloadOverWifiOnly,
                 eventSink = eventSink,
             )
         }

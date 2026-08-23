@@ -60,6 +60,7 @@ class ModelDownloadTrackerImpl
     @Inject
     constructor(
         private val workManager: WorkManager,
+        private val downloadPreferences: ModelDownloadPreferences,
     ) : ModelDownloadTracker {
         override fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>> = workManager.getWorkInfosForUniqueWorkFlow(modelId)
 
@@ -82,10 +83,17 @@ class ModelDownloadTrackerImpl
 
             val data = builder.build()
 
+            val networkType =
+                if (downloadPreferences.downloadOverWifiOnly) {
+                    NetworkType.UNMETERED
+                } else {
+                    NetworkType.CONNECTED
+                }
+
             val constraints =
                 Constraints
                     .Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiredNetworkType(networkType)
                     .build()
 
             val request =
