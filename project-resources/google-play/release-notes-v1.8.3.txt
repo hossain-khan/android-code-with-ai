@@ -1,0 +1,7 @@
+=== GOOGLE PLAY RELEASE NOTES (Max 500 characters) ===
+
+What's New in v1.8.3:
+• Initialization Safety: Prevented sending messages or selecting suggested prompts while the AI model is initializing in memory.
+• Model Hub Polish: Clean 1-line card headers for models without awkward text wrapping.
+• Formatted Model Names: Friendly model names (e.g. Gemma 4-E2B IT) in confirmation dialogs and loaders.
+• Bug Fixes: Fixed duplicate storage unit in model deletion dialog.
