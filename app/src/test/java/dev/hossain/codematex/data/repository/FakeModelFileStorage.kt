@@ -11,8 +11,11 @@ class FakeModelFileStorage(
 ) : ModelFileStorage {
     private val existingFiles = existingPaths.toMutableSet()
     val deletedPaths = mutableListOf<String>()
+    var availableBytes: Long = Long.MAX_VALUE
 
     override fun getModelsDir(): File = modelsDir
+
+    override fun getAvailableStorageBytes(): Long = availableBytes
 
     override fun modelExists(path: String): Boolean = path in existingFiles
 

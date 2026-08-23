@@ -12,6 +12,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.io.IOException
 import java.net.InetSocketAddress
 import java.security.MessageDigest
 import java.util.concurrent.atomic.AtomicBoolean
@@ -353,6 +354,30 @@ class HttpModelDownloaderTest {
             assertEquals(goodContent.size.toLong(), File(outputPath).length())
             assertTrue(goodContent.contentEquals(File(outputPath).readBytes()))
             assertFalse(File("$outputPath.codematextmp").exists())
+        }
+
+    @Test
+    fun `given insufficient disk space - download fails immediately with IOException`() =
+        runTest {
+            val content = ByteArray(10_000) { it.toByte() }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = HttpModelDownloader()
+            // Simulate only 1,000 bytes available when 10,000 bytes are required
+            downloader.spaceChecker = { 1_000L }
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is IOException)
+            assertFalse(File(outputPath).exists())
         }
 
     private class ModelFileHandler(

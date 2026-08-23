@@ -21,6 +21,11 @@ interface ModelFileStorage {
     fun getModelsDir(): File
 
     /**
+     * Returns the usable free space in bytes in the storage location.
+     */
+    fun getAvailableStorageBytes(): Long
+
+    /**
      * Returns `true` if a model file exists at [path].
      */
     fun modelExists(path: String): Boolean
@@ -49,6 +54,10 @@ class ModelFileStorageImpl
         private val modelsDir = File(context.getExternalFilesDir(null), "models")
 
         override fun getModelsDir(): File = modelsDir
+
+        override fun getAvailableStorageBytes(): Long =
+            modelsDir.usableSpace.takeIf { it > 0 }
+                ?: (context.getExternalFilesDir(null) ?: context.filesDir).usableSpace
 
         override fun modelExists(path: String): Boolean = File(path).exists()
 
