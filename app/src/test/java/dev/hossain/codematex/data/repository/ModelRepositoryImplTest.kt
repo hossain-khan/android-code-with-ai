@@ -293,6 +293,23 @@ class ModelRepositoryImplTest {
         }
 
     @Test
+    fun `deleteModel updates getAvailableModels flow with not downloaded status`() =
+        runTest {
+            val path = "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm"
+            val modelId = "litert-community/gemma-4-E2B-it-litert-lm"
+            val (repository, _) = createRepository(existingPaths = setOf(path), selectedModelId = modelId)
+
+            val initialModels = repository.getAvailableModels().first()
+            assertEquals(DownloadStatus.DOWNLOADED, initialModels.first { it.id == modelId }.downloadStatus)
+
+            repository.deleteModel(testModel(id = modelId, localPath = path))
+
+            val updatedModels = repository.getAvailableModels().first()
+            assertEquals(DownloadStatus.NOT_DOWNLOADED, updatedModels.first { it.id == modelId }.downloadStatus)
+            assertFalse(updatedModels.first { it.id == modelId }.isSelected)
+        }
+
+    @Test
     fun `deleteModel does not clear selection when deleting different model`() =
         runTest {
             val path = "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm"
