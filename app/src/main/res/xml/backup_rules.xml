@@ -7,7 +7,9 @@
 -->
 <full-backup-content>
     <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+        Exclude multi-gigabyte on-device LLM model binaries (2.6GB–3.7GB)
+        from Google Drive Auto Backup to prevent exceeding quotas and consuming bandwidth.
+    -->
+    <exclude domain="external" path="models" />
+    <exclude domain="file" path="models" />
 </full-backup-content>
