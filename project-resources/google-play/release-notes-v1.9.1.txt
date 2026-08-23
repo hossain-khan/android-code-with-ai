@@ -1,0 +1,5 @@
+What's New in v1.9.1:
+• AI Tutor Personas: Streamlined personas including Senior Architect, Beginner Tutor, and Interview Coach.
+• Friendly Model Names: Cleaner, concise model names in chat and telemetry headers.
+• Telemetry & Status Fixes: Real-time inference speed and throughput telemetry updates reliably.
+• Fast & Concise Responses: Optimized prompting for brief, mobile-friendly code answers.
