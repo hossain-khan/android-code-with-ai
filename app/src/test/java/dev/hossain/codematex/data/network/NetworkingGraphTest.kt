@@ -24,7 +24,7 @@ class NetworkingGraphTest {
         val loggingInterceptor = client.interceptors.filterIsInstance<HttpLoggingInterceptor>().firstOrNull()
         if (BuildConfig.DEBUG) {
             org.junit.Assert.assertNotNull(loggingInterceptor)
-            assertEquals(HttpLoggingInterceptor.Level.BODY, loggingInterceptor?.level)
+            assertEquals(HttpLoggingInterceptor.Level.HEADERS, loggingInterceptor?.level)
         } else {
             org.junit.Assert.assertNull(loggingInterceptor)
         }

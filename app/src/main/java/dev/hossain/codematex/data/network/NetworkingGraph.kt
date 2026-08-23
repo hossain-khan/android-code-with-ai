@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 interface NetworkingGraph {
     /**
      * Provides a configured [OkHttpClient] with:
-     * - HTTP request/response logging (BODY level in debug, NONE in release)
+     * - HTTP request/response header logging (HEADERS level in debug, NONE in release to avoid buffering large payloads)
      * - 30-second connect and read timeouts
      */
     @Provides
@@ -38,7 +38,7 @@ interface NetworkingGraph {
                 if (BuildConfig.DEBUG) {
                     addInterceptor(
                         HttpLoggingInterceptor().apply {
-                            level = HttpLoggingInterceptor.Level.BODY
+                            level = HttpLoggingInterceptor.Level.HEADERS
                         },
                     )
                 }

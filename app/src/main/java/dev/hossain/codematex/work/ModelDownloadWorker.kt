@@ -112,7 +112,11 @@ class ModelDownloadWorker(
                 )
         val expectedSha256 = inputData.getString(KEY_SHA256)
 
-        setForeground(createForegroundInfo("Starting download..."))
+        try {
+            setForeground(createForegroundInfo("Starting download..."))
+        } catch (e: Exception) {
+            Timber.w(e, "ModelDownloadWorker: Failed to start foreground service, continuing download in background")
+        }
 
         val result =
             executeDownload(
@@ -138,7 +142,11 @@ class ModelDownloadWorker(
                 .putInt(KEY_PROGRESS, progress)
                 .build(),
         )
-        setForeground(createForegroundInfo("$progress%", progress))
+        try {
+            setForeground(createForegroundInfo("$progress%", progress))
+        } catch (e: Exception) {
+            Timber.w(e, "ModelDownloadWorker: Failed to update foreground notification")
+        }
     }
 
     private fun createForegroundInfo(
