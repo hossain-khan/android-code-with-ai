@@ -23,6 +23,7 @@ data class AiModel(
     val description: String = "",
     val sha256: String? = null,
     val downloadErrorMessage: String? = null,
+    val isSelected: Boolean = false,
 )
 
 enum class DownloadStatus {

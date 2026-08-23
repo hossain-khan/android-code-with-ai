@@ -47,7 +47,10 @@ class ModelRepositoryImpl
                 val modelIds = allowlist.map { it.modelId }
                 val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
 
-                combine(progressFlows) { workInfoLists ->
+                combine(
+                    combine(progressFlows) { it.toList() },
+                    selectionStore.selectedModelIdFlow,
+                ) { workInfoLists, savedSelectedId ->
                     val progressMap = mutableMapOf<String, Triple<DownloadStatus, Int, String?>>()
                     workInfoLists.forEachIndexed { index, workInfos ->
                         val modelId = modelIds[index]
@@ -68,10 +71,14 @@ class ModelRepositoryImpl
                         progressMap[modelId] = Triple(status, progress, errorMessage)
                     }
 
-                    val models =
+                    val downloadedModelIds = mutableSetOf<String>()
+                    val rawModels =
                         allowlist.map { entry ->
                             val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
                             val isDownloaded = fileStorage.modelExists(localPath)
+                            if (isDownloaded) {
+                                downloadedModelIds.add(entry.modelId)
+                            }
                             val (status, progress, errorMessage) =
                                 if (isDownloaded) {
                                     Triple(DownloadStatus.DOWNLOADED, 100, null)
@@ -81,21 +88,35 @@ class ModelRepositoryImpl
 
                             buildAiModel(entry, localPath, isDownloaded, status, progress, errorMessage)
                         }
+
+                    val effectiveSelectedId =
+                        savedSelectedId?.takeIf { downloadedModelIds.contains(it) }
+                            ?: downloadedModelIds.firstOrNull()
+
+                    val models =
+                        rawModels.map { model ->
+                            model.copy(
+                                isSelected =
+                                    model.downloadStatus == DownloadStatus.DOWNLOADED &&
+                                        model.id == effectiveSelectedId,
+                            )
+                        }
+
                     cachedModels = models
-                    emit(models)
-                }.collect {}
+                    models
+                }.collect { emit(it) }
             }
 
         override fun getSelectedModel(): AiModel? {
             val savedId = selectionStore.selectedModelId
             val savedModel = cachedModels.find { it.id == savedId && it.downloadStatus == DownloadStatus.DOWNLOADED }
-            if (savedModel != null) return savedModel
+            if (savedModel != null) return savedModel.copy(isSelected = true)
 
             // Fallback: auto-select the first available downloaded model
             val firstDownloaded = cachedModels.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
             if (firstDownloaded != null) {
                 selectionStore.selectedModelId = firstDownloaded.id
-                return firstDownloaded
+                return firstDownloaded.copy(isSelected = true)
             }
             return null
         }
@@ -135,6 +156,7 @@ class ModelRepositoryImpl
             status: DownloadStatus = if (isDownloaded) DownloadStatus.DOWNLOADED else DownloadStatus.NOT_DOWNLOADED,
             progress: Int = if (isDownloaded) 100 else 0,
             downloadErrorMessage: String? = null,
+            isSelected: Boolean = false,
         ): AiModel =
             AiModel(
                 id = entry.modelId,
@@ -158,6 +180,7 @@ class ModelRepositoryImpl
                 description = entry.description,
                 sha256 = entry.sha256,
                 downloadErrorMessage = downloadErrorMessage,
+                isSelected = isSelected,
             )
 
         private fun buildDownloadUrl(entry: ModelEntry): String =
