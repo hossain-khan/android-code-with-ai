@@ -9,6 +9,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
@@ -35,6 +36,8 @@ class ModelRepositoryImpl
                 emptyList()
             }
 
+        private val storageChanges = MutableStateFlow(0)
+
         override fun getAvailableModels(): Flow<List<AiModel>> =
             flow {
                 val allowlist = allowlistDataSource.loadAllowlist()
@@ -50,7 +53,8 @@ class ModelRepositoryImpl
                 combine(
                     combine(progressFlows) { it.toList() },
                     selectionStore.selectedModelIdFlow,
-                ) { workInfoLists, savedSelectedId ->
+                    storageChanges,
+                ) { workInfoLists, savedSelectedId, _ ->
                     val progressMap = mutableMapOf<String, Triple<DownloadStatus, Int, String?>>()
                     workInfoLists.forEachIndexed { index, workInfos ->
                         val modelId = modelIds[index]
@@ -147,6 +151,7 @@ class ModelRepositoryImpl
             if (selectionStore.selectedModelId == model.id) {
                 selectionStore.selectedModelId = null
             }
+            storageChanges.value++
         }
 
         private fun buildAiModel(

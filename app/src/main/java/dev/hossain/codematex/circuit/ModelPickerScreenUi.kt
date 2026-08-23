@@ -26,12 +26,15 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
@@ -40,13 +43,16 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -210,6 +216,9 @@ private fun ModelPickerLayout(
                                 state.eventSink(ModelPickerScreen.Event.Select(model))
                             }
                         },
+                        onDelete = {
+                            state.eventSink(ModelPickerScreen.Event.Delete(model))
+                        },
                     )
                 }
             }
@@ -286,8 +295,60 @@ private fun ModelCard(
     onDownload: () -> Unit,
     onCancel: () -> Unit,
     onSelect: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text(
+                    text = "Delete ${model.displayName}?",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            },
+            text = {
+                val formattedSize = sizeFormatter.format(model.sizeBytes / 1_000_000)
+                Text(
+                    text =
+                        "Are you sure you want to delete this model? " +
+                            "This will permanently remove the model file from your device and free up $formattedSize MB of storage space.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        onDelete()
+                    },
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteConfirmation = false },
+                ) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -551,15 +612,44 @@ private fun ModelCard(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Cancel Download")
                     }
-                } else if (model.isSelected) {
-                    FilledTonalButton(
-                        onClick = onSelect,
-                        enabled = false,
-                        modifier = Modifier.fillMaxWidth(),
+                } else if (model.downloadStatus == DownloadStatus.DOWNLOADED) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (model.isSelected) {
+                            FilledTonalButton(
+                                onClick = onSelect,
+                                enabled = false,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Active Model")
+                            }
+                        } else {
+                            Button(
+                                onClick = onSelect,
+                                enabled = isCompatible,
+                                modifier = Modifier.fillMaxWidth(),
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Select Model")
+                            }
+                        }
+                    }
+
+                    OutlinedIconButton(
+                        onClick = { showDeleteConfirmation = true },
+                        colors =
+                            IconButtonDefaults.outlinedIconButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error,
+                            ),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Active Model")
+                        Icon(
+                            imageVector = Icons.Default.DeleteOutline,
+                            contentDescription = "Delete ${model.displayName}",
+                            tint = MaterialTheme.colorScheme.error,
+                        )
                     }
                 } else {
                     Button(
@@ -567,7 +657,6 @@ private fun ModelCard(
                             when {
                                 isCompatible && model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> onDownload()
                                 isCompatible && model.downloadStatus == DownloadStatus.FAILED -> onDownload()
-                                isCompatible && model.downloadStatus == DownloadStatus.DOWNLOADED -> onSelect()
                             }
                         },
                         enabled = isCompatible,
@@ -575,7 +664,6 @@ private fun ModelCard(
                     ) {
                         val icon =
                             when {
-                                model.downloadStatus == DownloadStatus.DOWNLOADED -> Icons.Default.PlayArrow
                                 model.downloadStatus == DownloadStatus.FAILED -> Icons.Default.CloudDownload
                                 else -> Icons.Default.CloudDownload
                             }
@@ -585,7 +673,6 @@ private fun ModelCard(
                             when {
                                 !isCompatible -> "Insufficient RAM"
                                 model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download Model"
-                                model.downloadStatus == DownloadStatus.DOWNLOADED -> "Select Model"
                                 model.downloadStatus == DownloadStatus.FAILED -> "Retry Download"
                                 else -> "Download Model"
                             },
