@@ -105,14 +105,6 @@ app/src/main/java/dev/hossain/codematex/
 
 ---
 
-## 🔒 Security & CI/CD Verification
-
-GitHub Actions automates continuous verification on every PR and tag:
-- **Continuous Integration ([`android.yml`](.github/workflows/android.yml))**: Automated Kotlin formatting checks (`kotlinter`), Android Lint, JVM unit tests, and Kover coverage thresholds.
-- **Production Releases ([`android-release.yml`](.github/workflows/android-release.yml))**: Automated production keystore signing with cryptographic `apksigner` SHA-256 certificate fingerprint verification before attaching binaries to GitHub Releases.
-
----
-
 ## 📄 License
 
 CodeMateX is open source software licensed under the [MIT License](LICENSE).
