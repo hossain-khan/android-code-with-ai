@@ -15,6 +15,7 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
     var initializeResult: Result<List<ChatMessage>> = Result.success(emptyList())
     var messageEvents: List<ChatInferenceEvent> = emptyList()
     var activeBackendValue: LlmEngine.Backend? = null
+    var shouldThrow: Exception? = null
 
     var initializeCalls = mutableListOf<InitializeCall>()
     var stopCalls = 0
@@ -57,6 +58,7 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
 
     override suspend fun sendMessage(input: String): Flow<ChatInferenceEvent> {
         sendMessageInputs += input
+        shouldThrow?.let { throw it }
         return flow { messageEvents.forEach { emit(it) } }
     }
 }
