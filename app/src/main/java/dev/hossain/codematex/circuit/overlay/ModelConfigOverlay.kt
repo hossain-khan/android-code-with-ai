@@ -20,6 +20,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.slack.circuitx.overlays.BottomSheetOverlay
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlinx.serialization.Serializable
 
 data class ModelConfig(
@@ -127,5 +129,25 @@ private fun ConfigSlider(
             onValueChange = onValueChange,
             valueRange = min..max,
         )
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+@ThemePreviews
+@Composable
+private fun ModelConfigContentPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        androidx.compose.material3.Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            ModelConfigContent(
+                initialConfig = ModelConfig(),
+                onDismiss = {},
+                onSave = {},
+            )
+        }
     }
 }

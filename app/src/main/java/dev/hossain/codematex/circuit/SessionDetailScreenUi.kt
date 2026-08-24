@@ -69,6 +69,9 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
@@ -587,6 +590,109 @@ private fun SessionMessageMarkdown(
             modifier = modifier,
         ) {
             Markdown(content = content)
+        }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+private val sampleSession =
+    ChatSession(
+        id = "101",
+        title = "Room Database Migrations in Android",
+        summary = "How to write safe AutoMigration and manual Migration specs with Room.",
+        topic = dev.hossain.codematex.data.model.CodingTopic.ANDROID,
+        messageCount = 4,
+        lastActiveAt = 0L,
+        modelUsed = "gemma-4-E2B-it-litert-lm",
+    )
+
+private val sampleDetailMessages =
+    listOf(
+        ChatMessage.User(
+            content = "How do I add a new column to a Room entity with migration?",
+        ),
+        ChatMessage.Agent(
+            content =
+                "You can write an `AutoMigration` if adding a nullable or default-valued column:\n\n" +
+                    "```kotlin\n" +
+                    "@Database(\n" +
+                    "    version = 2,\n" +
+                    "    entities = [User::class],\n" +
+                    "    autoMigrations = [\n" +
+                    "        AutoMigration(from = 1, to = 2)\n" +
+                    "    ]\n" +
+                    ")\n" +
+                    "abstract class AppDatabase : RoomDatabase()\n" +
+                    "```",
+        ),
+        ChatMessage.System(
+            info = "Session restored from local database",
+        ),
+    )
+
+@DevicePreviews
+@Composable
+private fun SessionDetailScreenPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        SessionDetailLayout(
+            state =
+                SessionDetailScreen.State.Success(
+                    session = sampleSession,
+                    messages = sampleDetailMessages,
+                    eventSink = {},
+                ),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SessionInfoCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        SessionInfoCard(
+            session = sampleSession,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SessionMessageBubblePreview() {
+    val accent = sampleSession.topic.visualInfo.accentColor
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SessionMessageBubble(
+                message = sampleDetailMessages[0],
+                visualAccent = accent,
+            )
+            SessionMessageBubble(
+                message = sampleDetailMessages[1],
+                visualAccent = accent,
+            )
+            SessionMessageBubble(
+                message = sampleDetailMessages[2],
+                visualAccent = accent,
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EmptyDetailMessagesViewPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            EmptyDetailMessagesView(
+                visualInfo = sampleSession.topic.visualInfo,
+                modifier = Modifier.padding(16.dp),
+            )
         }
     }
 }
