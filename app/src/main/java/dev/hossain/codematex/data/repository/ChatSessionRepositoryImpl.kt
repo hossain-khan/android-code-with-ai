@@ -40,7 +40,7 @@ class ChatSessionRepositoryImpl
             messages: List<ChatMessage>,
             sessionId: String?,
             modelUsed: String?,
-        ) {
+        ): String {
             val effectiveSessionId = sessionId ?: System.currentTimeMillis().toString()
             val title =
                 messages
@@ -73,6 +73,8 @@ class ChatSessionRepositoryImpl
                     msg.toMessageEntity(effectiveSessionId, index)
                 },
             )
+
+            return effectiveSessionId
         }
 
         override suspend fun deleteSession(sessionId: String) {

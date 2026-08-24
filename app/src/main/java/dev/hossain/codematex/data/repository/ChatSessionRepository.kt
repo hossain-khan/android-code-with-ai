@@ -17,7 +17,7 @@ interface ChatSessionRepository {
         messages: List<ChatMessage>,
         sessionId: String? = null,
         modelUsed: String? = null,
-    )
+    ): String
 
     suspend fun deleteSession(sessionId: String)
 }

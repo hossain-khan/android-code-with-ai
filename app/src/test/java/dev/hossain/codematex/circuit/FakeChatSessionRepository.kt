@@ -29,8 +29,10 @@ class FakeChatSessionRepository(
         messages: List<ChatMessage>,
         sessionId: String?,
         modelUsed: String?,
-    ) {
+    ): String {
+        val effectiveSessionId = sessionId ?: "generated-session-id"
         savedSessions.add(Triple(topic, messages, sessionId))
+        return effectiveSessionId
     }
 
     override suspend fun deleteSession(sessionId: String) {

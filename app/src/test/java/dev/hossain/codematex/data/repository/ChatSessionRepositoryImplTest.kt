@@ -287,6 +287,34 @@ class ChatSessionRepositoryImplTest {
         }
 
     @Test
+    fun `given existing session id - save session returns same id`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            val returnedId =
+                repository.saveSession(
+                    CodingTopic.KOTLIN,
+                    listOf(ChatMessage.User("Hi")),
+                    sessionId = "existing-session",
+                )
+
+            assertEquals("existing-session", returnedId)
+        }
+
+    @Test
+    fun `given no session id - save session returns generated id`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            val returnedId = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
+
+            assertEquals(dao.upsertedSessions.single().id, returnedId)
+            assertTrue(returnedId.isNotBlank())
+        }
+
+    @Test
     fun `given model used - save session persists model name`() =
         runTest {
             val dao = FakeSessionDao()

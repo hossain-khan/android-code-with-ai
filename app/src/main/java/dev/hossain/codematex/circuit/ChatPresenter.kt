@@ -40,6 +40,7 @@ class ChatPresenter(
     @Composable
     override fun present(): ChatScreen.State {
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
+        var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
@@ -168,12 +169,13 @@ class ChatPresenter(
                                             throughputInfo = throughputTracker.finalize()
                                             isGenerating = false
                                             Timber.d("ChatPresenter: Saving session message history...")
-                                            sessionRepository.saveSession(
-                                                topic = screen.topic,
-                                                messages = messages,
-                                                sessionId = screen.sessionId,
-                                                modelUsed = modelName,
-                                            )
+                                            currentSessionId =
+                                                sessionRepository.saveSession(
+                                                    topic = screen.topic,
+                                                    messages = messages,
+                                                    sessionId = currentSessionId,
+                                                    modelUsed = modelName,
+                                                )
                                         }
                                     }
                                 }
