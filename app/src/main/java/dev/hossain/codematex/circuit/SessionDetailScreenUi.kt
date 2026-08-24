@@ -1,6 +1,10 @@
 package dev.hossain.codematex.circuit
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +19,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -29,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -37,18 +48,29 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
+import com.halilibo.richtext.commonmark.Markdown
+import com.halilibo.richtext.ui.CodeBlockStyle
+import com.halilibo.richtext.ui.RichTextStyle
+import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.visualInfo
+import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -175,23 +197,17 @@ private fun SessionDetailLayout(
                     )
 
                     if (state.messages.isEmpty()) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                "No messages in this session.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
+                        EmptyDetailMessagesView(visualInfo = visualInfo, modifier = Modifier.fillMaxSize())
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(state.messages) { message ->
-                                SessionMessageBubble(message)
+                                SessionMessageBubble(
+                                    message = message,
+                                    visualAccent = visualInfo.accentColor,
+                                )
                             }
                         }
                     }
@@ -218,12 +234,20 @@ private fun SessionDetailLayout(
                     LazyColumn(
                         modifier = Modifier.weight(1f),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(state.messages) { message ->
-                            SessionMessageBubble(message)
+                            SessionMessageBubble(
+                                message = message,
+                                visualAccent = visualInfo.accentColor,
+                            )
                         }
                     }
+                } else {
+                    EmptyDetailMessagesView(
+                        visualInfo = visualInfo,
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                    )
                 }
 
                 Column(
@@ -252,6 +276,52 @@ private fun SessionDetailLayout(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun EmptyDetailMessagesView(
+    visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier.padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = visualInfo.accentColor.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                modifier = Modifier.size(64.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Forum,
+                        contentDescription = null,
+                        tint = visualInfo.accentColor,
+                        modifier = Modifier.size(32.dp),
+                    )
+                }
+            }
+
+            Text(
+                text = "No Messages Recorded",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Text(
+                text = "This session does not contain any transcript messages.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }
@@ -318,7 +388,7 @@ private fun SessionInfoCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    "Model: ${session.modelUsed}",
+                    "Model: ${formatShortModelName(session.modelUsed)}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.outline,
                 )
@@ -333,54 +403,190 @@ private fun SessionInfoCard(
 }
 
 @Composable
-private fun SessionMessageBubble(message: ChatMessage) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        tonalElevation =
-            when (message) {
-                is ChatMessage.User -> 0.dp
-                is ChatMessage.Agent -> 1.dp
-                is ChatMessage.Error -> 0.dp
-                is ChatMessage.System -> 0.dp
-            },
-        shape = MaterialTheme.shapes.medium,
-        color =
-            when (message) {
-                is ChatMessage.User -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                else -> MaterialTheme.colorScheme.surfaceContainerLow
-            },
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text(
-                text =
-                    when (message) {
-                        is ChatMessage.User -> "You"
-                        is ChatMessage.Agent -> "AI Tutor"
-                        is ChatMessage.Error -> "Error"
-                        is ChatMessage.System -> "System"
-                    },
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.Bold,
-                color =
-                    when (message) {
-                        is ChatMessage.User -> MaterialTheme.colorScheme.primary
-                        is ChatMessage.Agent -> MaterialTheme.colorScheme.secondary
-                        is ChatMessage.Error -> MaterialTheme.colorScheme.error
-                        is ChatMessage.System -> MaterialTheme.colorScheme.onSurfaceVariant
-                    },
+private fun SessionMessageBubble(
+    message: ChatMessage,
+    visualAccent: androidx.compose.ui.graphics.Color,
+) {
+    val context = LocalContext.current
+
+    when (message) {
+        is ChatMessage.User -> {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.padding(start = 48.dp),
+                ) {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
+            }
+        }
+
+        is ChatMessage.Agent -> {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
+                    shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                        ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(
+                                    Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = visualAccent,
+                                    modifier = Modifier.size(14.dp),
+                                )
+                                Text(
+                                    text = "CodeMateX",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = visualAccent,
+                                )
+                            }
+
+                            IconButton(
+                                modifier = Modifier.size(24.dp),
+                                onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("Chat message", message.content))
+                                },
+                            ) {
+                                Icon(
+                                    Icons.Default.ContentCopy,
+                                    contentDescription = "Copy message",
+                                    modifier = Modifier.size(14.dp),
+                                    tint = MaterialTheme.colorScheme.outline,
+                                )
+                            }
+                        }
+
+                        SessionMessageMarkdown(
+                            content = message.content.ifEmpty { "..." },
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        is ChatMessage.Error -> {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = message.message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+            }
+        }
+
+        is ChatMessage.System -> {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                ) {
+                    Text(
+                        text = message.info,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionMessageMarkdown(
+    content: String,
+    modifier: Modifier = Modifier,
+) {
+    val currentTheme = MaterialTheme.colorScheme
+    val chatMarkdownStyle =
+        remember(currentTheme) {
+            RichTextStyle(
+                paragraphSpacing = 6.sp,
+                headingStyle = { level: Int, defaultStyle: TextStyle ->
+                    when (level) {
+                        0 -> defaultStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        1 -> defaultStyle.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        2 -> defaultStyle.copy(fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
+                        else -> defaultStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                },
+                codeBlockStyle =
+                    CodeBlockStyle(
+                        textStyle =
+                            TextStyle(
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.5.sp,
+                                lineHeight = 16.sp,
+                            ),
+                        modifier =
+                            Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(currentTheme.surfaceContainerLowest)
+                                .padding(8.dp),
+                    ),
             )
-            Text(
-                text =
-                    when (message) {
-                        is ChatMessage.User -> message.content
-                        is ChatMessage.Agent -> message.content
-                        is ChatMessage.Error -> message.message
-                        is ChatMessage.System -> message.info
-                    },
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+        }
+
+    ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp)) {
+        RichText(
+            style = chatMarkdownStyle,
+            modifier = modifier,
+        ) {
+            Markdown(content = content)
         }
     }
 }
