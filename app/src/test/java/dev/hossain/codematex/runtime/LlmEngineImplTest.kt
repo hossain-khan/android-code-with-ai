@@ -31,7 +31,7 @@ class LlmEngineImplTest {
     fun `initialize skips loading for dev null model path`() =
         runEngineTest {
             engine.initialize(
-                modelPath = "/dev/null",
+                modelPath = DEV_STUB_MODEL_PATH,
                 backend = LlmEngine.Backend.GPU,
             )
 

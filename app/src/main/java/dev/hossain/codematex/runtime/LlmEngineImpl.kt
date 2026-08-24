@@ -17,6 +17,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 /**
+ * Sentinel path used in dev mode to skip loading the real LiteRT-LM engine.
+ */
+internal const val DEV_STUB_MODEL_PATH = "/dev/null"
+
+/**
  * Implementation of [LlmEngine] that orchestrates on-device LLM inference using Google's LiteRT-LM.
  *
  * LiteRT (formerly TensorFlow Lite) is optimized for edge AI workloads.
@@ -64,7 +69,7 @@ class LlmEngineImpl(
         systemInstruction: String?,
         config: ModelConfig,
     ) = engineMutex.withLock {
-        if (modelPath == "/dev/null") {
+        if (modelPath == DEV_STUB_MODEL_PATH) {
             Timber.w("LlmEngineImpl: Stub model detected - skipping LiteRT-LM initialization")
             return@withLock
         }

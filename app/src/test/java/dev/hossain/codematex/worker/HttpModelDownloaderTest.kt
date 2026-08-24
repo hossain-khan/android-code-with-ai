@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
+import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -39,6 +40,8 @@ class HttpModelDownloaderTest {
 
     private fun serverUrl(path: String = "/model.bin"): String = "http://localhost:$port$path"
 
+    private fun createDownloader(): HttpModelDownloader = HttpModelDownloader(OkHttpClient())
+
     @Test
     fun `given server returns file - download writes file to output path`() =
         runTest {
@@ -46,7 +49,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -74,7 +77,7 @@ class HttpModelDownloaderTest {
             tmpFile.parentFile?.mkdirs()
             tmpFile.writeBytes(partialContent)
 
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -108,7 +111,7 @@ class HttpModelDownloaderTest {
             tmpFile.parentFile?.mkdirs()
             tmpFile.writeBytes(stalePartialContent)
 
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -134,7 +137,7 @@ class HttpModelDownloaderTest {
             }
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -155,7 +158,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
             val cancelled = AtomicBoolean(false)
 
             try {
@@ -182,7 +185,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
             val progressReports = mutableListOf<Int>()
 
             downloader.download(
@@ -207,7 +210,7 @@ class HttpModelDownloaderTest {
             server.createContext("/good-fallback.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -236,7 +239,7 @@ class HttpModelDownloaderTest {
             }
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -253,7 +256,7 @@ class HttpModelDownloaderTest {
     fun `given empty urls list - download returns failure`() =
         runTest {
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -280,7 +283,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -306,7 +309,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -338,7 +341,7 @@ class HttpModelDownloaderTest {
             server.createContext("/fallback.bin", ModelFileHandler(goodContent))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
 
             val result =
                 downloader.download(
@@ -363,7 +366,7 @@ class HttpModelDownloaderTest {
             server.createContext("/model.bin", ModelFileHandler(content))
 
             val outputPath = File(outputDir, "model.bin").absolutePath
-            val downloader = HttpModelDownloader()
+            val downloader = createDownloader()
             // Simulate only 1,000 bytes available when 10,000 bytes are required
             downloader.spaceChecker = { 1_000L }
 
