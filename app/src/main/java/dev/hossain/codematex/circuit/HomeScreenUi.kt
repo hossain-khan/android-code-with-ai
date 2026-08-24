@@ -80,6 +80,9 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 import java.util.Locale
@@ -906,6 +909,100 @@ private fun NotificationPermissionHandler() {
                     Text("Not Now")
                 }
             },
+        )
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+@DevicePreviews
+@Composable
+private fun HomeScreenPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        HomeLayout(
+            state =
+                HomeScreen.State.Success(
+                    recentSessions =
+                        listOf(
+                            ChatSession(
+                                id = "1",
+                                title = "Kotlin Coroutines & Flow",
+                                summary = "Explaining stateIn vs shareIn operators with practical examples.",
+                                topic = CodingTopic.KOTLIN,
+                                messageCount = 6,
+                                lastActiveAt = 0L,
+                                modelUsed = "Gemma 4-E2B IT",
+                            ),
+                            ChatSession(
+                                id = "2",
+                                title = "Jetpack Compose Performance",
+                                summary = "Stability and smart recomposition debugging techniques.",
+                                topic = CodingTopic.ANDROID,
+                                messageCount = 4,
+                                lastActiveAt = 0L,
+                                modelUsed = "Gemma 4-E2B IT",
+                            ),
+                        ),
+                    topics = CodingTopic.entries,
+                    hasDownloadedModel = true,
+                    eventSink = {},
+                ),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun HeroBannerPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        HeroBanner(
+            hasDownloadedModel = true,
+            onManageModels = {},
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun TopicCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TopicCard(
+                topic = CodingTopic.KOTLIN,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+            TopicCard(
+                topic = CodingTopic.ANDROID,
+                onClick = {},
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SessionCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        SessionCard(
+            session =
+                ChatSession(
+                    id = "1",
+                    title = "Kotlin Coroutines & Flow",
+                    summary = "Explaining stateIn vs shareIn operators with practical examples.",
+                    topic = CodingTopic.KOTLIN,
+                    messageCount = 6,
+                    lastActiveAt = 0L,
+                    modelUsed = "Gemma 4-E2B IT",
+                ),
+            onClick = {},
         )
     }
 }

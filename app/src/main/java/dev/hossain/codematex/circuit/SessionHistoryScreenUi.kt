@@ -52,7 +52,11 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatSession
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
@@ -392,5 +396,83 @@ private fun SessionCard(
                 )
             }
         }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+private val sampleHistorySessions =
+    listOf(
+        ChatSession(
+            id = "1",
+            title = "Kotlin Flow Lifecycle in Compose",
+            summary = "collectAsStateWithLifecycle best practices on Android.",
+            topic = CodingTopic.KOTLIN,
+            messageCount = 8,
+            lastActiveAt = 0L,
+            modelUsed = "Gemma 4-E2B IT",
+        ),
+        ChatSession(
+            id = "2",
+            title = "Python Asyncio Event Loop",
+            summary = "Understanding asyncio tasks and gather concurrency.",
+            topic = CodingTopic.PYTHON,
+            messageCount = 5,
+            lastActiveAt = 0L,
+            modelUsed = "Gemma 4-E2B IT",
+        ),
+        ChatSession(
+            id = "3",
+            title = "Rust Ownership & Borrow Checker",
+            summary = "Deep dive into mutable references and lifetimes.",
+            topic = CodingTopic.RUST,
+            messageCount = 12,
+            lastActiveAt = 0L,
+            modelUsed = "Gemma 4-E2B IT",
+        ),
+    )
+
+@DevicePreviews
+@Composable
+private fun SessionHistoryScreenPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        SessionHistoryLayout(
+            state =
+                SessionHistoryScreen.State.Success(
+                    allSessions = sampleHistorySessions,
+                    sessions = sampleHistorySessions,
+                    selectedTopic = null,
+                    availableTopics = listOf(CodingTopic.KOTLIN, CodingTopic.PYTHON, CodingTopic.RUST),
+                    eventSink = {},
+                ),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EmptySessionsViewPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            EmptySessionsView(
+                selectedTopic = CodingTopic.KOTLIN,
+                onClearFilter = {},
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SessionHistoryCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        SessionCard(
+            session = sampleHistorySessions.first(),
+            onClick = {},
+            onDelete = {},
+        )
     }
 }

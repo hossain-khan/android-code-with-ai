@@ -42,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.ThemePreviews
 
 /**
  * Material 3 Modal Bottom Sheet displaying rich app architecture, privacy commitments, and legal links.
@@ -291,6 +293,38 @@ private fun LinkCard(
                 contentDescription = "Open Link",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(14.dp),
+            )
+        }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+@ThemePreviews
+@Composable
+private fun AppInfoBottomSheetPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+            AppInfoSheetContent(
+                onDismiss = {},
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun AppInfoLinkItemPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            LinkCard(
+                title = "GitHub Repository",
+                icon = Icons.Default.Code,
+                url = "https://github.com",
+                onClick = {},
+                modifier = Modifier.padding(16.dp),
             )
         }
     }

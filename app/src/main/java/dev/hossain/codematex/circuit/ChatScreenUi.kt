@@ -99,6 +99,9 @@ import dev.hossain.codematex.circuit.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
@@ -1337,6 +1340,98 @@ private fun ModelTechnicalInfoPanel(
                     )
                 }
             }
+        }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+// ==========================================
+// Previews
+// ==========================================
+
+private val sampleActiveChatState =
+    ChatScreen.State.Active(
+        topic = dev.hossain.codematex.data.model.CodingTopic.KOTLIN,
+        modelName = "gemma-4-E2B-it-litert-lm",
+        activeBackend = "GPU",
+        modelSize = "2,588 MB",
+        modelMemory = "Requires 4GB RAM",
+        configInfo = "Temp: 0.7 • Top-K: 40 • Top-P: 1.0",
+        throughputInfo = "TTFT: 480ms • Speed: 14.2 t/s",
+        systemStatsInfo = null,
+        persona = TutorPersona.SENIOR_ENGINEER,
+        isPreparing = false,
+        isGenerating = false,
+        messages =
+            listOf(
+                ChatMessage.User(
+                    content = "How do I launch a coroutine safely in a ViewModel?",
+                ),
+                ChatMessage.Agent(
+                    content =
+                        "In Android development, use `viewModelScope.launch` which is bound to the ViewModel's lifecycle:\n\n" +
+                            "```kotlin\n" +
+                            "class MyViewModel : ViewModel() {\n" +
+                            "    fun loadData() {\n" +
+                            "        viewModelScope.launch {\n" +
+                            "            val result = repository.fetchData()\n" +
+                            "            _state.value = result\n" +
+                            "        }\n" +
+                            "    }\n" +
+                            "}\n" +
+                            "```\n" +
+                            "This coroutine is automatically cancelled when the ViewModel is cleared.",
+                ),
+            ),
+        eventSink = {},
+    )
+
+@DevicePreviews
+@Composable
+private fun ChatScreenActivePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        ChatLayout(state = sampleActiveChatState)
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EmptyChatTopicStartersPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            EmptyChatTopicStarters(
+                visualInfo = dev.hossain.codematex.data.model.CodingTopic.KOTLIN.visualInfo,
+                onPromptSelected = {},
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ModelTechnicalInfoPanelPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            ModelTechnicalInfoPanel(state = sampleActiveChatState)
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChatInputFieldPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            ChatInputField(
+                state = sampleActiveChatState,
+                inputText = "Tell me about Compose State",
+                onInputTextChanged = {},
+                onSendMessage = {},
+            )
         }
     }
 }

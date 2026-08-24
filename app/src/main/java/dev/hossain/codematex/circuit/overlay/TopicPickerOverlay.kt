@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.slack.circuitx.overlays.BottomSheetOverlay
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -71,6 +73,25 @@ private fun TopicPickerContent(
                     label = { Text(topic.displayName) },
                 )
             }
+        }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+@ThemePreviews
+@Composable
+private fun TopicPickerContentPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        androidx.compose.material3.Surface(
+            color = MaterialTheme.colorScheme.surfaceContainerLow,
+        ) {
+            TopicPickerContent(
+                initialTopic = CodingTopic.KOTLIN,
+                onTopicSelected = {},
+            )
         }
     }
 }

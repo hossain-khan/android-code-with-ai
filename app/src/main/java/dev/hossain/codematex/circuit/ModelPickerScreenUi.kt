@@ -78,6 +78,9 @@ import dev.hossain.codematex.circuit.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.DeviceMemory
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
@@ -705,6 +708,117 @@ private fun DownloadSettingsCard(
             Switch(
                 checked = downloadOverWifiOnly,
                 onCheckedChange = onToggleWifiOnly,
+            )
+        }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+
+private val sampleModels =
+    listOf(
+        AiModel(
+            id = "gemma-4-E2B-it-litert-lm",
+            name = "gemma-4-E2B-it-litert-lm",
+            displayName = "Gemma 4-E2B IT",
+            description = "Instruction-tuned on-device coding model with superior reasoning.",
+            sizeBytes = 2_588_000_000L,
+            localPath = "/data/data/models/gemma-4-E2B.bin",
+            preferredBackend = dev.hossain.codematex.runtime.LlmEngine.Backend.GPU,
+            minDeviceMemoryInGb = 4,
+            downloadUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
+            modelRepoUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
+            license = "Gemma Terms of Use",
+            publisher = "Google",
+            downloadStatus = DownloadStatus.DOWNLOADED,
+            isSelected = true,
+        ),
+        AiModel(
+            id = "qwen-2.5-coder-1.5b",
+            name = "qwen-2.5-coder-1.5b",
+            displayName = "Qwen 2.5 Coder 1.5B",
+            description = "Compact multilingual code completion and debugging assistant.",
+            sizeBytes = 1_850_000_000L,
+            localPath = null,
+            preferredBackend = dev.hossain.codematex.runtime.LlmEngine.Backend.CPU,
+            minDeviceMemoryInGb = 3,
+            downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",
+            modelRepoUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",
+            license = "Apache 2.0",
+            publisher = "Alibaba",
+            downloadStatus = DownloadStatus.NOT_DOWNLOADED,
+            isSelected = false,
+        ),
+    )
+
+@DevicePreviews
+@Composable
+private fun ModelPickerScreenPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        ModelPickerLayout(
+            state =
+                ModelPickerScreen.State.Success(
+                    models = sampleModels,
+                    downloadOverWifiOnly = true,
+                    eventSink = {},
+                ),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun DeviceMemoryBannerPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        DeviceMemoryBanner(
+            deviceRamGb = 12,
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun DownloadSettingsCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        DownloadSettingsCard(
+            downloadOverWifiOnly = true,
+            onToggleWifiOnly = {},
+            modifier = Modifier.padding(16.dp),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ModelCardPreview() {
+    val formatter = DecimalFormat("#,### MB")
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            ModelCard(
+                model = sampleModels[0],
+                sizeFormatter = formatter,
+                isCompatible = true,
+                deviceRamGb = 12,
+                onDownload = {},
+                onCancel = {},
+                onSelect = {},
+                onDelete = {},
+            )
+            ModelCard(
+                model = sampleModels[1],
+                sizeFormatter = formatter,
+                isCompatible = true,
+                deviceRamGb = 12,
+                onDownload = {},
+                onCancel = {},
+                onSelect = {},
+                onDelete = {},
             )
         }
     }
