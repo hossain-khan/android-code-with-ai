@@ -9,6 +9,8 @@ import dev.hossain.codematex.data.model.ChatMessage
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import kotlin.coroutines.resume
@@ -40,6 +42,14 @@ class LlmEngineImpl(
     private var activeBackend: LlmEngine.Backend? = null
     private var activeCallback: MessageCallback? = null
 
+    /**
+     * Serializes all engine operations. LiteRT-LM does not support concurrent
+     * [sendMessageAsync] calls on the same [com.google.ai.edge.litertlm.Conversation];
+     * this mutex prevents interleaving initialization, inference, reset, and history
+     * restoration from multiple coroutines.
+     */
+    private val engineMutex = Mutex()
+
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
     /**
@@ -53,10 +63,10 @@ class LlmEngineImpl(
         backend: LlmEngine.Backend,
         systemInstruction: String?,
         config: ModelConfig,
-    ) {
+    ) = engineMutex.withLock {
         if (modelPath == "/dev/null") {
             Timber.w("LlmEngineImpl: Stub model detected - skipping LiteRT-LM initialization")
-            return
+            return@withLock
         }
 
         // If the model is already loaded in memory, reuse the compiled engine and only reset the conversation.
@@ -65,8 +75,8 @@ class LlmEngineImpl(
             Timber.d("LlmEngineImpl: Reusing already loaded in-memory engine for modelPath=$modelPath")
             currentSystemInstruction = systemInstruction
             currentConfig = config
-            resetConversation(systemInstruction, config)
-            return
+            resetConversationLocked(systemInstruction, config)
+            return@withLock
         }
 
         cleanup()
@@ -90,7 +100,7 @@ class LlmEngineImpl(
     override suspend fun runInference(
         input: String,
         onToken: (partialResult: String, done: Boolean) -> Unit,
-    ) {
+    ) = engineMutex.withLock {
         if (engine == null) {
             throw IllegalStateException("LLM engine is not initialized. Please wait for model initialization to complete.")
         }
@@ -187,7 +197,18 @@ class LlmEngineImpl(
         conversation?.cancelProcess()
     }
 
-    override fun resetConversation(
+    override suspend fun resetConversation(
+        systemInstruction: String?,
+        config: ModelConfig,
+    ) = engineMutex.withLock {
+        resetConversationLocked(systemInstruction, config)
+    }
+
+    /**
+     * Internal version of [resetConversation] that must be called while already
+     * holding [engineMutex]. Used by [initialize] when reusing an in-memory engine.
+     */
+    private fun resetConversationLocked(
         systemInstruction: String?,
         config: ModelConfig,
     ) {
@@ -217,28 +238,29 @@ class LlmEngineImpl(
         conversation = engine?.createConversation(conversationConfig)
     }
 
-    override suspend fun restoreHistory(messages: List<ChatMessage>) {
-        if (engine == null) return
+    override suspend fun restoreHistory(messages: List<ChatMessage>) =
+        engineMutex.withLock {
+            if (engine == null) return@withLock
 
-        val priorMessages = messages.filterIsInstance<ChatMessage.User>() + messages.filterIsInstance<ChatMessage.Agent>()
-        if (priorMessages.isEmpty()) return
+            val priorMessages = messages.filterIsInstance<ChatMessage.User>() + messages.filterIsInstance<ChatMessage.Agent>()
+            if (priorMessages.isEmpty()) return@withLock
 
-        try {
-            executeRestoreHistory(priorMessages)
-        } catch (e: Exception) {
-            val failedBackend = activeBackend
-            if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
-                Timber.w(
-                    e,
-                    "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",
-                )
-                recreateSessionWithCpu()
+            try {
                 executeRestoreHistory(priorMessages)
-            } else {
-                Timber.w(e, "LlmEngineImpl: Failed to restore history")
+            } catch (e: Exception) {
+                val failedBackend = activeBackend
+                if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+                    Timber.w(
+                        e,
+                        "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",
+                    )
+                    recreateSessionWithCpu()
+                    executeRestoreHistory(priorMessages)
+                } else {
+                    Timber.w(e, "LlmEngineImpl: Failed to restore history")
+                }
             }
         }
-    }
 
     private suspend fun executeRestoreHistory(priorMessages: List<ChatMessage>) {
         val conv = conversation ?: return

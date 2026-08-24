@@ -17,6 +17,7 @@ interface DatabaseGraph {
     ): SessionDatabase =
         Room
             .databaseBuilder(context, SessionDatabase::class.java, "sessions.db")
+            .addMigrations(SessionDatabase.MIGRATION_1_2)
             .build()
 
     @Provides

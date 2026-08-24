@@ -45,7 +45,7 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         stopCalls++
     }
 
-    override fun resetConversation(
+    override suspend fun resetConversation(
         topic: CodingTopic,
         persona: TutorPersona,
     ) {

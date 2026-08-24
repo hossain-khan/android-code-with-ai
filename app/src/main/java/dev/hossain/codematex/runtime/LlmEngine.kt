@@ -18,7 +18,7 @@ interface LlmEngine {
 
     fun stop()
 
-    fun resetConversation(
+    suspend fun resetConversation(
         systemInstruction: String? = null,
         config: ModelConfig = ModelConfig(),
     )

@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -33,6 +34,8 @@ data class SessionEntity(
 data class MessageEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val sessionId: String,
+    @ColumnInfo(defaultValue = "")
+    val messageId: String = "",
     val type: String,
     val content: String,
     val timestamp: Long,

@@ -43,8 +43,10 @@ class ChatSessionRepositoryImplTest {
         type: String,
         content: String = "content",
         orderIndex: Int = 0,
+        messageId: String = "msg-$orderIndex",
     ) = MessageEntity(
         sessionId = sessionId,
+        messageId = messageId,
         type = type,
         content = content,
         timestamp = 1_000L,
@@ -109,7 +111,6 @@ class ChatSessionRepositoryImplTest {
             val messages = repository.getMessages("s1")
             assertEquals(5, messages.size)
 
-            // ChatMessage ids are random UUIDs, so compare type + content instead of equality.
             val typesAndContent =
                 messages.map {
                     when (it) {
@@ -130,6 +131,9 @@ class ChatSessionRepositoryImplTest {
                 ),
                 typesAndContent,
             )
+
+            // Message IDs stored in Room should be restored exactly.
+            assertEquals(listOf("msg-0", "msg-1", "msg-2", "msg-3", "msg-4"), messages.map { it.id })
         }
 
     @Test
@@ -247,6 +251,65 @@ class ChatSessionRepositoryImplTest {
             assertEquals(listOf(0, 1, 2, 3), entities.map { it.orderIndex })
             val sessionId = dao.upsertedSessions.single().id
             assertTrue(entities.all { it.sessionId == sessionId })
+        }
+
+    @Test
+    fun `given existing session id - save session reuses id and deletes old messages`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            repository.saveSession(
+                CodingTopic.KOTLIN,
+                listOf(ChatMessage.User("First")),
+                sessionId = "existing-session",
+            )
+
+            repository.saveSession(
+                CodingTopic.KOTLIN,
+                listOf(ChatMessage.User("Updated")),
+                sessionId = "existing-session",
+            )
+
+            assertEquals(2, dao.upsertedSessions.size)
+            assertTrue(dao.upsertedSessions.all { it.id == "existing-session" })
+            assertEquals(
+                listOf(
+                    "deleteMessages:existing-session",
+                    "upsertSession",
+                    "insertMessages",
+                    "deleteMessages:existing-session",
+                    "upsertSession",
+                    "insertMessages",
+                ),
+                dao.calls,
+            )
+        }
+
+    @Test
+    fun `given model used - save session persists model name`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            repository.saveSession(
+                CodingTopic.KOTLIN,
+                listOf(ChatMessage.User("Hi")),
+                modelUsed = "gemma-4-E2B",
+            )
+
+            assertEquals("gemma-4-E2B", dao.upsertedSessions.single().modelUsed)
+        }
+
+    @Test
+    fun `given no model used - save session defaults to unknown`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
+
+            assertEquals("unknown", dao.upsertedSessions.single().modelUsed)
         }
 
     @Test

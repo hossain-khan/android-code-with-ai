@@ -40,7 +40,7 @@ class FakeLlmEngine : LlmEngine {
         stopCalls++
     }
 
-    override fun resetConversation(
+    override suspend fun resetConversation(
         systemInstruction: String?,
         config: ModelConfig,
     ) {
