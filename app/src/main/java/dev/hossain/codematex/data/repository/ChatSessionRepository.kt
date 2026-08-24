@@ -15,7 +15,9 @@ interface ChatSessionRepository {
     suspend fun saveSession(
         topic: CodingTopic,
         messages: List<ChatMessage>,
-    )
+        sessionId: String? = null,
+        modelUsed: String? = null,
+    ): String
 
     suspend fun deleteSession(sessionId: String)
 }

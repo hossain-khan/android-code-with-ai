@@ -2,6 +2,7 @@ package dev.hossain.codematex.data.local
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 
 class FakeSessionDao(
     sessions: List<SessionEntity> = emptyList(),
@@ -13,6 +14,9 @@ class FakeSessionDao(
     val insertedMessages = mutableListOf<List<MessageEntity>>()
 
     override fun getAllSessions(): Flow<List<SessionEntity>> = sessionsFlow
+
+    override fun getSessionById(sessionId: String): Flow<SessionEntity?> =
+        sessionsFlow.map { sessions -> sessions.find { it.id == sessionId } }
 
     override suspend fun getMessages(sessionId: String): List<MessageEntity> = messages.filter { it.sessionId == sessionId }
 

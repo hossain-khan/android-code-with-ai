@@ -12,7 +12,7 @@ class FakeChatSessionRepository(
     private val messages: List<ChatMessage> = emptyList(),
     private var getException: Exception? = null,
 ) : ChatSessionRepository {
-    var savedSessions = mutableListOf<Pair<CodingTopic, List<ChatMessage>>>()
+    var savedSessions = mutableListOf<Triple<CodingTopic, List<ChatMessage>, String?>>()
     var deletedSessionIds = mutableListOf<String>()
 
     override fun getAllSessions(): Flow<List<ChatSession>> {
@@ -27,8 +27,12 @@ class FakeChatSessionRepository(
     override suspend fun saveSession(
         topic: CodingTopic,
         messages: List<ChatMessage>,
-    ) {
-        savedSessions.add(topic to messages)
+        sessionId: String?,
+        modelUsed: String?,
+    ): String {
+        val effectiveSessionId = sessionId ?: "generated-session-id"
+        savedSessions.add(Triple(topic, messages, sessionId))
+        return effectiveSessionId
     }
 
     override suspend fun deleteSession(sessionId: String) {

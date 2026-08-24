@@ -70,7 +70,7 @@ interface ChatInferenceOrchestrator {
     /**
      * Resets the conversation using the system prompt for [topic] and [persona].
      */
-    fun resetConversation(
+    suspend fun resetConversation(
         topic: CodingTopic,
         persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     )
@@ -143,7 +143,7 @@ class DefaultChatInferenceOrchestrator
             llmEngine.stop()
         }
 
-        override fun resetConversation(
+        override suspend fun resetConversation(
             topic: CodingTopic,
             persona: TutorPersona,
         ) {

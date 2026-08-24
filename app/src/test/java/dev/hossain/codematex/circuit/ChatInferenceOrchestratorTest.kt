@@ -109,11 +109,12 @@ class ChatInferenceOrchestratorTest {
     }
 
     @Test
-    fun `resetConversation delegates to engine`() {
-        createOrchestrator().resetConversation(CodingTopic.PYTHON)
+    fun `resetConversation delegates to engine`() =
+        runTest {
+            createOrchestrator().resetConversation(CodingTopic.PYTHON)
 
-        assertEquals(1, fakeEngine.resetCalls)
-    }
+            assertEquals(1, fakeEngine.resetCalls)
+        }
 
     @Test(expected = kotlinx.coroutines.CancellationException::class)
     fun `initialize rethrows CancellationException when coroutine cancelled`() =

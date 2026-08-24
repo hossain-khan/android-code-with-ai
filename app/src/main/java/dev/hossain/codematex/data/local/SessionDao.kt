@@ -11,6 +11,9 @@ interface SessionDao {
     @Query("SELECT * FROM sessions ORDER BY lastActiveAt DESC")
     fun getAllSessions(): Flow<List<SessionEntity>>
 
+    @Query("SELECT * FROM sessions WHERE id = :sessionId")
+    fun getSessionById(sessionId: String): Flow<SessionEntity?>
+
     @Query("SELECT * FROM messages WHERE sessionId = :sessionId ORDER BY orderIndex")
     suspend fun getMessages(sessionId: String): List<MessageEntity>
 

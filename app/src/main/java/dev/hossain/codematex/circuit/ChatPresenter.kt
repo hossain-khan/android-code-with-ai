@@ -40,6 +40,7 @@ class ChatPresenter(
     @Composable
     override fun present(): ChatScreen.State {
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
+        var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
@@ -134,6 +135,9 @@ class ChatPresenter(
                         throughputInfo = "Prefilling..."
 
                         scope.launch {
+                            // Capture the active model at inference start so the saved session
+                            // is tagged with the model that actually generated the response.
+                            val modelName = activeModel?.name
                             try {
                                 val throughputTracker = ThroughputTracker()
                                 chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
@@ -165,7 +169,13 @@ class ChatPresenter(
                                             throughputInfo = throughputTracker.finalize()
                                             isGenerating = false
                                             Timber.d("ChatPresenter: Saving session message history...")
-                                            sessionRepository.saveSession(screen.topic, messages)
+                                            currentSessionId =
+                                                sessionRepository.saveSession(
+                                                    topic = screen.topic,
+                                                    messages = messages,
+                                                    sessionId = currentSessionId,
+                                                    modelUsed = modelName,
+                                                )
                                         }
                                     }
                                 }
@@ -189,7 +199,9 @@ class ChatPresenter(
                         messages =
                             messages +
                             ChatMessage.System("Switched tutor persona to ${event.persona.iconGlyph} ${event.persona.displayName}")
-                        chatInferenceOrchestrator.resetConversation(screen.topic, event.persona)
+                        scope.launch {
+                            chatInferenceOrchestrator.resetConversation(screen.topic, event.persona)
+                        }
                     }
                 }
 
@@ -208,7 +220,9 @@ class ChatPresenter(
                     messages = emptyList()
                     throughputInfo = null
                     systemStatsInfo = null
-                    chatInferenceOrchestrator.resetConversation(screen.topic, persona)
+                    scope.launch {
+                        chatInferenceOrchestrator.resetConversation(screen.topic, persona)
+                    }
                 }
 
                 ChatScreen.Event.Retry -> {
