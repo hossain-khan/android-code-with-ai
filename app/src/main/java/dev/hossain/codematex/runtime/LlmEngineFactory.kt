@@ -6,6 +6,7 @@ import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.ai.edge.litertlm.LiteRtLmJniException
 import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.di.ApplicationContext
@@ -41,7 +42,8 @@ interface LlmEngineFactory {
      * Previously failed backends are tracked by [BackendFallbackStrategy] and
      * skipped on future attempts.
      *
-     * @throws Exception if no backend can initialize the model.
+     * @throws LiteRtLmJniException if the preferred or fallback backend cannot be initialized.
+     * @throws Exception if a non-backend error occurs or no backend can initialize the model.
      */
     suspend fun createSession(
         modelPath: String,
@@ -115,8 +117,8 @@ class DefaultLlmEngineFactory
                                 DefaultInferenceConversation(conversation),
                                 actualBackend,
                             )
-                    } catch (e: Exception) {
-                        Timber.e(e, "LlmEngineFactory: Failed to initialize engine with backend=$actualBackend")
+                    } catch (e: LiteRtLmJniException) {
+                        Timber.w(e, "LlmEngineFactory: Backend $actualBackend not supported, attempting fallback")
                         backendFallbackStrategy.markUnsupported(actualBackend)
 
                         actualBackend =
@@ -132,6 +134,9 @@ class DefaultLlmEngineFactory
                         } catch (closeError: Exception) {
                             Timber.w(closeError, "LlmEngineFactory: Error closing failed engine")
                         }
+                    } catch (e: Exception) {
+                        Timber.e(e, "LlmEngineFactory: Non-backend error initializing engine with backend=$actualBackend")
+                        throw e
                     }
                 }
 

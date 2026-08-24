@@ -11,7 +11,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import javax.inject.Inject
 
 @SingleIn(AppScope::class)
@@ -38,78 +38,94 @@ class ModelRepositoryImpl
 
         private val storageChanges = MutableStateFlow(0)
 
-        override fun getAvailableModels(): Flow<List<AiModel>> =
-            flow {
-                val allowlist = allowlistDataSource.loadAllowlist()
-                if (allowlist.isEmpty()) {
-                    cachedModels = emptyList()
-                    emit(emptyList())
-                    return@flow
+        override fun getAvailableModels(): Flow<List<AiModel>> {
+            val allowlist = allowlistDataSource.loadAllowlist()
+            if (allowlist.isEmpty()) {
+                cachedModels = emptyList()
+                return flowOf(emptyList())
+            }
+
+            val modelIds = allowlist.map { it.modelId }
+            val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
+
+            // Cache file-existence checks because modelExists() hits disk. The cache is
+            // invalidated when storage changes (delete) or when a WorkManager job reaches a
+            // terminal state, so download completion/failure is reflected on the next emission.
+            var lastStorageVersion = -1
+            val downloadedCache = mutableMapOf<String, Boolean>()
+
+            return combine(
+                combine(progressFlows) { it.toList() },
+                selectionStore.selectedModelIdFlow,
+                storageChanges,
+            ) { workInfoLists, savedSelectedId, storageVersion ->
+                val hasTerminalWorkState =
+                    workInfoLists.any { workInfos ->
+                        workInfos.any { it.state.isFinished }
+                    }
+                if (storageVersion != lastStorageVersion || hasTerminalWorkState) {
+                    lastStorageVersion = storageVersion
+                    downloadedCache.clear()
                 }
 
-                val modelIds = allowlist.map { it.modelId }
-                val progressFlows = modelIds.map { id -> downloadTracker.getWorkInfoFlow(id) }
+                val progressMap = mutableMapOf<String, Triple<DownloadStatus, Int, String?>>()
+                workInfoLists.forEachIndexed { index, workInfos ->
+                    val modelId = modelIds[index]
+                    val latestWork = workInfos.lastOrNull()
+                    val status =
+                        when (latestWork?.state) {
+                            WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED -> DownloadStatus.DOWNLOADING
+                            WorkInfo.State.FAILED -> DownloadStatus.FAILED
+                            else -> DownloadStatus.NOT_DOWNLOADED
+                        }
+                    val progress = latestWork?.progress?.getInt(ModelDownloadWorker.KEY_PROGRESS, 0) ?: 0
+                    val errorMessage =
+                        if (status == DownloadStatus.FAILED) {
+                            latestWork?.outputData?.getString(ModelDownloadWorker.KEY_ERROR_MESSAGE)
+                        } else {
+                            null
+                        }
+                    progressMap[modelId] = Triple(status, progress, errorMessage)
+                }
 
-                combine(
-                    combine(progressFlows) { it.toList() },
-                    selectionStore.selectedModelIdFlow,
-                    storageChanges,
-                ) { workInfoLists, savedSelectedId, _ ->
-                    val progressMap = mutableMapOf<String, Triple<DownloadStatus, Int, String?>>()
-                    workInfoLists.forEachIndexed { index, workInfos ->
-                        val modelId = modelIds[index]
-                        val latestWork = workInfos.lastOrNull()
-                        val status =
-                            when (latestWork?.state) {
-                                WorkInfo.State.RUNNING, WorkInfo.State.ENQUEUED -> DownloadStatus.DOWNLOADING
-                                WorkInfo.State.FAILED -> DownloadStatus.FAILED
-                                else -> DownloadStatus.NOT_DOWNLOADED
+                val downloadedModelIds = mutableSetOf<String>()
+                val rawModels =
+                    allowlist.map { entry ->
+                        val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
+                        val isDownloaded =
+                            downloadedCache.getOrPut(entry.modelId) {
+                                fileStorage.modelExists(localPath)
                             }
-                        val progress = latestWork?.progress?.getInt(ModelDownloadWorker.KEY_PROGRESS, 0) ?: 0
-                        val errorMessage =
-                            if (status == DownloadStatus.FAILED) {
-                                latestWork?.outputData?.getString(ModelDownloadWorker.KEY_ERROR_MESSAGE)
+                        if (isDownloaded) {
+                            downloadedModelIds.add(entry.modelId)
+                        }
+                        val (status, progress, errorMessage) =
+                            if (isDownloaded) {
+                                Triple(DownloadStatus.DOWNLOADED, 100, null)
                             } else {
-                                null
+                                progressMap[entry.modelId] ?: Triple(DownloadStatus.NOT_DOWNLOADED, 0, null)
                             }
-                        progressMap[modelId] = Triple(status, progress, errorMessage)
+
+                        buildAiModel(entry, localPath, isDownloaded, status, progress, errorMessage)
                     }
 
-                    val downloadedModelIds = mutableSetOf<String>()
-                    val rawModels =
-                        allowlist.map { entry ->
-                            val localPath = fileStorage.getLocalPath(entry.modelId, entry.modelFile)
-                            val isDownloaded = fileStorage.modelExists(localPath)
-                            if (isDownloaded) {
-                                downloadedModelIds.add(entry.modelId)
-                            }
-                            val (status, progress, errorMessage) =
-                                if (isDownloaded) {
-                                    Triple(DownloadStatus.DOWNLOADED, 100, null)
-                                } else {
-                                    progressMap[entry.modelId] ?: Triple(DownloadStatus.NOT_DOWNLOADED, 0, null)
-                                }
+                val effectiveSelectedId =
+                    savedSelectedId?.takeIf { downloadedModelIds.contains(it) }
+                        ?: downloadedModelIds.firstOrNull()
 
-                            buildAiModel(entry, localPath, isDownloaded, status, progress, errorMessage)
-                        }
+                val models =
+                    rawModels.map { model ->
+                        model.copy(
+                            isSelected =
+                                model.downloadStatus == DownloadStatus.DOWNLOADED &&
+                                    model.id == effectiveSelectedId,
+                        )
+                    }
 
-                    val effectiveSelectedId =
-                        savedSelectedId?.takeIf { downloadedModelIds.contains(it) }
-                            ?: downloadedModelIds.firstOrNull()
-
-                    val models =
-                        rawModels.map { model ->
-                            model.copy(
-                                isSelected =
-                                    model.downloadStatus == DownloadStatus.DOWNLOADED &&
-                                        model.id == effectiveSelectedId,
-                            )
-                        }
-
-                    cachedModels = models
-                    models
-                }.collect { emit(it) }
+                cachedModels = models
+                models
             }
+        }
 
         override fun getSelectedModel(): AiModel? {
             val savedId = selectionStore.selectedModelId

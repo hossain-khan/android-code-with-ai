@@ -18,6 +18,10 @@ interface DatabaseGraph {
         Room
             .databaseBuilder(context, SessionDatabase::class.java, "sessions.db")
             .addMigrations(SessionDatabase.MIGRATION_1_2)
+            // Safety net for pre-release development: if a future schema change ships without a
+            // matching migration, Room drops all tables and recreates them instead of crashing
+            // on startup. Replace with proper migrations before a stable release.
+            .fallbackToDestructiveMigration(true)
             .build()
 
     @Provides

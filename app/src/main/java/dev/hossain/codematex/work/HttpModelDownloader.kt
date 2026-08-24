@@ -13,26 +13,23 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.MessageDigest
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
  * Production implementation of [ModelDownloader] that downloads model files
  * over HTTP using [OkHttpClient] with support for resuming partial
  * downloads and verifying SHA-256 digests.
+ *
+ * The [okHttpClient] is provided by the dependency graph (see
+ * [dev.hossain.codematex.data.network.NetworkingGraph]); there is no default
+ * fallback so a missing binding fails at compile time rather than silently
+ * using a differently configured client at runtime.
  */
 @ContributesBinding(AppScope::class)
 class HttpModelDownloader
     @Inject
     constructor(
-        private val okHttpClient: OkHttpClient =
-            OkHttpClient
-                .Builder()
-                .followRedirects(true)
-                .followSslRedirects(true)
-                .connectTimeout(60, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
-                .build(),
+        private val okHttpClient: OkHttpClient,
     ) : ModelDownloader {
         internal var spaceChecker: (File) -> Long = { it.usableSpace }
 
