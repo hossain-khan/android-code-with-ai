@@ -1,0 +1,5 @@
+What's New in v1.9.2:
+• Session History Fixes: Multi-turn chat sessions now update seamlessly without creating duplicate entries.
+• Stable Chat Scroll: Message list rendering and scroll performance improved with database v2 schema.
+• Engine Stability: Mutex concurrency guards preventing native on-device inference race conditions.
+• Design & UI Polish: Enhanced Session Detail view and Material 3 Expressive UI refinements throughout.
