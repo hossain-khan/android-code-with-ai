@@ -21,11 +21,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -179,21 +182,13 @@ private fun SessionHistoryLayout(
             }
 
             if (state.sessions.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text =
-                            if (state.selectedTopic != null) {
-                                "No sessions found for ${state.selectedTopic.displayName}"
-                            } else {
-                                "No sessions yet"
-                            },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                EmptySessionsView(
+                    selectedTopic = state.selectedTopic,
+                    onClearFilter = {
+                        state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(null))
+                    },
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                )
             } else {
                 LazyVerticalGrid(
                     columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
@@ -213,6 +208,90 @@ private fun SessionHistoryLayout(
                             },
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptySessionsView(
+    selectedTopic: dev.hossain.codematex.data.model.CodingTopic?,
+    onClearFilter: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val visualInfo = selectedTopic?.visualInfo
+    val accentColor = visualInfo?.accentColor ?: MaterialTheme.colorScheme.primary
+
+    Box(
+        modifier = modifier.padding(24.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = accentColor.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, accentColor.copy(alpha = 0.4f)),
+                modifier = Modifier.size(64.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    if (visualInfo != null) {
+                        Text(
+                            text = visualInfo.iconGlyph,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = accentColor,
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(32.dp),
+                        )
+                    }
+                }
+            }
+
+            Text(
+                text =
+                    if (selectedTopic != null) {
+                        "No ${selectedTopic.displayName} Sessions"
+                    } else {
+                        "No Chat Sessions Yet"
+                    },
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Text(
+                text =
+                    if (selectedTopic != null) {
+                        "You haven't recorded any conversations in ${selectedTopic.displayName} yet."
+                    } else {
+                        "Your offline AI tutoring sessions will be automatically saved and cataloged here."
+                    },
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(0.85f),
+            )
+
+            if (selectedTopic != null) {
+                FilledTonalButton(
+                    onClick = onClearFilter,
+                    modifier = Modifier.padding(top = 4.dp),
+                    colors =
+                        ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        ),
+                ) {
+                    Text("Show All Topics", style = MaterialTheme.typography.labelMedium)
                 }
             }
         }

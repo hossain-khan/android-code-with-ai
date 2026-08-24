@@ -121,7 +121,10 @@ private fun HomeLayout(
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
     Scaffold(
-        modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+        modifier =
+            modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
+                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)),
         topBar = {
             TopAppBar(
                 title = {
