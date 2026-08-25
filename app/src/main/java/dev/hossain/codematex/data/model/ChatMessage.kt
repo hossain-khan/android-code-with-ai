@@ -28,3 +28,27 @@ sealed class ChatMessage {
         override val id: String = UUID.randomUUID().toString(),
     ) : ChatMessage()
 }
+
+/**
+ * Stable persistence IDs for [ChatMessage] subtypes. The [stableId] is stored in the database
+ * instead of the sealed-class name or any other internal label so that message type mapping is
+ * resilient to renames.
+ */
+enum class ChatMessageKind(
+    val stableId: String,
+) {
+    USER("user"),
+    AGENT("agent"),
+    ERROR("error"),
+    SYSTEM("system"),
+    UNKNOWN("unknown"),
+    ;
+
+    companion object {
+        /**
+         * Returns the kind for the given [stableId], or [UNKNOWN] if the id does not match any
+         * known kind.
+         */
+        fun fromStableId(stableId: String): ChatMessageKind = entries.find { it.stableId == stableId } ?: UNKNOWN
+    }
+}

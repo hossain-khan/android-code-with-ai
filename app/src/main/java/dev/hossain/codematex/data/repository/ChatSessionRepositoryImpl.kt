@@ -4,6 +4,7 @@ import dev.hossain.codematex.data.local.MessageEntity
 import dev.hossain.codematex.data.local.SessionDao
 import dev.hossain.codematex.data.local.SessionEntity
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.data.model.ChatMessageKind
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.domain.summary.SessionSummaryGenerator
@@ -41,7 +42,7 @@ class ChatSessionRepositoryImpl
             sessionId: String?,
             modelUsed: String?,
         ): String {
-            val effectiveSessionId = sessionId ?: System.currentTimeMillis().toString()
+            val effectiveSessionId = sessionId ?: UUID.randomUUID().toString()
             val title =
                 messages
                     .filterIsInstance<ChatMessage.User>()
@@ -49,26 +50,20 @@ class ChatSessionRepositoryImpl
                     ?.content
                     ?.take(TITLE_MAX_LENGTH) ?: "Untitled"
 
+            // Summary generation performs inference and must not run inside the database
+            // transaction.
             val summary = summaryGenerator.generateSummary(messages)
 
-            // When updating an existing session, clear its old messages so the stored
-            // conversation matches the current message list exactly.
-            if (sessionId != null) {
-                sessionDao.deleteMessages(effectiveSessionId)
-            }
-
-            sessionDao.upsertSession(
+            sessionDao.replaceSession(
                 SessionEntity(
                     id = effectiveSessionId,
-                    topic = topic.name,
+                    topic = topic.stableId,
                     title = title,
                     summary = summary,
                     messageCount = messages.size,
                     lastActiveAt = System.currentTimeMillis(),
                     modelUsed = modelUsed ?: "unknown",
                 ),
-            )
-            sessionDao.insertMessages(
                 messages.mapIndexed { index, msg ->
                     msg.toMessageEntity(effectiveSessionId, index)
                 },
@@ -85,7 +80,7 @@ class ChatSessionRepositoryImpl
         private fun SessionEntity.toChatSession(): ChatSession =
             ChatSession(
                 id = id,
-                topic = CodingTopic.valueOf(topic),
+                topic = CodingTopic.fromStableId(topic),
                 title = title,
                 summary = summary,
                 messageCount = messageCount,
@@ -97,12 +92,16 @@ class ChatSessionRepositoryImpl
             // Messages saved before the messageId column was introduced have an empty
             // value here; generate a fresh ID for those legacy rows.
             val restoredId = messageId.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
-            return when (type) {
-                "user" -> ChatMessage.User(content, restoredId)
-                "agent" -> ChatMessage.Agent(content, isStreaming = false, restoredId)
-                "error" -> ChatMessage.Error(content, restoredId)
-                "system" -> ChatMessage.System(content, restoredId)
-                else -> ChatMessage.System(content, restoredId)
+            return when (ChatMessageKind.fromStableId(type)) {
+                ChatMessageKind.USER -> ChatMessage.User(content, restoredId)
+
+                ChatMessageKind.AGENT -> ChatMessage.Agent(content, isStreaming = false, restoredId)
+
+                ChatMessageKind.ERROR -> ChatMessage.Error(content, restoredId)
+
+                ChatMessageKind.SYSTEM,
+                ChatMessageKind.UNKNOWN,
+                -> ChatMessage.System(content, restoredId)
             }
         }
 
@@ -115,10 +114,10 @@ class ChatSessionRepositoryImpl
                 messageId = id,
                 type =
                     when (this) {
-                        is ChatMessage.User -> "user"
-                        is ChatMessage.Agent -> "agent"
-                        is ChatMessage.Error -> "error"
-                        is ChatMessage.System -> "system"
+                        is ChatMessage.User -> ChatMessageKind.USER.stableId
+                        is ChatMessage.Agent -> ChatMessageKind.AGENT.stableId
+                        is ChatMessage.Error -> ChatMessageKind.ERROR.stableId
+                        is ChatMessage.System -> ChatMessageKind.SYSTEM.stableId
                     },
                 content =
                     when (this) {

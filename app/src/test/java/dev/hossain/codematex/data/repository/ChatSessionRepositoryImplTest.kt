@@ -9,6 +9,7 @@ import dev.hossain.codematex.domain.summary.FakeSessionSummaryGenerator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,7 +28,7 @@ class ChatSessionRepositoryImplTest {
 
     private fun testSessionEntity(
         id: String = "s1",
-        topic: String = "KOTLIN",
+        topic: String = CodingTopic.KOTLIN.stableId,
     ) = SessionEntity(
         id = id,
         topic = topic,
@@ -56,7 +57,7 @@ class ChatSessionRepositoryImplTest {
     @Test
     fun `given session entities - get all sessions maps entities to chat sessions`() =
         runTest {
-            val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1", topic = "PYTHON")))
+            val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1", topic = CodingTopic.PYTHON.stableId)))
             val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             val sessions = repository.getAllSessions().first()
@@ -151,7 +152,7 @@ class ChatSessionRepositoryImplTest {
 
             val session = dao.upsertedSessions.single()
             assertEquals("Explain Kotlin coroutines", session.title)
-            assertEquals("KOTLIN", session.topic)
+            assertEquals(CodingTopic.KOTLIN.stableId, session.topic)
             assertEquals(2, session.messageCount)
         }
 
@@ -275,12 +276,8 @@ class ChatSessionRepositoryImplTest {
             assertTrue(dao.upsertedSessions.all { it.id == "existing-session" })
             assertEquals(
                 listOf(
-                    "deleteMessages:existing-session",
-                    "upsertSession",
-                    "insertMessages",
-                    "deleteMessages:existing-session",
-                    "upsertSession",
-                    "insertMessages",
+                    "replaceSession:existing-session",
+                    "replaceSession:existing-session",
                 ),
                 dao.calls,
             )
@@ -348,7 +345,7 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
 
-            assertEquals(listOf("upsertSession", "insertMessages"), dao.calls)
+            assertEquals(listOf("replaceSession:${dao.upsertedSessions.single().id}"), dao.calls)
         }
 
     @Test
@@ -361,5 +358,64 @@ class ChatSessionRepositoryImplTest {
 
             assertEquals(listOf("deleteMessages:s1", "deleteSession:s1"), dao.calls)
             assertTrue(repository.getAllSessions().first().isEmpty())
+        }
+
+    @Test
+    fun `given unknown topic stored - get all sessions maps to unknown topic`() =
+        runTest {
+            val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1", topic = "corrupt-topic")))
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            val sessions = repository.getAllSessions().first()
+
+            assertEquals(CodingTopic.UNKNOWN, sessions.single().topic)
+        }
+
+    @Test
+    fun `given unknown message type stored - get messages maps to system message`() =
+        runTest {
+            val dao =
+                FakeSessionDao(
+                    messages =
+                        listOf(
+                            testMessageEntity(type = "corrupt-type", content = "fallback", orderIndex = 0),
+                        ),
+                )
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            val messages = repository.getMessages("s1")
+
+            assertEquals(1, messages.size)
+            val system = messages.single() as ChatMessage.System
+            assertEquals("fallback", system.info)
+        }
+
+    @Test
+    fun `given no session id - save session generates unique ids for rapid calls`() =
+        runTest {
+            val dao = FakeSessionDao()
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            val id1 = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("A")))
+            val id2 = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("B")))
+
+            assertTrue(id1.isNotBlank())
+            assertTrue(id2.isNotBlank())
+            assertNotEquals(id1, id2)
+            assertEquals(2, dao.upsertedSessions.size)
+        }
+
+    @Test
+    fun `given replace session throws - save session propagates exception`() =
+        runTest {
+            val dao = FakeSessionDao(throwOnReplace = true)
+            val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
+
+            try {
+                repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
+                throw AssertionError("Expected exception to be thrown")
+            } catch (e: RuntimeException) {
+                assertEquals("replaceSession failed", e.message)
+            }
         }
 }

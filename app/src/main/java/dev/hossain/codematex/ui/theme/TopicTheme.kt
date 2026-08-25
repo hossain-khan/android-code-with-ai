@@ -184,4 +184,15 @@ val CodingTopic.visualInfo: TopicVisualInfo
                         ),
                 )
             }
+
+            CodingTopic.UNKNOWN -> {
+                TopicVisualInfo(
+                    topic = this,
+                    accentColor = Color(0xFF9E9E9E),
+                    secondaryAccentColor = Color(0xFFE0E0E0),
+                    tagline = "Previously selected topic could not be restored",
+                    iconGlyph = "?",
+                    starterPrompts = emptyList(),
+                )
+            }
         }
