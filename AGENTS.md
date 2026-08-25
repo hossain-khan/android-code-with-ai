@@ -96,6 +96,12 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
   - Cover multiple critical UI states: nominal/default, preparing/loading, high-load/error, and active states.
   - Ensure standalone modular components (e.g., progress bars, chips, cards) have dedicated previews with realistic sample data and padding.
 
+### F. Markdown Rendering for Chat Messages
+- **Library**: Chat/session detail messages are rendered with [multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer) (`v0.44.0`), using the Material 3 (`-m3`) and syntax-highlighting (`-code`) modules.
+- **Shared Component**: Use [MarkdownMessage](app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt) for all message Markdown. It hoists parsing state with `rememberMarkdownState(content, retainState = true)` so streaming tokens do not flash a loading state.
+- **Custom Code Blocks**: Code blocks are intercepted through the library's `markdownComponents(codeBlock = ..., codeFence = ...)` plugin API and rendered with `MarkdownHighlightedCodeBlock` / `MarkdownHighlightedCodeFence` from the `-code` module.
+- **Streaming Notes**: The library also provides `StreamingMarkdownState` for append-only token streams. The current presenter emits the full message content on each token, so `rememberMarkdownState` with `retainState = true` is the right fit. If the presenter is refactored to expose raw chunks, migrate to `rememberStreamingMarkdownState()` / `Flow<String>.collectAsStreamingMarkdownState()`.
+
 ---
 
 ## 6. Development Workflows & Commands

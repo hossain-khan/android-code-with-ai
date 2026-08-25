@@ -48,8 +48,8 @@ androidxWork = "2.11.2"
 
 # On-device AI
 litertlm = "0.15.0"
+markdownRenderer = "0.44.0"
 room = "2.7.2"
-richtext = "1.0.0-alpha05"
 timber = "5.0.1"
 
 # Kover - Kotlin code coverage
@@ -120,9 +120,10 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
-# Markdown rendering - https://github.com/halilozercan/compose-richtext
-richtext-commonmark = { group = "com.halilibo.compose-richtext", name = "richtext-commonmark", version.ref = "richtext" }
-richtext-ui-material3 = { group = "com.halilibo.compose-richtext", name = "richtext-ui-material3", version.ref = "richtext" }
+# Markdown rendering - https://github.com/mikepenz/multiplatform-markdown-renderer
+markdown-renderer = { group = "com.mikepenz", name = "multiplatform-markdown-renderer", version.ref = "markdownRenderer" }
+markdown-renderer-m3 = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
+markdown-renderer-code = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-code", version.ref = "markdownRenderer" }
 
 # Logging - https://github.com/JakeWharton/timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
