@@ -1,13 +1,11 @@
-package dev.hossain.codematex.circuit.overlay
+package dev.hossain.codematex.ui.overlay
 
 import android.content.ContextWrapper
-import dev.hossain.codematex.ui.overlay.ModelConfig
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Unit tests for [dev.hossain.codematex.ui.overlay.ModelConfigStore].
+ * Unit tests for [ModelConfigStore].
  */
 class ModelConfigStoreTest {
     private val store = ModelConfigStore(ContextWrapper(null))

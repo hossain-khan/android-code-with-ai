@@ -1,11 +1,11 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.aimodels
 
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.FakeModelDownloadPreferences
-import dev.hossain.codematex.ui.screens.aimodels.ModelPickerPresenter
-import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.data.repository.FakeModelRepository
+import dev.hossain.codematex.data.repository.testModel
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -13,7 +13,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [dev.hossain.codematex.ui.screens.aimodels.ModelPickerPresenter].
+ * Unit tests for [ModelPickerPresenter].
  */
 class ModelPickerPresenterTest {
     private val downloadedModel =

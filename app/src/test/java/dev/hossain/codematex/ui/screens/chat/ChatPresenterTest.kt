@@ -1,18 +1,21 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chat
 
 import android.content.Context
 import android.content.ContextWrapper
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
+import dev.hossain.codematex.data.FakeChatInferenceOrchestrator
+import dev.hossain.codematex.data.FakeSystemStatsMonitor
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeModelRepository
+import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
-import dev.hossain.codematex.ui.screens.chat.ChatPresenter
-import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -20,7 +23,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [dev.hossain.codematex.ui.screens.chat.ChatPresenter].
+ * Unit tests for [ChatPresenter].
  */
 class ChatPresenterTest {
     private val fakeContext: Context = ContextWrapper(null)

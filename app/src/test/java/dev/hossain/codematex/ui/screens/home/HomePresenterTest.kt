@@ -1,15 +1,15 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.home
 
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
-import dev.hossain.codematex.ui.screens.home.HomePresenter
-import dev.hossain.codematex.ui.screens.home.HomeScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -21,7 +21,7 @@ class FakeHardwareEligibilityChecker(
 }
 
 /**
- * Unit tests for [dev.hossain.codematex.ui.screens.home.HomePresenter].
+ * Unit tests for [HomePresenter].
  */
 class HomePresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()

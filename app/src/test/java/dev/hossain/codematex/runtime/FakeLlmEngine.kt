@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.runtime
 
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.runtime.LlmEngine

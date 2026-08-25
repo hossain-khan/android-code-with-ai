@@ -1,12 +1,12 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
 import android.content.ContextWrapper
-import dev.hossain.codematex.data.ChatInferenceEvent
-import dev.hossain.codematex.data.DefaultChatInferenceOrchestrator
-import dev.hossain.codematex.data.DefaultTopicPromptProvider
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.testModel
+import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import kotlinx.coroutines.flow.toList

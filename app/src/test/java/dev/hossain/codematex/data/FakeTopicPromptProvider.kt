@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
 import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.CodingTopic

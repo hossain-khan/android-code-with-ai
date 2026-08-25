@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.ChatInferenceOrchestrator
