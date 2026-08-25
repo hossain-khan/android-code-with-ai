@@ -108,6 +108,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.circuit.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -957,21 +958,38 @@ private fun ChatInputField(
                         "Initializing model..."
                     }
 
-                Row(
+                Column(
                     modifier =
                         Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = labelText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CircularWavyProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = state.topic.visualInfo.accentColor,
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = labelText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+
+                    state.systemResourceStats?.let { stats ->
+                        LiveHardwareTelemetryBars(
+                            stats = stats,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            cpuColor = state.topic.visualInfo.accentColor,
+                        )
+                    }
                 }
             }
 
@@ -1138,7 +1156,12 @@ private fun SupportingBenchmarkingCard(
                 }
             }
 
-            state.systemStatsInfo?.let { stats ->
+            state.systemResourceStats?.let { stats ->
+                LiveHardwareTelemetryBars(
+                    stats = stats,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+            } ?: state.systemStatsInfo?.let { stats ->
                 Text(
                     text = stats,
                     style = MaterialTheme.typography.labelSmall,
@@ -1436,7 +1459,12 @@ private fun ModelTechnicalInfoPanel(
                     )
                 }
 
-                state.systemStatsInfo?.let { stats ->
+                state.systemResourceStats?.let { stats ->
+                    LiveHardwareTelemetryBars(
+                        stats = stats,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    )
+                } ?: state.systemStatsInfo?.let { stats ->
                     Text(
                         text = stats,
                         style = MaterialTheme.typography.labelSmall,
@@ -1533,6 +1561,30 @@ private fun ChatInputFieldPreview() {
             ChatInputField(
                 state = sampleActiveChatState,
                 inputText = "Tell me about Compose State",
+                onInputTextChanged = {},
+                onSendMessage = {},
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChatInputFieldPreparingPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            ChatInputField(
+                state =
+                    sampleActiveChatState.copy(
+                        isPreparing = true,
+                        systemResourceStats =
+                            dev.hossain.codematex.system.SystemResourceStats(
+                                cpuPercent = 42f,
+                                ramUsedGb = 3.8f,
+                                ramTotalGb = 8.0f,
+                            ),
+                    ),
+                inputText = "",
                 onInputTextChanged = {},
                 onSendMessage = {},
             )

@@ -36,6 +36,7 @@ data class ChatScreen(
             val configInfo: String?,
             val throughputInfo: String?,
             val systemStatsInfo: String?,
+            val systemResourceStats: dev.hossain.codematex.system.SystemResourceStats? = null,
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State
