@@ -153,11 +153,14 @@ Every screen with dynamic lists MUST include an expressive empty state:
 ### E. Markdown Rendering & Code Blocks
 LLM responses are rendered in native Compose using **`multiplatform-markdown-renderer`** ([github.com/mikepenz/multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer)) via [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt):
 - **Artifacts**: `com.mikepenz:multiplatform-markdown-renderer-m3` and `multiplatform-markdown-renderer-code` (`v0.44.0`).
-- **Anti-Flicker State**: Uses `rememberMarkdownState(content, retainState = true)` to avoid loading flashes during rapid token streaming.
-- **Syntax Highlighting**: Code blocks & fences are intercepted via `markdownComponents` and rendered with `MarkdownHighlightedCodeBlock` / `MarkdownHighlightedCodeFence` with `showHeader = true`.
-- **Typography Sizing**: Scaled to ensure high readability within compact mobile chat bubbles:
+- **Anti-Flicker State**: Uses `rememberMarkdownState(content, retainState = true)` to hoist parser state and retain the previous AST during rapid token streaming, preventing loading flashes.
+- **Monospace Code Block & Inline Code Styling**:
+  - **Inline Code**: Styled with `fontFamily = FontFamily.Monospace`, `12.5.sp` size, and `16.sp` line-height via `markdownTypography(code = ...)`.
+  - **Code Blocks & Fences**: Intercepted via `markdownComponents` and rendered with `MarkdownHighlightedCodeBlock` / `MarkdownHighlightedCodeFence`. Explicitly styled with `TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.5.sp, lineHeight = 16.sp)` and `showHeader = true` for language badge display.
+- **Typography Sizing**:
   - Base body text: `MaterialTheme.typography.bodyMedium` (`14.sp`, `20.sp` line height).
-  - Code Blocks: Monospace `12.5.sp` with syntax highlighting and language badge header.
+  - Monospace code text: `12.5.sp` with `16.sp` line height.
+- **GitHub Alert Callouts**: Natively renders `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` alert banners.
 
 ### F. Compose Previews for Modular UI Elements
 Whenever creating or updating modular composable components, always include comprehensive preview functions at the bottom of the file:
