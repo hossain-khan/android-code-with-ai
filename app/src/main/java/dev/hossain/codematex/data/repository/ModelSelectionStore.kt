@@ -37,13 +37,13 @@ class ModelSelectionStoreImpl
         @param:ApplicationContext private val context: Context,
     ) : ModelSelectionStore {
         private val prefs = context.getSharedPreferences("model_prefs", Context.MODE_PRIVATE)
-        private val _selectedModelIdFlow = MutableStateFlow(prefs.getString("selected_model_id", null))
-        override val selectedModelIdFlow: Flow<String?> = _selectedModelIdFlow.asStateFlow()
+        override val selectedModelIdFlow: Flow<String?>
+            field = MutableStateFlow(prefs.getString("selected_model_id", null))
 
         override var selectedModelId: String?
-            get() = _selectedModelIdFlow.value
+            get() = selectedModelIdFlow.value
             set(value) {
                 prefs.edit { putString("selected_model_id", value) }
-                _selectedModelIdFlow.value = value
+                selectedModelIdFlow.value = value
             }
     }

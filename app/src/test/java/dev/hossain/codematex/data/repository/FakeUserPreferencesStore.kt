@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakeUserPreferencesStore(
     initialSelectedPersona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
 ) : UserPreferencesStore {
-    private val _selectedPersonaFlow = MutableStateFlow(initialSelectedPersona)
-    override val selectedPersonaFlow: Flow<TutorPersona> = _selectedPersonaFlow.asStateFlow()
+    override val selectedPersonaFlow: Flow<TutorPersona>
+        field = MutableStateFlow(initialSelectedPersona)
 
     override var selectedPersona: TutorPersona
-        get() = _selectedPersonaFlow.value
+        get() = selectedPersonaFlow.value
         set(value) {
-            _selectedPersonaFlow.value = value
+            selectedPersonaFlow.value = value
         }
 }

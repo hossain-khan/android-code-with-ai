@@ -38,14 +38,14 @@ class UserPreferencesStoreImpl
     ) : UserPreferencesStore {
         private val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
 
-        private val _selectedPersonaFlow = MutableStateFlow(loadStoredPersona())
-        override val selectedPersonaFlow: Flow<TutorPersona> = _selectedPersonaFlow.asStateFlow()
+        override val selectedPersonaFlow: Flow<TutorPersona>
+            field = MutableStateFlow(loadStoredPersona())
 
         override var selectedPersona: TutorPersona
-            get() = _selectedPersonaFlow.value
+            get() = selectedPersonaFlow.value
             set(value) {
                 prefs.edit { putString(KEY_SELECTED_PERSONA, value.name) }
-                _selectedPersonaFlow.value = value
+                selectedPersonaFlow.value = value
             }
 
         private fun loadStoredPersona(): TutorPersona {
