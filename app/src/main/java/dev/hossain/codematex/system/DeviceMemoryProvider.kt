@@ -22,6 +22,12 @@ interface DeviceMemoryProvider {
     fun getMemoryStats(): DeviceMemory.MemoryStats
 
     /**
+     * Returns the total device RAM in bytes. This is the authoritative value for compatibility
+     * decisions because it avoids GB/GiB truncation disagreements.
+     */
+    fun getTotalMemoryBytes(): Long
+
+    /**
      * Returns the current process CPU tick count.
      */
     fun getProcessCpuTicks(): Long
@@ -34,9 +40,12 @@ class DeviceMemoryProviderImpl
     constructor(
         @param:ApplicationContext private val context: Context,
         private val memoryStatsProvider: (Context) -> DeviceMemory.MemoryStats = DeviceMemory::getMemoryStats,
+        private val totalMemoryBytesProvider: (Context) -> Long = DeviceMemory::getTotalMemoryBytes,
         private val cpuTicksProvider: () -> Long = DeviceMemory::getProcessCpuTicks,
     ) : DeviceMemoryProvider {
         override fun getMemoryStats(): DeviceMemory.MemoryStats = memoryStatsProvider(context)
+
+        override fun getTotalMemoryBytes(): Long = totalMemoryBytesProvider(context)
 
         override fun getProcessCpuTicks(): Long = cpuTicksProvider()
     }

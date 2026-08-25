@@ -4,6 +4,8 @@ import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.system.DeviceMemoryInfo
+import dev.hossain.codematex.system.ModelCompatibility
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -15,6 +17,8 @@ data object ModelPickerScreen : ParcelableScreen {
 
         data class Success(
             val models: List<AiModel>,
+            val deviceMemoryInfo: DeviceMemoryInfo,
+            val modelCompatibility: Map<String, ModelCompatibility>,
             val downloadOverWifiOnly: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State

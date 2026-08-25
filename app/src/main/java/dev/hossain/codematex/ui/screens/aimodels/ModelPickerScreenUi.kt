@@ -65,7 +65,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -77,12 +76,13 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.system.DeviceMemoryInfo
+import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
-import dev.hossain.codematex.util.DeviceMemory
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 import java.text.DecimalFormat
@@ -117,8 +117,6 @@ private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val deviceRamGb = remember { DeviceMemory.getDeviceRamGb(context) }
     val sizeFormatter = remember { DecimalFormat("#,### MB") }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -172,7 +170,7 @@ private fun ModelPickerLayout(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                DeviceMemoryBanner(deviceRamGb = deviceRamGb)
+                DeviceMemoryBanner(deviceMemoryInfo = state.deviceMemoryInfo)
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -197,12 +195,12 @@ private fun ModelPickerLayout(
                 }
             } else {
                 items(state.models) { model ->
-                    val isCompatible = DeviceMemory.isModelCompatible(model.minDeviceMemoryInGb, deviceRamGb)
+                    val compatibility = state.modelCompatibility[model.id] ?: ModelCompatibility.Incompatible("Unknown compatibility")
+                    val isCompatible = compatibility is ModelCompatibility.Compatible
                     ModelCard(
                         model = model,
                         sizeFormatter = sizeFormatter,
-                        isCompatible = isCompatible,
-                        deviceRamGb = deviceRamGb,
+                        compatibility = compatibility,
                         onDownload = {
                             if (isCompatible) {
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -233,9 +231,10 @@ private fun ModelPickerLayout(
 
 @Composable
 private fun DeviceMemoryBanner(
-    deviceRamGb: Int,
+    deviceMemoryInfo: DeviceMemoryInfo,
     modifier: Modifier = Modifier,
 ) {
+    val ramFormatter = remember { DecimalFormat("#,##0.0") }
     Card(
         modifier =
             modifier
@@ -276,7 +275,7 @@ private fun DeviceMemoryBanner(
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    "$deviceRamGb GB Total RAM",
+                    "${ramFormatter.format(deviceMemoryInfo.displayTotalGb)} ${deviceMemoryInfo.displayLabel} Total RAM",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -295,13 +294,13 @@ private fun DeviceMemoryBanner(
 private fun ModelCard(
     model: AiModel,
     sizeFormatter: DecimalFormat,
-    isCompatible: Boolean,
-    deviceRamGb: Int,
+    compatibility: ModelCompatibility,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
     onSelect: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val isCompatible = compatibility is ModelCompatibility.Compatible
     val uriHandler = LocalUriHandler.current
     var showDeleteConfirmation by remember { mutableStateOf(false) }
 
@@ -537,8 +536,9 @@ private fun ModelCard(
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.size(16.dp),
                         )
+                        val reason = (compatibility as? ModelCompatibility.Incompatible)?.reason ?: "Insufficient RAM"
                         Text(
-                            "Requires ${model.minDeviceMemoryInGb}GB RAM (Device has ${deviceRamGb}GB)",
+                            reason,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
@@ -762,6 +762,8 @@ private fun ModelPickerScreenPreview() {
             state =
                 ModelPickerScreen.State.Success(
                     models = sampleModels,
+                    deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
+                    modelCompatibility = sampleModels.associate { it.id to ModelCompatibility.Compatible },
                     downloadOverWifiOnly = true,
                     eventSink = {},
                 ),
@@ -774,7 +776,7 @@ private fun ModelPickerScreenPreview() {
 private fun DeviceMemoryBannerPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         DeviceMemoryBanner(
-            deviceRamGb = 12,
+            deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
             modifier = Modifier.padding(16.dp),
         )
     }
@@ -804,8 +806,7 @@ private fun ModelCardPreview() {
             ModelCard(
                 model = sampleModels[0],
                 sizeFormatter = formatter,
-                isCompatible = true,
-                deviceRamGb = 12,
+                compatibility = ModelCompatibility.Compatible,
                 onDownload = {},
                 onCancel = {},
                 onSelect = {},
@@ -814,8 +815,7 @@ private fun ModelCardPreview() {
             ModelCard(
                 model = sampleModels[1],
                 sizeFormatter = formatter,
-                isCompatible = true,
-                deviceRamGb = 12,
+                compatibility = ModelCompatibility.Incompatible("Requires 3GB RAM (Device has 12GB)"),
                 onDownload = {},
                 onCancel = {},
                 onSelect = {},

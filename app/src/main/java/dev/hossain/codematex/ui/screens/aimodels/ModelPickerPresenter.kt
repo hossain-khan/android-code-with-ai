@@ -13,6 +13,8 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.system.ModelCompatibility
+import dev.hossain.codematex.system.ModelCompatibilityChecker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -26,6 +28,7 @@ class ModelPickerPresenter(
     @Assisted private val screen: ModelPickerScreen,
     private val modelRepository: ModelRepository,
     private val downloadPreferences: ModelDownloadPreferences,
+    private val modelCompatibilityChecker: ModelCompatibilityChecker,
 ) : Presenter<ModelPickerScreen.State> {
     @Composable
     override fun present(): ModelPickerScreen.State {
@@ -87,6 +90,11 @@ class ModelPickerPresenter(
         } else {
             ModelPickerScreen.State.Success(
                 models = models,
+                deviceMemoryInfo = modelCompatibilityChecker.getDeviceMemoryInfo(),
+                modelCompatibility =
+                    models.associate { model ->
+                        model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
+                    },
                 downloadOverWifiOnly = downloadOverWifiOnly,
                 eventSink = eventSink,
             )

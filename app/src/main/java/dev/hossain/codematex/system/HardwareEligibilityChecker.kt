@@ -45,9 +45,10 @@ class HardwareEligibilityCheckerImpl(
         }
 
         val is64Bit = is64BitSupported()
-        val memoryStats = deviceMemoryProvider.getMemoryStats()
-        // Round to two decimals to avoid Float->Double precision issues at the threshold.
-        val detectedGb = kotlin.math.round(memoryStats.totalGb.toDouble() * 100) / 100.0
+        val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
+        val detectedGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalBytes)
+        val minRequiredBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8)
+        val minRequiredRamGb = MemoryCompatibilityPolicy.toDecimalGigabytes(minRequiredBytes)
 
         // 1. 64-bit Architecture Verification
         if (!is64Bit) {
@@ -59,10 +60,9 @@ class HardwareEligibilityCheckerImpl(
         }
 
         // 2. RAM Verification
-        // Note: Devices sold with 8 GB RAM typically report ~7.2 GB - 7.5 GB to the kernel
-        // due to hardware and baseband reservations.
-        val minRequiredRamGb = 7.2
-        if (detectedGb < minRequiredRamGb) {
+        // An 8 GB marketed device must report at least ~7.2 GB to the kernel. The same byte-based
+        // policy and reservation allowance is used for app-level and per-model eligibility.
+        if (totalBytes < minRequiredBytes) {
             return HardwareEligibility.Ineligible(
                 reason = "On-device AI models require at least 8 GB RAM for stable execution.",
                 detectedRamGb = detectedGb,
