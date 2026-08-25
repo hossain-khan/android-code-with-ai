@@ -39,6 +39,7 @@ class ModelDownloadWorker(
         const val KEY_ERROR_MESSAGE = "error_message"
         const val KEY_MODEL_ID = "model_id"
         const val KEY_MODEL_NAME = "model_name"
+        const val NOTIFICATION_ID_DOWNLOAD_COMPLETE = 2
 
         /**
          * Pure business logic for executing a model download, separated from the WorkManager
@@ -172,10 +173,69 @@ class ModelDownloadWorker(
                 },
             )
 
+        if (result == Result.success()) {
+            showDownloadCompleteNotification()
+        }
+
         return if (result != Result.success() && runAttemptCount < 5) {
             Result.retry()
         } else {
             result
+        }
+    }
+
+    private fun showDownloadCompleteNotification() {
+        val modelName =
+            inputData.getString(KEY_MODEL_NAME)
+                ?: inputData.getString(KEY_MODEL_ID)?.substringAfterLast("/")
+                ?: "AI Model"
+
+        val homeIntent =
+            Intent(
+                applicationContext,
+                MainActivity::class.java,
+            ).apply {
+                flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+
+        val contentPendingIntent =
+            PendingIntent.getActivity(
+                applicationContext,
+                0,
+                homeIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
+
+        val notification =
+            androidx.core.app.NotificationCompat
+                .Builder(applicationContext, "model_download")
+                .setContentTitle("$modelName is ready!")
+                .setContentText("Download complete. Tap to explore coding topics with your on-device AI tutor!")
+                .setStyle(
+                    androidx.core.app.NotificationCompat
+                        .BigTextStyle()
+                        .setBigContentTitle("$modelName is ready!")
+                        .bigText(
+                            "$modelName has been downloaded and installed. Tap to start exploring Kotlin, Jetpack Compose, Android Architecture, and Algorithms with your personal on-device AI tutor!",
+                        ),
+                ).setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setContentIntent(contentPendingIntent)
+                .setAutoCancel(true)
+                .build()
+
+        val notificationManager =
+            androidx.core.app.NotificationManagerCompat
+                .from(applicationContext)
+
+        try {
+            notificationManager.notify(
+                NOTIFICATION_ID_DOWNLOAD_COMPLETE,
+                notification,
+            )
+        } catch (e: SecurityException) {
+            Timber.w(e, "ModelDownloadWorker: Missing notification permission for completion notification")
+        } catch (e: Exception) {
+            Timber.w(e, "ModelDownloadWorker: Failed to post download completion notification")
         }
     }
 
