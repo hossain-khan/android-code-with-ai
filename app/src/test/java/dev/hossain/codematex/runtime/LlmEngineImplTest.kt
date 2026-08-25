@@ -369,6 +369,54 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `restoreHistory preserves chronological order of alternating user and agent turns`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val messages =
+                listOf(
+                    ChatMessage.User("User1"),
+                    ChatMessage.Agent("Agent1"),
+                    ChatMessage.User("User2"),
+                    ChatMessage.Agent("Agent2"),
+                    ChatMessage.System("ignored"),
+                    ChatMessage.Error("ignored"),
+                )
+            val job =
+                launch {
+                    engine.restoreHistory(messages)
+                }
+
+            val message = fakeConversation.sentMessages.single()
+            val user1Index = message.input.indexOf("User: User1")
+            val agent1Index = message.input.indexOf("Assistant: Agent1")
+            val user2Index = message.input.indexOf("User: User2")
+            val agent2Index = message.input.indexOf("Assistant: Agent2")
+
+            assertTrue("Expected prompt to contain all turns", user1Index >= 0 && agent1Index >= 0 && user2Index >= 0 && agent2Index >= 0)
+            assertTrue("User1 should come before Agent1", user1Index < agent1Index)
+            assertTrue("Agent1 should come before User2", agent1Index < user2Index)
+            assertTrue("User2 should come before Agent2", user2Index < agent2Index)
+            assertEquals(-1, message.input.indexOf("System"))
+            assertEquals(-1, message.input.indexOf("Error"))
+
+            message.callback.onDone()
+            job.join()
+        }
+
+    @Test
     fun `restoreHistory falls back to CPU when seeding fails on hardware backend`() =
         runEngineTest {
             val gpuEngine = FakeInferenceEngine()
@@ -588,6 +636,123 @@ class LlmEngineImplTest {
             assertTrue("GPU engine should be closed when fallback fails", gpuEngine.closed)
             assertTrue("GPU conversation should be closed when fallback fails", gpuConversation.closed)
             assertNull(engine.getActiveBackend())
+        }
+
+    @Test
+    fun `runInferenceIsolated uses a separate conversation from active chat`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
+            val job =
+                launch {
+                    engine.runInferenceIsolated("Summary prompt") { partial, done ->
+                        emittedTokens.add(partial to done)
+                    }
+                }
+
+            // The active chat conversation should not receive the isolated prompt.
+            assertEquals(0, fakeConversation.sentMessages.size)
+
+            // A new conversation should have been created from the same engine.
+            assertEquals(1, fakeEngine.createdConversations.size)
+            val isolatedConversation = fakeEngine.createdConversations.single()
+            assertEquals(1, isolatedConversation.sentMessages.size)
+            assertEquals("Summary prompt", isolatedConversation.sentMessages.single().input)
+
+            isolatedConversation.sentMessages
+                .single()
+                .callback
+                .onMessage(textMessage("Short"))
+            isolatedConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            job.join()
+
+            assertEquals(listOf("Short" to false, "" to true), emittedTokens)
+        }
+
+    @Test
+    fun `runInferenceIsolated closes isolated conversation on completion`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    engine.runInferenceIsolated("Summary prompt") { _, _ -> }
+                }
+
+            val isolatedConversation = fakeEngine.createdConversations.single()
+            isolatedConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            job.join()
+
+            assertTrue("Isolated conversation should be closed", isolatedConversation.closed)
+            assertEquals("Active chat conversation should not be closed", false, fakeConversation.closed)
+        }
+
+    @Test
+    fun `runInferenceIsolated closes isolated conversation on error`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInferenceIsolated("Summary prompt") { _, _ -> }
+                    } catch (e: RuntimeException) {
+                        // Expected.
+                    }
+                }
+
+            val isolatedConversation = fakeEngine.createdConversations.single()
+            isolatedConversation.sentMessages
+                .single()
+                .callback
+                .onError(RuntimeException("Summary failed"))
+            job.join()
+
+            assertTrue("Isolated conversation should be closed on error", isolatedConversation.closed)
+            assertEquals("Active chat conversation should not be closed", false, fakeConversation.closed)
         }
 
     private fun textMessage(text: String): com.google.ai.edge.litertlm.Message {

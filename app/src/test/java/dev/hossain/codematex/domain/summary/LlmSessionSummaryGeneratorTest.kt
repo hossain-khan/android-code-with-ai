@@ -30,7 +30,7 @@ class LlmSessionSummaryGeneratorTest {
         }
 
     @Test
-    fun `given user and agent messages - joins conversation and runs inference`() =
+    fun `given user and agent messages - joins conversation and runs isolated inference`() =
         runTest {
             fakeEngine.responseTokens = listOf("A ", "Kotlin ", "summary", "")
             val messages =
@@ -42,6 +42,7 @@ class LlmSessionSummaryGeneratorTest {
             val summary = generator.generateSummary(messages)
 
             assertEquals("A Kotlin summary", summary)
+            assertEquals(1, fakeEngine.isolatedInferenceCalls)
             assertTrue(fakeEngine.lastInput?.contains("Summarize this coding learning session") == true)
             assertTrue(fakeEngine.lastInput?.contains("User: Explain Kotlin coroutines") == true)
             assertTrue(fakeEngine.lastInput?.contains("AI: Coroutines are lightweight threads.") == true)

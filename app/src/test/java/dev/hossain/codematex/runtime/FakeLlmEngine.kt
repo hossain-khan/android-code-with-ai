@@ -11,6 +11,7 @@ class FakeLlmEngine : LlmEngine {
     var stopCalls = 0
     var cleanupCalls = 0
     var restoreHistoryCalls = 0
+    var isolatedInferenceCalls = 0
     var lastInput: String? = null
     var shouldThrow: Exception? = null
 
@@ -34,6 +35,16 @@ class FakeLlmEngine : LlmEngine {
         responseTokens.forEachIndexed { index, token ->
             onToken(token, index == responseTokens.lastIndex)
         }
+    }
+
+    override suspend fun runInferenceIsolated(
+        input: String,
+        systemInstruction: String?,
+        config: ModelConfig,
+        onToken: (partialResult: String, done: Boolean) -> Unit,
+    ) {
+        isolatedInferenceCalls++
+        runInference(input, onToken)
     }
 
     override fun stop() {

@@ -135,6 +135,30 @@ class LlmEngineImpl(
         }
     }
 
+    override suspend fun runInferenceIsolated(
+        input: String,
+        systemInstruction: String?,
+        config: ModelConfig,
+        onToken: (partialResult: String, done: Boolean) -> Unit,
+    ) = engineMutex.withLock {
+        engine
+            ?: throw IllegalStateException("LLM engine is not initialized. Please wait for model initialization to complete.")
+
+        // Create a conversation that is separate from the active chat conversation so that
+        // summary prompts and responses cannot pollute the user's live context. The loaded
+        // engine is reused, so no second model is loaded. A failure here intentionally does
+        // NOT fall back to CPU and does NOT touch the active chat session.
+        val isolatedConversation =
+            createConversationLocked(systemInstruction, config)
+                ?: throw IllegalStateException("Failed to create isolated conversation")
+
+        try {
+            executeInferenceOnConversation(input, isolatedConversation, onToken)
+        } finally {
+            closeQuietly(isolatedConversation)
+        }
+    }
+
     private suspend fun recreateSessionWithCpu() {
         val engineToClose = engine
         val conversationToClose = conversation
@@ -170,7 +194,14 @@ class LlmEngineImpl(
         val conv =
             conversation
                 ?: throw IllegalStateException("Engine not initialized. Call initialize() first.")
+        executeInferenceOnConversation(input, conv, onToken)
+    }
 
+    private suspend fun executeInferenceOnConversation(
+        input: String,
+        conv: InferenceConversation,
+        onToken: (partialResult: String, done: Boolean) -> Unit,
+    ) {
         withContext(dispatcher) {
             suspendCancellableCoroutine<Unit> { cont ->
                 val callback =
@@ -207,7 +238,19 @@ class LlmEngineImpl(
     ) {
         currentSystemInstruction = systemInstruction
         currentConfig = config
-        conversation?.close()
+        closeQuietly(conversation)
+        conversation = createConversationLocked(systemInstruction, config)
+    }
+
+    /**
+     * Creates a new [InferenceConversation] from the currently loaded engine. Must be called
+     * while holding [engineMutex]. Returns `null` if no engine is loaded.
+     */
+    private fun createConversationLocked(
+        systemInstruction: String?,
+        config: ModelConfig,
+    ): InferenceConversation? {
+        val loadedEngine = engine ?: return null
 
         val samplerConfig =
             SamplerConfig(
@@ -228,14 +271,14 @@ class LlmEngineImpl(
                 samplerConfig = samplerConfig,
             )
 
-        conversation = engine?.createConversation(conversationConfig)
+        return loadedEngine.createConversation(conversationConfig)
     }
 
     override suspend fun restoreHistory(messages: List<ChatMessage>) =
         engineMutex.withLock {
             if (engine == null) return@withLock
 
-            val priorMessages = messages.filterIsInstance<ChatMessage.User>() + messages.filterIsInstance<ChatMessage.Agent>()
+            val priorMessages = messages.filter { it is ChatMessage.User || it is ChatMessage.Agent }
             if (priorMessages.isEmpty()) return@withLock
 
             try {
@@ -257,7 +300,13 @@ class LlmEngineImpl(
 
     private suspend fun executeRestoreHistory(priorMessages: List<ChatMessage>) {
         val conv = conversation ?: return
+        executeRestoreHistoryOnConversation(priorMessages, conv)
+    }
 
+    private suspend fun executeRestoreHistoryOnConversation(
+        priorMessages: List<ChatMessage>,
+        conv: InferenceConversation,
+    ) {
         Timber.d("LlmEngineImpl: Restoring ${priorMessages.size} prior messages to conversation context")
 
         val contextPrompt =

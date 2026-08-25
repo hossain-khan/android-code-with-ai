@@ -16,6 +16,18 @@ interface LlmEngine {
         onToken: (partialResult: String, done: Boolean) -> Unit,
     )
 
+    /**
+     * Runs inference on a temporary conversation that is isolated from the active chat
+     * conversation. The loaded engine is reused, so no second model is loaded. The temporary
+     * conversation is closed before this method returns.
+     */
+    suspend fun runInferenceIsolated(
+        input: String,
+        systemInstruction: String? = null,
+        config: ModelConfig = ModelConfig(),
+        onToken: (partialResult: String, done: Boolean) -> Unit,
+    )
+
     fun stop()
 
     suspend fun resetConversation(
