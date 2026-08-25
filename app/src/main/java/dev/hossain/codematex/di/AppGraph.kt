@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
-import androidx.datastore.preferences.SharedPreferencesMigration
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
@@ -73,12 +72,6 @@ interface AppGraph {
     ): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(
             corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
-            migrations =
-                listOf(
-                    SharedPreferencesMigration(context, "user_prefs"),
-                    SharedPreferencesMigration(context, "model_prefs"),
-                    SharedPreferencesMigration(context, "download_prefs"),
-                ),
             produceFile = { context.preferencesDataStoreFile("codematex_user_preferences") },
         )
 
