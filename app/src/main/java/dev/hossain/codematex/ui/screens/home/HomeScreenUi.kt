@@ -72,6 +72,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.window.core.layout.WindowSizeClass
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -851,7 +852,7 @@ private fun NotificationPermissionHandler() {
             onDismissRequest = {
                 showRationaleDialog = false
                 hasPrompted = true
-                prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+                prefs.edit { putBoolean("has_prompted_notifications", true) }
             },
             icon = {
                 Surface(
@@ -891,7 +892,7 @@ private fun NotificationPermissionHandler() {
                     onClick = {
                         showRationaleDialog = false
                         hasPrompted = true
-                        prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+                        prefs.edit { putBoolean("has_prompted_notifications", true) }
                         permissionState.launchPermissionRequest()
                     },
                 ) {
@@ -903,7 +904,7 @@ private fun NotificationPermissionHandler() {
                     onClick = {
                         showRationaleDialog = false
                         hasPrompted = true
-                        prefs.edit().putBoolean("has_prompted_notifications", true).apply()
+                        prefs.edit { putBoolean("has_prompted_notifications", true) }
                     },
                 ) {
                     Text("Not Now")

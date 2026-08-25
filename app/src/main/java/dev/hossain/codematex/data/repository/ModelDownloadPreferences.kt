@@ -1,6 +1,7 @@
 package dev.hossain.codematex.data.repository
 
 import android.content.Context
+import androidx.core.content.edit
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -34,7 +35,7 @@ class ModelDownloadPreferencesImpl
         override var downloadOverWifiOnly: Boolean
             get() = prefs.getBoolean(KEY_WIFI_ONLY, true)
             set(value) {
-                prefs.edit().putBoolean(KEY_WIFI_ONLY, value).apply()
+                prefs.edit { putBoolean(KEY_WIFI_ONLY, value) }
             }
 
         companion object {
