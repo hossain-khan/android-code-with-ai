@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -135,6 +136,36 @@ private fun LiveHardwareTelemetryBarsPreview() {
         Surface {
             LiveHardwareTelemetryBars(
                 stats = SystemResourceStats(cpuPercent = 42f, ramUsedGb = 3.8f, ramTotalGb = 8.0f),
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun LiveHardwareTelemetryBarsHighLoadPreview() {
+    CodeWithAIAppTheme {
+        Surface {
+            LiveHardwareTelemetryBars(
+                stats = SystemResourceStats(cpuPercent = 88f, ramUsedGb = 7.4f, ramTotalGb = 8.0f),
+                modifier = Modifier.padding(16.dp),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CompactMetricProgressBarPreview() {
+    CodeWithAIAppTheme {
+        Surface {
+            CompactMetricProgressBar(
+                label = "CPU",
+                valueText = "64%",
+                fraction = 0.64f,
+                indicatorColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(16.dp),
             )
         }
     }
