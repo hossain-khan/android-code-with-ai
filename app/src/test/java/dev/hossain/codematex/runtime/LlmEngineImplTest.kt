@@ -197,6 +197,8 @@ class LlmEngineImplTest {
             assertEquals(2, factory.createSessionRequests.size)
             assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
             assertEquals(listOf("OK" to false, "" to true), emittedTokens)
+            assertTrue("GPU engine should be closed during fallback", gpuEngine.closed)
+            assertTrue("GPU conversation should be closed during fallback", gpuConversation.closed)
         }
 
     @Test
@@ -411,6 +413,8 @@ class LlmEngineImplTest {
 
             assertEquals(2, factory.createSessionRequests.size)
             assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
+            assertTrue("GPU engine should be closed during history fallback", gpuEngine.closed)
+            assertTrue("GPU conversation should be closed during history fallback", gpuConversation.closed)
         }
 
     @Test
@@ -442,6 +446,147 @@ class LlmEngineImplTest {
 
             assertTrue(fakeConversation.closed)
             assertTrue(fakeEngine.closed)
+            assertNull(engine.getActiveBackend())
+        }
+
+    @Test
+    fun `runInference ignores duplicate onDone callbacks`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
+            val job =
+                launch {
+                    engine.runInference("Hello") { partial, done ->
+                        emittedTokens.add(partial to done)
+                    }
+                }
+
+            val message = fakeConversation.sentMessages.single()
+            message.callback.onDone()
+            message.callback.onDone()
+            message.callback.onDone()
+            job.join()
+
+            assertEquals(listOf("" to true), emittedTokens)
+        }
+
+    @Test
+    fun `runInference swallows onToken consumer exception and still completes`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
+            val job =
+                launch {
+                    engine.runInference("Hello") { partial, done ->
+                        if (partial == "boom") throw RuntimeException("Token consumer failed")
+                        emittedTokens.add(partial to done)
+                    }
+                }
+
+            val message = fakeConversation.sentMessages.single()
+            message.callback.onMessage(textMessage("before"))
+            message.callback.onMessage(textMessage("boom"))
+            message.callback.onMessage(textMessage("after"))
+            message.callback.onDone()
+            job.join()
+
+            assertEquals(listOf("before" to false, "after" to false, "" to true), emittedTokens)
+        }
+
+    @Test
+    fun `runInference is safe when cancellation races with late terminal callback`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    engine.runInference("Hello") { _, _ -> }
+                }
+
+            val message = fakeConversation.sentMessages.single()
+            job.cancel()
+            job.join()
+
+            // After cancellation, a late native callback should not resume a completed continuation.
+            message.callback.onDone()
+            message.callback.onError(RuntimeException("Late error"))
+
+            assertTrue(fakeConversation.cancelled)
+        }
+
+    @Test
+    fun `runInference closes failed hardware session when CPU fallback creation fails`() =
+        runEngineTest {
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            // No CPU session configured, so fallback creation will throw.
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: IllegalStateException) {
+                        // Expected: CPU fallback factory has no session.
+                    }
+                }
+
+            gpuConversation.sentMessages
+                .single()
+                .callback
+                .onError(RuntimeException("GPU failed"))
+            job.join()
+
+            assertTrue("GPU engine should be closed when fallback fails", gpuEngine.closed)
+            assertTrue("GPU conversation should be closed when fallback fails", gpuConversation.closed)
             assertNull(engine.getActiveBackend())
         }
 

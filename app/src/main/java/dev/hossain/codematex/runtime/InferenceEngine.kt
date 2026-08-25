@@ -13,6 +13,11 @@ import com.google.ai.edge.litertlm.MessageCallback
  */
 interface InferenceEngine {
     /**
+     * Initializes the engine after creation. Must be called before creating conversations.
+     */
+    fun initialize()
+
+    /**
      * Creates a new conversation with the given [config].
      */
     fun createConversation(config: ConversationConfig): InferenceConversation
@@ -52,6 +57,10 @@ interface InferenceConversation {
 class DefaultInferenceEngine(
     private val engine: Engine,
 ) : InferenceEngine {
+    override fun initialize() {
+        engine.initialize()
+    }
+
     override fun createConversation(config: ConversationConfig): InferenceConversation =
         DefaultInferenceConversation(engine.createConversation(config))
 

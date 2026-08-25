@@ -6,6 +6,7 @@ import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.ui.overlay.ModelConfig
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -13,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import timber.log.Timber
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -134,16 +136,31 @@ class LlmEngineImpl(
     }
 
     private suspend fun recreateSessionWithCpu() {
-        val session =
-            llmEngineFactory.createSession(
-                modelPath = currentModelPath,
-                preferredBackend = LlmEngine.Backend.CPU,
-                systemInstruction = currentSystemInstruction,
-                config = currentConfig,
-            )
-        engine = session.engine
-        conversation = session.conversation
-        activeBackend = session.backend
+        val engineToClose = engine
+        val conversationToClose = conversation
+        try {
+            val session =
+                llmEngineFactory.createSession(
+                    modelPath = currentModelPath,
+                    preferredBackend = LlmEngine.Backend.CPU,
+                    systemInstruction = currentSystemInstruction,
+                    config = currentConfig,
+                )
+            engine = session.engine
+            conversation = session.conversation
+            activeBackend = session.backend
+        } catch (e: Throwable) {
+            // The failed hardware session is no longer usable. Clear it out before rethrowing
+            // so we do not leave multi-gigabyte native allocations pinned.
+            engine = null
+            conversation = null
+            activeBackend = null
+            closeQuietly(conversationToClose)
+            closeQuietly(engineToClose)
+            throw e
+        }
+        closeQuietly(conversationToClose)
+        closeQuietly(engineToClose)
     }
 
     private suspend fun executeInference(
@@ -155,42 +172,13 @@ class LlmEngineImpl(
                 ?: throw IllegalStateException("Engine not initialized. Call initialize() first.")
 
         withContext(dispatcher) {
-            suspendCancellableCoroutine { cont ->
+            suspendCancellableCoroutine<Unit> { cont ->
                 val callback =
-                    object : MessageCallback {
-                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
-                            try {
-                                val text =
-                                    message.contents.contents.joinToString("") { content ->
-                                        when (content) {
-                                            is com.google.ai.edge.litertlm.Content.Text -> content.text
-                                            else -> ""
-                                        }
-                                    }
-                                onToken(text, false)
-                            } catch (e: Exception) {
-                                Timber.e(e, "LlmEngineImpl: Error processing incoming JNI token message")
-                            }
-                        }
-
-                        override fun onDone() {
-                            onToken("", true)
-                            cont.resume(Unit)
-                        }
-
-                        override fun onError(throwable: Throwable) {
-                            if (throwable is java.util.concurrent.CancellationException ||
-                                throwable is kotlinx.coroutines.CancellationException ||
-                                throwable.message?.contains("cancel", ignoreCase = true) == true
-                            ) {
-                                Timber.d("LlmEngineImpl: LiteRT-LM reported task cancellation")
-                                onToken("", true)
-                                cont.resume(Unit)
-                            } else {
-                                cont.resumeWithException(throwable)
-                            }
-                        }
-                    }
+                    SafeCallback(
+                        cont = cont,
+                        onContent = { text -> onToken(text, false) },
+                        onTerminal = { onToken("", true) },
+                    )
                 activeCallback = callback
                 conv.sendMessageAsync(input, callback)
                 cont.invokeOnCancellation { conv.cancelProcess() }
@@ -288,23 +276,14 @@ class LlmEngineImpl(
             }
 
         withContext(dispatcher) {
-            suspendCancellableCoroutine { cont ->
+            suspendCancellableCoroutine<Unit> { cont ->
                 val callback =
-                    object : MessageCallback {
-                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
-                            // Ignore response - we just want to seed context
-                        }
-
-                        override fun onDone() {
-                            Timber.d("LlmEngineImpl: Context restoration complete")
-                            cont.resume(Unit)
-                        }
-
-                        override fun onError(throwable: Throwable) {
-                            Timber.w(throwable, "LlmEngineImpl: Context restoration failed")
-                            cont.resumeWithException(throwable)
-                        }
-                    }
+                    SafeCallback(
+                        cont = cont,
+                        onContent = { },
+                        onTerminal = { Timber.d("LlmEngineImpl: Context restoration complete") },
+                        onError = { throwable -> Timber.w(throwable, "LlmEngineImpl: Context restoration failed") },
+                    )
                 activeCallback = callback
                 conv.sendMessageAsync(contextPrompt, callback)
                 cont.invokeOnCancellation { conv.cancelProcess() }
@@ -313,11 +292,116 @@ class LlmEngineImpl(
     }
 
     override fun cleanup() {
-        conversation?.close()
-        engine?.close()
+        closeQuietly(conversation)
+        closeQuietly(engine)
         conversation = null
         engine = null
         activeBackend = null
         activeCallback = null
     }
+
+    /**
+     * Closes a native [InferenceConversation], swallowing any exception so that cleanup does not
+     * mask the original failure that triggered it.
+     */
+    private fun closeQuietly(conversation: InferenceConversation?) {
+        try {
+            conversation?.close()
+        } catch (e: Exception) {
+            Timber.w(e, "LlmEngineImpl: Error closing conversation")
+        }
+    }
+
+    /**
+     * Closes a native [InferenceEngine], swallowing any exception so that cleanup does not
+     * mask the original failure that triggered it.
+     */
+    private fun closeQuietly(engine: InferenceEngine?) {
+        try {
+            engine?.close()
+        } catch (e: Exception) {
+            Timber.w(e, "LlmEngineImpl: Error closing engine")
+        }
+    }
+
+    /**
+     * Combines an idempotent continuation with a terminal guard so that the entire callback
+     * (including token dispatch) is ignored after the first terminal signal.
+     */
+    private class SafeCallback(
+        private val cont: CancellableContinuation<Unit>,
+        private val onContent: (String) -> Unit,
+        private val onTerminal: () -> Unit,
+        private val onError: ((Throwable) -> Unit)? = null,
+    ) : MessageCallback {
+        private val resumed = AtomicBoolean(false)
+        private val terminal = AtomicBoolean(false)
+
+        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
+            if (terminal.get()) return
+            try {
+                val text =
+                    message.contents.contents.joinToString("") { content ->
+                        when (content) {
+                            is com.google.ai.edge.litertlm.Content.Text -> content.text
+                            else -> ""
+                        }
+                    }
+                onContent(text)
+            } catch (e: Exception) {
+                Timber.e(e, "LlmEngineImpl: Error processing incoming JNI token message")
+            }
+        }
+
+        override fun onDone() {
+            if (terminal.getAndSet(true)) return
+            try {
+                onTerminal()
+                resume(Unit)
+            } catch (e: Exception) {
+                Timber.e(e, "LlmEngineImpl: Error in onDone callback")
+            }
+        }
+
+        override fun onError(throwable: Throwable) {
+            if (terminal.getAndSet(true)) return
+            try {
+                onError?.invoke(throwable)
+                if (isCancellation(throwable)) {
+                    Timber.d("LlmEngineImpl: LiteRT-LM reported task cancellation")
+                    onTerminal()
+                    resume(Unit)
+                } else {
+                    resumeWithException(throwable)
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "LlmEngineImpl: Error in onError callback")
+            }
+        }
+
+        private fun resume(value: Unit) {
+            if (resumed.compareAndSet(false, true)) {
+                try {
+                    cont.resume(value)
+                } catch (e: Exception) {
+                    Timber.w(e, "LlmEngineImpl: Continuation resume threw; ignoring")
+                }
+            }
+        }
+
+        private fun resumeWithException(throwable: Throwable) {
+            if (resumed.compareAndSet(false, true)) {
+                try {
+                    cont.resumeWithException(throwable)
+                } catch (e: Exception) {
+                    Timber.w(e, "LlmEngineImpl: Continuation resumeWithException threw; ignoring")
+                }
+            }
+        }
+    }
 }
+
+private fun isCancellation(throwable: Throwable): Boolean =
+    throwable is java.util.concurrent.CancellationException ||
+        throwable is kotlinx.coroutines.CancellationException ||
+        throwable.message?.contains("cancel", ignoreCase = true) == true

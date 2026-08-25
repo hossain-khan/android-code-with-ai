@@ -28,6 +28,30 @@ data class LlmEngineSession(
 )
 
 /**
+ * Factory for creating [InferenceEngine] instances.
+ *
+ * Abstracted so [DefaultLlmEngineFactory] can be unit-tested without loading JNI libraries.
+ */
+interface NativeEngineFactory {
+    /**
+     * Creates a new [InferenceEngine] for [config]. The returned engine is not yet initialized;
+     * callers are responsible for invoking [InferenceEngine.initialize].
+     */
+    fun create(config: EngineConfig): InferenceEngine
+}
+
+/**
+ * Production implementation that creates a native [Engine] and wraps it in an [InferenceEngine].
+ */
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
+class DefaultNativeEngineFactory
+    @Inject
+    constructor() : NativeEngineFactory {
+        override fun create(config: EngineConfig): InferenceEngine = DefaultInferenceEngine(Engine(config))
+    }
+
+/**
  * Factory responsible for creating a LiteRT-LM [Engine] and [Conversation]
  * with hardware backend fallback.
  *
@@ -60,6 +84,7 @@ class DefaultLlmEngineFactory
     constructor(
         @param:ApplicationContext private val context: Context,
         private val backendFallbackStrategy: BackendFallbackStrategy,
+        private val nativeEngineFactory: NativeEngineFactory,
     ) : LlmEngineFactory {
         override suspend fun createSession(
             modelPath: String,
@@ -72,7 +97,8 @@ class DefaultLlmEngineFactory
                 var session: LlmEngineSession? = null
 
                 while (session == null) {
-                    var engine: Engine? = null
+                    var inferenceEngine: InferenceEngine? = null
+                    var inferenceConversation: InferenceConversation? = null
                     try {
                         Timber.d("LlmEngineFactory: Attempting to initialize engine with backend=$actualBackend")
                         Timber.d(
@@ -88,7 +114,7 @@ class DefaultLlmEngineFactory
                                 maxNumTokens = config.maxTokens,
                             )
 
-                        engine = Engine(engineConfig).also { it.initialize() }
+                        inferenceEngine = nativeEngineFactory.create(engineConfig).also { it.initialize() }
 
                         val samplerConfig =
                             SamplerConfig(
@@ -108,13 +134,13 @@ class DefaultLlmEngineFactory
                                 samplerConfig = samplerConfig,
                             )
 
-                        val conversation = engine.createConversation(conversationConfig)
+                        inferenceConversation = inferenceEngine.createConversation(conversationConfig)
 
                         Timber.d("LlmEngineFactory: Engine initialized successfully with backend=$actualBackend")
                         session =
                             LlmEngineSession(
-                                DefaultInferenceEngine(engine),
-                                DefaultInferenceConversation(conversation),
+                                inferenceEngine,
+                                inferenceConversation,
                                 actualBackend,
                             )
                     } catch (e: LiteRtLmJniException) {
@@ -127,16 +153,24 @@ class DefaultLlmEngineFactory
                                     Timber.e("LlmEngineFactory: CPU backend failed. No further fallback available.")
                                     throw e
                                 }
-
-                        // Close the partially initialized engine before trying the next backend.
-                        try {
-                            engine?.close()
-                        } catch (closeError: Exception) {
-                            Timber.w(closeError, "LlmEngineFactory: Error closing failed engine")
-                        }
                     } catch (e: Exception) {
                         Timber.e(e, "LlmEngineFactory: Non-backend error initializing engine with backend=$actualBackend")
                         throw e
+                    } finally {
+                        // If we did not successfully build a session, release any partially initialized
+                        // native resources so the next fallback attempt (or the caller) starts clean.
+                        if (session == null) {
+                            try {
+                                inferenceConversation?.close()
+                            } catch (closeError: Exception) {
+                                Timber.w(closeError, "LlmEngineFactory: Error closing failed conversation")
+                            }
+                            try {
+                                inferenceEngine?.close()
+                            } catch (closeError: Exception) {
+                                Timber.w(closeError, "LlmEngineFactory: Error closing failed engine")
+                            }
+                        }
                     }
                 }
 
