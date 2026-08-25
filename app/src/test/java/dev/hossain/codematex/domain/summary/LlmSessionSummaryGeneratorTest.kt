@@ -1,7 +1,7 @@
 package dev.hossain.codematex.domain.summary
 
-import dev.hossain.codematex.circuit.FakeLlmEngine
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.runtime.FakeLlmEngine
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

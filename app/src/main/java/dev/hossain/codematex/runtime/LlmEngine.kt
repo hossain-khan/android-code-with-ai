@@ -1,7 +1,7 @@
 package dev.hossain.codematex.runtime
 
-import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.ui.overlay.ModelConfig
 
 interface LlmEngine {
     suspend fun initialize(

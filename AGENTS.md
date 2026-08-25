@@ -8,7 +8,7 @@ Welcome! This guide outlines the project structure, design patterns, core workfl
 CodeMateX is a native Android application that runs optimized Large Language Models (e.g., Gemma 2B) locally on the user's device using Google's **LiteRT-LM** runtime.
 
 * **Architecture**: Slack's **Circuit** framework (MVI-based Presenter/UI pattern), facilitating clear separation between State, UI Event handlers, and Composable rendering.
-* **State Management**: Presenters (like [ChatPresenter](app/src/main/java/dev/hossain/codematex/circuit/ChatPresenter.kt)) yield a state stream that triggers unidirectional UI redraws.
+* **State Management**: Presenters (like [ChatPresenter](app/src/main/java/dev/hossain/codematex/ui/screens/chat/ChatPresenter.kt)) yield a state stream that triggers unidirectional UI redraws.
 * **Engine Core**: [LlmEngine](app/src/main/java/dev/hossain/codematex/runtime/LlmEngine.kt) interfaces with the native LiteRT-LM runtime wrapper to manage inference loops, system prompting, context restoration, and token extraction.
 
 ---
@@ -52,7 +52,7 @@ graph TD
 
 ## 4. Sticky Technical Benchmarking Panel
 
-The chat screen contains a sticky benchmarking dashboard right below the top app bar in [ChatScreenUi.kt](app/src/main/java/dev/hossain/codematex/circuit/ChatScreenUi.kt). It provides:
+The chat screen contains a sticky benchmarking dashboard right below the top app bar in [ChatScreenUi.kt](app/src/main/java/dev/hossain/codematex/ui/screens/chat/ChatScreenUi.kt). It provides:
 1. **Model Specs**: File size and memory boundaries (e.g. `2588 MB • Requires 4GB RAM`).
 2. **Settings**: Sampler settings (`Temp`, `Top-K`, `Top-P`).
 3. **Execution Backend**: CPU, GPU, or NPU badge (green-tinted if hardware-accelerated, red-tinted warning if running on CPU).

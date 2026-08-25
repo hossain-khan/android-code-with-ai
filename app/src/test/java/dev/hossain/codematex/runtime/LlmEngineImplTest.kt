@@ -2,8 +2,8 @@
 
 package dev.hossain.codematex.runtime
 
-import dev.hossain.codematex.circuit.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.ui.overlay.ModelConfig
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
