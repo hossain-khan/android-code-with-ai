@@ -5,6 +5,20 @@ import kotlinx.serialization.Serializable
 
 /**
  * Snapshot of real-time device hardware telemetry (CPU & RAM utilization).
+ *
+ * Typically displayed in the initialization dock and benchmark scorecard:
+ * ```
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │                 ⏳ Initializing Gemma 2B...                 │
+ * │                                                             │
+ * │ CPU       42%                 RAM          3.8 / 8.0 GB     │
+ * │ ═════════════                 ═════════════════════════     │
+ * └─────────────────────────────────────────────────────────────┘
+ * ```
+ *
+ * @property cpuPercent Estimated process/system CPU usage percentage (0.0 to 100.0).
+ * @property ramUsedGb Device RAM currently in use in gigabytes.
+ * @property ramTotalGb Total device RAM available in gigabytes.
  */
 @Immutable
 @Serializable

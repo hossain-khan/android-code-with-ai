@@ -7,6 +7,7 @@ import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.system.SystemResourceStats
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
@@ -36,7 +37,7 @@ data class ChatScreen(
             val configInfo: String?,
             val throughputInfo: String?,
             val systemStatsInfo: String?,
-            val systemResourceStats: dev.hossain.codematex.system.SystemResourceStats? = null,
+            val systemResourceStats: SystemResourceStats? = null,
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State

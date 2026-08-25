@@ -108,6 +108,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.circuit.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -1578,7 +1579,7 @@ private fun ChatInputFieldPreparingPreview() {
                     sampleActiveChatState.copy(
                         isPreparing = true,
                         systemResourceStats =
-                            dev.hossain.codematex.system.SystemResourceStats(
+                            SystemResourceStats(
                                 cpuPercent = 42f,
                                 ramUsedGb = 3.8f,
                                 ramTotalGb = 8.0f,

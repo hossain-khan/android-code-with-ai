@@ -9,6 +9,7 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.FakeDeviceMemoryProvider
+import dev.hossain.codematex.system.SystemResourceStats
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -180,7 +181,7 @@ class ChatPresenterTest {
             val customStatsMonitor = FakeSystemStatsMonitor()
             customStatsMonitor.resourceStatsToEmit =
                 listOf(
-                    dev.hossain.codematex.system.SystemResourceStats(
+                    SystemResourceStats(
                         cpuPercent = 45f,
                         ramUsedGb = 3.5f,
                         ramTotalGb = 8.0f,

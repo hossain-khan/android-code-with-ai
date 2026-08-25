@@ -19,6 +19,7 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.system.SystemResourceStats
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -48,7 +49,7 @@ class ChatPresenter(
         var initTrigger by rememberRetained { mutableStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
-        var systemResourceStats by rememberRetained { mutableStateOf<dev.hossain.codematex.system.SystemResourceStats?>(null) }
+        var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
 

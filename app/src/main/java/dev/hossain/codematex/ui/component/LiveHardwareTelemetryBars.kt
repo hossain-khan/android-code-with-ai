@@ -28,6 +28,21 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 
 /**
  * Modular, ultra-compact hardware telemetry bar displaying live CPU and RAM resource utilization.
+ *
+ * Visual layout:
+ * ```
+ * ┌─────────────────────────────────────────────────────────────┐
+ * │                 ⏳ Initializing Gemma 2B...                 │
+ * │                                                             │
+ * │ CPU       42%                 RAM          3.8 / 8.0 GB     │
+ * │ ═════════════                 ═════════════════════════     │
+ * └─────────────────────────────────────────────────────────────┘
+ * ```
+ *
+ * @param stats Real-time snapshot of CPU percentage and used/total device RAM.
+ * @param modifier Modifier for styling and layout positioning.
+ * @param cpuColor Color used for the CPU progress track. Defaults to [MaterialTheme.colorScheme.primary].
+ * @param ramColor Color used for the RAM progress track. Defaults to [MaterialTheme.colorScheme.tertiary].
  */
 @Composable
 fun LiveHardwareTelemetryBars(
