@@ -76,6 +76,17 @@ jobs:
           files: ./app/build/reports/kover/reportDebug.xml
           slug: hossain-khan/android-code-with-ai
 
+      # GitHub Action that uploads test results to Codecov Test Analytics 📊
+      # https://docs.codecov.com/docs/test-analytics
+      - name: Upload test results to Codecov (Test Analytics)
+        if: ${{ !cancelled() && (steps.filter.outputs.src == 'true' || github.event_name == 'push') }}
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
+          files: ./app/build/test-results/testDebugUnitTest/TEST-*.xml
+          slug: hossain-khan/android-code-with-ai
+
       - if: steps.filter.outputs.src != 'true' && github.event_name != 'push'
         name: Skip build
         run: echo "No relevant changes detected — coverage skipped."
