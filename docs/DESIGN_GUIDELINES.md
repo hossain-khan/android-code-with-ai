@@ -151,13 +151,13 @@ Every screen with dynamic lists MUST include an expressive empty state:
 - Interactive prompt chips or primary action button.
 
 ### E. Markdown Rendering & Code Blocks
-LLM responses are rendered in native Compose using **`compose-richtext`** ([github.com/halilozercan/compose-richtext](https://github.com/halilozercan/compose-richtext)):
-- **Artifacts**: `com.halilibo.compose-richtext:richtext-commonmark` & `richtext-ui-material3` (CommonMark AST parser).
+LLM responses are rendered in native Compose using **`multiplatform-markdown-renderer`** ([github.com/mikepenz/multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer)) via [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt):
+- **Artifacts**: `com.mikepenz:multiplatform-markdown-renderer-m3` and `multiplatform-markdown-renderer-code` (`v0.44.0`).
+- **Anti-Flicker State**: Uses `rememberMarkdownState(content, retainState = true)` to avoid loading flashes during rapid token streaming.
+- **Syntax Highlighting**: Code blocks & fences are intercepted via `markdownComponents` and rendered with `MarkdownHighlightedCodeBlock` / `MarkdownHighlightedCodeFence` with `showHeader = true`.
 - **Typography Sizing**: Scaled to ensure high readability within compact mobile chat bubbles:
   - Base body text: `MaterialTheme.typography.bodyMedium` (`14.sp`, `20.sp` line height).
-  - Headings (H1–H6): Scaled proportionally (H1: `16.sp Bold`, H2: `15.sp Bold`, H3: `14.5.sp SemiBold`).
-  - Code Blocks: Monospace `12.5.sp` with `surfaceContainerLowest` container background and rounded 8.dp corners.
-  - Spacing: Compact `paragraphSpacing = 6.sp`.
+  - Code Blocks: Monospace `12.5.sp` with syntax highlighting and language badge header.
 
 ### F. Compose Previews for Modular UI Elements
 Whenever creating or updating modular composable components, always include comprehensive preview functions at the bottom of the file:
