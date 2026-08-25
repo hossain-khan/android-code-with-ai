@@ -32,8 +32,8 @@ class LlmSessionSummaryGenerator
 
             var summary = ""
             try {
-                llmEngine.runInference(
-                    "Summarize this coding learning session in 1-2 sentences: $conversationText",
+                llmEngine.runInferenceIsolated(
+                    input = "Summarize this coding learning session in 1-2 sentences: $conversationText",
                 ) { token, done ->
                     if (!done) {
                         summary += token
