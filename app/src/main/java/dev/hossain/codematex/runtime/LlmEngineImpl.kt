@@ -120,15 +120,17 @@ class LlmEngineImpl(
         } catch (e: java.util.concurrent.CancellationException) {
             Timber.d("LlmEngineImpl: Inference was cancelled by user (Java CancellationException)")
             throw e
-        } catch (e: Exception) {
-            val failedBackend = activeBackend
-            if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+        } catch (e: BackendFailureException) {
+            val failedBackend = e.failedBackend
+            if (failedBackend != LlmEngine.Backend.CPU) {
                 Timber.w(
                     e,
                     "LlmEngineImpl: Inference failed on hardware acceleration ($failedBackend). Falling back to CPU...",
                 )
                 recreateSessionWithCpu()
-                executeInference(input, onToken)
+                // Re-throw so the orchestrator can signal the presenter to discard any partial
+                // hardware output before retrying on the newly-created CPU session.
+                throw e
             } else {
                 throw e
             }
@@ -153,7 +155,12 @@ class LlmEngineImpl(
                 ?: throw IllegalStateException("Failed to create isolated conversation")
 
         try {
-            executeInferenceOnConversation(input, isolatedConversation, onToken)
+            executeInferenceOnConversation(
+                input = input,
+                conv = isolatedConversation,
+                onToken = onToken,
+                backend = activeBackend ?: LlmEngine.Backend.CPU,
+            )
         } finally {
             closeQuietly(isolatedConversation)
         }
@@ -201,12 +208,14 @@ class LlmEngineImpl(
         input: String,
         conv: InferenceConversation,
         onToken: (partialResult: String, done: Boolean) -> Unit,
+        backend: LlmEngine.Backend = activeBackend ?: LlmEngine.Backend.CPU,
     ) {
         withContext(dispatcher) {
             suspendCancellableCoroutine<Unit> { cont ->
                 val callback =
                     SafeCallback(
                         cont = cont,
+                        backend = backend,
                         onContent = { text -> onToken(text, false) },
                         onTerminal = { onToken("", true) },
                     )
@@ -329,6 +338,7 @@ class LlmEngineImpl(
                 val callback =
                     SafeCallback(
                         cont = cont,
+                        backend = activeBackend ?: LlmEngine.Backend.CPU,
                         onContent = { },
                         onTerminal = { Timber.d("LlmEngineImpl: Context restoration complete") },
                         onError = { throwable -> Timber.w(throwable, "LlmEngineImpl: Context restoration failed") },
@@ -379,6 +389,7 @@ class LlmEngineImpl(
      */
     private class SafeCallback(
         private val cont: CancellableContinuation<Unit>,
+        private val backend: LlmEngine.Backend,
         private val onContent: (String) -> Unit,
         private val onTerminal: () -> Unit,
         private val onError: ((Throwable) -> Unit)? = null,
@@ -421,7 +432,13 @@ class LlmEngineImpl(
                     onTerminal()
                     resume(Unit)
                 } else {
-                    resumeWithException(throwable)
+                    val exceptionToResume =
+                        if (throwable is com.google.ai.edge.litertlm.LiteRtLmJniException) {
+                            BackendFailureException(backend, throwable)
+                        } else {
+                            throwable
+                        }
+                    resumeWithException(exceptionToResume)
                 }
             } catch (e: Exception) {
                 Timber.e(e, "LlmEngineImpl: Error in onError callback")

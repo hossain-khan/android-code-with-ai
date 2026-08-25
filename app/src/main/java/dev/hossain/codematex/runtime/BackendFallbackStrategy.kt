@@ -46,10 +46,11 @@ class DefaultBackendFallbackStrategy
         private val unsupportedBackends = mutableSetOf<LlmEngine.Backend>()
 
         override fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend {
-            if (unsupportedBackends.contains(preferred)) {
-                return LlmEngine.Backend.CPU
+            var backend = preferred
+            while (unsupportedBackends.contains(backend) && backend != LlmEngine.Backend.CPU) {
+                backend = nextBackend(backend) ?: LlmEngine.Backend.CPU
             }
-            return preferred
+            return backend
         }
 
         override fun nextBackend(current: LlmEngine.Backend): LlmEngine.Backend? =
