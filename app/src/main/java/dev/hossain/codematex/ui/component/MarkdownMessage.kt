@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.compose.components.markdownComponents
@@ -42,7 +44,12 @@ fun MarkdownMessage(
             markdownTypography(
                 text = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                 paragraph = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
-                code = MaterialTheme.typography.bodyMedium.copy(fontSize = 12.5.sp, lineHeight = 16.sp),
+                code =
+                    MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.5.sp,
+                        lineHeight = 16.sp,
+                    ),
             ),
         components =
             markdownComponents(
@@ -65,6 +72,12 @@ private fun ChatMarkdownCodeBlock(
         content = content,
         node = node,
         showHeader = true,
+        style =
+            TextStyle(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.5.sp,
+                lineHeight = 16.sp,
+            ),
     )
 }
 
@@ -81,6 +94,12 @@ private fun ChatMarkdownCodeFence(
         content = content,
         node = node,
         showHeader = true,
+        style =
+            TextStyle(
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.5.sp,
+                lineHeight = 16.sp,
+            ),
     )
 }
 
