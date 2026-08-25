@@ -104,13 +104,13 @@ import com.halilibo.richtext.ui.CodeBlockStyle
 import com.halilibo.richtext.ui.RichTextStyle
 import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
-import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews

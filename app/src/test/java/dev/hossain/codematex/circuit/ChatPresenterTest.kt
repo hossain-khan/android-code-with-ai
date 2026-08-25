@@ -5,11 +5,11 @@ import android.content.ContextWrapper
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatPresenter
 import dev.hossain.codematex.ui.screens.chat.ChatScreen

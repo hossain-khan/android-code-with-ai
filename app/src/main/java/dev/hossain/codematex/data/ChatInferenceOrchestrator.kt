@@ -1,6 +1,5 @@
 package dev.hossain.codematex.data
 
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
@@ -8,6 +7,7 @@ import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LlmEngine.Backend
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn

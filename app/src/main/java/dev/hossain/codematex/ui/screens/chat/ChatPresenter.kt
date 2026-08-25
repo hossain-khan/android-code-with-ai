@@ -12,10 +12,8 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.ChatInferenceOrchestrator
-import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.data.ThroughputTracker
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
@@ -23,6 +21,8 @@ import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
+import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
