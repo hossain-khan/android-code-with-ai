@@ -39,7 +39,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,28 +47,23 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
-import com.halilibo.richtext.commonmark.Markdown
-import com.halilibo.richtext.ui.CodeBlockStyle
-import com.halilibo.richtext.ui.RichTextStyle
-import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -490,7 +484,7 @@ private fun SessionMessageBubble(
                             }
                         }
 
-                        SessionMessageMarkdown(
+                        MarkdownMessage(
                             content = message.content.ifEmpty { "..." },
                             modifier = Modifier.padding(top = 4.dp),
                         )
@@ -548,51 +542,6 @@ private fun SessionMessageBubble(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SessionMessageMarkdown(
-    content: String,
-    modifier: Modifier = Modifier,
-) {
-    val currentTheme = MaterialTheme.colorScheme
-    val chatMarkdownStyle =
-        remember(currentTheme) {
-            RichTextStyle(
-                paragraphSpacing = 6.sp,
-                headingStyle = { level: Int, defaultStyle: TextStyle ->
-                    when (level) {
-                        0 -> defaultStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                        1 -> defaultStyle.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold)
-                        2 -> defaultStyle.copy(fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
-                        else -> defaultStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                },
-                codeBlockStyle =
-                    CodeBlockStyle(
-                        textStyle =
-                            TextStyle(
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.5.sp,
-                                lineHeight = 16.sp,
-                            ),
-                        modifier =
-                            Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(currentTheme.surfaceContainerLowest)
-                                .padding(8.dp),
-                    ),
-            )
-        }
-
-    ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp)) {
-        RichText(
-            style = chatMarkdownStyle,
-            modifier = modifier,
-        ) {
-            Markdown(content = content)
         }
     }
 }

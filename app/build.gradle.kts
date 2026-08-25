@@ -230,8 +230,9 @@ dependencies {
     ksp(libs.room.compiler)
 
     // Markdown rendering
-    implementation(libs.richtext.commonmark)
-    implementation(libs.richtext.ui.material3)
+    implementation(libs.markdown.renderer)
+    implementation(libs.markdown.renderer.m3)
+    implementation(libs.markdown.renderer.code)
 
     // Logging
     implementation(libs.timber)
