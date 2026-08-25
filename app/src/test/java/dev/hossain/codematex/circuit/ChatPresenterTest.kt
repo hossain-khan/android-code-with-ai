@@ -9,6 +9,7 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.FakeDeviceMemoryProvider
+import dev.hossain.codematex.system.SystemResourceStats
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -165,6 +166,51 @@ class ChatPresenterTest {
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertEquals(TutorPersona.BEGINNER_FRIENDLY, updatedState.persona)
                 assertTrue(fakeChatInferenceOrchestrator.resetConversationPersonas.contains(TutorPersona.BEGINNER_FRIENDLY))
+            }
+        }
+
+    @Test
+    fun `given system stats monitor emits metrics - emits active state with systemResourceStats`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val customStatsMonitor = FakeSystemStatsMonitor()
+            customStatsMonitor.resourceStatsToEmit =
+                listOf(
+                    SystemResourceStats(
+                        cpuPercent = 45f,
+                        ramUsedGb = 3.5f,
+                        ramTotalGb = 8.0f,
+                    ),
+                )
+
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Response"))
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                    configStore = configStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = customStatsMonitor,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                state.eventSink(ChatScreen.Event.SendMessage("Explain ViewModel"))
+
+                val generatingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals(45f, generatingState.systemResourceStats?.cpuPercent ?: 0f, 0.01f)
+                assertEquals(3.5f, generatingState.systemResourceStats?.ramUsedGb ?: 0f, 0.01f)
+                assertEquals(8.0f, generatingState.systemResourceStats?.ramTotalGb ?: 0f, 0.01f)
             }
         }
 }

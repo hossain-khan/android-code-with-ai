@@ -19,6 +19,7 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.system.SystemResourceStats
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -48,6 +49,7 @@ class ChatPresenter(
         var initTrigger by rememberRetained { mutableStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
+        var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
 
@@ -109,13 +111,17 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(isGenerating) {
-            if (isGenerating) {
-                systemStatsMonitor.monitorWhileActive(
-                    isActive = { isGenerating },
-                    onStats = { systemStatsInfo = it },
+        LaunchedEffect(isGenerating, isPreparing) {
+            if (isGenerating || isPreparing) {
+                systemStatsMonitor.monitorMetricsWhileActive(
+                    isActive = { isGenerating || isPreparing },
+                    onMetrics = { stats ->
+                        systemResourceStats = stats
+                        systemStatsInfo = stats.formattedSummary
+                    },
                 )
             } else {
+                systemResourceStats = null
                 systemStatsInfo = null
             }
         }
@@ -137,9 +143,11 @@ class ChatPresenter(
                         scope.launch {
                             // Capture the active model at inference start so the saved session
                             // is tagged with the model that actually generated the response.
-                            val modelName = activeModel?.name
+                            val currentModel = activeModel
+                            val modelName = currentModel?.name ?: "Unknown"
+
+                            val throughputTracker = ThroughputTracker()
                             try {
-                                val throughputTracker = ThroughputTracker()
                                 chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
                                     when (inferenceEvent) {
                                         is ChatInferenceEvent.Token -> {
@@ -220,6 +228,7 @@ class ChatPresenter(
                     messages = emptyList()
                     throughputInfo = null
                     systemStatsInfo = null
+                    systemResourceStats = null
                     scope.launch {
                         chatInferenceOrchestrator.resetConversation(screen.topic, persona)
                     }
@@ -282,6 +291,7 @@ class ChatPresenter(
                     configInfo = configText,
                     throughputInfo = throughputInfo,
                     systemStatsInfo = systemStatsInfo,
+                    systemResourceStats = systemResourceStats,
                     topic = screen.topic,
                     eventSink = eventSink,
                 )

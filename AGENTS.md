@@ -89,6 +89,13 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
 - Always provide an expressive empty state with topic glyphs and starter action chips rather than a blank screen.
 - Standardize on `pinnedScrollBehavior` attached to both `TopAppBar` and parent `Scaffold.nestedScroll()`.
 
+### E. Mandatory Compose Previews for Modular UI Elements
+- **Rule**: Whenever creating or updating composables, screens, or modular UI components, **always include comprehensive `@ThemePreviews` and/or `@DevicePreviews`**.
+- **Best Practices**:
+  - Wrap preview content in `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }` to preview in both Light and Dark modes.
+  - Cover multiple critical UI states: nominal/default, preparing/loading, high-load/error, and active states.
+  - Ensure standalone modular components (e.g., progress bars, chips, cards) have dedicated previews with realistic sample data and padding.
+
 ---
 
 ## 6. Development Workflows & Commands
