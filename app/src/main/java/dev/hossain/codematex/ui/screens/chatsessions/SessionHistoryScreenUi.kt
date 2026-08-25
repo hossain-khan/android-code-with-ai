@@ -211,6 +211,7 @@ private fun SessionHistoryLayout(
                             onDelete = {
                                 state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
                             },
+                            modifier = Modifier.animateItem(),
                         )
                     }
                 }
@@ -308,11 +309,12 @@ private fun SessionCard(
     session: ChatSession,
     onClick: () -> Unit,
     onDelete: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val visualInfo = session.topic.visualInfo
     Card(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
