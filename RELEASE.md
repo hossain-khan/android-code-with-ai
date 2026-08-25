@@ -164,6 +164,10 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.10.0` | `17` | 2026-08-25 | Live CPU/RAM telemetry bars during init, UI & test package reorganization, Codecov Test Analytics. |
+| `1.9.3` | `16` | 2026-08-25 | Smart auto-scroll with Jump-to-Bottom pill, download complete notifications, R8 size optimization. |
+| `1.9.0` | `10` | 2026-08-24 | Hardware benchmark scorecard, model config sheet, download cancel/delete management. |
+| `1.8.0` | `9` | 2026-08-23 | Background download service with WorkManager, sticky notifications, foreground download progress. |
 | `1.7.0` | `8` | 2026-08-22 | SOLID architecture refactor (P1-P6), HTTP range downloader, JNI safety, M3 input dock. |
 | `1.6.0` | `7` | 2026-08-21 | Production release keystore enforcement, initial Google Play release notes, Markdown chat typography. |
 | `1.5.0` | `6` | 2026-08-20 | Atmospheric M3 Jetcaster redesign, multi-pane adaptive layouts, wavy progress indicators. |

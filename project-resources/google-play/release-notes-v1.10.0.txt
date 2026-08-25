@@ -1,0 +1,5 @@
+What's New in v1.10.0:
+• Live Hardware Telemetry: Added real-time CPU & RAM usage indicators during model initialization & inference.
+• UI Re-architecture: Streamlined package structure across chat, home, models, and session screens.
+• Test & CI Analytics: Integrated automated test suite tracking and performance diagnostics.
+• Performance & Stability: Updated Room 2.7.2 and AGP 9.3.2 for enhanced database speed and smoother on-device AI.
