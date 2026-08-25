@@ -1,6 +1,5 @@
 package dev.hossain.codematex.system
 
-import dev.hossain.codematex.util.DeviceMemory
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -11,7 +10,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given dev mode - returns eligible regardless of hardware`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 0f, totalGb = 2f)
+        fakeMemoryProvider.returnedTotalBytes = 2L * MemoryCompatibilityPolicy.BYTES_PER_GB
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,
@@ -26,7 +25,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given 64-bit and enough ram - returns eligible`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 4f, totalGb = 8f)
+        fakeMemoryProvider.returnedTotalBytes = 8L * MemoryCompatibilityPolicy.BYTES_PER_GB
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,
@@ -41,7 +40,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given not 64-bit - returns ineligible with architecture reason`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 4f, totalGb = 8f)
+        fakeMemoryProvider.returnedTotalBytes = 8L * MemoryCompatibilityPolicy.BYTES_PER_GB
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,
@@ -58,7 +57,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given 64-bit but low ram - returns ineligible with ram reason`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 1f, totalGb = 6f)
+        fakeMemoryProvider.returnedTotalBytes = 6L * MemoryCompatibilityPolicy.BYTES_PER_GB
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,
@@ -76,7 +75,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given ram exactly at threshold - returns eligible`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 0f, totalGb = 7.2f)
+        fakeMemoryProvider.returnedTotalBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8)
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,
@@ -91,7 +90,7 @@ class HardwareEligibilityCheckerImplTest {
 
     @Test
     fun `given ram just below threshold - returns ineligible`() {
-        fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 0f, totalGb = 7.19f)
+        fakeMemoryProvider.returnedTotalBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8) - 1
         val checker =
             HardwareEligibilityCheckerImpl(
                 deviceMemoryProvider = fakeMemoryProvider,

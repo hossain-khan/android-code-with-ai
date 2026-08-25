@@ -5,22 +5,17 @@ import android.content.Context
 import java.io.File
 
 object DeviceMemory {
-    fun getDeviceRamGb(context: Context): Int =
-        getDeviceRamGb { memoryInfo ->
+    fun getTotalMemoryBytes(context: Context): Long =
+        getTotalMemoryBytes { memoryInfo ->
             val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
             activityManager.getMemoryInfo(memoryInfo)
         }
 
-    fun getDeviceRamGb(getMemoryInfo: (ActivityManager.MemoryInfo) -> Unit): Int {
+    fun getTotalMemoryBytes(getMemoryInfo: (ActivityManager.MemoryInfo) -> Unit): Long {
         val memoryInfo = ActivityManager.MemoryInfo()
         getMemoryInfo(memoryInfo)
-        return (memoryInfo.totalMem / (1024 * 1024 * 1024)).toInt()
+        return memoryInfo.totalMem
     }
-
-    fun isModelCompatible(
-        modelMinRamGb: Int,
-        deviceRamGb: Int,
-    ): Boolean = modelMinRamGb == 0 || deviceRamGb >= modelMinRamGb
 
     data class MemoryStats(
         val usedGb: Float,

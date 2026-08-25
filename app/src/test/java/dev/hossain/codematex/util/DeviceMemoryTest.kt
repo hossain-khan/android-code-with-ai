@@ -1,6 +1,7 @@
 package dev.hossain.codematex.util
 
 import android.app.ActivityManager
+import dev.hossain.codematex.system.MemoryCompatibilityPolicy
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -16,48 +17,19 @@ class DeviceMemoryTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun `given model has no ram requirement - is model compatible is always true`() {
-        assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 0, deviceRamGb = 0))
-        assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 0, deviceRamGb = 4))
-    }
+    fun `given total memory - getTotalMemoryBytes returns raw bytes`() {
+        val bytes =
+            DeviceMemory.getTotalMemoryBytes { memoryInfo ->
+                memoryInfo.totalMem = 8L * MemoryCompatibilityPolicy.BYTES_PER_GB
+            }
 
-    @Test
-    fun `given device meets ram requirement - is model compatible is true`() {
-        assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 8))
-        assertTrue(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 12))
-    }
-
-    @Test
-    fun `given device below ram requirement - is model compatible is false`() {
-        assertFalse(DeviceMemory.isModelCompatible(modelMinRamGb = 8, deviceRamGb = 7))
-        assertFalse(DeviceMemory.isModelCompatible(modelMinRamGb = 12, deviceRamGb = 8))
+        assertEquals(8L * MemoryCompatibilityPolicy.BYTES_PER_GB, bytes)
     }
 
     @Test
     fun `given any platform - get process cpu ticks never returns negative value`() {
         // On platforms without /proc (e.g. macOS dev machines) this falls back to 0.
         assertTrue(DeviceMemory.getProcessCpuTicks() >= 0L)
-    }
-
-    @Test
-    fun `getDeviceRamGb returns total memory in gigabytes`() {
-        val ramGb =
-            DeviceMemory.getDeviceRamGb { memoryInfo ->
-                memoryInfo.totalMem = 16L * 1024 * 1024 * 1024
-            }
-
-        assertEquals(16, ramGb)
-    }
-
-    @Test
-    fun `getDeviceRamGb rounds down to nearest gigabyte`() {
-        val ramGb =
-            DeviceMemory.getDeviceRamGb { memoryInfo ->
-                // 15.5 GB in bytes
-                memoryInfo.totalMem = (15.5 * 1024 * 1024 * 1024).toLong()
-            }
-
-        assertEquals(15, ramGb)
     }
 
     @Test
