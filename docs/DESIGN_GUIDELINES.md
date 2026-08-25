@@ -159,6 +159,13 @@ LLM responses are rendered in native Compose using **`compose-richtext`** ([gith
   - Code Blocks: Monospace `12.5.sp` with `surfaceContainerLowest` container background and rounded 8.dp corners.
   - Spacing: Compact `paragraphSpacing = 6.sp`.
 
+### F. Compose Previews for Modular UI Elements
+Whenever creating or updating modular composable components, always include comprehensive preview functions at the bottom of the file:
+- Annotate with `@ThemePreviews` (and `@DevicePreviews` for full screen layouts).
+- Always wrap preview calls with `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }`.
+- Provide previews for multiple visual states (nominal/default, preparing/loading, high-load/error, active).
+- Ensure standalone modular components have realistic preview data and padding (`Modifier.padding(16.dp)`).
+
 ---
 
 ## 6. AI Agent Implementation Checklist
@@ -167,6 +174,7 @@ Before finishing any UI task, verify the following checklist:
 
 - [ ] **M3 Surface Container Hierarchy**: Are cards using `surfaceContainerLow` and top/bottom bars using `surfaceContainer`?
 - [ ] **Adaptive Layout**: Is the screen responsive using `currentWindowAdaptiveInfoV2()`?
+- [ ] **Compose Previews**: Are `@ThemePreviews` added with multiple visual states for new or modified modular UI components?
 - [ ] **Wavy Progress**: Are loading states using `CircularWavyProgressIndicator` / `LinearWavyProgressIndicator`?
 - [ ] **Atmospheric Glow**: Is `radialGradientScrim` applied where appropriate?
 - [ ] **Empty States**: Are empty lists handled gracefully with informative visuals?
