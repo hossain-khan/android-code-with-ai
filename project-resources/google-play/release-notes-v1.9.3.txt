@@ -1,0 +1,5 @@
+What's New in v1.9.3:
+• Smart Auto-Scroll: Chat stays pinned to the bottom during live streaming, with a floating "Jump to Bottom ↓" pill when scrolled up.
+• Download Details: Notifications show real-time downloaded/total MB & an expandable completion summary.
+• Optimized App Size: Streamlined R8 configuration saving over 650 KB of APK & DEX footprint.
+• Engine Stability: Enhanced LiteRT-LM JNI reflection mappings for crash-free local inference.
