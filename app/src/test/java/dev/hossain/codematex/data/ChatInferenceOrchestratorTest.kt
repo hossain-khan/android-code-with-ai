@@ -136,4 +136,40 @@ class ChatInferenceOrchestratorTest {
     fun `getActiveBackend returns engine backend`() {
         assertEquals(LlmEngine.Backend.CPU, createOrchestrator().getActiveBackend())
     }
+
+    @Test
+    fun `sendMessage emits BackendFailed and retries when backend fails`() =
+        runTest {
+            fakeEngine.backendFailureBackend = LlmEngine.Backend.GPU
+            fakeEngine.responseTokens = listOf("CPU ", "response", "")
+
+            val events = createOrchestrator().sendMessage("Hi").toList()
+
+            assertEquals(
+                listOf(
+                    ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
+                    ChatInferenceEvent.Token("CPU "),
+                    ChatInferenceEvent.Token("response"),
+                    ChatInferenceEvent.Token(""),
+                    ChatInferenceEvent.Done,
+                ),
+                events,
+            )
+            assertEquals(2, fakeEngine.runInferenceCalls)
+        }
+
+    @Test
+    fun `sendMessage does not retry when CPU backend fails`() =
+        runTest {
+            fakeEngine.backendFailureBackend = LlmEngine.Backend.CPU
+            fakeEngine.responseTokens = listOf("CPU ", "response", "")
+
+            try {
+                createOrchestrator().sendMessage("Hi").toList()
+            } catch (e: Exception) {
+                // Expected.
+            }
+
+            assertEquals(1, fakeEngine.runInferenceCalls)
+        }
 }

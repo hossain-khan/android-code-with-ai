@@ -191,6 +191,22 @@ class ChatPresenter(
                                                     modelUsed = modelName,
                                                 )
                                         }
+
+                                        is ChatInferenceEvent.BackendFailed -> {
+                                            Timber.w(
+                                                "ChatPresenter: Backend ${inferenceEvent.backend} failed, clearing partial output for fallback",
+                                            )
+                                            val lastAgent = messages.last() as? ChatMessage.Agent
+                                            if (lastAgent != null && lastAgent.isStreaming) {
+                                                messages =
+                                                    messages.dropLast(1) +
+                                                    lastAgent.copy(
+                                                        content = "",
+                                                        isStreaming = true,
+                                                    )
+                                            }
+                                            throughputInfo = "Falling back from ${inferenceEvent.backend}..."
+                                        }
                                     }
                                 }
                             } catch (e: CancellationException) {

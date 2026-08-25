@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
+import dev.hossain.codematex.runtime.BackendFailureException
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LlmEngine.Backend
 import dev.hossain.codematex.ui.overlay.ModelConfigStore
@@ -33,6 +34,14 @@ sealed interface ChatInferenceEvent {
      * Emitted when the LLM finishes generating the response.
      */
     data object Done : ChatInferenceEvent
+
+    /**
+     * Emitted when inference failed on a hardware backend and a fallback attempt is about to start.
+     * The presenter should discard any partial output from the failed backend.
+     */
+    data class BackendFailed(
+        val backend: LlmEngine.Backend,
+    ) : ChatInferenceEvent
 }
 
 /**
@@ -84,9 +93,10 @@ interface ChatInferenceOrchestrator {
     /**
      * Sends [input] to the LLM and returns a [Flow] of inference events.
      *
-     * The flow emits [ChatInferenceEvent.Token] for each partial token and
-     * [ChatInferenceEvent.Done] once generation completes. Errors terminate the
-     * flow with an exception.
+     * The flow emits [ChatInferenceEvent.Token] for each partial token,
+     * [ChatInferenceEvent.BackendFailed] when a hardware backend fails and a
+     * fallback attempt is starting, and [ChatInferenceEvent.Done] once generation
+     * completes. Errors terminate the flow with an exception.
      */
     suspend fun sendMessage(input: String): Flow<ChatInferenceEvent>
 }
@@ -160,12 +170,26 @@ class DefaultChatInferenceOrchestrator
             callbackFlow {
                 Timber.d("ChatInferenceOrchestrator: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
 
-                llmEngine.runInference(input) { partialToken, done ->
-                    trySend(ChatInferenceEvent.Token(partialToken))
-                    if (done) {
-                        trySend(ChatInferenceEvent.Done)
-                        close()
+                suspend fun runAndEmit(input: String) {
+                    llmEngine.runInference(input) { partialToken, done ->
+                        trySend(ChatInferenceEvent.Token(partialToken))
+                        if (done) {
+                            trySend(ChatInferenceEvent.Done)
+                            close()
+                        }
                     }
+                }
+
+                try {
+                    runAndEmit(input)
+                } catch (e: BackendFailureException) {
+                    if (e.failedBackend == LlmEngine.Backend.CPU) {
+                        // CPU failure is terminal; do not retry.
+                        throw e
+                    }
+                    Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
+                    trySend(ChatInferenceEvent.BackendFailed(e.failedBackend))
+                    runAndEmit(input)
                 }
 
                 awaitClose {

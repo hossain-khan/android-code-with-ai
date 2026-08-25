@@ -23,7 +23,22 @@ class BackendFallbackStrategyTest {
     }
 
     @Test
-    fun `resolveStartBackend falls back to CPU when preferred is unsupported`() {
+    fun `resolveStartBackend falls back through chain when preferred is unsupported`() {
+        strategy.markUnsupported(LlmEngine.Backend.NPU)
+
+        assertEquals(LlmEngine.Backend.GPU, strategy.resolveStartBackend(LlmEngine.Backend.NPU))
+    }
+
+    @Test
+    fun `resolveStartBackend skips multiple unsupported backends`() {
+        strategy.markUnsupported(LlmEngine.Backend.NPU)
+        strategy.markUnsupported(LlmEngine.Backend.GPU)
+
+        assertEquals(LlmEngine.Backend.CPU, strategy.resolveStartBackend(LlmEngine.Backend.NPU))
+    }
+
+    @Test
+    fun `resolveStartBackend falls back to CPU when preferred GPU is unsupported`() {
         strategy.markUnsupported(LlmEngine.Backend.GPU)
 
         assertEquals(LlmEngine.Backend.CPU, strategy.resolveStartBackend(LlmEngine.Backend.GPU))

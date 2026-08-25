@@ -153,7 +153,7 @@ class LlmEngineImplTest {
         }
 
     @Test
-    fun `runInference falls back to CPU when inference fails on hardware backend`() =
+    fun `runInference recreates CPU session and throws BackendFailureException on hardware failure`() =
         runEngineTest {
             val gpuEngine = FakeInferenceEngine()
             val gpuConversation = FakeInferenceConversation()
@@ -178,27 +178,165 @@ class LlmEngineImplTest {
                 backend = LlmEngine.Backend.GPU,
             )
 
-            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
             val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: BackendFailureException) {
+                        assertEquals(LlmEngine.Backend.GPU, e.failedBackend)
+                    }
+                }
+
+            val gpuMessage = gpuConversation.sentMessages.single()
+            gpuMessage.callback.onError(
+                com.google.ai.edge.litertlm
+                    .LiteRtLmJniException("GPU failed"),
+            )
+            job.join()
+
+            assertEquals(2, factory.createSessionRequests.size)
+            assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
+            assertTrue("GPU engine should be closed during fallback", gpuEngine.closed)
+            assertTrue("GPU conversation should be closed during fallback", gpuConversation.closed)
+            assertEquals(LlmEngine.Backend.CPU, engine.getActiveBackend())
+
+            // A second runInference call now uses the CPU session.
+            val emittedTokens = mutableListOf<Pair<String, Boolean>>()
+            val cpuJob =
                 launch {
                     engine.runInference("Hello") { partial, done ->
                         emittedTokens.add(partial to done)
                     }
                 }
-
-            val gpuMessage = gpuConversation.sentMessages.single()
-            gpuMessage.callback.onError(RuntimeException("GPU failed"))
-
             val cpuMessage = cpuConversation.sentMessages.single()
             cpuMessage.callback.onMessage(textMessage("OK"))
             cpuMessage.callback.onDone()
+            cpuJob.join()
+
+            assertEquals(listOf("OK" to false, "" to true), emittedTokens)
+        }
+
+    @Test
+    fun `runInference throws BackendFailureException and recreates CPU session on backend failure`() =
+        runEngineTest {
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            val cpuEngine = FakeInferenceEngine()
+            val cpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = cpuEngine,
+                    conversation = cpuConversation,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: BackendFailureException) {
+                        assertEquals(LlmEngine.Backend.GPU, e.failedBackend)
+                    }
+                }
+
+            gpuConversation.sentMessages
+                .single()
+                .callback
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("GPU failed"),
+                )
             job.join()
 
-            assertEquals(2, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
-            assertEquals(listOf("OK" to false, "" to true), emittedTokens)
-            assertTrue("GPU engine should be closed during fallback", gpuEngine.closed)
-            assertTrue("GPU conversation should be closed during fallback", gpuConversation.closed)
+            assertTrue("GPU engine should be closed", gpuEngine.closed)
+            assertTrue("GPU conversation should be closed", gpuConversation.closed)
+            assertEquals(LlmEngine.Backend.CPU, engine.getActiveBackend())
+        }
+
+    @Test
+    fun `runInference does not retry when CPU backend fails`() =
+        runEngineTest {
+            val cpuEngine = FakeInferenceEngine()
+            val cpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = cpuEngine,
+                    conversation = cpuConversation,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.CPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: BackendFailureException) {
+                        assertEquals(LlmEngine.Backend.CPU, e.failedBackend)
+                    }
+                }
+
+            cpuConversation.sentMessages
+                .single()
+                .callback
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("CPU failed"),
+                )
+            job.join()
+
+            assertEquals(1, factory.createSessionRequests.size)
+        }
+
+    @Test
+    fun `runInference does not fall back on non-backend errors`() =
+        runEngineTest {
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: RuntimeException) {
+                        assertEquals("Programming error", e.message)
+                    }
+                }
+
+            gpuConversation.sentMessages
+                .single()
+                .callback
+                .onError(RuntimeException("Programming error"))
+            job.join()
+
+            assertEquals(1, factory.createSessionRequests.size)
+            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
         }
 
     @Test
@@ -451,7 +589,10 @@ class LlmEngineImplTest {
             gpuConversation.sentMessages
                 .single()
                 .callback
-                .onError(RuntimeException("GPU failed"))
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("GPU failed"),
+                )
             assertEquals(1, cpuConversation.sentMessages.size)
             cpuConversation.sentMessages
                 .single()
@@ -630,7 +771,10 @@ class LlmEngineImplTest {
             gpuConversation.sentMessages
                 .single()
                 .callback
-                .onError(RuntimeException("GPU failed"))
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("GPU failed"),
+                )
             job.join()
 
             assertTrue("GPU engine should be closed when fallback fails", gpuEngine.closed)

@@ -12,8 +12,10 @@ class FakeLlmEngine : LlmEngine {
     var cleanupCalls = 0
     var restoreHistoryCalls = 0
     var isolatedInferenceCalls = 0
+    var runInferenceCalls = 0
     var lastInput: String? = null
     var shouldThrow: Exception? = null
+    var backendFailureBackend: LlmEngine.Backend? = null
 
     override suspend fun initialize(
         modelPath: String,
@@ -30,7 +32,13 @@ class FakeLlmEngine : LlmEngine {
         onToken: (partialResult: String, done: Boolean) -> Unit,
     ) {
         lastInput = input
+        runInferenceCalls++
         if (shouldThrow != null) throw shouldThrow!!
+
+        val failingBackend = backendFailureBackend
+        if (failingBackend != null && runInferenceCalls == 1) {
+            throw BackendFailureException(failingBackend, RuntimeException("Backend $failingBackend failed"))
+        }
 
         responseTokens.forEachIndexed { index, token ->
             onToken(token, index == responseTokens.lastIndex)
