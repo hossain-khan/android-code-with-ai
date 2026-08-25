@@ -1,0 +1,5 @@
+What's New in v1.11.0:
+• Persistent AI Tutor Persona: Automatically saves and pre-selects your preferred tutor persona across launches.
+• Modern Markdown & Monospace Code: Upgraded Markdown rendering with crisp syntax-highlighted code blocks.
+• Fluid History Animations: Smooth deletion and reordering animations for session history.
+• Jetpack Preferences DataStore: Fully modernized async persistence architecture with Kotlin 2.4 explicit backing fields.
