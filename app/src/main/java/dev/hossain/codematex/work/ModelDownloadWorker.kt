@@ -4,7 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.net.Uri
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
@@ -288,7 +288,7 @@ class ModelDownloadWorker(
         val deepLinkIntent =
             Intent(
                 Intent.ACTION_VIEW,
-                Uri.parse("codematex://models"),
+                "codematex://models".toUri(),
                 applicationContext,
                 MainActivity::class.java,
             ).apply {

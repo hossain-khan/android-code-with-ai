@@ -1,6 +1,7 @@
 package dev.hossain.codematex.data.repository
 
 import android.content.Context
+import androidx.core.content.edit
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -42,7 +43,7 @@ class ModelSelectionStoreImpl
         override var selectedModelId: String?
             get() = _selectedModelIdFlow.value
             set(value) {
-                prefs.edit().putString("selected_model_id", value).apply()
+                prefs.edit { putString("selected_model_id", value) }
                 _selectedModelIdFlow.value = value
             }
     }

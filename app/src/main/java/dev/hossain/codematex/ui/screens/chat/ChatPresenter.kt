@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.chat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -49,7 +50,7 @@ class ChatPresenter(
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
-        var initTrigger by rememberRetained { mutableStateOf(0) }
+        var initTrigger by rememberRetained { mutableIntStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
