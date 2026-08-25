@@ -2,6 +2,12 @@ package dev.hossain.codematex.di
 
 import android.app.Activity
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
 import com.slack.circuit.foundation.Circuit
 import dev.zacsweers.metro.AppScope
@@ -52,11 +58,22 @@ interface AppGraph {
 
     val workManager: WorkManager
     val workerFactory: AppWorkerFactory
+    val dataStore: DataStore<Preferences>
 
     @Provides
     fun providesWorkManager(
         @ApplicationContext context: Context,
     ): WorkManager = WorkManager.getInstance(context)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun providesPreferencesDataStore(
+        @ApplicationContext context: Context,
+    ): DataStore<Preferences> =
+        PreferenceDataStoreFactory.create(
+            corruptionHandler = ReplaceFileCorruptionHandler { emptyPreferences() },
+            produceFile = { context.preferencesDataStoreFile("codematex_user_preferences") },
+        )
 
     /**
      * Factory for creating the [AppGraph] with runtime inputs.
