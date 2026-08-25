@@ -80,6 +80,38 @@ class ModelDownloadWorkerTest {
             assertEquals(listOf(0, 25, 50, 75, 100), fakeDownloader.progressReports)
         }
 
+    @Test
+    fun `given downloader reports detailed byte progress - execute download forwards byte progress`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            fakeDownloader.detailedProgressToReport =
+                listOf(
+                    Triple(10, 100_000_000L, 1_000_000_000L),
+                    Triple(50, 500_000_000L, 1_000_000_000L),
+                    Triple(100, 1_000_000_000L, 1_000_000_000L),
+                )
+            val detailedProgress = mutableListOf<Triple<Int, Long, Long>>()
+
+            ModelDownloadWorker.executeDownload(
+                url = "https://example.com/model.bin",
+                outputPath = "/models/model.bin",
+                modelDownloader = fakeDownloader,
+                isStopped = { false },
+                onProgress = { percent, bytes, total ->
+                    detailedProgress += Triple(percent, bytes, total)
+                },
+            )
+
+            assertEquals(
+                listOf(
+                    Triple(10, 100_000_000L, 1_000_000_000L),
+                    Triple(50, 500_000_000L, 1_000_000_000L),
+                    Triple(100, 1_000_000_000L, 1_000_000_000L),
+                ),
+                detailedProgress,
+            )
+        }
+
     @Test(expected = CancellationException::class)
     fun `given worker is stopped during progress - execute download throws cancellation`() =
         runTest {

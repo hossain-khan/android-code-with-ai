@@ -17,7 +17,7 @@ interface ModelDownloader {
         urls: List<String>,
         outputPath: String,
         expectedSha256: String? = null,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> =
         if (urls.isEmpty()) {
@@ -33,21 +33,51 @@ interface ModelDownloader {
         url: String,
         outputPath: String,
         expectedSha256: String? = null,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit>
 
     suspend fun download(
         urls: List<String>,
         outputPath: String,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> = download(urls, outputPath, null, onProgress, shouldCancel)
 
     suspend fun download(
         url: String,
         outputPath: String,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> = download(url, outputPath, null, onProgress, shouldCancel)
+
+    suspend fun download(
+        urls: List<String>,
+        outputPath: String,
+        expectedSha256: String? = null,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean = { false },
+    ): Result<Unit> =
+        download(
+            urls = urls,
+            outputPath = outputPath,
+            expectedSha256 = expectedSha256,
+            onProgress = { percent, _, _ -> onProgress(percent) },
+            shouldCancel = shouldCancel,
+        )
+
+    suspend fun download(
+        url: String,
+        outputPath: String,
+        expectedSha256: String? = null,
+        onProgress: suspend (percent: Int) -> Unit,
+        shouldCancel: () -> Boolean = { false },
+    ): Result<Unit> =
+        download(
+            url = url,
+            outputPath = outputPath,
+            expectedSha256 = expectedSha256,
+            onProgress = { percent, _, _ -> onProgress(percent) },
+            shouldCancel = shouldCancel,
+        )
 }

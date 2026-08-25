@@ -10,8 +10,10 @@ class FakeModelDownloader : ModelDownloader {
     val downloads = mutableListOf<DownloadCall>()
     val multiUrlDownloads = mutableListOf<MultiUrlDownloadCall>()
     val progressReports = mutableListOf<Int>()
+    val detailedProgressReports = mutableListOf<Triple<Int, Long, Long>>()
     var nextResult: Result<Unit> = Result.success(Unit)
     var progressToReport: List<Int> = emptyList()
+    var detailedProgressToReport: List<Triple<Int, Long, Long>> = emptyList()
     var shouldFailWithCancellation: Boolean = false
 
     data class DownloadCall(
@@ -30,7 +32,7 @@ class FakeModelDownloader : ModelDownloader {
         urls: List<String>,
         outputPath: String,
         expectedSha256: String?,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean,
     ): Result<Unit> {
         multiUrlDownloads += MultiUrlDownloadCall(urls, outputPath, expectedSha256)
@@ -41,19 +43,31 @@ class FakeModelDownloader : ModelDownloader {
         url: String,
         outputPath: String,
         expectedSha256: String?,
-        onProgress: suspend (percent: Int) -> Unit,
+        onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         shouldCancel: () -> Boolean,
     ): Result<Unit> {
         coroutineContext.ensureActive()
         downloads += DownloadCall(url, outputPath, expectedSha256)
 
-        progressToReport.forEach { progress ->
-            coroutineContext.ensureActive()
-            if (shouldCancel()) {
-                throw kotlinx.coroutines.CancellationException("Download cancelled")
+        if (detailedProgressToReport.isNotEmpty()) {
+            detailedProgressToReport.forEach { (progress, bytes, total) ->
+                coroutineContext.ensureActive()
+                if (shouldCancel()) {
+                    throw kotlinx.coroutines.CancellationException("Download cancelled")
+                }
+                progressReports += progress
+                detailedProgressReports += Triple(progress, bytes, total)
+                onProgress(progress, bytes, total)
             }
-            progressReports += progress
-            onProgress(progress)
+        } else {
+            progressToReport.forEach { progress ->
+                coroutineContext.ensureActive()
+                if (shouldCancel()) {
+                    throw kotlinx.coroutines.CancellationException("Download cancelled")
+                }
+                progressReports += progress
+                onProgress(progress, progress * 10_000_000L, 100_000_000L)
+            }
         }
 
         if (shouldFailWithCancellation) {
