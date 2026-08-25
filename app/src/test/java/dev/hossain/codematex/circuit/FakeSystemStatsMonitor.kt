@@ -1,9 +1,10 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.system.SystemResourceStats
 
 /**
- * In-memory fake of [SystemStatsMonitor] for unit tests.
+ * In-memory fake of [dev.hossain.codematex.data.SystemStatsMonitor] for unit tests.
  */
 class FakeSystemStatsMonitor : SystemStatsMonitor {
     var statsToEmit: List<String> = emptyList()

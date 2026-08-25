@@ -1,5 +1,7 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.data.ChatInferenceEvent
+import dev.hossain.codematex.data.ChatInferenceOrchestrator
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
@@ -9,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
- * In-memory fake of [ChatInferenceOrchestrator] for unit tests.
+ * In-memory fake of [dev.hossain.codematex.data.ChatInferenceOrchestrator] for unit tests.
  */
 class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
     var initializeResult: Result<List<ChatMessage>> = Result.success(emptyList())

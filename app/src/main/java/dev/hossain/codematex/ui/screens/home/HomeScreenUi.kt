@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.home
 
 import android.Manifest
 import android.content.Context
@@ -257,7 +257,7 @@ private fun HomeLayout(
                                     "No recent sessions yet.\nSelect a topic on the left to start coding!",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    textAlign = TextAlign.Center,
                                 )
                             }
                         }

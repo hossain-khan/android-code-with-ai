@@ -1,6 +1,6 @@
 package dev.hossain.codematex.circuit
 
-import dev.hossain.codematex.circuit.overlay.ModelConfig
+import dev.hossain.codematex.ui.overlay.ModelConfig
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.runtime.LlmEngine
 

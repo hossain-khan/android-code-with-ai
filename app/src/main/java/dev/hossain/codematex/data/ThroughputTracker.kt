@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
 /**
  * Tracks LLM inference throughput metrics: time-to-first-token (TTFT) and

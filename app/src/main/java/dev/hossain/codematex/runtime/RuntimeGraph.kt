@@ -1,7 +1,7 @@
 package dev.hossain.codematex.runtime
 
 import android.content.Context
-import dev.hossain.codematex.circuit.overlay.ModelConfigStore
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo

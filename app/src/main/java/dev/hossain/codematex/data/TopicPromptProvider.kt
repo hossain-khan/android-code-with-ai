@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
@@ -10,7 +10,7 @@ import javax.inject.Inject
 /**
  * Abstraction over system prompt construction for a coding topic and tutor persona.
  *
- * Decouples LLM prompt formatting from [ChatPresenter] so new prompting
+ * Decouples LLM prompt formatting from [dev.hossain.codematex.ui.screens.chat.ChatPresenter] so new prompting
  * strategies can be introduced without modifying presenter logic.
  */
 interface TopicPromptProvider {

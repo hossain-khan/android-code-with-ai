@@ -1,11 +1,12 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.data.ThroughputTracker
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [ThroughputTracker].
+ * Unit tests for [dev.hossain.codematex.data.ThroughputTracker].
  */
 class ThroughputTrackerTest {
     @Test

@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chatsessions
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -52,6 +52,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -68,10 +69,12 @@ import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import dev.hossain.codematex.ui.theme.TopicVisualInfo
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
@@ -285,7 +288,7 @@ private fun SessionDetailLayout(
 
 @Composable
 private fun EmptyDetailMessagesView(
-    visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
+    visualInfo: TopicVisualInfo,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -408,7 +411,7 @@ private fun SessionInfoCard(
 @Composable
 private fun SessionMessageBubble(
     message: ChatMessage,
-    visualAccent: androidx.compose.ui.graphics.Color,
+    visualAccent: Color,
 ) {
     val context = LocalContext.current
 
@@ -603,7 +606,7 @@ private val sampleSession =
         id = "101",
         title = "Room Database Migrations in Android",
         summary = "How to write safe AutoMigration and manual Migration specs with Room.",
-        topic = dev.hossain.codematex.data.model.CodingTopic.ANDROID,
+        topic = CodingTopic.ANDROID,
         messageCount = 4,
         lastActiveAt = 0L,
         modelUsed = "gemma-4-E2B-it-litert-lm",

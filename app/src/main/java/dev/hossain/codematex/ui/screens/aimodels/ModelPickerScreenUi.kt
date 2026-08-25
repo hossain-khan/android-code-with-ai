@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.aimodels
 
 import android.Manifest
 import android.os.Build
@@ -74,9 +74,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
-import dev.hossain.codematex.circuit.overlay.AppInfoBottomSheet
+import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -726,7 +727,7 @@ private val sampleModels =
             description = "Instruction-tuned on-device coding model with superior reasoning.",
             sizeBytes = 2_588_000_000L,
             localPath = "/data/data/models/gemma-4-E2B.bin",
-            preferredBackend = dev.hossain.codematex.runtime.LlmEngine.Backend.GPU,
+            preferredBackend = LlmEngine.Backend.GPU,
             minDeviceMemoryInGb = 4,
             downloadUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
             modelRepoUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
@@ -742,7 +743,7 @@ private val sampleModels =
             description = "Compact multilingual code completion and debugging assistant.",
             sizeBytes = 1_850_000_000L,
             localPath = null,
-            preferredBackend = dev.hossain.codematex.runtime.LlmEngine.Backend.CPU,
+            preferredBackend = LlmEngine.Backend.CPU,
             minDeviceMemoryInGb = 3,
             downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",
             modelRepoUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",

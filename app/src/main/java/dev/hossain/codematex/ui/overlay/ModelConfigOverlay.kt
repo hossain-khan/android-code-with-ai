@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit.overlay
+package dev.hossain.codematex.ui.overlay
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -9,6 +9,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -140,7 +141,7 @@ private fun ConfigSlider(
 @Composable
 private fun ModelConfigContentPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        androidx.compose.material3.Surface(
+        Surface(
             color = MaterialTheme.colorScheme.surfaceContainerLow,
         ) {
             ModelConfigContent(

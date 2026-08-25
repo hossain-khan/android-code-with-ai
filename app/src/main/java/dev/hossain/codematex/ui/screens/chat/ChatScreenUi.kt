@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chat
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -44,7 +44,6 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
-import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Tune
@@ -54,7 +53,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
@@ -86,6 +84,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -105,8 +104,9 @@ import com.halilibo.richtext.ui.CodeBlockStyle
 import com.halilibo.richtext.ui.RichTextStyle
 import com.halilibo.richtext.ui.material3.RichText
 import com.slack.circuit.codegen.annotations.CircuitInject
-import dev.hossain.codematex.circuit.overlay.TutorPersonaBottomSheet
+import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
@@ -789,7 +789,7 @@ private fun ChatMessageList(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun EmptyChatTopicStarters(
-    visualInfo: dev.hossain.codematex.ui.theme.TopicVisualInfo,
+    visualInfo: TopicVisualInfo,
     enabled: Boolean = true,
     onPromptSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -832,7 +832,7 @@ private fun EmptyChatTopicStarters(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = 6.dp, bottom = 24.dp),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            textAlign = TextAlign.Center,
         )
 
         Row(
@@ -903,7 +903,7 @@ private fun EmptyChatTopicStarters(
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
-private fun GeneratingIndicator(accentColor: androidx.compose.ui.graphics.Color) {
+private fun GeneratingIndicator(accentColor: Color) {
     Row(
         modifier =
             Modifier
@@ -1176,7 +1176,7 @@ private fun SupportingBenchmarkingCard(
 @Composable
 private fun MessageBubble(
     message: ChatMessage,
-    visualAccent: androidx.compose.ui.graphics.Color,
+    visualAccent: Color,
     onCopy: (String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -1487,7 +1487,7 @@ private fun ModelTechnicalInfoPanel(
 
 private val sampleActiveChatState =
     ChatScreen.State.Active(
-        topic = dev.hossain.codematex.data.model.CodingTopic.KOTLIN,
+        topic = CodingTopic.KOTLIN,
         modelName = "gemma-4-E2B-it-litert-lm",
         activeBackend = "GPU",
         modelSize = "2,588 MB",
@@ -1536,7 +1536,7 @@ private fun EmptyChatTopicStartersPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         Surface {
             EmptyChatTopicStarters(
-                visualInfo = dev.hossain.codematex.data.model.CodingTopic.KOTLIN.visualInfo,
+                visualInfo = CodingTopic.KOTLIN.visualInfo,
                 onPromptSelected = {},
                 modifier = Modifier.padding(16.dp),
             )

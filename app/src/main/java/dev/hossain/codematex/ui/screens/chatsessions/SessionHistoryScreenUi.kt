@@ -1,4 +1,4 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chatsessions
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -47,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
@@ -220,7 +221,7 @@ private fun SessionHistoryLayout(
 
 @Composable
 private fun EmptySessionsView(
-    selectedTopic: dev.hossain.codematex.data.model.CodingTopic?,
+    selectedTopic: CodingTopic?,
     onClearFilter: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -282,7 +283,7 @@ private fun EmptySessionsView(
                     },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(0.85f),
             )
 

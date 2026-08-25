@@ -8,7 +8,7 @@ import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.ai.edge.litertlm.LiteRtLmJniException
 import com.google.ai.edge.litertlm.SamplerConfig
-import dev.hossain.codematex.circuit.overlay.ModelConfig
+import dev.hossain.codematex.ui.overlay.ModelConfig
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding

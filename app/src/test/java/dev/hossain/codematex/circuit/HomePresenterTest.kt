@@ -5,9 +5,13 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
+import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.chat.ChatScreen
+import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
+import dev.hossain.codematex.ui.screens.home.HomePresenter
+import dev.hossain.codematex.ui.screens.home.HomeScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FakeHardwareEligibilityChecker(
@@ -17,7 +21,7 @@ class FakeHardwareEligibilityChecker(
 }
 
 /**
- * Unit tests for [HomePresenter].
+ * Unit tests for [dev.hossain.codematex.ui.screens.home.HomePresenter].
  */
 class HomePresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()

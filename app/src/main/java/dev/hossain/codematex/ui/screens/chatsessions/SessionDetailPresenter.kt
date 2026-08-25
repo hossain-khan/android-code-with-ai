@@ -1,10 +1,9 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chatsessions
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -14,6 +13,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.repository.ChatSessionRepository
+import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory

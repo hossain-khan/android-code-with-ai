@@ -25,8 +25,8 @@ import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
-import dev.hossain.codematex.circuit.HomeScreen
-import dev.hossain.codematex.circuit.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.home.HomeScreen
+import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.zacsweers.metro.AppScope

@@ -1,11 +1,11 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.data.DefaultSystemStatsMonitor
 import dev.hossain.codematex.system.FakeDeviceMemoryProvider
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.util.DeviceMemory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

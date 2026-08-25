@@ -1,5 +1,6 @@
 package dev.hossain.codematex.circuit
 
+import dev.hossain.codematex.data.DefaultTopicPromptProvider
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import org.junit.Assert.assertEquals
@@ -7,7 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Unit tests for [DefaultTopicPromptProvider].
+ * Unit tests for [dev.hossain.codematex.data.DefaultTopicPromptProvider].
  */
 class TopicPromptProviderTest {
     private val provider = DefaultTopicPromptProvider()

@@ -3,13 +3,16 @@ package dev.hossain.codematex.circuit
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.screens.chat.ChatScreen
+import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryPresenter
+import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
- * Unit tests for [SessionHistoryPresenter].
+ * Unit tests for [dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryPresenter].
  */
 class SessionHistoryPresenterTest {
     @Test

@@ -1,20 +1,23 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.ui.screens.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
-import dev.hossain.codematex.circuit.overlay.ModelConfigStore
+import dev.hossain.codematex.data.ChatInferenceEvent
+import dev.hossain.codematex.data.ChatInferenceOrchestrator
+import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.data.SystemStatsMonitor
+import dev.hossain.codematex.data.ThroughputTracker
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
-import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -103,7 +106,7 @@ class ChatPresenter(
                         Timber.e(error, "ChatPresenter: Model initialization failed")
                         errorMessage = error.message
                     }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 Timber.d("ChatPresenter: Model initialization cancelled")
                 throw e
             } finally {

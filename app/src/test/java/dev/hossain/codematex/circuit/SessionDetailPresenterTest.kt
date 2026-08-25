@@ -4,12 +4,15 @@ import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.screens.chat.ChatScreen
+import dev.hossain.codematex.ui.screens.chatsessions.SessionDetailPresenter
+import dev.hossain.codematex.ui.screens.chatsessions.SessionDetailScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
- * Unit tests for [SessionDetailPresenter].
+ * Unit tests for [dev.hossain.codematex.ui.screens.chatsessions.SessionDetailPresenter].
  */
 class SessionDetailPresenterTest {
     private val testMessages =
@@ -38,7 +41,8 @@ class SessionDetailPresenterTest {
         runTest {
             val fakeRepo = FakeChatSessionRepository(sessions = emptyList())
             val navigator = FakeNavigator(SessionDetailScreen("unknown"))
-            val presenter = SessionDetailPresenter(navigator, SessionDetailScreen("unknown"), fakeRepo)
+            val presenter =
+                SessionDetailPresenter(navigator, SessionDetailScreen("unknown"), fakeRepo)
 
             presenter.test {
                 assertEquals(SessionDetailScreen.State.Loading, expectMostRecentItem())

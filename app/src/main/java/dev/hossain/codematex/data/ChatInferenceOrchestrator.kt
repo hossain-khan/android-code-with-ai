@@ -1,6 +1,6 @@
-package dev.hossain.codematex.circuit
+package dev.hossain.codematex.data
 
-import dev.hossain.codematex.circuit.overlay.ModelConfigStore
+import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
@@ -39,7 +39,7 @@ sealed interface ChatInferenceEvent {
  * Abstraction over the LLM inference lifecycle for a chat session.
  *
  * Encapsulates model initialization, history restoration, inference streaming,
- * stop/reset, and retry coordination so that [ChatPresenter] can focus on UI
+ * stop/reset, and retry coordination so that [dev.hossain.codematex.ui.screens.chat.ChatPresenter] can focus on UI
  * state management.
  */
 interface ChatInferenceOrchestrator {
