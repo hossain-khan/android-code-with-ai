@@ -10,12 +10,12 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakeModelSelectionStore(
     initialSelectedModelId: String? = null,
 ) : ModelSelectionStore {
-    private val _selectedModelIdFlow = MutableStateFlow(initialSelectedModelId)
-    override val selectedModelIdFlow: Flow<String?> = _selectedModelIdFlow.asStateFlow()
+    override val selectedModelIdFlow: Flow<String?>
+        field = MutableStateFlow(initialSelectedModelId)
 
     override var selectedModelId: String?
-        get() = _selectedModelIdFlow.value
+        get() = selectedModelIdFlow.value
         set(value) {
-            _selectedModelIdFlow.value = value
+            selectedModelIdFlow.value = value
         }
 }

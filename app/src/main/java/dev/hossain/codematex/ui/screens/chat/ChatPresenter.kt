@@ -21,6 +21,7 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -39,6 +40,7 @@ class ChatPresenter(
     private val modelRepository: ModelRepository,
     private val sessionRepository: ChatSessionRepository,
     private val configStore: ModelConfigStore,
+    private val userPreferencesStore: UserPreferencesStore,
     private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
     private val systemStatsMonitor: SystemStatsMonitor,
 ) : Presenter<ChatScreen.State> {
@@ -48,7 +50,7 @@ class ChatPresenter(
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
-        var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
+        var persona by rememberRetained { mutableStateOf(userPreferencesStore.selectedPersona) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableIntStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
@@ -208,6 +210,7 @@ class ChatPresenter(
                     if (persona != event.persona) {
                         Timber.d("ChatPresenter: Switching persona to ${event.persona.name}")
                         persona = event.persona
+                        userPreferencesStore.selectedPersona = event.persona
                         messages =
                             messages +
                             ChatMessage.System("Switched tutor persona to ${event.persona.iconGlyph} ${event.persona.displayName}")
