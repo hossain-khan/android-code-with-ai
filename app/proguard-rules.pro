@@ -15,7 +15,7 @@
     native <methods>;
 }
 
-# Preserve JNI callback interface invoked from native LiteRT-LM C++ background threads
--keep class com.google.ai.edge.litertlm.MessageCallback { *; }
+# Retain LiteRT-LM classes, configs (SamplerConfig, ThinkingConfig, etc.), and callbacks called via JNI from liblitertlm_jni.so
+-keep class com.google.ai.edge.litertlm.** { *; }
 -dontwarn com.google.ai.edge.litertlm.**
 
