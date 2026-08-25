@@ -200,6 +200,30 @@ class HttpModelDownloaderTest {
         }
 
     @Test
+    fun `given known content length - download reports bytes and total bytes`() =
+        runTest {
+            val content = ByteArray(100_000) { it.toByte() }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = createDownloader()
+            val byteReports = mutableListOf<Pair<Long, Long>>()
+
+            downloader.download(
+                url = serverUrl(),
+                outputPath = outputPath,
+                onProgress = { _, bytesDownloaded, totalBytes ->
+                    byteReports += Pair(bytesDownloaded, totalBytes)
+                },
+                shouldCancel = { false },
+            )
+
+            assertTrue(byteReports.isNotEmpty())
+            assertEquals(100_000L, byteReports.last().second)
+            assertEquals(100_000L, byteReports.last().first)
+        }
+
+    @Test
     fun `given primary url fails - fallback url succeeds and writes full file`() =
         runTest {
             val content = ByteArray(1_000) { it.toByte() }

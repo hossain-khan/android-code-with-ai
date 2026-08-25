@@ -37,16 +37,17 @@ class HttpModelDownloader
             urls: List<String>,
             outputPath: String,
             expectedSha256: String?,
-            onProgress: suspend (percent: Int) -> Unit,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
             shouldCancel: () -> Boolean,
         ): Result<Unit> {
             if (urls.isEmpty()) {
                 return Result.failure(IllegalArgumentException("No download URLs provided"))
             }
 
-            var lastError: Throwable = IllegalStateException("Download failed for all candidate URLs")
-            for ((index, url) in urls.withIndex()) {
-                Timber.d("HttpModelDownloader: Trying candidate URL (${index + 1}/${urls.size}): $url")
+            var lastError: Throwable = IllegalStateException("No URLs to download")
+
+            for (url in urls) {
+                Timber.d("HttpModelDownloader: Trying candidate URL: $url")
                 val result = download(url, outputPath, expectedSha256, onProgress, shouldCancel)
                 if (result.isSuccess) {
                     return result
@@ -68,7 +69,7 @@ class HttpModelDownloader
             url: String,
             outputPath: String,
             expectedSha256: String?,
-            onProgress: suspend (percent: Int) -> Unit,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
             shouldCancel: () -> Boolean,
         ): Result<Unit> =
             withContext(Dispatchers.IO) {
@@ -157,7 +158,7 @@ class HttpModelDownloader
                                     ) {
                                         lastReportedProgress = progress
                                         lastReportedBytes = downloadedBytes
-                                        onProgress(progress)
+                                        onProgress(progress, downloadedBytes, totalBytes)
                                         Timber.i(
                                             "HttpModelDownloader: Progress=$progress% (${downloadedBytes / 1_000_000}MB / ${totalBytes / 1_000_000}MB)",
                                         )

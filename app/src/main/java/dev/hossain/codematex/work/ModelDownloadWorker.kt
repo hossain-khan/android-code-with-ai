@@ -33,6 +33,8 @@ class ModelDownloadWorker(
         const val KEY_URLS = "urls"
         const val KEY_PATH = "path"
         const val KEY_PROGRESS = "progress"
+        const val KEY_BYTES_DOWNLOADED = "bytes_downloaded"
+        const val KEY_TOTAL_BYTES = "total_bytes"
         const val KEY_SHA256 = "sha256"
         const val KEY_ERROR_MESSAGE = "error_message"
         const val KEY_MODEL_ID = "model_id"
@@ -48,7 +50,7 @@ class ModelDownloadWorker(
             expectedSha256: String? = null,
             modelDownloader: ModelDownloader,
             isStopped: () -> Boolean,
-            onProgress: suspend (Int) -> Unit,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         ): Result =
             try {
                 Timber.d("ModelDownloadWorker: Starting download with candidate URLs=$urls to $outputPath")
@@ -58,9 +60,9 @@ class ModelDownloadWorker(
                         urls = urls,
                         outputPath = outputPath,
                         expectedSha256 = expectedSha256,
-                        onProgress = { progress ->
+                        onProgress = { progress, bytesDownloaded, totalBytes ->
                             if (isStopped()) throw kotlinx.coroutines.CancellationException("Worker stopped")
-                            onProgress(progress)
+                            onProgress(progress, bytesDownloaded, totalBytes)
                         },
                         shouldCancel = isStopped,
                     )
@@ -88,9 +90,26 @@ class ModelDownloadWorker(
         suspend fun executeDownload(
             urls: List<String>,
             outputPath: String,
+            expectedSha256: String? = null,
             modelDownloader: ModelDownloader,
             isStopped: () -> Boolean,
             onProgress: suspend (Int) -> Unit,
+        ): Result = executeDownload(urls, outputPath, expectedSha256, modelDownloader, isStopped) { p, _, _ -> onProgress(p) }
+
+        suspend fun executeDownload(
+            urls: List<String>,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (Int) -> Unit,
+        ): Result = executeDownload(urls, outputPath, null, modelDownloader, isStopped, onProgress)
+
+        suspend fun executeDownload(
+            urls: List<String>,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
         ): Result = executeDownload(urls, outputPath, null, modelDownloader, isStopped, onProgress)
 
         suspend fun executeDownload(
@@ -100,6 +119,23 @@ class ModelDownloadWorker(
             isStopped: () -> Boolean,
             onProgress: suspend (Int) -> Unit,
         ): Result = executeDownload(listOf(url), outputPath, null, modelDownloader, isStopped, onProgress)
+
+        suspend fun executeDownload(
+            url: String,
+            outputPath: String,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
+        ): Result = executeDownload(listOf(url), outputPath, null, modelDownloader, isStopped, onProgress)
+
+        suspend fun executeDownload(
+            url: String,
+            outputPath: String,
+            expectedSha256: String? = null,
+            modelDownloader: ModelDownloader,
+            isStopped: () -> Boolean,
+            onProgress: suspend (percent: Int, bytesDownloaded: Long, totalBytes: Long) -> Unit,
+        ): Result = executeDownload(listOf(url), outputPath, expectedSha256, modelDownloader, isStopped, onProgress)
     }
 
     override suspend fun doWork(): Result {
@@ -131,7 +167,9 @@ class ModelDownloadWorker(
                 expectedSha256 = expectedSha256,
                 modelDownloader = modelDownloader,
                 isStopped = { isStopped },
-                onProgress = { progress -> reportProgress(progress) },
+                onProgress = { progress, bytesDownloaded, totalBytes ->
+                    reportProgress(progress, bytesDownloaded, totalBytes)
+                },
             )
 
         return if (result != Result.success() && runAttemptCount < 5) {
@@ -141,15 +179,32 @@ class ModelDownloadWorker(
         }
     }
 
-    private suspend fun reportProgress(progress: Int) {
+    private suspend fun reportProgress(
+        progress: Int,
+        bytesDownloaded: Long = 0L,
+        totalBytes: Long = 0L,
+    ) {
         setProgress(
             Data
                 .Builder()
                 .putInt(KEY_PROGRESS, progress)
+                .putLong(KEY_BYTES_DOWNLOADED, bytesDownloaded)
+                .putLong(KEY_TOTAL_BYTES, totalBytes)
                 .build(),
         )
         try {
-            setForeground(createForegroundInfo("$progress%", progress))
+            val content =
+                if (totalBytes > 0) {
+                    val downloadedMb = bytesDownloaded / 1_000_000L
+                    val totalMb = totalBytes / 1_000_000L
+                    String.format(java.util.Locale.US, "%d%% • %,d MB / %,d MB", progress, downloadedMb, totalMb)
+                } else if (bytesDownloaded > 0) {
+                    val downloadedMb = bytesDownloaded / 1_000_000L
+                    String.format(java.util.Locale.US, "%d%% • %,d MB", progress, downloadedMb)
+                } else {
+                    "$progress%"
+                }
+            setForeground(createForegroundInfo(content, progress))
         } catch (e: Exception) {
             Timber.w(e, "ModelDownloadWorker: Failed to update foreground notification")
         }
