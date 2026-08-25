@@ -99,7 +99,7 @@ class HomePresenter(
         } else {
             HomeScreen.State.Success(
                 recentSessions = recentSessions,
-                topics = CodingTopic.entries,
+                topics = CodingTopic.selectableEntries,
                 hasDownloadedModel = hasDownloadedModel,
                 eventSink = eventSink,
             )

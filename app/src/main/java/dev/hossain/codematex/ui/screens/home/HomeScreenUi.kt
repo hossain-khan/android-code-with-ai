@@ -946,7 +946,7 @@ private fun HomeScreenPreview() {
                                 modelUsed = "Gemma 4-E2B IT",
                             ),
                         ),
-                    topics = CodingTopic.entries,
+                    topics = CodingTopic.selectableEntries,
                     hasDownloadedModel = true,
                     eventSink = {},
                 ),

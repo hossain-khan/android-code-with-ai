@@ -64,7 +64,7 @@ private fun TopicPickerContent(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            CodingTopic.entries.forEach { topic ->
+            CodingTopic.selectableEntries.forEach { topic ->
                 FilterChip(
                     selected = selectedTopic == topic,
                     onClick = {

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -28,4 +29,18 @@ interface SessionDao {
 
     @Query("DELETE FROM messages WHERE sessionId = :sessionId")
     suspend fun deleteMessages(sessionId: String)
+
+    /**
+     * Atomically replaces the session and its messages. Any failure during deletion, upsert, or
+     * insertion rolls back the entire transaction, leaving the previous session state intact.
+     */
+    @Transaction
+    suspend fun replaceSession(
+        session: SessionEntity,
+        messages: List<MessageEntity>,
+    ) {
+        deleteMessages(session.id)
+        upsertSession(session)
+        insertMessages(messages)
+    }
 }

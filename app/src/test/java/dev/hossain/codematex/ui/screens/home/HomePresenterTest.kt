@@ -42,7 +42,7 @@ class HomePresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
-                assertEquals(CodingTopic.entries, state.topics)
+                assertEquals(CodingTopic.selectableEntries, state.topics)
             }
         }
 
@@ -74,7 +74,7 @@ class HomePresenterTest {
                 // Dismiss warning
                 state.eventSink(HomeScreen.Event.DismissIneligibilityWarning)
                 val successState = expectMostRecentItem() as HomeScreen.State.Success
-                assertEquals(CodingTopic.entries, successState.topics)
+                assertEquals(CodingTopic.selectableEntries, successState.topics)
             }
         }
 

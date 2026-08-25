@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.map
 class FakeSessionDao(
     sessions: List<SessionEntity> = emptyList(),
     private val messages: List<MessageEntity> = emptyList(),
+    private val throwOnReplace: Boolean = false,
 ) : SessionDao {
     private val sessionsFlow = MutableStateFlow(sessions)
     val calls = mutableListOf<String>()
@@ -38,5 +39,16 @@ class FakeSessionDao(
 
     override suspend fun deleteMessages(sessionId: String) {
         calls += "deleteMessages:$sessionId"
+    }
+
+    override suspend fun replaceSession(
+        session: SessionEntity,
+        messages: List<MessageEntity>,
+    ) {
+        if (throwOnReplace) throw RuntimeException("replaceSession failed")
+        calls += "replaceSession:${session.id}"
+        upsertedSessions += session
+        sessionsFlow.value = sessionsFlow.value.filterNot { it.id == session.id } + session
+        insertedMessages += messages
     }
 }

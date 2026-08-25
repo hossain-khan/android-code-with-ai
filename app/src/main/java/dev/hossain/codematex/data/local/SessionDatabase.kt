@@ -7,7 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [SessionEntity::class, MessageEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 abstract class SessionDatabase : RoomDatabase() {
@@ -24,6 +24,45 @@ abstract class SessionDatabase : RoomDatabase() {
             object : Migration(1, 2) {
                 override fun migrate(db: SupportSQLiteDatabase) {
                     db.execSQL("ALTER TABLE messages ADD COLUMN messageId TEXT NOT NULL DEFAULT ''")
+                }
+            }
+
+        /**
+         * Migration from version 2 to 3: replaces brittle enum names and raw message type strings
+         * with stable IDs. Any unrecognized values are mapped to the `unknown` stable ID so that
+         * corrupt or legacy rows do not crash the sessions list.
+         */
+        val MIGRATION_2_3 =
+            object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        UPDATE sessions SET topic = CASE topic
+                            WHEN 'KOTLIN' THEN 'kotlin'
+                            WHEN 'PYTHON' THEN 'python'
+                            WHEN 'JAVASCRIPT' THEN 'javascript'
+                            WHEN 'RUST' THEN 'rust'
+                            WHEN 'GO' THEN 'go'
+                            WHEN 'SWIFT' THEN 'swift'
+                            WHEN 'ALGORITHMS' THEN 'algorithms'
+                            WHEN 'SYSTEM_DESIGN' THEN 'system-design'
+                            WHEN 'ANDROID' THEN 'android'
+                            WHEN 'WEB' THEN 'web'
+                            ELSE 'unknown'
+                        END
+                        """.trimIndent(),
+                    )
+                    db.execSQL(
+                        """
+                        UPDATE messages SET type = CASE type
+                            WHEN 'user' THEN 'user'
+                            WHEN 'agent' THEN 'agent'
+                            WHEN 'error' THEN 'error'
+                            WHEN 'system' THEN 'system'
+                            ELSE 'unknown'
+                        END
+                        """.trimIndent(),
+                    )
                 }
             }
     }
