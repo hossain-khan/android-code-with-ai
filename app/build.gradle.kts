@@ -229,6 +229,9 @@ dependencies {
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
+    // Jetpack Preferences DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Markdown rendering
     implementation(libs.markdown.renderer)
     implementation(libs.markdown.renderer.m3)

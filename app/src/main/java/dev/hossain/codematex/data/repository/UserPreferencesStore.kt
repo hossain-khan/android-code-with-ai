@@ -1,15 +1,22 @@
 package dev.hossain.codematex.data.repository
 
-import android.content.Context
-import androidx.core.content.edit
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.hossain.codematex.data.model.TutorPersona
-import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -34,31 +41,40 @@ interface UserPreferencesStore {
 class UserPreferencesStoreImpl
     @Inject
     constructor(
-        @param:ApplicationContext private val context: Context,
+        private val dataStore: DataStore<Preferences>,
     ) : UserPreferencesStore {
-        private val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+        private val personaState: StateFlow<TutorPersona> =
+            dataStore.data
+                .map { prefs ->
+                    val storedName = prefs[KEY_SELECTED_PERSONA] ?: return@map TutorPersona.SENIOR_ENGINEER
+                    try {
+                        TutorPersona.valueOf(storedName)
+                    } catch (e: IllegalArgumentException) {
+                        Timber.w(e, "Unknown stored persona '$storedName', defaulting to ${TutorPersona.SENIOR_ENGINEER}")
+                        TutorPersona.SENIOR_ENGINEER
+                    }
+                }.stateIn(
+                    scope = scope,
+                    started = SharingStarted.Eagerly,
+                    initialValue = TutorPersona.SENIOR_ENGINEER,
+                )
 
         override val selectedPersonaFlow: Flow<TutorPersona>
-            field = MutableStateFlow(loadStoredPersona())
+            get() = personaState
 
         override var selectedPersona: TutorPersona
-            get() = selectedPersonaFlow.value
+            get() = personaState.value
             set(value) {
-                prefs.edit { putString(KEY_SELECTED_PERSONA, value.name) }
-                selectedPersonaFlow.value = value
+                scope.launch {
+                    dataStore.edit { prefs ->
+                        prefs[KEY_SELECTED_PERSONA] = value.name
+                    }
+                }
             }
-
-        private fun loadStoredPersona(): TutorPersona {
-            val storedName = prefs.getString(KEY_SELECTED_PERSONA, null) ?: return TutorPersona.SENIOR_ENGINEER
-            return try {
-                TutorPersona.valueOf(storedName)
-            } catch (e: IllegalArgumentException) {
-                Timber.w(e, "Unknown stored persona '$storedName', defaulting to ${TutorPersona.SENIOR_ENGINEER}")
-                TutorPersona.SENIOR_ENGINEER
-            }
-        }
 
         companion object {
-            private const val KEY_SELECTED_PERSONA = "selected_tutor_persona"
+            private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
         }
     }
