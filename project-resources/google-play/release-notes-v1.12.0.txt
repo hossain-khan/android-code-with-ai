@@ -1,0 +1,6 @@
+What's New in v1.12.0:
+• On-Device Reliability: Hardened LiteRT native engine lifecycles & isolated background session summarization.
+• Atomic Downloads: Verified checksum integrity & atomic model installation.
+• Robust Persistence: Transaction-safe session storage & resilient Room migrations.
+• Benchmarking Accuracy: Monotonic TTFT and decode throughput accounting.
+• Kotlin 2.4 Architecture: Modernized state flow backing fields & modularized chat UI.
