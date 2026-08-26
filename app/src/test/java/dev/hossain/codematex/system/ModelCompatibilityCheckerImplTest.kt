@@ -47,15 +47,16 @@ class ModelCompatibilityCheckerImplTest {
 
     @Test
     fun `getDeviceMemoryInfo returns decimal gigabytes and GB label`() {
+        val totalBytes = (8.5 * MemoryCompatibilityPolicy.BYTES_PER_GB).toLong()
         val provider =
             FakeDeviceMemoryProvider().apply {
-                returnedTotalBytes = 8_500_000_000L
+                returnedTotalBytes = totalBytes
             }
         val checker = ModelCompatibilityCheckerImpl(provider, isDevMode = { false })
 
         val info = checker.getDeviceMemoryInfo()
 
-        assertEquals(8_500_000_000L, info.totalBytes)
+        assertEquals(totalBytes, info.totalBytes)
         assertEquals(8.5, info.displayTotalGb, 0.001)
         assertEquals("GB", info.displayLabel)
     }
