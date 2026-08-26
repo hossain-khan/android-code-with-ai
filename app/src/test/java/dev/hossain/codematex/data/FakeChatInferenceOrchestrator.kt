@@ -43,6 +43,14 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         return initializeResult
     }
 
+    var switchPersonaCalls = mutableListOf<SwitchPersonaCall>()
+
+    data class SwitchPersonaCall(
+        val topic: CodingTopic,
+        val persona: TutorPersona,
+        val messages: List<ChatMessage>,
+    )
+
     override fun stop() {
         stopCalls++
     }
@@ -51,6 +59,16 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         topic: CodingTopic,
         persona: TutorPersona,
     ) {
+        resetConversationTopics += topic
+        resetConversationPersonas += persona
+    }
+
+    override suspend fun switchPersona(
+        topic: CodingTopic,
+        persona: TutorPersona,
+        messages: List<ChatMessage>,
+    ) {
+        switchPersonaCalls += SwitchPersonaCall(topic, persona, messages)
         resetConversationTopics += topic
         resetConversationPersonas += persona
     }

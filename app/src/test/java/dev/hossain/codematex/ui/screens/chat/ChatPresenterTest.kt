@@ -7,6 +7,7 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.FakeChatInferenceOrchestrator
 import dev.hossain.codematex.data.FakeSystemStatsMonitor
+import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
@@ -20,6 +21,8 @@ import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -257,6 +260,228 @@ class ChatPresenterTest {
                 assertEquals(45f, generatingState.systemResourceStats?.cpuPercent ?: 0f, 0.01f)
                 assertEquals(3.5f, generatingState.systemResourceStats?.ramUsedGb ?: 0f, 0.01f)
                 assertEquals(8.0f, generatingState.systemResourceStats?.ramTotalGb ?: 0f, 0.01f)
+            }
+        }
+
+    @Test
+    fun `given resumed session - reset clears messages and sessionId and next message creates new session`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val resumedSessionId = "resumed-session-123"
+            val existingMessages = listOf(ChatMessage.User("Prior question"), ChatMessage.Agent("Prior answer"))
+            val sessionRepo = FakeChatSessionRepository(messages = existingMessages)
+
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.initializeResult = Result.success(existingMessages)
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Fresh answer"), ChatInferenceEvent.Done)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN, sessionId = resumedSessionId))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN, sessionId = resumedSessionId),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals(2, initialState.messages.size)
+
+                // Reset session
+                initialState.eventSink(ChatScreen.Event.ResetSession)
+                val resetState = expectMostRecentItem() as ChatScreen.State.Active
+                assertTrue(resetState.messages.isEmpty())
+
+                // Next message should create a new conversation (passing sessionId = null to saveSession)
+                resetState.eventSink(ChatScreen.Event.SendMessage("New turn"))
+                expectMostRecentItem() // generation & save completes
+
+                val lastSaved = sessionRepo.savedSessions.lastOrNull()
+                assertNotNull(lastSaved)
+                assertNull("SessionId must be null for new conversation after reset", lastSaved?.third)
+            }
+        }
+
+    @Test
+    fun `given persona switch with existing messages - calls switchPersona with history and updates persona`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val existingMessages = listOf(ChatMessage.User("Existing question"), ChatMessage.Agent("Existing answer"))
+            val sessionRepo = FakeChatSessionRepository(messages = existingMessages)
+
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.initializeResult = Result.success(existingMessages)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.INTERVIEW_COACH))
+
+                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals(TutorPersona.INTERVIEW_COACH, updatedState.persona)
+
+                val switchCall = fakeOrchestrator.switchPersonaCalls.lastOrNull()
+                assertNotNull(switchCall)
+                assertEquals(TutorPersona.INTERVIEW_COACH, switchCall?.persona)
+                assertTrue(switchCall?.messages?.any { it is ChatMessage.System } == true)
+            }
+        }
+
+    @Test
+    fun `given persistence failure after inference done - preserves assistant response and exposes saveErrorMessage`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val sessionRepo = FakeChatSessionRepository()
+            sessionRepo.saveException = java.io.IOException("Disk full")
+
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Generated code answer"), ChatInferenceEvent.Done)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SendMessage("Write quicksort"))
+
+                val postDoneState = expectMostRecentItem() as ChatScreen.State.Active
+                assertFalse(postDoneState.isGenerating)
+                assertEquals("Disk full", postDoneState.saveErrorMessage)
+
+                // Verify the generated assistant response was NOT deleted or replaced with an Error message
+                val lastMessage = postDoneState.messages.lastOrNull()
+                assertTrue("Expected Agent message but was $lastMessage", lastMessage is ChatMessage.Agent)
+                assertEquals("Generated code answer", (lastMessage as ChatMessage.Agent).content)
+                assertFalse(lastMessage.isStreaming)
+            }
+        }
+
+    @Test
+    fun `given save error - retry save persists conversation and clears error`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val sessionRepo = FakeChatSessionRepository()
+            sessionRepo.saveException = java.io.IOException("Temporary DB lock")
+
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Response"), ChatInferenceEvent.Done)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SendMessage("Hello"))
+
+                val failedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals("Temporary DB lock", failedState.saveErrorMessage)
+
+                // Database lock clears
+                sessionRepo.saveException = null
+
+                failedState.eventSink(ChatScreen.Event.RetrySave)
+                val recoveredState = expectMostRecentItem() as ChatScreen.State.Active
+                assertNull(recoveredState.saveErrorMessage)
+                assertEquals(1, sessionRepo.savedSessions.size)
+            }
+        }
+
+    @Test
+    fun `given active generation - stop generation transitions streaming message to terminal state`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Partial output"))
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SendMessage("Long question"))
+
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertTrue(streamingState.isGenerating)
+
+                streamingState.eventSink(ChatScreen.Event.StopGeneration)
+                val stoppedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertFalse(stoppedState.isGenerating)
+                val lastMessage = stoppedState.messages.lastOrNull() as? ChatMessage.Agent
+                assertNotNull(lastMessage)
+                assertFalse(lastMessage?.isStreaming == true)
+                assertEquals(1, fakeOrchestrator.stopCalls)
             }
         }
 }

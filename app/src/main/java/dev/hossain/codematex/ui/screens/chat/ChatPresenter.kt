@@ -52,6 +52,7 @@ class ChatPresenter(
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(userPreferencesStore.selectedPersona) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var saveErrorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableIntStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
@@ -81,7 +82,7 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger, persona) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
@@ -137,8 +138,9 @@ class ChatPresenter(
         val eventSink: (ChatScreen.Event) -> Unit = { event ->
             when (event) {
                 is ChatScreen.Event.SendMessage -> {
-                    if (!isGenerating && !isPreparing) {
+                    if (!isGenerating && !isPreparing && event.text.isNotBlank()) {
                         isGenerating = true
+                        saveErrorMessage = null
                         val input = event.text
                         Timber.d("ChatPresenter: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
 
@@ -182,14 +184,25 @@ class ChatPresenter(
                                             throughputTracker.recordToken("")
                                             throughputInfo = throughputTracker.finalize()
                                             isGenerating = false
+
+                                            // Save session message history in an independent try-catch block
+                                            // so persistence failures do not discard or overwrite the generated response.
                                             Timber.d("ChatPresenter: Saving session message history...")
-                                            currentSessionId =
-                                                sessionRepository.saveSession(
-                                                    topic = screen.topic,
-                                                    messages = messages,
-                                                    sessionId = currentSessionId,
-                                                    modelUsed = modelName,
-                                                )
+                                            try {
+                                                currentSessionId =
+                                                    sessionRepository.saveSession(
+                                                        topic = screen.topic,
+                                                        messages = messages,
+                                                        sessionId = currentSessionId,
+                                                        modelUsed = modelName,
+                                                    )
+                                                saveErrorMessage = null
+                                            } catch (e: CancellationException) {
+                                                throw e
+                                            } catch (e: Exception) {
+                                                Timber.e(e, "ChatPresenter: Failed to save session history")
+                                                saveErrorMessage = e.message ?: "Failed to save conversation"
+                                            }
                                         }
 
                                         is ChatInferenceEvent.BackendFailed -> {
@@ -223,42 +236,90 @@ class ChatPresenter(
                 }
 
                 is ChatScreen.Event.SelectPersona -> {
-                    if (persona != event.persona) {
+                    if (!isGenerating && !isPreparing && persona != event.persona) {
                         Timber.d("ChatPresenter: Switching persona to ${event.persona.name}")
-                        persona = event.persona
-                        userPreferencesStore.selectedPersona = event.persona
-                        messages =
-                            messages +
-                            ChatMessage.System("Switched tutor persona to ${event.persona.iconGlyph} ${event.persona.displayName}")
+                        val newPersona = event.persona
+                        persona = newPersona
+                        userPreferencesStore.selectedPersona = newPersona
+                        val notice =
+                            ChatMessage.System("Switched tutor persona to ${newPersona.iconGlyph} ${newPersona.displayName}")
+                        val updatedMessages = messages + notice
+                        messages = updatedMessages
                         scope.launch {
-                            chatInferenceOrchestrator.resetConversation(screen.topic, event.persona)
+                            isPreparing = true
+                            try {
+                                chatInferenceOrchestrator.switchPersona(screen.topic, newPersona, updatedMessages)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e, "ChatPresenter: Error switching persona")
+                            } finally {
+                                isPreparing = false
+                            }
                         }
                     }
                 }
 
                 ChatScreen.Event.StopGeneration -> {
-                    Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
-                    chatInferenceOrchestrator.stop()
-                    isGenerating = false
-                    val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
-                    if (lastAgent != null && lastAgent.isStreaming) {
-                        messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                    if (isGenerating) {
+                        Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
+                        chatInferenceOrchestrator.stop()
+                        isGenerating = false
+                        val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                        if (lastAgent != null && lastAgent.isStreaming) {
+                            messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                        }
                     }
                 }
 
                 ChatScreen.Event.ResetSession -> {
-                    Timber.d("ChatPresenter: ResetSession event received. Clearing message history and resetting engine...")
-                    messages = emptyList()
-                    throughputInfo = null
-                    systemStatsInfo = null
-                    systemResourceStats = null
-                    scope.launch {
-                        chatInferenceOrchestrator.resetConversation(screen.topic, persona)
+                    if (!isGenerating && !isPreparing) {
+                        Timber.d("ChatPresenter: ResetSession event received. Clearing message history and resetting engine...")
+                        messages = emptyList()
+                        currentSessionId = null
+                        saveErrorMessage = null
+                        throughputInfo = null
+                        systemStatsInfo = null
+                        systemResourceStats = null
+                        scope.launch {
+                            isPreparing = true
+                            try {
+                                chatInferenceOrchestrator.resetConversation(screen.topic, persona)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e, "ChatPresenter: Error resetting conversation")
+                            } finally {
+                                isPreparing = false
+                            }
+                        }
                     }
                 }
 
                 ChatScreen.Event.Retry -> {
                     initTrigger++
+                }
+
+                ChatScreen.Event.RetrySave -> {
+                    if (saveErrorMessage != null && !isGenerating && !isPreparing) {
+                        scope.launch {
+                            try {
+                                currentSessionId =
+                                    sessionRepository.saveSession(
+                                        topic = screen.topic,
+                                        messages = messages,
+                                        sessionId = currentSessionId,
+                                        modelUsed = activeModel?.name ?: "Unknown",
+                                    )
+                                saveErrorMessage = null
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e, "ChatPresenter: Retry save failed")
+                                saveErrorMessage = e.message ?: "Failed to save conversation"
+                            }
+                        }
+                    }
                 }
 
                 is ChatScreen.Event.CopyMessage -> {}
@@ -315,6 +376,7 @@ class ChatPresenter(
                     throughputInfo = throughputInfo,
                     systemStatsInfo = systemStatsInfo,
                     systemResourceStats = systemResourceStats,
+                    saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
                     eventSink = eventSink,
                 )
