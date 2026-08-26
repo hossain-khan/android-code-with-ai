@@ -87,7 +87,7 @@ class ChatInferenceOrchestratorTest {
         }
 
     @Test
-    fun `sendMessage emits tokens and done event`() =
+    fun `sendMessage emits tokens and done event without terminal empty token`() =
         runTest {
             fakeEngine.responseTokens = listOf("Hello", " world", "")
 
@@ -97,7 +97,6 @@ class ChatInferenceOrchestratorTest {
                 listOf(
                     ChatInferenceEvent.Token("Hello"),
                     ChatInferenceEvent.Token(" world"),
-                    ChatInferenceEvent.Token(""),
                     ChatInferenceEvent.Done,
                 ),
                 events,
@@ -150,7 +149,6 @@ class ChatInferenceOrchestratorTest {
                     ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
                     ChatInferenceEvent.Token("CPU "),
                     ChatInferenceEvent.Token("response"),
-                    ChatInferenceEvent.Token(""),
                     ChatInferenceEvent.Done,
                 ),
                 events,

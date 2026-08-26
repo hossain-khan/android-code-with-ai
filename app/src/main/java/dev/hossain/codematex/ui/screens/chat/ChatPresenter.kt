@@ -181,7 +181,6 @@ class ChatPresenter(
                                                         isStreaming = false,
                                                     )
                                             }
-                                            throughputTracker.recordToken("")
                                             throughputInfo = throughputTracker.finalize()
                                             isGenerating = false
 

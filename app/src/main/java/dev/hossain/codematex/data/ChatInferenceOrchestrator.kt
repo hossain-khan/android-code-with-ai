@@ -197,7 +197,9 @@ class DefaultChatInferenceOrchestrator
 
                 suspend fun runAndEmit(input: String) {
                     llmEngine.runInference(input) { partialToken, done ->
-                        trySend(ChatInferenceEvent.Token(partialToken))
+                        if (partialToken.isNotEmpty()) {
+                            trySend(ChatInferenceEvent.Token(partialToken))
+                        }
                         if (done) {
                             trySend(ChatInferenceEvent.Done)
                             close()
