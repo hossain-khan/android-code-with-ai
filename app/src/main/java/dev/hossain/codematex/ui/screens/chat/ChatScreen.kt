@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chat
 
+import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
@@ -15,6 +16,7 @@ data class ChatScreen(
     val topic: CodingTopic,
     val sessionId: String? = null,
 ) : ParcelableScreen {
+    @Immutable
     @Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State

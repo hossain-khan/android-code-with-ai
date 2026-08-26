@@ -77,6 +77,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
@@ -221,7 +222,6 @@ private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
-    val sizeFormatter = remember { DecimalFormat("#,### MB") }
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
@@ -303,7 +303,6 @@ private fun ModelPickerLayout(
                     val isCompatible = compatibility is ModelCompatibility.Compatible
                     ModelCard(
                         model = model,
-                        sizeFormatter = sizeFormatter,
                         compatibility = compatibility,
                         onDownload = {
                             if (isCompatible) {
@@ -397,7 +396,6 @@ private fun DeviceMemoryBanner(
 @Composable
 private fun ModelCard(
     model: AiModel,
-    sizeFormatter: DecimalFormat,
     compatibility: ModelCompatibility,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
@@ -425,11 +423,10 @@ private fun ModelCard(
                 )
             },
             text = {
-                val formattedSize = sizeFormatter.format(model.sizeBytes / 1_000_000)
                 Text(
                     text =
                         "Are you sure you want to delete this model? " +
-                            "This will permanently remove the model file from your device and free up $formattedSize of storage space.",
+                            "This will permanently remove the model file from your device and free up ${model.formattedSize} of storage space.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             },
@@ -494,7 +491,7 @@ private fun ModelCard(
                     color = MaterialTheme.colorScheme.surfaceContainerHighest,
                 ) {
                     Text(
-                        text = sizeFormatter.format(model.sizeBytes / 1_000_000),
+                        text = model.formattedSize,
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -901,7 +898,6 @@ private fun DownloadSettingsCardPreview() {
 @ThemePreviews
 @Composable
 private fun ModelCardPreview() {
-    val formatter = DecimalFormat("#,### MB")
     CodeWithAIAppTheme(dynamicColor = false) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -909,7 +905,6 @@ private fun ModelCardPreview() {
         ) {
             ModelCard(
                 model = sampleModels[0],
-                sizeFormatter = formatter,
                 compatibility = ModelCompatibility.Compatible,
                 onDownload = {},
                 onCancel = {},
@@ -918,7 +913,6 @@ private fun ModelCardPreview() {
             )
             ModelCard(
                 model = sampleModels[1],
-                sizeFormatter = formatter,
                 compatibility = ModelCompatibility.Incompatible("Requires 3GB RAM (Device has 12GB)"),
                 onDownload = {},
                 onCancel = {},
