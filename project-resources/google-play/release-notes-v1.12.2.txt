@@ -1,0 +1,5 @@
+What's New in v1.12.2:
+• Memory Precision: Standardized on binary gigabyte (1024^3) memory calculations for accurate device RAM reporting and model checks.
+• Work Package Alignment: Realigned work package name across app and test suites.
+• Expressive Markdown Typography: Configured M3 heading styles (h1–h6) for formatted AI responses.
+• Interface Documentation: Added complete KDoc coverage across public repositories, DAOs, and runtime engine interfaces.
