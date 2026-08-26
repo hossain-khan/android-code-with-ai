@@ -498,11 +498,25 @@ private fun SessionCard(
                     color = visualInfo.accentColor,
                     fontWeight = FontWeight.SemiBold,
                 )
-                Text(
-                    "${session.messageCount} messages",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    val relativeTime =
+                        dev.hossain.codematex.util
+                            .formatRelativeTime(session.lastActiveAt)
+                    val metadataText =
+                        if (relativeTime.isNotEmpty()) {
+                            "${session.messageCount} messages • $relativeTime"
+                        } else {
+                            "${session.messageCount} messages"
+                        }
+                    Text(
+                        metadataText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+                }
             }
         }
     }

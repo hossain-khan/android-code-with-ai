@@ -7,6 +7,8 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.delay
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.DurationUnit
 
 /**
  * Abstraction over CPU/RAM polling used to display live system stats during
@@ -67,9 +69,9 @@ class DefaultSystemStatsMonitor
             )
 
             while (isActive()) {
-                delay(750)
+                delay(750.milliseconds)
                 val now = System.currentTimeMillis()
-                val elapsedSec = (now - prevTime) / 1000f
+                val elapsedSec = (now - prevTime).milliseconds.toDouble(DurationUnit.SECONDS).toFloat()
                 val currentTicks = deviceMemoryProvider.getProcessCpuTicks()
 
                 if (elapsedSec > 0.1f) {
