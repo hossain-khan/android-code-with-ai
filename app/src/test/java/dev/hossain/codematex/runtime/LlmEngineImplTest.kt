@@ -607,6 +607,122 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `restoreHistory cancellation cancels native processing without fallback`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    engine.restoreHistory(listOf(ChatMessage.User("Hello")))
+                }
+
+            val callback = fakeConversation.sentMessages.single().callback
+            job.cancel()
+            job.join()
+
+            // Native code can still report a late terminal callback while unwinding.
+            callback.onDone()
+
+            assertTrue(job.isCancelled)
+            assertTrue(fakeConversation.cancelled)
+            assertEquals(1, factory.createSessionRequests.size)
+            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+        }
+
+    @Test
+    fun `restoreHistory propagates non-backend errors without fallback`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val expectedError = IllegalStateException("Conversation state is invalid")
+            var caughtError: Throwable? = null
+            val job =
+                launch {
+                    try {
+                        engine.restoreHistory(listOf(ChatMessage.User("Hello")))
+                    } catch (throwable: Throwable) {
+                        caughtError = throwable
+                    }
+                }
+
+            fakeConversation.sentMessages
+                .single()
+                .callback
+                .onError(expectedError)
+            job.join()
+
+            assertTrue(caughtError is IllegalStateException)
+            assertEquals(expectedError.message, caughtError?.message)
+            assertEquals(1, factory.createSessionRequests.size)
+            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+        }
+
+    @Test
+    fun `restoreHistory propagates CPU backend failure without retry`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.CPU,
+            )
+
+            var caughtError: Throwable? = null
+            val job =
+                launch {
+                    try {
+                        engine.restoreHistory(listOf(ChatMessage.User("Hello")))
+                    } catch (throwable: Throwable) {
+                        caughtError = throwable
+                    }
+                }
+
+            fakeConversation.sentMessages
+                .single()
+                .callback
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("CPU failed"),
+                )
+            job.join()
+
+            assertTrue(caughtError is BackendFailureException)
+            assertEquals(LlmEngine.Backend.CPU, (caughtError as BackendFailureException).failedBackend)
+            assertEquals(1, factory.createSessionRequests.size)
+        }
+
+    @Test
     fun `restoreHistory does nothing when engine is not initialized`() =
         runEngineTest {
             engine.restoreHistory(listOf(ChatMessage.User("Hello")))
@@ -673,7 +789,47 @@ class LlmEngineImplTest {
         }
 
     @Test
-    fun `runInference swallows onToken consumer exception and still completes`() =
+    fun `runInference completes when terminal consumer throws`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            var completed = false
+            var terminalCalls = 0
+            val job =
+                launch {
+                    engine.runInference("Hello") { _, done ->
+                        if (done) {
+                            terminalCalls++
+                            throw AssertionError("Terminal consumer failed")
+                        }
+                    }
+                    completed = true
+                }
+
+            fakeConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            job.join()
+
+            assertTrue(completed)
+            assertEquals(1, terminalCalls)
+        }
+
+    @Test
+    fun `runInference swallows onToken consumer throwable and still completes`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()
             val fakeConversation = FakeInferenceConversation()
@@ -693,7 +849,7 @@ class LlmEngineImplTest {
             val job =
                 launch {
                     engine.runInference("Hello") { partial, done ->
-                        if (partial == "boom") throw RuntimeException("Token consumer failed")
+                        if (partial == "boom") throw AssertionError("Token consumer failed")
                         emittedTokens.add(partial to done)
                     }
                 }
