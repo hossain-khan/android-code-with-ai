@@ -7,13 +7,13 @@ import org.junit.Test
 
 class MemoryCompatibilityPolicyTest {
     @Test
-    fun `minimum required bytes for 8GB model is 7_200_000_000`() {
-        assertEquals(7_200_000_000L, MemoryCompatibilityPolicy.minimumRequiredBytes(8))
+    fun `minimum required bytes for 8GB model is 7_730_941_132`() {
+        assertEquals(7_730_941_132L, MemoryCompatibilityPolicy.minimumRequiredBytes(8))
     }
 
     @Test
-    fun `minimum required bytes for 12GB model is 10_800_000_000`() {
-        assertEquals(10_800_000_000L, MemoryCompatibilityPolicy.minimumRequiredBytes(12))
+    fun `minimum required bytes for 12GB model is 11_596_411_699`() {
+        assertEquals(11_596_411_699L, MemoryCompatibilityPolicy.minimumRequiredBytes(12))
     }
 
     @Test
@@ -52,6 +52,7 @@ class MemoryCompatibilityPolicyTest {
 
     @Test
     fun `toDecimalGigabytes converts bytes correctly`() {
-        assertEquals(8.0, MemoryCompatibilityPolicy.toDecimalGigabytes(8_000_000_000L), 0.001)
+        val bytes = 8L * MemoryCompatibilityPolicy.BYTES_PER_GB
+        assertEquals(8.0, MemoryCompatibilityPolicy.toDecimalGigabytes(bytes), 0.001)
     }
 }

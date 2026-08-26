@@ -3,17 +3,17 @@ package dev.hossain.codematex.system
 /**
  * Shared byte-based policy for RAM compatibility decisions.
  *
- * Model requirements are expressed as marketed gigabytes (decimal, 1 GB = 1_000_000_000 bytes).
- * Devices typically report less physical memory than the marketed amount because the kernel,
- * baseband, and other reserved blocks consume a portion before the OS boots. The policy applies a
- * fixed reservation allowance so that an N-GB model is usable when roughly 90 % of N GB is
- * visible to the OS.
+ * Model requirements are expressed in gigabytes using binary 1024-based calculation
+ * (1 GB / GiB = 1,073,741,824 bytes). Devices typically report less physical memory
+ * than the marketed amount because the kernel, baseband, and other reserved blocks
+ * consume a portion before the OS boots. The policy applies a fixed reservation
+ * allowance so that an N-GB model is usable when roughly 90 % of N GB is visible to the OS.
  */
 object MemoryCompatibilityPolicy {
     /**
-     * Number of bytes in a marketed (decimal) gigabyte.
+     * Number of bytes in a gigabyte (1024^3 = 1,073,741,824 bytes).
      */
-    const val BYTES_PER_GB: Long = 1_000_000_000L
+    const val BYTES_PER_GB: Long = 1024L * 1024L * 1024L
 
     /**
      * Reserved-memory allowance. A device is considered compatible with an N-GB model when it

@@ -36,8 +36,8 @@ class DeviceMemoryTest {
     fun `getMemoryStats returns used and total memory in gigabytes`() {
         val stats =
             DeviceMemory.getMemoryStats { memoryInfo ->
-                memoryInfo.totalMem = 16L * 1_000_000_000
-                memoryInfo.availMem = 12L * 1_000_000_000
+                memoryInfo.totalMem = 16L * MemoryCompatibilityPolicy.BYTES_PER_GB
+                memoryInfo.availMem = 12L * MemoryCompatibilityPolicy.BYTES_PER_GB
             }
 
         assertEquals(16.0f, stats.totalGb, 0.001f)
