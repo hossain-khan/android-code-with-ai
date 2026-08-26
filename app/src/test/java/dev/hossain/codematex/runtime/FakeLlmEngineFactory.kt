@@ -14,6 +14,8 @@ class FakeLlmEngineFactory : LlmEngineFactory {
     private var sessionIndex = 0
     var createSessionRequests = mutableListOf<CreateSessionRequest>()
         private set
+    var fallbackSessionRequests = mutableListOf<LlmEngine.Backend>()
+        private set
 
     fun addSession(session: LlmEngineSession) {
         sessions.add(session)
@@ -37,6 +39,27 @@ class FakeLlmEngineFactory : LlmEngineFactory {
             throw IllegalStateException("No fake session configured for index $sessionIndex")
         }
         return sessions[sessionIndex++]
+    }
+
+    override suspend fun createFallbackSession(
+        modelPath: String,
+        failedBackend: LlmEngine.Backend,
+        systemInstruction: String?,
+        config: ModelConfig,
+    ): LlmEngineSession {
+        fallbackSessionRequests.add(failedBackend)
+        val fallbackBackend =
+            when (failedBackend) {
+                LlmEngine.Backend.NPU -> LlmEngine.Backend.GPU
+                LlmEngine.Backend.GPU -> LlmEngine.Backend.CPU
+                LlmEngine.Backend.CPU -> error("CPU backend has no fallback")
+            }
+        return createSession(
+            modelPath = modelPath,
+            preferredBackend = fallbackBackend,
+            systemInstruction = systemInstruction,
+            config = config,
+        )
     }
 
     fun createFakeSession(

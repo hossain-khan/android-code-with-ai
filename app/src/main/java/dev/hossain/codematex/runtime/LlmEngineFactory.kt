@@ -75,6 +75,21 @@ interface LlmEngineFactory {
         systemInstruction: String?,
         config: ModelConfig,
     ): LlmEngineSession
+
+    /**
+     * Replaces a session after inference failed on [failedBackend].
+     *
+     * The failed backend is recorded as unsupported and the next available backend in the
+     * fallback chain is used as the preference for [createSession].
+     *
+     * @throws IllegalArgumentException if [failedBackend] has no fallback.
+     */
+    suspend fun createFallbackSession(
+        modelPath: String,
+        failedBackend: LlmEngine.Backend,
+        systemInstruction: String?,
+        config: ModelConfig,
+    ): LlmEngineSession
 }
 
 @SingleIn(AppScope::class)
@@ -86,6 +101,25 @@ class DefaultLlmEngineFactory
         private val backendFallbackStrategy: BackendFallbackStrategy,
         private val nativeEngineFactory: NativeEngineFactory,
     ) : LlmEngineFactory {
+        override suspend fun createFallbackSession(
+            modelPath: String,
+            failedBackend: LlmEngine.Backend,
+            systemInstruction: String?,
+            config: ModelConfig,
+        ): LlmEngineSession {
+            val fallbackBackend =
+                requireNotNull(backendFallbackStrategy.nextBackend(failedBackend)) {
+                    "Backend $failedBackend has no fallback"
+                }
+            backendFallbackStrategy.markUnsupported(failedBackend)
+            return createSession(
+                modelPath = modelPath,
+                preferredBackend = fallbackBackend,
+                systemInstruction = systemInstruction,
+                config = config,
+            )
+        }
+
         override suspend fun createSession(
             modelPath: String,
             preferredBackend: LlmEngine.Backend,

@@ -207,16 +207,19 @@ class DefaultChatInferenceOrchestrator
                     }
                 }
 
-                try {
-                    runAndEmit(input)
-                } catch (e: BackendFailureException) {
-                    if (e.failedBackend == LlmEngine.Backend.CPU) {
-                        // CPU failure is terminal; do not retry.
-                        throw e
+                val failedBackends = mutableSetOf<LlmEngine.Backend>()
+                while (true) {
+                    try {
+                        runAndEmit(input)
+                        break
+                    } catch (e: BackendFailureException) {
+                        if (e.failedBackend == LlmEngine.Backend.CPU || !failedBackends.add(e.failedBackend)) {
+                            // CPU and repeated backend failures are terminal.
+                            throw e
+                        }
+                        Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
+                        send(ChatInferenceEvent.BackendFailed(e.failedBackend))
                     }
-                    Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
-                    trySend(ChatInferenceEvent.BackendFailed(e.failedBackend))
-                    runAndEmit(input)
                 }
 
                 awaitClose {

@@ -124,12 +124,12 @@ class LlmEngineImpl(
             if (e.failedBackend != LlmEngine.Backend.CPU) {
                 Timber.w(
                     e,
-                    "LlmEngineImpl: Inference failed on hardware acceleration (${e.failedBackend}). Falling back to CPU...",
+                    "LlmEngineImpl: Inference failed on ${e.failedBackend}. Creating fallback session...",
                 )
-                recreateSessionWithCpu()
+                recreateSessionAfterFailure(e.failedBackend)
             }
-            // Re-throw so the orchestrator can signal the presenter to discard any partial
-            // hardware output before retrying on the newly-created CPU session.
+            // Re-throw so the orchestrator can signal the presenter to discard partial output
+            // before retrying on the newly-created fallback session.
             throw e
         }
     }
@@ -164,14 +164,14 @@ class LlmEngineImpl(
         }
     }
 
-    private suspend fun recreateSessionWithCpu() {
+    private suspend fun recreateSessionAfterFailure(failedBackend: LlmEngine.Backend) {
         val engineToClose = engine
         val conversationToClose = conversation
         try {
             val session =
-                llmEngineFactory.createSession(
+                llmEngineFactory.createFallbackSession(
                     modelPath = currentModelPath,
-                    preferredBackend = LlmEngine.Backend.CPU,
+                    failedBackend = failedBackend,
                     systemInstruction = currentSystemInstruction,
                     config = currentConfig,
                 )
@@ -291,22 +291,23 @@ class LlmEngineImpl(
             val priorMessages = messages.filter { it is ChatMessage.User || it is ChatMessage.Agent }
             if (priorMessages.isEmpty()) return@withLock
 
-            try {
-                executeRestoreHistory(priorMessages)
-            } catch (e: kotlinx.coroutines.CancellationException) {
-                throw e
-            } catch (e: java.util.concurrent.CancellationException) {
-                throw e
-            } catch (e: BackendFailureException) {
-                if (e.failedBackend != LlmEngine.Backend.CPU) {
+            while (true) {
+                try {
+                    executeRestoreHistory(priorMessages)
+                    return@withLock
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                    throw e
+                } catch (e: java.util.concurrent.CancellationException) {
+                    throw e
+                } catch (e: BackendFailureException) {
+                    if (e.failedBackend == LlmEngine.Backend.CPU) {
+                        throw e
+                    }
                     Timber.w(
                         e,
-                        "LlmEngineImpl: History restoration failed on ${e.failedBackend}. Falling back to CPU...",
+                        "LlmEngineImpl: History restoration failed on ${e.failedBackend}. Creating fallback session...",
                     )
-                    recreateSessionWithCpu()
-                    executeRestoreHistory(priorMessages)
-                } else {
-                    throw e
+                    recreateSessionAfterFailure(e.failedBackend)
                 }
             }
         }

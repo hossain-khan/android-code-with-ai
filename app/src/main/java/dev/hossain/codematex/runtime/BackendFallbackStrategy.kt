@@ -16,8 +16,8 @@ import javax.inject.Inject
 interface BackendFallbackStrategy {
     /**
      * Returns the backend to actually start with, taking previously unsupported
-     * backends into account. If [preferred] is unsupported, the strategy falls
-     * back to CPU immediately.
+     * backends into account. Unsupported backends are skipped in preference order
+     * until the first available backend is found.
      */
     fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend
 

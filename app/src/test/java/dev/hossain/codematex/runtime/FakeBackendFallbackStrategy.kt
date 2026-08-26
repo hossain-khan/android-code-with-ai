@@ -11,11 +11,11 @@ class FakeBackendFallbackStrategy : BackendFallbackStrategy {
 
     override fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend {
         resolveStartBackendInvocations.add(preferred)
-        return if (unsupportedBackends.contains(preferred)) {
-            LlmEngine.Backend.CPU
-        } else {
-            preferred
+        var backend = preferred
+        while (backend in unsupportedBackends && backend != LlmEngine.Backend.CPU) {
+            backend = nextBackend(backend) ?: LlmEngine.Backend.CPU
         }
+        return backend
     }
 
     override fun nextBackend(current: LlmEngine.Backend): LlmEngine.Backend? {
