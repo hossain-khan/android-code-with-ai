@@ -38,6 +38,7 @@ data class ChatScreen(
             val throughputInfo: String?,
             val systemStatsInfo: String?,
             val systemResourceStats: SystemResourceStats? = null,
+            val saveErrorMessage: String? = null,
             val topic: CodingTopic,
             val eventSink: (Event) -> Unit,
         ) : State
@@ -64,6 +65,8 @@ data class ChatScreen(
         data object ResetSession : Event
 
         data object Retry : Event
+
+        data object RetrySave : Event
 
         data class CopyMessage(
             val content: String,

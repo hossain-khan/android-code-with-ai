@@ -11,6 +11,7 @@ class FakeChatSessionRepository(
     private val sessions: List<ChatSession> = emptyList(),
     private val messages: List<ChatMessage> = emptyList(),
     private var getException: Exception? = null,
+    var saveException: Exception? = null,
 ) : ChatSessionRepository {
     var savedSessions = mutableListOf<Triple<CodingTopic, List<ChatMessage>, String?>>()
     var deletedSessionIds = mutableListOf<String>()
@@ -30,6 +31,7 @@ class FakeChatSessionRepository(
         sessionId: String?,
         modelUsed: String?,
     ): String {
+        if (saveException != null) throw saveException!!
         val effectiveSessionId = sessionId ?: "generated-session-id"
         savedSessions.add(Triple(topic, messages, sessionId))
         return effectiveSessionId

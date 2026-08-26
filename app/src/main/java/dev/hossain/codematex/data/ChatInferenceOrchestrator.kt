@@ -85,6 +85,16 @@ interface ChatInferenceOrchestrator {
     )
 
     /**
+     * Switches the persona by resetting the conversation with the new persona's system prompt
+     * and restoring the given [messages].
+     */
+    suspend fun switchPersona(
+        topic: CodingTopic,
+        persona: TutorPersona,
+        messages: List<ChatMessage>,
+    )
+
+    /**
      * Returns the currently active backend, or null if the engine is not
      * initialized.
      */
@@ -162,6 +172,21 @@ class DefaultChatInferenceOrchestrator
                 topicPromptProvider.buildSystemPrompt(topic, persona),
                 configStore.config,
             )
+        }
+
+        override suspend fun switchPersona(
+            topic: CodingTopic,
+            persona: TutorPersona,
+            messages: List<ChatMessage>,
+        ) {
+            Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
+            llmEngine.resetConversation(
+                topicPromptProvider.buildSystemPrompt(topic, persona),
+                configStore.config,
+            )
+            if (messages.isNotEmpty()) {
+                llmEngine.restoreHistory(messages)
+            }
         }
 
         override fun getActiveBackend(): Backend? = llmEngine.getActiveBackend()

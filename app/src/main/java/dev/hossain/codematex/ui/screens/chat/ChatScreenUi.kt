@@ -67,6 +67,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -576,6 +577,13 @@ private fun ChatLayout(
                         )
                     }
 
+                    if (state.saveErrorMessage != null) {
+                        SaveErrorBanner(
+                            errorMessage = state.saveErrorMessage,
+                            onRetry = { state.eventSink(ChatScreen.Event.RetrySave) },
+                        )
+                    }
+
                     ChatInputField(
                         state = state,
                         inputText = inputText,
@@ -642,6 +650,13 @@ private fun ChatLayout(
                         onCopyMessage = {
                             state.eventSink(ChatScreen.Event.CopyMessage(it))
                         },
+                    )
+                }
+
+                if (state.saveErrorMessage != null) {
+                    SaveErrorBanner(
+                        errorMessage = state.saveErrorMessage,
+                        onRetry = { state.eventSink(ChatScreen.Event.RetrySave) },
                     )
                 }
 
@@ -925,6 +940,46 @@ private fun GeneratingIndicator(accentColor: Color) {
                     text = "Thinking...",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SaveErrorBanner(
+    errorMessage: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f),
+        shape = MaterialTheme.shapes.small,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(
+                onClick = onRetry,
+            ) {
+                Text(
+                    text = "Retry",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onErrorContainer,
                 )
             }
         }
@@ -1533,6 +1588,20 @@ private fun ChatInputFieldPreparingPreview() {
                 inputText = "",
                 onInputTextChanged = {},
                 onSendMessage = {},
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun SaveErrorBannerPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            SaveErrorBanner(
+                errorMessage = "Failed to save conversation: SQLite disk full",
+                onRetry = {},
+                modifier = Modifier.padding(16.dp),
             )
         }
     }
