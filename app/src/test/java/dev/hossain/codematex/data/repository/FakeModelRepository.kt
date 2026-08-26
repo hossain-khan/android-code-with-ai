@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.flowOf
 class FakeModelRepository(
     private val availableModels: List<AiModel> = emptyList(),
     private var selectedModel: AiModel? = null,
-    private val getException: Exception? = null,
+    var getException: Exception? = null,
 ) : ModelRepository {
     var downloadCalls = mutableListOf<AiModel>()
     var cancelDownloadCalls = mutableListOf<AiModel>()

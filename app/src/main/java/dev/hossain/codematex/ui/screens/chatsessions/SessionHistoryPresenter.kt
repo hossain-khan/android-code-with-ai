@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.chatsessions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -19,8 +20,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AssistedInject
 class SessionHistoryPresenter(
@@ -33,13 +36,21 @@ class SessionHistoryPresenter(
         var sessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var selectedTopic by rememberRetained { mutableStateOf<CodingTopic?>(null) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var retryTrigger by rememberRetained { mutableIntStateOf(0) }
         val scope = rememberCoroutineScope()
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(retryTrigger) {
+            isLoading = true
+            errorMessage = null
             sessionRepository
                 .getAllSessions()
-                .catch { isLoading = false }
-                .collect { list ->
+                .catch { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "SessionHistoryPresenter: Error loading chat history")
+                    errorMessage = e.message ?: "Failed to load chat history"
+                    isLoading = false
+                }.collect { list ->
                     sessions = list
                     isLoading = false
                 }
@@ -50,17 +61,22 @@ class SessionHistoryPresenter(
                 sessions.map { it.topic }.distinct()
             }
 
-        // If the selected topic no longer exists in sessions (e.g. after deletion), reset filter
-        if (selectedTopic != null && !availableTopics.contains(selectedTopic)) {
-            selectedTopic = null
-        }
+        // Derive effective filter state without mutating snapshot state during composition body execution
+        val effectiveTopic =
+            remember(selectedTopic, availableTopics) {
+                if (selectedTopic != null && selectedTopic in availableTopics) {
+                    selectedTopic
+                } else {
+                    null
+                }
+            }
 
         val filteredSessions =
-            remember(sessions, selectedTopic) {
-                if (selectedTopic == null) {
+            remember(sessions, effectiveTopic) {
+                if (effectiveTopic == null) {
                     sessions
                 } else {
-                    sessions.filter { it.topic == selectedTopic }
+                    sessions.filter { it.topic == effectiveTopic }
                 }
             }
 
@@ -83,22 +99,34 @@ class SessionHistoryPresenter(
                     selectedTopic = if (selectedTopic == event.topic) null else event.topic
                 }
 
+                SessionHistoryScreen.Event.Retry -> {
+                    retryTrigger++
+                }
+
                 SessionHistoryScreen.Event.Back -> {
                     navigator.pop()
                 }
             }
         }
 
-        return if (isLoading) {
-            SessionHistoryScreen.State.Loading
-        } else {
-            SessionHistoryScreen.State.Success(
-                sessions = filteredSessions,
-                allSessions = sessions,
-                availableTopics = availableTopics,
-                selectedTopic = selectedTopic,
-                eventSink = eventSink,
-            )
+        return when {
+            isLoading -> {
+                SessionHistoryScreen.State.Loading
+            }
+
+            errorMessage != null -> {
+                SessionHistoryScreen.State.Error(errorMessage!!, eventSink)
+            }
+
+            else -> {
+                SessionHistoryScreen.State.Success(
+                    sessions = filteredSessions,
+                    allSessions = sessions,
+                    availableTopics = availableTopics,
+                    selectedTopic = effectiveTopic,
+                    eventSink = eventSink,
+                )
+            }
         }
     }
 

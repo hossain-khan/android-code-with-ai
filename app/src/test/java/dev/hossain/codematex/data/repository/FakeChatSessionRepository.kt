@@ -5,23 +5,25 @@ import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 class FakeChatSessionRepository(
     private val sessions: List<ChatSession> = emptyList(),
     private val messages: List<ChatMessage> = emptyList(),
-    private var getException: Exception? = null,
+    var getException: Exception? = null,
+    var getSessionException: Exception? = null,
     var saveException: Exception? = null,
 ) : ChatSessionRepository {
     var savedSessions = mutableListOf<Triple<CodingTopic, List<ChatMessage>, String?>>()
     var deletedSessionIds = mutableListOf<String>()
 
-    override fun getAllSessions(): Flow<List<ChatSession>> {
-        if (getException != null) throw getException!!
-        return flowOf(sessions)
-    }
+    override fun getAllSessions(): Flow<List<ChatSession>> = getException?.let { ex -> flow { throw ex } } ?: flowOf(sessions)
 
-    override suspend fun getSession(sessionId: String): ChatSession? = sessions.find { it.id == sessionId }
+    override suspend fun getSession(sessionId: String): ChatSession? {
+        if (getSessionException != null) throw getSessionException!!
+        return sessions.find { it.id == sessionId }
+    }
 
     override suspend fun getMessages(sessionId: String): List<ChatMessage> = messages
 

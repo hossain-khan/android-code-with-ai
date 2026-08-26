@@ -37,7 +37,7 @@ class SessionDetailPresenterTest {
         }
 
     @Test
-    fun `given session missing - stays loading`() =
+    fun `given session missing - emits not found state with session id`() =
         runTest {
             val fakeRepo = FakeChatSessionRepository(sessions = emptyList())
             val navigator = FakeNavigator(SessionDetailScreen("unknown"))
@@ -45,7 +45,35 @@ class SessionDetailPresenterTest {
                 SessionDetailPresenter(navigator, SessionDetailScreen("unknown"), fakeRepo)
 
             presenter.test {
-                assertEquals(SessionDetailScreen.State.Loading, expectMostRecentItem())
+                val state = expectMostRecentItem() as SessionDetailScreen.State.NotFound
+                assertEquals("unknown", state.sessionId)
+            }
+        }
+
+    @Test
+    fun `given session load error - emits error state and retry succeeds`() =
+        runTest {
+            val session = testSession(id = "s1", topic = CodingTopic.KOTLIN)
+            val fakeRepo =
+                FakeChatSessionRepository(
+                    sessions = listOf(session),
+                    messages = testMessages,
+                    getSessionException = java.io.IOException("Database unavailable"),
+                )
+            val navigator = FakeNavigator(SessionDetailScreen("s1"))
+            val presenter = SessionDetailPresenter(navigator, SessionDetailScreen("s1"), fakeRepo)
+
+            presenter.test {
+                val errorState = expectMostRecentItem() as SessionDetailScreen.State.Error
+                assertEquals("Database unavailable", errorState.message)
+
+                // Clear the error and trigger retry
+                fakeRepo.getSessionException = null
+                errorState.eventSink(SessionDetailScreen.Event.Retry)
+
+                val successState = expectMostRecentItem() as SessionDetailScreen.State.Success
+                assertEquals(session, successState.session)
+                assertEquals(testMessages, successState.messages)
             }
         }
 
