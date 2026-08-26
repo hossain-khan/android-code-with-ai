@@ -13,9 +13,19 @@ import javax.inject.Inject
  * Manages model configuration hyperparameters (temperature, topK, topP, maxTokens).
  */
 interface ModelConfigStore {
+    /**
+     * The current snapshot of active model hyperparameters.
+     */
     val config: ModelConfig
+
+    /**
+     * Observable [StateFlow] emitting updated model hyperparameters when modified.
+     */
     val configFlow: StateFlow<ModelConfig>
 
+    /**
+     * Updates the current hyperparameter configuration to [newConfig].
+     */
     fun updateConfig(newConfig: ModelConfig)
 }
 

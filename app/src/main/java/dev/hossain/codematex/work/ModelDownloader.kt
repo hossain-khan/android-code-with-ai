@@ -37,6 +37,9 @@ interface ModelDownloader {
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit>
 
+    /**
+     * Downloads the resource from candidate [urls] to [outputPath] without integrity verification.
+     */
     suspend fun download(
         urls: List<String>,
         outputPath: String,
@@ -44,6 +47,9 @@ interface ModelDownloader {
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> = download(urls, outputPath, null, onProgress, shouldCancel)
 
+    /**
+     * Downloads the resource at [url] to [outputPath] without integrity verification.
+     */
     suspend fun download(
         url: String,
         outputPath: String,
@@ -51,6 +57,9 @@ interface ModelDownloader {
         shouldCancel: () -> Boolean = { false },
     ): Result<Unit> = download(url, outputPath, null, onProgress, shouldCancel)
 
+    /**
+     * Downloads the resource from candidate [urls] to [outputPath] with percent-only progress updates.
+     */
     suspend fun download(
         urls: List<String>,
         outputPath: String,
@@ -66,6 +75,9 @@ interface ModelDownloader {
             shouldCancel = shouldCancel,
         )
 
+    /**
+     * Downloads the resource at [url] to [outputPath] with percent-only progress updates.
+     */
     suspend fun download(
         url: String,
         outputPath: String,

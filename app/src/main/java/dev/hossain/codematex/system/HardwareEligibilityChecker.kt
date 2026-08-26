@@ -26,7 +26,15 @@ sealed interface HardwareEligibility {
     ) : HardwareEligibility
 }
 
+/**
+ * Checks overall device hardware eligibility (such as 64-bit ABI support and baseline RAM capacity)
+ * to run on-device Large Language Models.
+ */
 interface HardwareEligibilityChecker {
+    /**
+     * Evaluates device architecture and total available memory, returning [HardwareEligibility.Eligible]
+     * or [HardwareEligibility.Ineligible] with the specific failure cause.
+     */
     fun checkEligibility(): HardwareEligibility
 }
 

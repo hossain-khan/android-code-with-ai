@@ -14,6 +14,9 @@ import dev.zacsweers.metro.SingleIn
  * data, while debug builds may opt into destructive fallback to speed up active schema iteration.
  */
 interface DatabaseMigrationPolicy {
+    /**
+     * When `true`, enables Room destructive fallback if no migration matches; `false` in production.
+     */
     val allowDestructiveMigration: Boolean
 }
 
