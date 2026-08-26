@@ -23,6 +23,11 @@ data class ModelEntry(
     val downloadUrl: String? = null,
     val fallbackDownloadUrls: List<String> = emptyList(),
     val sha256: String? = null,
+    val displayName: String? = null,
+    val contextWindow: Int = 0,
+    val quantization: String = "",
+    val promptFormat: String = "",
+    val isGatedModel: Boolean = false,
 )
 
 /**

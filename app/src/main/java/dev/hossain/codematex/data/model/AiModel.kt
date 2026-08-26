@@ -26,6 +26,10 @@ data class AiModel(
     val sha256: String? = null,
     val downloadErrorMessage: String? = null,
     val isSelected: Boolean = false,
+    val contextWindow: Int = 0,
+    val quantization: String = "",
+    val promptFormat: String = "",
+    val isGatedModel: Boolean = false,
 )
 
 enum class DownloadStatus {
@@ -46,3 +50,33 @@ val AiModel.shortDisplayName: String
  */
 val AiModel.formattedSize: String
     get() = formatStorageSize(sizeBytes)
+
+/**
+ * Returns a formatted context window string (e.g. `"128k Context"`, `"32k Context"`), or `null` if unspecified.
+ */
+val AiModel.formattedContextWindow: String?
+    get() {
+        if (contextWindow <= 0) return null
+        val kCount =
+            when {
+                // Powers-of-2 multiples of 1024 (e.g. 4096 -> 4k, 8192 -> 8k, 32768 -> 32k, 131072 -> 128k)
+                contextWindow % 1024 == 0 && ((contextWindow / 1024) and ((contextWindow / 1024) - 1)) == 0 -> {
+                    contextWindow / 1024
+                }
+
+                // Multiples of 1000 (e.g. 128000 -> 128k, 32000 -> 32k)
+                contextWindow % 1000 == 0 -> {
+                    contextWindow / 1000
+                }
+
+                // Other binary multiples of 1024
+                contextWindow % 1024 == 0 -> {
+                    contextWindow / 1024
+                }
+
+                else -> {
+                    kotlin.math.round(contextWindow / 1000.0).toInt()
+                }
+            }
+        return "${kCount}k Context"
+    }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -77,6 +78,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.formattedContextWindow
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
@@ -510,10 +512,10 @@ private fun ModelCard(
             }
 
             // Specs & Badges Row
-            Row(
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Surface(
                     shape = MaterialTheme.shapes.extraSmall,
@@ -525,6 +527,35 @@ private fun ModelCard(
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+
+                if (model.quantization.isNotBlank()) {
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Text(
+                            text = model.quantization,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+
+                model.formattedContextWindow?.let { contextWindow ->
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Text(
+                            text = contextWindow,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
 
                 Surface(
@@ -822,7 +853,7 @@ private fun DownloadSettingsCard(
 private val sampleModels =
     listOf(
         AiModel(
-            id = "gemma-4-E2B-it-litert-lm",
+            id = "litert-community/gemma-4-E2B-it-litert-lm",
             name = "gemma-4-E2B-it-litert-lm",
             displayName = "Gemma 4-E2B IT",
             description = "Instruction-tuned on-device coding model with superior reasoning.",
@@ -830,28 +861,53 @@ private val sampleModels =
             localPath = "/data/data/models/gemma-4-E2B.bin",
             preferredBackend = LlmEngine.Backend.GPU,
             minDeviceMemoryInGb = 4,
-            downloadUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
-            modelRepoUrl = "https://huggingface.co/google/gemma-4-E2B-it-litert-lm",
-            license = "Gemma Terms of Use",
+            downloadUrl = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm",
+            modelRepoUrl = "https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm",
+            license = "Apache 2.0",
             publisher = "Google",
             downloadStatus = DownloadStatus.DOWNLOADED,
             isSelected = true,
+            contextWindow = 8192,
+            quantization = "INT4",
+            promptFormat = "GEMMA",
         ),
         AiModel(
-            id = "qwen-2.5-coder-1.5b",
-            name = "qwen-2.5-coder-1.5b",
+            id = "litert-community/Phi-4-mini-instruct",
+            name = "Phi-4-mini-instruct",
+            displayName = "Phi-4 Mini Instruct (3.8B)",
+            description = "Advanced multi-step reasoning for devices with high memory capacity.",
+            sizeBytes = 2_684_354_560L,
+            localPath = null,
+            preferredBackend = LlmEngine.Backend.GPU,
+            minDeviceMemoryInGb = 6,
+            downloadUrl = "https://huggingface.co/litert-community/Phi-4-mini-instruct",
+            modelRepoUrl = "https://huggingface.co/litert-community/Phi-4-mini-instruct",
+            license = "MIT",
+            publisher = "Google LiteRT Community",
+            downloadStatus = DownloadStatus.NOT_DOWNLOADED,
+            isSelected = false,
+            contextWindow = 128000,
+            quantization = "INT4",
+            promptFormat = "PHI",
+        ),
+        AiModel(
+            id = "litert-community/Qwen2.5-Coder-1.5B-Instruct",
+            name = "Qwen2.5-Coder-1.5B-Instruct",
             displayName = "Qwen 2.5 Coder 1.5B",
-            description = "Compact multilingual code completion and debugging assistant.",
-            sizeBytes = 1_850_000_000L,
+            description = "Best lightweight model for code explanations, syntax fixes, and debugging.",
+            sizeBytes = 1_120_000_000L,
             localPath = null,
             preferredBackend = LlmEngine.Backend.CPU,
             minDeviceMemoryInGb = 3,
-            downloadUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",
-            modelRepoUrl = "https://huggingface.co/Qwen/Qwen2.5-Coder-1.5B",
+            downloadUrl = "https://huggingface.co/litert-community/Qwen2.5-Coder-1.5B-Instruct",
+            modelRepoUrl = "https://huggingface.co/litert-community/Qwen2.5-Coder-1.5B-Instruct",
             license = "Apache 2.0",
-            publisher = "Alibaba",
+            publisher = "Google LiteRT Community",
             downloadStatus = DownloadStatus.NOT_DOWNLOADED,
             isSelected = false,
+            contextWindow = 32768,
+            quantization = "INT4",
+            promptFormat = "CHATML",
         ),
     )
 
