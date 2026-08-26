@@ -1,0 +1,6 @@
+What's New in v1.12.1:
+• Hardware Fallback: Multi-tier NPU -> GPU -> CPU runtime acceleration with safe retry loops.
+• JNI Exception Safety: Robust native thread cancellation & continuation lifecycle isolation.
+• AI Code Disclaimer: Animated responsible AI review reminder in chat with auto-dismissal while streaming.
+• Relative Time & Durations: Idiomatic time formatting across session cards.
+• Compose Performance: Skippable UI rendering with @Immutable state optimization.
