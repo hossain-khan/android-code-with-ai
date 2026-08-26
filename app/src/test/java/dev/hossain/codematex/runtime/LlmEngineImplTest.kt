@@ -217,6 +217,57 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `runInference recreates GPU session after NPU failure`() =
+        runEngineTest {
+            val npuEngine = FakeInferenceEngine()
+            val npuConversation = FakeInferenceConversation()
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = npuEngine,
+                    conversation = npuConversation,
+                    backend = LlmEngine.Backend.NPU,
+                ),
+            )
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.NPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: BackendFailureException) {
+                        assertEquals(LlmEngine.Backend.NPU, e.failedBackend)
+                    }
+                }
+
+            npuConversation.sentMessages
+                .single()
+                .callback
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("NPU failed"),
+                )
+            job.join()
+
+            assertEquals(listOf(LlmEngine.Backend.NPU), factory.fallbackSessionRequests)
+            assertEquals(LlmEngine.Backend.GPU, factory.createSessionRequests[1].preferredBackend)
+            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertTrue("NPU engine should be closed during fallback", npuEngine.closed)
+            assertTrue("NPU conversation should be closed during fallback", npuConversation.closed)
+        }
+
+    @Test
     fun `runInference throws BackendFailureException and recreates CPU session on backend failure`() =
         runEngineTest {
             val gpuEngine = FakeInferenceEngine()
@@ -615,12 +666,12 @@ class LlmEngineImplTest {
                 factory.createFakeSession(
                     engine = fakeEngine,
                     conversation = fakeConversation,
-                    backend = LlmEngine.Backend.GPU,
+                    backend = LlmEngine.Backend.NPU,
                 ),
             )
             engine.initialize(
                 modelPath = "/data/model.bin",
-                backend = LlmEngine.Backend.GPU,
+                backend = LlmEngine.Backend.NPU,
             )
 
             val job =
@@ -637,8 +688,9 @@ class LlmEngineImplTest {
 
             assertTrue(job.isCancelled)
             assertTrue(fakeConversation.cancelled)
+            assertTrue(factory.fallbackSessionRequests.isEmpty())
             assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertEquals(LlmEngine.Backend.NPU, engine.getActiveBackend())
         }
 
     @Test
@@ -650,12 +702,12 @@ class LlmEngineImplTest {
                 factory.createFakeSession(
                     engine = fakeEngine,
                     conversation = fakeConversation,
-                    backend = LlmEngine.Backend.GPU,
+                    backend = LlmEngine.Backend.NPU,
                 ),
             )
             engine.initialize(
                 modelPath = "/data/model.bin",
-                backend = LlmEngine.Backend.GPU,
+                backend = LlmEngine.Backend.NPU,
             )
 
             val expectedError = IllegalStateException("Conversation state is invalid")
@@ -677,8 +729,9 @@ class LlmEngineImplTest {
 
             assertTrue(caughtError is IllegalStateException)
             assertEquals(expectedError.message, caughtError?.message)
+            assertTrue(factory.fallbackSessionRequests.isEmpty())
             assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertEquals(LlmEngine.Backend.NPU, engine.getActiveBackend())
         }
 
     @Test
@@ -719,6 +772,7 @@ class LlmEngineImplTest {
 
             assertTrue(caughtError is BackendFailureException)
             assertEquals(LlmEngine.Backend.CPU, (caughtError as BackendFailureException).failedBackend)
+            assertTrue(factory.fallbackSessionRequests.isEmpty())
             assertEquals(1, factory.createSessionRequests.size)
         }
 

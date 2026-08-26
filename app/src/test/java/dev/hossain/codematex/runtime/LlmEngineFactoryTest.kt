@@ -77,6 +77,34 @@ class LlmEngineFactoryTest {
             assertEquals(LlmEngine.Backend.GPU, session.backend)
         }
 
+    @Test
+    fun `createFallbackSession advances NPU failure to GPU and records unsupported backend`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val fakeEngine = FakeInferenceEngine()
+            fakeEngine.createdConversations.add(FakeInferenceConversation())
+            val fallbackStrategy = DefaultBackendFallbackStrategy()
+            val factory =
+                DefaultLlmEngineFactory(
+                    context = FakeContext(),
+                    backendFallbackStrategy = fallbackStrategy,
+                    nativeEngineFactory =
+                        object : NativeEngineFactory {
+                            override fun create(config: EngineConfig): InferenceEngine = fakeEngine
+                        },
+                )
+
+            val session =
+                factory.createFallbackSession(
+                    modelPath = "/data/model.bin",
+                    failedBackend = LlmEngine.Backend.NPU,
+                    systemInstruction = systemInstruction,
+                    config = config,
+                )
+
+            assertEquals(LlmEngine.Backend.GPU, session.backend)
+            assertTrue(fallbackStrategy.isUnsupported(LlmEngine.Backend.NPU))
+        }
+
     /**
      * Minimal [android.content.Context] stand-in. The GPU backend path does not read from it.
      */

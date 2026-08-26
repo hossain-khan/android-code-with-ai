@@ -156,6 +156,31 @@ class ChatInferenceOrchestratorTest {
         }
 
     @Test
+    fun `sendMessage retries through NPU and GPU failures before CPU succeeds`() =
+        runTest {
+            fakeEngine.backendFailureBackends =
+                listOf(
+                    LlmEngine.Backend.NPU,
+                    LlmEngine.Backend.GPU,
+                )
+            fakeEngine.responseTokens = listOf("CPU ", "response", "")
+
+            val events = createOrchestrator().sendMessage("Hi").toList()
+
+            assertEquals(
+                listOf(
+                    ChatInferenceEvent.BackendFailed(LlmEngine.Backend.NPU),
+                    ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
+                    ChatInferenceEvent.Token("CPU "),
+                    ChatInferenceEvent.Token("response"),
+                    ChatInferenceEvent.Done,
+                ),
+                events,
+            )
+            assertEquals(3, fakeEngine.runInferenceCalls)
+        }
+
+    @Test
     fun `sendMessage does not retry when CPU backend fails`() =
         runTest {
             fakeEngine.backendFailureBackend = LlmEngine.Backend.CPU

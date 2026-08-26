@@ -16,6 +16,7 @@ class FakeLlmEngine : LlmEngine {
     var lastInput: String? = null
     var shouldThrow: Exception? = null
     var backendFailureBackend: LlmEngine.Backend? = null
+    var backendFailureBackends: List<LlmEngine.Backend> = emptyList()
 
     override suspend fun initialize(
         modelPath: String,
@@ -35,8 +36,10 @@ class FakeLlmEngine : LlmEngine {
         runInferenceCalls++
         if (shouldThrow != null) throw shouldThrow!!
 
-        val failingBackend = backendFailureBackend
-        if (failingBackend != null && runInferenceCalls == 1) {
+        val failingBackend =
+            backendFailureBackends.getOrNull(runInferenceCalls - 1)
+                ?: backendFailureBackend?.takeIf { runInferenceCalls == 1 }
+        if (failingBackend != null) {
             throw BackendFailureException(failingBackend, RuntimeException("Backend $failingBackend failed"))
         }
 
