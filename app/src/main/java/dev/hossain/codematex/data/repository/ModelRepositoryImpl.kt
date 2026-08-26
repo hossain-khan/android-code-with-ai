@@ -128,21 +128,16 @@ class ModelRepositoryImpl
         }
 
         override fun getSelectedModel(): AiModel? {
-            val savedId = selectionStore.selectedModelId
-            val savedModel = cachedModels.find { it.id == savedId && it.downloadStatus == DownloadStatus.DOWNLOADED }
-            if (savedModel != null) return savedModel.copy(isSelected = true)
+            val explicitlySelected = cachedModels.find { it.isSelected && it.downloadStatus == DownloadStatus.DOWNLOADED }
+            if (explicitlySelected != null) return explicitlySelected
 
             // Fallback: auto-select the first available downloaded model
             val firstDownloaded = cachedModels.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
-            if (firstDownloaded != null) {
-                selectionStore.selectedModelId = firstDownloaded.id
-                return firstDownloaded.copy(isSelected = true)
-            }
-            return null
+            return firstDownloaded?.copy(isSelected = true)
         }
 
         override suspend fun selectModel(model: AiModel) {
-            selectionStore.selectedModelId = model.id
+            selectionStore.setSelectedModelId(model.id)
         }
 
         override suspend fun downloadModel(model: AiModel) {
@@ -164,8 +159,8 @@ class ModelRepositoryImpl
         override suspend fun deleteModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
             fileStorage.deleteModel(path)
-            if (selectionStore.selectedModelId == model.id) {
-                selectionStore.selectedModelId = null
+            if (selectionStore.getSelectedModelId() == model.id) {
+                selectionStore.setSelectedModelId(null)
             }
             storageChanges.value++
         }

@@ -10,12 +10,18 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakeModelDownloadPreferences(
     downloadOverWifiOnly: Boolean = true,
 ) : ModelDownloadPreferences {
-    override val downloadOverWifiOnlyFlow: Flow<Boolean>
-        field = MutableStateFlow(downloadOverWifiOnly)
+    private val _downloadOverWifiOnlyFlow = MutableStateFlow(downloadOverWifiOnly)
 
-    override var downloadOverWifiOnly: Boolean
-        get() = downloadOverWifiOnlyFlow.value
-        set(value) {
-            downloadOverWifiOnlyFlow.value = value
+    override val downloadOverWifiOnlyFlow: Flow<Boolean> = _downloadOverWifiOnlyFlow.asStateFlow()
+
+    var shouldThrowOnWrite: Boolean = false
+
+    override suspend fun getDownloadOverWifiOnly(): Boolean = _downloadOverWifiOnlyFlow.value
+
+    override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw java.io.IOException("Fake disk write failure")
         }
+        _downloadOverWifiOnlyFlow.value = enabled
+    }
 }

@@ -1,6 +1,6 @@
 package dev.hossain.codematex.runtime
 
-import dev.hossain.codematex.ui.overlay.ModelConfig
+import dev.hossain.codematex.data.model.ModelConfig
 
 class FakeLlmEngineFactory : LlmEngineFactory {
     data class CreateSessionRequest(

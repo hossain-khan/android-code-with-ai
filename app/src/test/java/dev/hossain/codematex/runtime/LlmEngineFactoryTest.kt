@@ -3,7 +3,7 @@
 package dev.hossain.codematex.runtime
 
 import com.google.ai.edge.litertlm.EngineConfig
-import dev.hossain.codematex.ui.overlay.ModelConfig
+import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

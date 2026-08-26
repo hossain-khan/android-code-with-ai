@@ -21,16 +21,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.slack.circuitx.overlays.BottomSheetOverlay
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlinx.serialization.Serializable
-
-data class ModelConfig(
-    val temperature: Float = 0.7f,
-    val topK: Int = 40,
-    val topP: Float = 1.0f,
-    val maxTokens: Int = 2048,
-)
 
 @Serializable
 data object ModelConfigOverlay
