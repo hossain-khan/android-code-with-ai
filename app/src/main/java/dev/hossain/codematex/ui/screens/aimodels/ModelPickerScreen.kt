@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.aimodels
 
+import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
@@ -11,6 +12,7 @@ import kotlinx.serialization.Serializable
 
 @Parcelize
 data object ModelPickerScreen : ParcelableScreen {
+    @Immutable
     @Serializable
     sealed interface State : CircuitUiState {
         data object Loading : State

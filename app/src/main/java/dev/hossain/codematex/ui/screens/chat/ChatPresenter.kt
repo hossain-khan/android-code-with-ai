@@ -19,6 +19,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
@@ -369,8 +370,7 @@ class ChatPresenter(
                             screen.topic,
                             eventSink,
                         )
-                val sizeMb = model.sizeBytes / 1_000_000
-                val sizeText = "$sizeMb MB"
+                val sizeText = model.formattedSize
                 val memoryText = "Requires ${model.minDeviceMemoryInGb}GB RAM"
                 val configText = "Temp: ${modelConfig.temperature}, Top-K: ${modelConfig.topK}, Top-P: ${modelConfig.topP}"
 

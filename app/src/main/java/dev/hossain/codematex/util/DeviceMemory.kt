@@ -31,8 +31,11 @@ object DeviceMemory {
     fun getMemoryStats(getMemoryInfo: (ActivityManager.MemoryInfo) -> Unit): MemoryStats {
         val memoryInfo = ActivityManager.MemoryInfo()
         getMemoryInfo(memoryInfo)
-        val totalGb = memoryInfo.totalMem / 1_000_000_000f
-        val availGb = memoryInfo.availMem / 1_000_000_000f
+        val bytesPerGb =
+            dev.hossain.codematex.system.MemoryCompatibilityPolicy.BYTES_PER_GB
+                .toFloat()
+        val totalGb = memoryInfo.totalMem / bytesPerGb
+        val availGb = memoryInfo.availMem / bytesPerGb
         val usedGb = totalGb - availGb
         return MemoryStats(usedGb, totalGb)
     }

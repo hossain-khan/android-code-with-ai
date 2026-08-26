@@ -219,7 +219,10 @@ class LlmEngineImpl(
                     )
                 activeCallback = callback
                 conv.sendMessageAsync(input, callback)
-                cont.invokeOnCancellation { conv.cancelProcess() }
+                cont.invokeOnCancellation {
+                    callback.cancel()
+                    cancelNativeProcess(conv)
+                }
             }
         }
     }
@@ -290,17 +293,20 @@ class LlmEngineImpl(
 
             try {
                 executeRestoreHistory(priorMessages)
-            } catch (e: Exception) {
-                val failedBackend = activeBackend
-                if (failedBackend != null && failedBackend != LlmEngine.Backend.CPU) {
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: java.util.concurrent.CancellationException) {
+                throw e
+            } catch (e: BackendFailureException) {
+                if (e.failedBackend != LlmEngine.Backend.CPU) {
                     Timber.w(
                         e,
-                        "LlmEngineImpl: History restoration failed on $failedBackend. Falling back to CPU...",
+                        "LlmEngineImpl: History restoration failed on ${e.failedBackend}. Falling back to CPU...",
                     )
                     recreateSessionWithCpu()
                     executeRestoreHistory(priorMessages)
                 } else {
-                    Timber.w(e, "LlmEngineImpl: Failed to restore history")
+                    throw e
                 }
             }
         }
@@ -343,8 +349,19 @@ class LlmEngineImpl(
                     )
                 activeCallback = callback
                 conv.sendMessageAsync(contextPrompt, callback)
-                cont.invokeOnCancellation { conv.cancelProcess() }
+                cont.invokeOnCancellation {
+                    callback.cancel()
+                    cancelNativeProcess(conv)
+                }
             }
+        }
+    }
+
+    private fun cancelNativeProcess(conversation: InferenceConversation) {
+        try {
+            conversation.cancelProcess()
+        } catch (throwable: Throwable) {
+            logCallbackFailure(throwable, "LlmEngineImpl: Error cancelling native inference")
         }
     }
 
@@ -406,60 +423,73 @@ class LlmEngineImpl(
                         }
                     }
                 onContent(text)
-            } catch (e: Exception) {
-                Timber.e(e, "LlmEngineImpl: Error processing incoming JNI token message")
+            } catch (throwable: Throwable) {
+                logCallbackFailure(throwable, "LlmEngineImpl: Error processing incoming JNI token message")
             }
         }
 
         override fun onDone() {
-            if (terminal.getAndSet(true)) return
-            try {
-                onTerminal()
-                resume(Unit)
-            } catch (e: Exception) {
-                Timber.e(e, "LlmEngineImpl: Error in onDone callback")
-            }
+            if (!terminal.compareAndSet(false, true)) return
+            notifyTerminal()
+            completeSuccessfully()
         }
 
         override fun onError(throwable: Throwable) {
-            if (terminal.getAndSet(true)) return
-            try {
+            if (!terminal.compareAndSet(false, true)) return
+            runNoThrow("LlmEngineImpl: Error notifying callback observer") {
                 onError?.invoke(throwable)
-                if (isCancellation(throwable)) {
+            }
+
+            if (isCancellation(throwable)) {
+                runNoThrow("LlmEngineImpl: Error logging native cancellation") {
                     Timber.d("LlmEngineImpl: LiteRT-LM reported task cancellation")
-                    onTerminal()
-                    resume(Unit)
-                } else {
-                    val exceptionToResume =
-                        if (throwable is com.google.ai.edge.litertlm.LiteRtLmJniException) {
-                            BackendFailureException(backend, throwable)
-                        } else {
-                            throwable
-                        }
-                    resumeWithException(exceptionToResume)
                 }
-            } catch (e: Exception) {
-                Timber.e(e, "LlmEngineImpl: Error in onError callback")
+                notifyTerminal()
+                completeSuccessfully()
+            } else {
+                val exceptionToResume =
+                    if (throwable is com.google.ai.edge.litertlm.LiteRtLmJniException) {
+                        BackendFailureException(backend, throwable)
+                    } else {
+                        throwable
+                    }
+                completeWithException(exceptionToResume)
             }
         }
 
-        private fun resume(value: Unit) {
-            if (resumed.compareAndSet(false, true)) {
-                try {
-                    cont.resume(value)
-                } catch (e: Exception) {
-                    Timber.w(e, "LlmEngineImpl: Continuation resume threw; ignoring")
-                }
+        fun cancel() {
+            terminal.compareAndSet(false, true)
+            resumed.compareAndSet(false, true)
+        }
+
+        private fun notifyTerminal() {
+            runNoThrow("LlmEngineImpl: Error notifying terminal callback") {
+                onTerminal()
             }
         }
 
-        private fun resumeWithException(throwable: Throwable) {
-            if (resumed.compareAndSet(false, true)) {
-                try {
-                    cont.resumeWithException(throwable)
-                } catch (e: Exception) {
-                    Timber.w(e, "LlmEngineImpl: Continuation resumeWithException threw; ignoring")
-                }
+        private fun completeSuccessfully() {
+            if (!resumed.compareAndSet(false, true)) return
+            runNoThrow("LlmEngineImpl: Error completing inference continuation") {
+                cont.resume(Unit)
+            }
+        }
+
+        private fun completeWithException(throwable: Throwable) {
+            if (!resumed.compareAndSet(false, true)) return
+            runNoThrow("LlmEngineImpl: Error completing inference continuation exceptionally") {
+                cont.resumeWithException(throwable)
+            }
+        }
+
+        private inline fun runNoThrow(
+            logMessage: String,
+            block: () -> Unit,
+        ) {
+            try {
+                block()
+            } catch (throwable: Throwable) {
+                logCallbackFailure(throwable, logMessage)
             }
         }
     }
@@ -469,3 +499,14 @@ private fun isCancellation(throwable: Throwable): Boolean =
     throwable is java.util.concurrent.CancellationException ||
         throwable is kotlinx.coroutines.CancellationException ||
         throwable.message?.contains("cancel", ignoreCase = true) == true
+
+private fun logCallbackFailure(
+    throwable: Throwable,
+    message: String,
+) {
+    try {
+        Timber.e(throwable, message)
+    } catch (_: Throwable) {
+        // JNI callbacks must never throw into native code, including when logging fails.
+    }
+}
