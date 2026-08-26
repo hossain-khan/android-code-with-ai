@@ -4,7 +4,7 @@ import androidx.work.WorkInfo
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.runtime.LlmEngine
-import dev.hossain.codematex.worker.ModelDownloadWorker
+import dev.hossain.codematex.work.ModelDownloadWorker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn

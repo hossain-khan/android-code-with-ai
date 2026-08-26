@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 import android.app.PendingIntent
 import android.content.Context

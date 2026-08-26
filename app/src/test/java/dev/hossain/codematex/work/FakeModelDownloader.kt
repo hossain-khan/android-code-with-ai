@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 import kotlinx.coroutines.ensureActive
 import kotlin.coroutines.coroutineContext

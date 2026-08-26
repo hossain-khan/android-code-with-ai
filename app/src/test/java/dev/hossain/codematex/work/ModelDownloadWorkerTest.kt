@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
