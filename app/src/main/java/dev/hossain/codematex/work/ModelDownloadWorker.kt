@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.os.Build
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.Data
@@ -344,11 +345,15 @@ class ModelDownloadWorker(
                     cancelIntent,
                 ).build()
 
-        return ForegroundInfo(
-            1,
-            notification,
-            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-        )
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(
+                1,
+                notification,
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+            )
+        } else {
+            ForegroundInfo(1, notification)
+        }
     }
 
     @WorkerKey(ModelDownloadWorker::class)

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
+import timber.log.Timber
 import javax.inject.Inject
 
 @SingleIn(AppScope::class)
@@ -158,7 +159,10 @@ class ModelRepositoryImpl
 
         override suspend fun deleteModel(model: AiModel) {
             val path = model.localPath ?: getModelLocalPathById(model.id)
-            fileStorage.deleteModel(path)
+            val deleted = fileStorage.deleteModel(path)
+            if (!deleted) {
+                Timber.w("ModelRepositoryImpl: File delete returned false for path %s", path)
+            }
             if (selectionStore.getSelectedModelId() == model.id) {
                 selectionStore.setSelectedModelId(null)
             }
