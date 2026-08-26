@@ -32,3 +32,19 @@ enum class DownloadStatus {
     DOWNLOADED,
     FAILED,
 }
+
+/**
+ * Returns a concise, user-friendly display name derived from the model name/ID.
+ */
+val AiModel.shortDisplayName: String
+    get() =
+        dev.hossain.codematex.util
+            .formatShortModelName(name)
+
+/**
+ * Returns a formatted storage size string (e.g. `"2,588 MB"`).
+ */
+val AiModel.formattedSize: String
+    get() =
+        dev.hossain.codematex.util
+            .formatStorageSize(sizeBytes)

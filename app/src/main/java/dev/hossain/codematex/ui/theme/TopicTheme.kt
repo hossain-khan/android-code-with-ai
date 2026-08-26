@@ -1,8 +1,10 @@
 package dev.hossain.codematex.ui.theme
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import dev.hossain.codematex.data.model.CodingTopic
 
+@Immutable
 data class TopicVisualInfo(
     val topic: CodingTopic,
     val accentColor: Color,
