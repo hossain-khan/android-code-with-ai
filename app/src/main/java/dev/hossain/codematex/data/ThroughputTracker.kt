@@ -4,41 +4,54 @@ import java.util.Locale
 
 /**
  * Tracks LLM inference throughput metrics: time-to-first-token (TTFT) and
- * decode speed in tokens per second.
+ * decode speed in tokens per second using a monotonic time source.
  *
  * This class is stateful and intended to be created at the start of a single
  * inference request.
  *
- * @param clock time source used for measurements; defaults to [System.currentTimeMillis].
+ * @param clockNano time source returning monotonic time in nanoseconds; defaults to [System.nanoTime].
  */
 class ThroughputTracker(
-    private val clock: () -> Long = { System.currentTimeMillis() },
+    private val clockNano: () -> Long = { System.nanoTime() },
 ) {
-    private val startTime = clock()
+    private val startNano = clockNano()
     private var tokenCount = 0
-    private var firstTokenTime = 0L
+    private var firstTokenNano = 0L
 
     /**
      * Records a partial token and returns a human-readable throughput string.
+     * Empty strings are ignored so terminal or blank signals do not inflate the token count.
      *
-     * @param partialToken the token emitted by the LLM (may be empty for the
-     *        final done callback).
+     * @param partialToken the token emitted by the LLM.
      */
     fun recordToken(partialToken: String): String {
-        tokenCount++
-        if (firstTokenTime == 0L && partialToken.isNotBlank()) {
-            firstTokenTime = clock()
+        if (partialToken.isEmpty()) {
+            return formatCurrentProgress()
         }
 
-        val now = clock()
-        val totalPrefillMs = firstTokenTime - startTime
-        val decodeMs = now - firstTokenTime
+        val now = clockNano()
+        if (firstTokenNano == 0L) {
+            firstTokenNano = now
+        }
+        tokenCount++
+
+        return formatCurrentProgress(now)
+    }
+
+    private fun formatCurrentProgress(nowNano: Long = clockNano()): String {
+        if (tokenCount == 0 || firstTokenNano == 0L) {
+            return "TTFT: -- • Speed: -- t/s (0 tokens)"
+        }
+
+        val ttftMs = maxOf(0L, (firstTokenNano - startNano) / 1_000_000L)
+        val decodeNano = maxOf(0L, nowNano - firstTokenNano)
+        val decodeMs = decodeNano / 1_000_000L
 
         return if (decodeMs > 0) {
-            val speed = (tokenCount * 1000f) / decodeMs
-            "TTFT: ${totalPrefillMs}ms • Speed: ${String.format(Locale.US, "%.1f", speed)} t/s ($tokenCount tokens)"
+            val speed = (tokenCount.toDouble() * 1_000_000_000.0) / decodeNano.toDouble()
+            "TTFT: ${ttftMs}ms • Speed: ${String.format(Locale.US, "%.1f", speed)} t/s ($tokenCount tokens)"
         } else {
-            "TTFT: ${totalPrefillMs}ms • Speed: -- t/s ($tokenCount tokens)"
+            "TTFT: ${ttftMs}ms • Speed: -- t/s ($tokenCount tokens)"
         }
     }
 
@@ -46,13 +59,24 @@ class ThroughputTracker(
      * Returns the final throughput summary after generation completes.
      */
     fun finalize(): String {
-        val now = clock()
-        val decodeTimeSec = (now - firstTokenTime) / 1000f
-        val speed = if (decodeTimeSec > 0) tokenCount / decodeTimeSec else 0f
+        if (tokenCount == 0 || firstTokenNano == 0L) {
+            return "Speed: 0.0 t/s"
+        }
+
+        val now = clockNano()
+        val ttftMs = maxOf(0L, (firstTokenNano - startNano) / 1_000_000L)
+        val decodeNano = maxOf(0L, now - firstTokenNano)
+
+        val speed =
+            if (decodeNano > 0) {
+                (tokenCount.toDouble() * 1_000_000_000.0) / decodeNano.toDouble()
+            } else {
+                0.0
+            }
         val speedText = String.format(Locale.US, "%.1f", speed)
-        val ttft = firstTokenTime - startTime
-        return if (ttft > 0) {
-            "TTFT: ${ttft}ms • Speed: $speedText t/s"
+
+        return if (ttftMs > 0) {
+            "TTFT: ${ttftMs}ms • Speed: $speedText t/s"
         } else {
             "Speed: $speedText t/s"
         }
