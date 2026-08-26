@@ -20,10 +20,10 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
+import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.system.SystemResourceStats
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -50,7 +50,8 @@ class ChatPresenter(
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
         var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
-        var persona by rememberRetained { mutableStateOf(userPreferencesStore.selectedPersona) }
+        var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
+        var modelConfig by rememberRetained { mutableStateOf(configStore.config) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var saveErrorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableIntStateOf(0) }
@@ -65,11 +66,23 @@ class ChatPresenter(
             if (initial != null) {
                 activeModel = initial
             }
-            modelRepository.getAvailableModels().collect { models ->
-                availableModels = models
-                val selected = modelRepository.getSelectedModel()
-                if (selected?.id != activeModel?.id || selected?.localPath != activeModel?.localPath) {
-                    activeModel = selected
+            launch {
+                modelRepository.getAvailableModels().collect { models ->
+                    availableModels = models
+                    val selected = modelRepository.getSelectedModel()
+                    if (selected?.id != activeModel?.id || selected?.localPath != activeModel?.localPath) {
+                        activeModel = selected
+                    }
+                }
+            }
+            launch {
+                userPreferencesStore.selectedPersonaFlow.collect { storedPersona ->
+                    persona = storedPersona
+                }
+            }
+            launch {
+                configStore.configFlow.collect { currentConfig ->
+                    modelConfig = currentConfig
                 }
             }
         }
@@ -239,12 +252,12 @@ class ChatPresenter(
                         Timber.d("ChatPresenter: Switching persona to ${event.persona.name}")
                         val newPersona = event.persona
                         persona = newPersona
-                        userPreferencesStore.selectedPersona = newPersona
                         val notice =
                             ChatMessage.System("Switched tutor persona to ${newPersona.iconGlyph} ${newPersona.displayName}")
                         val updatedMessages = messages + notice
                         messages = updatedMessages
                         scope.launch {
+                            userPreferencesStore.setSelectedPersona(newPersona)
                             isPreparing = true
                             try {
                                 chatInferenceOrchestrator.switchPersona(screen.topic, newPersona, updatedMessages)
@@ -359,8 +372,7 @@ class ChatPresenter(
                 val sizeMb = model.sizeBytes / 1_000_000
                 val sizeText = "$sizeMb MB"
                 val memoryText = "Requires ${model.minDeviceMemoryInGb}GB RAM"
-                val config = configStore.config
-                val configText = "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}"
+                val configText = "Temp: ${modelConfig.temperature}, Top-K: ${modelConfig.topK}, Top-P: ${modelConfig.topP}"
 
                 ChatScreen.State.Active(
                     messages = messages,

@@ -39,8 +39,14 @@ class ModelPickerPresenter(
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
-        var downloadOverWifiOnly by rememberRetained { mutableStateOf(downloadPreferences.downloadOverWifiOnly) }
+        var downloadOverWifiOnly by rememberRetained { mutableStateOf(true) }
         val scope = rememberCoroutineScope()
+
+        LaunchedEffect(Unit) {
+            downloadPreferences.downloadOverWifiOnlyFlow.collect { enabled ->
+                downloadOverWifiOnly = enabled
+            }
+        }
 
         LaunchedEffect(retryTrigger) {
             isLoading = true
@@ -69,8 +75,9 @@ class ModelPickerPresenter(
                 }
 
                 is ModelPickerScreen.Event.ToggleWifiOnly -> {
-                    downloadPreferences.downloadOverWifiOnly = event.enabled
-                    downloadOverWifiOnly = event.enabled
+                    scope.launch {
+                        downloadPreferences.setDownloadOverWifiOnly(event.enabled)
+                    }
                 }
 
                 is ModelPickerScreen.Event.Download -> {

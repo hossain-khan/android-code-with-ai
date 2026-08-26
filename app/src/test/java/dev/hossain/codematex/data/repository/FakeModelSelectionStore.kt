@@ -10,12 +10,18 @@ import kotlinx.coroutines.flow.asStateFlow
 class FakeModelSelectionStore(
     initialSelectedModelId: String? = null,
 ) : ModelSelectionStore {
-    override val selectedModelIdFlow: Flow<String?>
-        field = MutableStateFlow(initialSelectedModelId)
+    private val _selectedModelIdFlow = MutableStateFlow(initialSelectedModelId)
 
-    override var selectedModelId: String?
-        get() = selectedModelIdFlow.value
-        set(value) {
-            selectedModelIdFlow.value = value
+    override val selectedModelIdFlow: Flow<String?> = _selectedModelIdFlow.asStateFlow()
+
+    var shouldThrowOnWrite: Boolean = false
+
+    override suspend fun getSelectedModelId(): String? = _selectedModelIdFlow.value
+
+    override suspend fun setSelectedModelId(modelId: String?) {
+        if (shouldThrowOnWrite) {
+            throw java.io.IOException("Fake disk write failure")
         }
+        _selectedModelIdFlow.value = modelId
+    }
 }

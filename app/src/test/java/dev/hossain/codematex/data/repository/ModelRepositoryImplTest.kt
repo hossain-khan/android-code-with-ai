@@ -81,7 +81,6 @@ class ModelRepositoryImplTest {
             "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
             selected?.localPath,
         )
-        assertEquals(selected?.id, deps.selectionStore.selectedModelId)
     }
 
     @Test
@@ -198,7 +197,7 @@ class ModelRepositoryImplTest {
 
             repository.selectModel(model)
 
-            assertEquals("some/model", deps.selectionStore.selectedModelId)
+            assertEquals("some/model", deps.selectionStore.getSelectedModelId())
         }
 
     @Test
@@ -289,7 +288,7 @@ class ModelRepositoryImplTest {
             repository.deleteModel(testModel(id = modelId, localPath = path))
 
             assertEquals(listOf(path), deps.fileStorage.deletedPaths)
-            assertNull(deps.selectionStore.selectedModelId)
+            assertNull(deps.selectionStore.getSelectedModelId())
         }
 
     @Test
@@ -321,7 +320,20 @@ class ModelRepositoryImplTest {
 
             repository.deleteModel(testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", localPath = path))
 
-            assertEquals("litert-community/gemma-4-E4B-it-litert-lm", deps.selectionStore.selectedModelId)
+            assertEquals("litert-community/gemma-4-E4B-it-litert-lm", deps.selectionStore.getSelectedModelId())
+        }
+
+    @Test
+    fun `selectModel awaits selectionStore update and is immediately observable`() =
+        runTest {
+            val path = "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm"
+            val modelId = "litert-community/gemma-4-E2B-it-litert-lm"
+            val (repository, deps) = createRepository(existingPaths = setOf(path))
+
+            val modelToSelect = testModel(id = modelId, localPath = path, status = DownloadStatus.DOWNLOADED)
+            repository.selectModel(modelToSelect)
+
+            assertEquals(modelId, deps.selectionStore.getSelectedModelId())
         }
 
     @Test

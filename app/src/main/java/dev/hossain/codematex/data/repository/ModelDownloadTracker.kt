@@ -88,8 +88,17 @@ class ModelDownloadTrackerImpl
 
             val data = builder.build()
 
+            val isWifiOnly =
+                try {
+                    kotlinx.coroutines.runBlocking {
+                        downloadPreferences.getDownloadOverWifiOnly()
+                    }
+                } catch (e: Exception) {
+                    true
+                }
+
             val networkType =
-                if (downloadPreferences.downloadOverWifiOnly) {
+                if (isWifiOnly) {
                     NetworkType.UNMETERED
                 } else {
                     NetworkType.CONNECTED

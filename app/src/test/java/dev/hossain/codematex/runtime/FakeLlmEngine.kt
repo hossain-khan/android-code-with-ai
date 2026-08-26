@@ -1,8 +1,8 @@
 package dev.hossain.codematex.runtime
 
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.runtime.LlmEngine
-import dev.hossain.codematex.ui.overlay.ModelConfig
 
 class FakeLlmEngine : LlmEngine {
     var responseTokens: List<String> = listOf("test response")

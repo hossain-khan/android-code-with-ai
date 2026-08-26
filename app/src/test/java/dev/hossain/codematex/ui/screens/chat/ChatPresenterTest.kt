@@ -1,7 +1,5 @@
 package dev.hossain.codematex.ui.screens.chat
 
-import android.content.Context
-import android.content.ContextWrapper
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
@@ -10,13 +8,15 @@ import dev.hossain.codematex.data.FakeSystemStatsMonitor
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
+import dev.hossain.codematex.data.repository.ModelConfigStore
+import dev.hossain.codematex.data.repository.ModelConfigStoreImpl
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
-import dev.hossain.codematex.ui.overlay.ModelConfigStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -30,9 +30,7 @@ import org.junit.Test
  * Unit tests for [ChatPresenter].
  */
 class ChatPresenterTest {
-    private val fakeContext: Context = ContextWrapper(null)
-
-    private val configStore = ModelConfigStore(fakeContext)
+    private val configStore: ModelConfigStore = ModelConfigStoreImpl()
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
@@ -212,7 +210,7 @@ class ChatPresenterTest {
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertEquals(TutorPersona.BEGINNER_FRIENDLY, updatedState.persona)
-                assertEquals(TutorPersona.BEGINNER_FRIENDLY, preferencesStore.selectedPersona)
+                assertEquals(TutorPersona.BEGINNER_FRIENDLY, preferencesStore.getSelectedPersona())
                 assertTrue(fakeChatInferenceOrchestrator.resetConversationPersonas.contains(TutorPersona.BEGINNER_FRIENDLY))
             }
         }
@@ -482,6 +480,78 @@ class ChatPresenterTest {
                 assertNotNull(lastMessage)
                 assertFalse(lastMessage?.isStreaming == true)
                 assertEquals(1, fakeOrchestrator.stopCalls)
+            }
+        }
+
+    @Test
+    fun `given SelectPersona event - updates persona, persists to store, and orchestrates persona switch`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            val userPrefsStore = FakeUserPreferencesStore(initialSelectedPersona = TutorPersona.SENIOR_ENGINEER)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                    configStore = configStore,
+                    userPreferencesStore = userPrefsStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals(TutorPersona.SENIOR_ENGINEER, initialState.persona)
+
+                initialState.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.INTERVIEW_COACH))
+
+                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals(TutorPersona.INTERVIEW_COACH, updatedState.persona)
+                assertEquals(TutorPersona.INTERVIEW_COACH, userPrefsStore.getSelectedPersona())
+            }
+        }
+
+    @Test
+    fun `given model config update in store - configInfo is dynamically updated in active state`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val localConfigStore = ModelConfigStoreImpl()
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                ChatPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                    configStore = localConfigStore,
+                    userPreferencesStore = fakeUserPreferencesStore,
+                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+                    systemStatsMonitor = fakeSystemStatsMonitor,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals("Temp: 0.7, Top-K: 40, Top-P: 1.0", initialState.configInfo)
+
+                localConfigStore.updateConfig(ModelConfig(temperature = 0.2f, topK = 10, topP = 0.8f, maxTokens = 512))
+
+                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertEquals("Temp: 0.2, Top-K: 10, Top-P: 0.8", updatedState.configInfo)
             }
         }
 }

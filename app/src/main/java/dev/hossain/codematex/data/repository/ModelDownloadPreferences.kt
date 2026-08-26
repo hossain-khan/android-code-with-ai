@@ -1,21 +1,20 @@
 package dev.hossain.codematex.data.repository
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -25,16 +24,19 @@ import javax.inject.Inject
  */
 interface ModelDownloadPreferences {
     /**
-     * Whether model downloads are restricted to unmetered Wi-Fi networks only.
-     * Defaults to `true` to protect users against unexpected cellular data consumption
-     * on multi-gigabyte models.
-     */
-    var downloadOverWifiOnly: Boolean
-
-    /**
      * Observable flow of the Wi-Fi only download preference.
      */
     val downloadOverWifiOnlyFlow: Flow<Boolean>
+
+    /**
+     * Whether model downloads are currently restricted to unmetered Wi-Fi networks only.
+     */
+    suspend fun getDownloadOverWifiOnly(): Boolean
+
+    /**
+     * Persists the Wi-Fi only download preference, awaiting completion.
+     */
+    suspend fun setDownloadOverWifiOnly(enabled: Boolean)
 }
 
 @SingleIn(AppScope::class)
@@ -44,29 +46,25 @@ class ModelDownloadPreferencesImpl
     constructor(
         private val dataStore: DataStore<Preferences>,
     ) : ModelDownloadPreferences {
-        private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-        private val wifiOnlyState: StateFlow<Boolean> =
+        override val downloadOverWifiOnlyFlow: Flow<Boolean> =
             dataStore.data
-                .map { prefs -> prefs[KEY_WIFI_ONLY] ?: true }
-                .stateIn(
-                    scope = scope,
-                    started = SharingStarted.Eagerly,
-                    initialValue = true,
-                )
-
-        override val downloadOverWifiOnlyFlow: Flow<Boolean>
-            get() = wifiOnlyState
-
-        override var downloadOverWifiOnly: Boolean
-            get() = wifiOnlyState.value
-            set(value) {
-                scope.launch {
-                    dataStore.edit { prefs ->
-                        prefs[KEY_WIFI_ONLY] = value
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "ModelDownloadPreferencesImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
                     }
-                }
+                }.map { prefs -> prefs[KEY_WIFI_ONLY] ?: true }
+                .distinctUntilChanged()
+
+        override suspend fun getDownloadOverWifiOnly(): Boolean = downloadOverWifiOnlyFlow.first()
+
+        override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
+            dataStore.edit { prefs ->
+                prefs[KEY_WIFI_ONLY] = enabled
             }
+        }
 
         companion object {
             private val KEY_WIFI_ONLY = booleanPreferencesKey("download_over_wifi_only")

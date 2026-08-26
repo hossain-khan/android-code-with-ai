@@ -63,7 +63,7 @@ class ModelPickerPresenterTest {
 
                 val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
                 assertFalse(updatedState.downloadOverWifiOnly)
-                assertFalse(fakePrefs.downloadOverWifiOnly)
+                assertFalse(fakePrefs.getDownloadOverWifiOnly())
             }
         }
 
