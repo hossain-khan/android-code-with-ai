@@ -140,8 +140,9 @@ class LlmEngineImpl(
         config: ModelConfig,
         onToken: (partialResult: String, done: Boolean) -> Unit,
     ) = engineMutex.withLock {
-        engine
-            ?: throw IllegalStateException("LLM engine is not initialized. Please wait for model initialization to complete.")
+        check(engine != null) {
+            "LLM engine is not initialized. Please wait for model initialization to complete."
+        }
 
         // Create a conversation that is separate from the active chat conversation so that
         // summary prompts and responses cannot pollute the user's live context. The loaded

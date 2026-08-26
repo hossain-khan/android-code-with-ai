@@ -126,6 +126,8 @@ kotlin {
         // Treat all warnings as errors to catch issues like Compose UI usage in presenters.
         // See https://slackhq.github.io/circuit/presenter/#no-compose-ui
         allWarningsAsErrors.set(true)
+        // Trial Kotlin unused return value checker in conservative 'check' mode (requires opt-in annotations)
+        freeCompilerArgs.add("-Xreturn-value-checker=check")
     }
 }
 
@@ -261,11 +263,6 @@ dependencies {
     testImplementation(libs.circuit.test)
     // Required for runTest in presenter unit tests
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-tasks.withType<Test> {
-    // Allow test task to pass even if no tests are discovered
-    failOnNoDiscoveredTests = false
 }
 
 metro {
