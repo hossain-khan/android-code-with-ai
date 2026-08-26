@@ -24,14 +24,13 @@ interface ModelConfigStore {
 class ModelConfigStoreImpl
     @Inject
     constructor() : ModelConfigStore {
-        private val _configFlow = MutableStateFlow(ModelConfig())
-
-        override val configFlow: StateFlow<ModelConfig> = _configFlow.asStateFlow()
+        override val configFlow: StateFlow<ModelConfig>
+            field = MutableStateFlow(ModelConfig())
 
         override val config: ModelConfig
-            get() = _configFlow.value
+            get() = configFlow.value
 
         override fun updateConfig(newConfig: ModelConfig) {
-            _configFlow.value = newConfig
+            configFlow.value = newConfig
         }
     }
