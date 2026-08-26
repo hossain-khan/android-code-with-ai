@@ -1,5 +1,7 @@
 package dev.hossain.codematex.data
 
+import java.util.Locale
+
 /**
  * Tracks LLM inference throughput metrics: time-to-first-token (TTFT) and
  * decode speed in tokens per second.
@@ -34,7 +36,7 @@ class ThroughputTracker(
 
         return if (decodeMs > 0) {
             val speed = (tokenCount * 1000f) / decodeMs
-            "TTFT: ${totalPrefillMs}ms • Speed: ${"%.1f".format(speed)} t/s ($tokenCount tokens)"
+            "TTFT: ${totalPrefillMs}ms • Speed: ${String.format(Locale.US, "%.1f", speed)} t/s ($tokenCount tokens)"
         } else {
             "TTFT: ${totalPrefillMs}ms • Speed: -- t/s ($tokenCount tokens)"
         }
@@ -47,7 +49,7 @@ class ThroughputTracker(
         val now = clock()
         val decodeTimeSec = (now - firstTokenTime) / 1000f
         val speed = if (decodeTimeSec > 0) tokenCount / decodeTimeSec else 0f
-        val speedText = "%.1f".format(speed)
+        val speedText = String.format(Locale.US, "%.1f", speed)
         val ttft = firstTokenTime - startTime
         return if (ttft > 0) {
             "TTFT: ${ttft}ms • Speed: $speedText t/s"

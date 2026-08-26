@@ -108,27 +108,23 @@ class ChatSessionRepositoryImpl
         private fun ChatMessage.toMessageEntity(
             sessionId: String,
             index: Int,
-        ): MessageEntity =
-            MessageEntity(
+        ): MessageEntity {
+            val (type, content) =
+                when (this) {
+                    is ChatMessage.User -> ChatMessageKind.USER.stableId to content
+                    is ChatMessage.Agent -> ChatMessageKind.AGENT.stableId to content
+                    is ChatMessage.Error -> ChatMessageKind.ERROR.stableId to message
+                    is ChatMessage.System -> ChatMessageKind.SYSTEM.stableId to info
+                }
+            return MessageEntity(
                 sessionId = sessionId,
                 messageId = id,
-                type =
-                    when (this) {
-                        is ChatMessage.User -> ChatMessageKind.USER.stableId
-                        is ChatMessage.Agent -> ChatMessageKind.AGENT.stableId
-                        is ChatMessage.Error -> ChatMessageKind.ERROR.stableId
-                        is ChatMessage.System -> ChatMessageKind.SYSTEM.stableId
-                    },
-                content =
-                    when (this) {
-                        is ChatMessage.User -> content
-                        is ChatMessage.Agent -> content
-                        is ChatMessage.Error -> message
-                        is ChatMessage.System -> info
-                    },
+                type = type,
+                content = content,
                 timestamp = System.currentTimeMillis(),
                 orderIndex = index,
             )
+        }
 
         private companion object {
             private const val TITLE_MAX_LENGTH = 50

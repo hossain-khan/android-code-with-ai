@@ -6,6 +6,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.serialization.Serializable
+import java.util.Locale
 
 /**
  * Per-model hardware compatibility result.
@@ -81,6 +82,6 @@ class ModelCompatibilityCheckerImpl(
         if (value == value.toLong().toDouble()) {
             value.toLong().toString()
         } else {
-            "%.1f".format(value)
+            String.format(Locale.US, "%.1f", value)
         }
 }

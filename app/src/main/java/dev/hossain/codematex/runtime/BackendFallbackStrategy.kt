@@ -47,7 +47,7 @@ class DefaultBackendFallbackStrategy
 
         override fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend {
             var backend = preferred
-            while (unsupportedBackends.contains(backend) && backend != LlmEngine.Backend.CPU) {
+            while (backend in unsupportedBackends && backend != LlmEngine.Backend.CPU) {
                 backend = nextBackend(backend) ?: LlmEngine.Backend.CPU
             }
             return backend
@@ -64,5 +64,5 @@ class DefaultBackendFallbackStrategy
             unsupportedBackends.add(backend)
         }
 
-        override fun isUnsupported(backend: LlmEngine.Backend): Boolean = unsupportedBackends.contains(backend)
+        override fun isUnsupported(backend: LlmEngine.Backend): Boolean = backend in unsupportedBackends
     }

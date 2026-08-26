@@ -50,27 +50,30 @@ class HardwareEligibilityCheckerImpl(
         val minRequiredBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8)
         val minRequiredRamGb = MemoryCompatibilityPolicy.toDecimalGigabytes(minRequiredBytes)
 
-        // 1. 64-bit Architecture Verification
-        if (!is64Bit) {
-            return HardwareEligibility.Ineligible(
-                reason = "This app requires a modern 64-bit processor (arm64-v8a).",
-                detectedRamGb = detectedGb,
-                is64BitSupported = false,
-            )
-        }
-
-        // 2. RAM Verification
+        // 1. 64-bit Architecture Verification & 2. RAM Verification
         // An 8 GB marketed device must report at least ~7.2 GB to the kernel. The same byte-based
         // policy and reservation allowance is used for app-level and per-model eligibility.
-        if (totalBytes < minRequiredBytes) {
-            return HardwareEligibility.Ineligible(
-                reason = "On-device AI models require at least 8 GB RAM for stable execution.",
-                detectedRamGb = detectedGb,
-                minRequiredRamGb = minRequiredRamGb,
-                is64BitSupported = true,
-            )
-        }
+        return when {
+            !is64Bit -> {
+                HardwareEligibility.Ineligible(
+                    reason = "This app requires a modern 64-bit processor (arm64-v8a).",
+                    detectedRamGb = detectedGb,
+                    is64BitSupported = false,
+                )
+            }
 
-        return HardwareEligibility.Eligible
+            totalBytes < minRequiredBytes -> {
+                HardwareEligibility.Ineligible(
+                    reason = "On-device AI models require at least 8 GB RAM for stable execution.",
+                    detectedRamGb = detectedGb,
+                    minRequiredRamGb = minRequiredRamGb,
+                    is64BitSupported = true,
+                )
+            }
+
+            else -> {
+                HardwareEligibility.Eligible
+            }
+        }
     }
 }
