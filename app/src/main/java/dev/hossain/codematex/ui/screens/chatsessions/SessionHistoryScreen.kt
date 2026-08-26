@@ -21,6 +21,11 @@ data object SessionHistoryScreen : ParcelableScreen {
             val selectedTopic: CodingTopic?,
             val eventSink: (Event) -> Unit,
         ) : State
+
+        data class Error(
+            val message: String,
+            val eventSink: (Event) -> Unit,
+        ) : State
     }
 
     @Serializable
@@ -36,6 +41,8 @@ data object SessionHistoryScreen : ParcelableScreen {
         data class SelectTopicFilter(
             val topic: CodingTopic?,
         ) : Event
+
+        data object Retry : Event
 
         data object Back : Event
     }

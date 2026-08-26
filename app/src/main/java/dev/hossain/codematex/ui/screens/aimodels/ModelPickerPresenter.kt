@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.aimodels
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -19,8 +20,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AssistedInject
 class ModelPickerPresenter(
@@ -34,14 +37,22 @@ class ModelPickerPresenter(
     override fun present(): ModelPickerScreen.State {
         var models by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var retryTrigger by rememberRetained { mutableIntStateOf(0) }
         var downloadOverWifiOnly by rememberRetained { mutableStateOf(downloadPreferences.downloadOverWifiOnly) }
         val scope = rememberCoroutineScope()
 
-        LaunchedEffect(Unit) {
+        LaunchedEffect(retryTrigger) {
+            isLoading = true
+            errorMessage = null
             modelRepository
                 .getAvailableModels()
-                .catch { isLoading = false }
-                .collect { list ->
+                .catch { e ->
+                    if (e is CancellationException) throw e
+                    Timber.e(e, "ModelPickerPresenter: Error loading available models")
+                    errorMessage = e.message ?: "Failed to load models"
+                    isLoading = false
+                }.collect { list ->
                     models = list
                     isLoading = false
                 }
@@ -51,6 +62,10 @@ class ModelPickerPresenter(
             when (event) {
                 is ModelPickerScreen.Event.Back -> {
                     navigator.pop()
+                }
+
+                is ModelPickerScreen.Event.Retry -> {
+                    retryTrigger++
                 }
 
                 is ModelPickerScreen.Event.ToggleWifiOnly -> {
@@ -85,19 +100,27 @@ class ModelPickerPresenter(
             }
         }
 
-        return if (isLoading) {
-            ModelPickerScreen.State.Loading
-        } else {
-            ModelPickerScreen.State.Success(
-                models = models,
-                deviceMemoryInfo = modelCompatibilityChecker.getDeviceMemoryInfo(),
-                modelCompatibility =
-                    models.associate { model ->
-                        model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
-                    },
-                downloadOverWifiOnly = downloadOverWifiOnly,
-                eventSink = eventSink,
-            )
+        return when {
+            isLoading -> {
+                ModelPickerScreen.State.Loading
+            }
+
+            errorMessage != null -> {
+                ModelPickerScreen.State.Error(errorMessage!!, eventSink)
+            }
+
+            else -> {
+                ModelPickerScreen.State.Success(
+                    models = models,
+                    deviceMemoryInfo = modelCompatibilityChecker.getDeviceMemoryInfo(),
+                    modelCompatibility =
+                        models.associate { model ->
+                            model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
+                        },
+                    downloadOverWifiOnly = downloadOverWifiOnly,
+                    eventSink = eventSink,
+                )
+            }
         }
     }
 

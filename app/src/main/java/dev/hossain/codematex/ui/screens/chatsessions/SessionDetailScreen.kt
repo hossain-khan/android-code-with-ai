@@ -21,6 +21,16 @@ data class SessionDetailScreen(
             val messages: List<ChatMessage>,
             val eventSink: (Event) -> Unit,
         ) : State
+
+        data class NotFound(
+            val sessionId: String,
+            val eventSink: (Event) -> Unit,
+        ) : State
+
+        data class Error(
+            val message: String,
+            val eventSink: (Event) -> Unit,
+        ) : State
     }
 
     @Serializable
@@ -28,6 +38,8 @@ data class SessionDetailScreen(
         data object ResumeSession : Event
 
         data object DeleteSession : Event
+
+        data object Retry : Event
 
         data object Back : Event
     }

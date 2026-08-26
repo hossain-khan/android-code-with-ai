@@ -22,11 +22,18 @@ data object ModelPickerScreen : ParcelableScreen {
             val downloadOverWifiOnly: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State
+
+        data class Error(
+            val message: String,
+            val eventSink: (Event) -> Unit,
+        ) : State
     }
 
     @Serializable
     sealed interface Event : CircuitUiEvent {
         data object Back : Event
+
+        data object Retry : Event
 
         data class ToggleWifiOnly(
             val enabled: Boolean,

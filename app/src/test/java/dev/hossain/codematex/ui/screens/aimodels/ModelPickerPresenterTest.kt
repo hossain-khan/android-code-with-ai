@@ -68,16 +68,27 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun `given model load fails - emits success with empty list`() =
+    fun `given model load fails - emits error state and retry succeeds`() =
         runTest {
-            val fakeRepo = FakeModelRepository(getException = IllegalStateException("Storage error"))
+            val fakeRepo =
+                FakeModelRepository(
+                    availableModels = listOf(downloadedModel),
+                    getException = IllegalStateException("Storage error"),
+                )
             val fakePrefs = FakeModelDownloadPreferences()
             val navigator = FakeNavigator(ModelPickerScreen)
             val presenter = ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker)
 
             presenter.test {
-                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertTrue(state.models.isEmpty())
+                val errorState = expectMostRecentItem() as ModelPickerScreen.State.Error
+                assertEquals("Storage error", errorState.message)
+
+                // Clear exception and retry
+                fakeRepo.getException = null
+                errorState.eventSink(ModelPickerScreen.Event.Retry)
+
+                val successState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertEquals(listOf(downloadedModel), successState.models)
             }
         }
 

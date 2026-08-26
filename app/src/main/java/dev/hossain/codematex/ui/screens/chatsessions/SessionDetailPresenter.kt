@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.chatsessions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -18,7 +19,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @AssistedInject
 class SessionDetailPresenter(
@@ -31,12 +34,31 @@ class SessionDetailPresenter(
         var session by rememberRetained { mutableStateOf<ChatSession?>(null) }
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
+        var isNotFound by rememberRetained { mutableStateOf(false) }
+        var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var retryTrigger by rememberRetained { mutableIntStateOf(0) }
         val scope = rememberCoroutineScope()
 
-        LaunchedEffect(screen.sessionId) {
-            session = sessionRepository.getSession(screen.sessionId)
-            messages = sessionRepository.getMessages(screen.sessionId)
-            isLoading = false
+        LaunchedEffect(screen.sessionId, retryTrigger) {
+            isLoading = true
+            isNotFound = false
+            errorMessage = null
+            try {
+                val loadedSession = sessionRepository.getSession(screen.sessionId)
+                if (loadedSession == null) {
+                    isNotFound = true
+                } else {
+                    session = loadedSession
+                    messages = sessionRepository.getMessages(screen.sessionId)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Timber.e(e, "SessionDetailPresenter: Failed to load session ${screen.sessionId}")
+                errorMessage = e.message ?: "Failed to load session details"
+            } finally {
+                isLoading = false
+            }
         }
 
         val eventSink: (SessionDetailScreen.Event) -> Unit = { event ->
@@ -54,22 +76,40 @@ class SessionDetailPresenter(
                     }
                 }
 
+                SessionDetailScreen.Event.Retry -> {
+                    retryTrigger++
+                }
+
                 SessionDetailScreen.Event.Back -> {
                     navigator.pop()
                 }
             }
         }
 
-        return if (isLoading) {
-            SessionDetailScreen.State.Loading
-        } else if (session != null) {
-            SessionDetailScreen.State.Success(
-                session = session!!,
-                messages = messages,
-                eventSink = eventSink,
-            )
-        } else {
-            SessionDetailScreen.State.Loading
+        return when {
+            isLoading -> {
+                SessionDetailScreen.State.Loading
+            }
+
+            errorMessage != null -> {
+                SessionDetailScreen.State.Error(errorMessage!!, eventSink)
+            }
+
+            isNotFound -> {
+                SessionDetailScreen.State.NotFound(screen.sessionId, eventSink)
+            }
+
+            session != null -> {
+                SessionDetailScreen.State.Success(
+                    session = session!!,
+                    messages = messages,
+                    eventSink = eventSink,
+                )
+            }
+
+            else -> {
+                SessionDetailScreen.State.NotFound(screen.sessionId, eventSink)
+            }
         }
     }
 

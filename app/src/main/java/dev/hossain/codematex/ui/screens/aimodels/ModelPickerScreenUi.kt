@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
@@ -67,6 +68,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -101,8 +103,110 @@ fun ModelPickerScreenContent(
             }
         }
 
+        is ModelPickerScreen.State.Error -> {
+            ModelPickerErrorLayout(state, modifier)
+        }
+
         is ModelPickerScreen.State.Success -> {
             ModelPickerLayout(state, modifier)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelPickerErrorLayout(
+    state: ModelPickerScreen.State.Error,
+    modifier: Modifier = Modifier,
+) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    Scaffold(
+        modifier = modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = {
+            TopAppBar(
+                title = { Text("AI Models") },
+                navigationIcon = {
+                    IconButton(onClick = { state.eventSink(ModelPickerScreen.Event.Back) }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+            )
+        },
+    ) { innerPadding ->
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .radialGradientScrim(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f))
+                    .padding(16.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(0.92f),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                shape = MaterialTheme.shapes.extraLarge,
+            ) {
+                Column(
+                    modifier = Modifier.padding(28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                        modifier = Modifier.size(64.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(32.dp),
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+
+                    Text(
+                        text = "Failed to Load Models",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Text(
+                        text = state.message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+
+                    Button(
+                        onClick = { state.eventSink(ModelPickerScreen.Event.Retry) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Text("Retry", fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = { state.eventSink(ModelPickerScreen.Event.Back) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.large,
+                    ) {
+                        Text("Go Back", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
         }
     }
 }
@@ -822,5 +926,20 @@ private fun ModelCardPreview() {
                 onDelete = {},
             )
         }
+    }
+}
+
+@ThemePreviews
+@DevicePreviews
+@Composable
+private fun ModelPickerErrorPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        ModelPickerErrorLayout(
+            state =
+                ModelPickerScreen.State.Error(
+                    message = "Unable to connect to Hugging Face repository. Check your network connection.",
+                    eventSink = {},
+                ),
+        )
     }
 }

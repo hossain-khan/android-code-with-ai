@@ -95,4 +95,63 @@ class SessionHistoryPresenterTest {
                 navigator.awaitPop()
             }
         }
+
+    @Test
+    fun `given repository error - emits error state and retry succeeds`() =
+        runTest {
+            val sessions = listOf(testSession(id = "s1", topic = CodingTopic.KOTLIN))
+            val fakeRepo =
+                FakeChatSessionRepository(
+                    sessions = sessions,
+                    getException = java.io.IOException("Database read failed"),
+                )
+            val navigator = FakeNavigator(SessionHistoryScreen)
+            val presenter =
+                SessionHistoryPresenter(
+                    navigator = navigator,
+                    screen = SessionHistoryScreen,
+                    sessionRepository = fakeRepo,
+                )
+
+            presenter.test {
+                val errorState = expectMostRecentItem() as SessionHistoryScreen.State.Error
+                assertEquals("Database read failed", errorState.message)
+
+                // Clear error and retry
+                fakeRepo.getException = null
+                errorState.eventSink(SessionHistoryScreen.Event.Retry)
+
+                val successState = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                assertEquals(1, successState.allSessions.size)
+                assertEquals("s1", successState.allSessions.first().id)
+            }
+        }
+
+    @Test
+    fun `given selected topic filter disappears - effective topic resets to null without mutation`() =
+        runTest {
+            val sessions = listOf(testSession(id = "s1", topic = CodingTopic.KOTLIN))
+            val fakeRepo = FakeChatSessionRepository(sessions = sessions)
+            val navigator = FakeNavigator(SessionHistoryScreen)
+            val presenter =
+                SessionHistoryPresenter(
+                    navigator = navigator,
+                    screen = SessionHistoryScreen,
+                    sessionRepository = fakeRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                // Select topic that exists
+                state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.KOTLIN))
+                val filteredState = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                assertEquals(CodingTopic.KOTLIN, filteredState.selectedTopic)
+
+                // Select topic that does not exist in sessions
+                filteredState.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.RUST))
+                val resetFilterState = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                assertNull(resetFilterState.selectedTopic)
+                assertEquals(1, resetFilterState.sessions.size)
+            }
+        }
 }
