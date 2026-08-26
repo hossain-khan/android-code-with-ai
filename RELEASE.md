@@ -164,6 +164,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.12.2` | `21` | 2026-08-26 | Binary gigabyte (1024^3) memory precision for device RAM detection and compatibility checks, work package alignment, M3 Markdown heading typography hierarchy, and comprehensive KDoc interface documentation. |
 | `1.12.1` | `20` | 2026-08-26 | Multi-tier runtime fallback (NPU -> GPU -> CPU), JNI callback exception isolation, animated responsible AI code disclaimer, idiomatic Kotlin Duration refactoring, and @Immutable Compose stability. |
 | `1.12.0` | `19` | 2026-08-26 | LiteRT JNI safety & native lifecycle hardening, atomic model downloads, transactional Room persistence, monotonic TTFT metrics, and Kotlin 2.4 architecture updates. |
 | `1.11.0` | `18` | 2026-08-25 | Persistent AI Tutor personas, Jetpack Preferences DataStore, multiplatform-markdown-renderer v0.44.0 with Monospace code blocks, session history animations. |
