@@ -1,5 +1,10 @@
 package dev.hossain.codematex.ui.screens.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,7 +38,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.SystemResourceStats
@@ -240,6 +247,28 @@ internal fun ChatInputField(
                 },
                 maxLines = 4,
             )
+
+            val showDisclaimer =
+                !state.isGenerating &&
+                    !state.isPreparing &&
+                    state.messages.any { it is ChatMessage.Agent && !it.isStreaming }
+
+            AnimatedVisibility(
+                visible = showDisclaimer,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
+                Text(
+                    text = "Review code carefully. AI can make mistakes.",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp, bottom = 2.dp),
+                )
+            }
         }
     }
 }
@@ -273,6 +302,28 @@ private fun ChatInputFieldPreview() {
             ChatInputField(
                 state = sampleInputDockState,
                 inputText = "Tell me about Compose State",
+                onInputTextChanged = {},
+                onSendMessage = {},
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChatInputFieldWithDisclaimerPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            ChatInputField(
+                state =
+                    sampleInputDockState.copy(
+                        messages =
+                            listOf(
+                                ChatMessage.User("Explain sealed interfaces"),
+                                ChatMessage.Agent("Sealed interfaces represent restricted class hierarchies in Kotlin..."),
+                            ),
+                    ),
+                inputText = "",
                 onInputTextChanged = {},
                 onSendMessage = {},
             )
