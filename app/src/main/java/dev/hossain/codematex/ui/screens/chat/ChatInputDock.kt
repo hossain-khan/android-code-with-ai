@@ -176,7 +176,7 @@ internal fun ChatInputField(
                     state.systemResourceStats?.let { stats ->
                         LiveHardwareTelemetryBars(
                             stats = stats,
-                            modifier = Modifier.padding(horizontal = 8.dp),
+                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 6.dp),
                             cpuColor = state.topic.visualInfo.accentColor,
                         )
                     }
