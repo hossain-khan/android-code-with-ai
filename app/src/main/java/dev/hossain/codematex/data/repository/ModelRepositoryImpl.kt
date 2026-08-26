@@ -181,7 +181,7 @@ class ModelRepositoryImpl
             AiModel(
                 id = entry.modelId,
                 name = entry.modelId.substringAfterLast("/"),
-                displayName = entry.modelId.substringAfterLast("/"),
+                displayName = entry.displayName ?: entry.modelId.substringAfterLast("/"),
                 downloadUrl = entry.downloadUrl ?: buildDownloadUrl(entry),
                 fallbackDownloadUrls =
                     entry.fallbackDownloadUrls.ifEmpty {
@@ -201,6 +201,10 @@ class ModelRepositoryImpl
                 sha256 = entry.sha256,
                 downloadErrorMessage = downloadErrorMessage,
                 isSelected = isSelected,
+                contextWindow = entry.contextWindow,
+                quantization = entry.quantization,
+                promptFormat = entry.promptFormat,
+                isGatedModel = entry.isGatedModel,
             )
 
         private fun buildDownloadUrl(entry: ModelEntry): String =

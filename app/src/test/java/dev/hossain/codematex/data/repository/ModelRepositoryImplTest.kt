@@ -90,11 +90,13 @@ class ModelRepositoryImplTest {
 
             val models = repository.getAvailableModels().first()
 
-            assertEquals(2, models.size)
+            assertEquals(4, models.size)
             assertEquals(
                 listOf(
                     "litert-community/gemma-4-E2B-it-litert-lm",
                     "litert-community/gemma-4-E4B-it-litert-lm",
+                    "litert-community/Phi-4-mini-instruct",
+                    "litert-community/Qwen2.5-Coder-1.5B-Instruct",
                 ),
                 models.map { it.id },
             )
@@ -361,9 +363,12 @@ class ModelRepositoryImplTest {
             val model = models.first { it.id == "litert-community/gemma-4-E2B-it-litert-lm" }
 
             assertEquals("gemma-4-E2B-it-litert-lm", model.name)
-            assertEquals("gemma-4-E2B-it-litert-lm", model.displayName)
+            assertEquals("Gemma 4-E2B IT", model.displayName)
             assertEquals(2_588_147_712L, model.sizeBytes)
             assertEquals(8, model.minDeviceMemoryInGb)
+            assertEquals(8192, model.contextWindow)
+            assertEquals("INT4", model.quantization)
+            assertEquals("GEMMA", model.promptFormat)
             assertEquals("Google LiteRT Community", model.publisher)
             assertEquals("Apache 2.0", model.license)
             assertEquals("https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm", model.modelRepoUrl)
