@@ -2,6 +2,8 @@ package dev.hossain.codematex.data.model
 
 import androidx.compose.runtime.Immutable
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.util.formatShortModelName
+import dev.hossain.codematex.util.formatStorageSize
 
 @Immutable
 data class AiModel(
@@ -37,14 +39,10 @@ enum class DownloadStatus {
  * Returns a concise, user-friendly display name derived from the model name/ID.
  */
 val AiModel.shortDisplayName: String
-    get() =
-        dev.hossain.codematex.util
-            .formatShortModelName(name)
+    get() = formatShortModelName(name)
 
 /**
  * Returns a formatted storage size string (e.g. `"2,588 MB"`).
  */
 val AiModel.formattedSize: String
-    get() =
-        dev.hossain.codematex.util
-            .formatStorageSize(sizeBytes)
+    get() = formatStorageSize(sizeBytes)
