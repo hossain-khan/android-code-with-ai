@@ -42,6 +42,12 @@ fun MarkdownMessage(
         modifier = modifier,
         typography =
             markdownTypography(
+                h1 = MaterialTheme.typography.displaySmallEmphasized,
+                h2 = MaterialTheme.typography.displaySmall,
+                h3 = MaterialTheme.typography.displaySmall,
+                h4 = MaterialTheme.typography.headlineMedium,
+                h5 = MaterialTheme.typography.headlineSmall,
+                h6 = MaterialTheme.typography.titleMedium,
                 text = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                 paragraph = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                 code =
