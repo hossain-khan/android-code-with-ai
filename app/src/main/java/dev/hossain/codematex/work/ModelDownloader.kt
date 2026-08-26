@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 /**
  * Abstraction over the actual HTTP download and file I/O logic used by

@@ -69,7 +69,7 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         modelId: String,
         progress: Int,
     ) {
-        val data = Data.Builder().putInt(dev.hossain.codematex.worker.ModelDownloadWorker.KEY_PROGRESS, progress).build()
+        val data = Data.Builder().putInt(dev.hossain.codematex.work.ModelDownloadWorker.KEY_PROGRESS, progress).build()
         val workInfo =
             WorkInfo(
                 java.util.UUID.randomUUID(),
@@ -92,7 +92,7 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
     ) {
         val outputData =
             if (errorMessage != null) {
-                Data.Builder().putString(dev.hossain.codematex.worker.ModelDownloadWorker.KEY_ERROR_MESSAGE, errorMessage).build()
+                Data.Builder().putString(dev.hossain.codematex.work.ModelDownloadWorker.KEY_ERROR_MESSAGE, errorMessage).build()
             } else {
                 Data.EMPTY
             }

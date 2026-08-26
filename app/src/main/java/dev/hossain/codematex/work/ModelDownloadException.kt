@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 /**
  * Typed, classified failures for the model download pipeline.

@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding

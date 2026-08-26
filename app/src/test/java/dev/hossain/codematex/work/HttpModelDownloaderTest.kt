@@ -1,4 +1,4 @@
-package dev.hossain.codematex.worker
+package dev.hossain.codematex.work
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
