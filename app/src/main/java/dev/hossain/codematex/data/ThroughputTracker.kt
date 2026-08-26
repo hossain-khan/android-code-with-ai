@@ -1,6 +1,8 @@
 package dev.hossain.codematex.data
 
 import java.util.Locale
+import kotlin.time.Duration.Companion.nanoseconds
+import kotlin.time.DurationUnit
 
 /**
  * Tracks LLM inference throughput metrics: time-to-first-token (TTFT) and
@@ -43,12 +45,13 @@ class ThroughputTracker(
             return "TTFT: -- • Speed: -- t/s (0 tokens)"
         }
 
-        val ttftMs = maxOf(0L, (firstTokenNano - startNano) / 1_000_000L)
-        val decodeNano = maxOf(0L, nowNano - firstTokenNano)
-        val decodeMs = decodeNano / 1_000_000L
+        val ttft = (firstTokenNano - startNano).nanoseconds
+        val ttftMs = ttft.inWholeMilliseconds.coerceAtLeast(0)
+        val decodeDuration = (nowNano - firstTokenNano).nanoseconds
+        val decodeSeconds = decodeDuration.toDouble(DurationUnit.SECONDS)
 
-        return if (decodeMs > 0) {
-            val speed = (tokenCount.toDouble() * 1_000_000_000.0) / decodeNano.toDouble()
+        return if (decodeDuration.inWholeMilliseconds > 0) {
+            val speed = tokenCount.toDouble() / decodeSeconds
             "TTFT: ${ttftMs}ms • Speed: ${String.format(Locale.US, "%.1f", speed)} t/s ($tokenCount tokens)"
         } else {
             "TTFT: ${ttftMs}ms • Speed: -- t/s ($tokenCount tokens)"
@@ -64,12 +67,14 @@ class ThroughputTracker(
         }
 
         val now = clockNano()
-        val ttftMs = maxOf(0L, (firstTokenNano - startNano) / 1_000_000L)
-        val decodeNano = maxOf(0L, now - firstTokenNano)
+        val ttft = (firstTokenNano - startNano).nanoseconds
+        val ttftMs = ttft.inWholeMilliseconds.coerceAtLeast(0)
+        val decodeDuration = (now - firstTokenNano).nanoseconds
+        val decodeSeconds = decodeDuration.toDouble(DurationUnit.SECONDS)
 
         val speed =
-            if (decodeNano > 0) {
-                (tokenCount.toDouble() * 1_000_000_000.0) / decodeNano.toDouble()
+            if (decodeDuration.inWholeMilliseconds > 0) {
+                tokenCount.toDouble() / decodeSeconds
             } else {
                 0.0
             }

@@ -11,7 +11,8 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 /**
  * Metro bindings for the networking layer contributed to [AppScope].
@@ -46,8 +47,8 @@ interface NetworkingGraph {
                         },
                     )
                 }
-            }.connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
+            }.connectTimeout(30.seconds.toJavaDuration())
+            .readTimeout(30.seconds.toJavaDuration())
             .build()
 
     /**

@@ -640,8 +640,17 @@ private fun SessionCard(
                         color = visualInfo.accentColor,
                         fontWeight = FontWeight.Medium,
                     )
+                    val relativeTime =
+                        dev.hossain.codematex.util
+                            .formatRelativeTime(session.lastActiveAt)
+                    val metadataText =
+                        if (relativeTime.isNotEmpty()) {
+                            "${session.messageCount} messages • $relativeTime"
+                        } else {
+                            "${session.messageCount} messages"
+                        }
                     Text(
-                        "${session.messageCount} messages",
+                        metadataText,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.outline,
                     )

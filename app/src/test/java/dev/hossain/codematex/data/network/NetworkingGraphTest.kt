@@ -6,7 +6,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Unit tests for [NetworkingGraph].
@@ -18,8 +18,8 @@ class NetworkingGraphTest {
     fun `provideOkHttpClient configures expected timeouts and logging level`() {
         val client = networkingGraph.provideOkHttpClient()
 
-        assertEquals(TimeUnit.SECONDS.toMillis(30), client.connectTimeoutMillis.toLong())
-        assertEquals(TimeUnit.SECONDS.toMillis(30), client.readTimeoutMillis.toLong())
+        assertEquals(30.seconds.inWholeMilliseconds, client.connectTimeoutMillis.toLong())
+        assertEquals(30.seconds.inWholeMilliseconds, client.readTimeoutMillis.toLong())
 
         val loggingInterceptor = client.interceptors.filterIsInstance<HttpLoggingInterceptor>().firstOrNull()
         if (BuildConfig.DEBUG) {
