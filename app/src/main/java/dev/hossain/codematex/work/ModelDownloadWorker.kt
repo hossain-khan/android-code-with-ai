@@ -20,7 +20,9 @@ import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.binding
+import kotlinx.coroutines.CancellationException
 import timber.log.Timber
+import java.io.IOException
 
 @AssistedInject
 class ModelDownloadWorker(
@@ -39,6 +41,7 @@ class ModelDownloadWorker(
         const val KEY_ERROR_MESSAGE = "error_message"
         const val KEY_MODEL_ID = "model_id"
         const val KEY_MODEL_NAME = "model_name"
+        const val KEY_ERROR_RETRYABLE = "error_retryable"
         const val NOTIFICATION_ID_DOWNLOAD_COMPLETE = 2
 
         /**
@@ -73,9 +76,21 @@ class ModelDownloadWorker(
                         Timber.d("ModelDownloadWorker: Download completed successfully")
                     }.onFailure { error ->
                         Timber.e(error, "ModelDownloadWorker: Download failed for all URLs")
-                    }.getOrThrow()
+                    }
 
-                Result.success()
+                if (result.isSuccess) {
+                    Result.success()
+                } else {
+                    val error = result.exceptionOrNull() ?: IllegalStateException("Download failed")
+                    val isRetryable = isRetryable(error)
+                    val errorData =
+                        Data
+                            .Builder()
+                            .putString(KEY_ERROR_MESSAGE, error.localizedMessage ?: error.message ?: "Download failed")
+                            .putBoolean(KEY_ERROR_RETRYABLE, isRetryable)
+                            .build()
+                    Result.failure(errorData)
+                }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -84,9 +99,22 @@ class ModelDownloadWorker(
                     Data
                         .Builder()
                         .putString(KEY_ERROR_MESSAGE, e.localizedMessage ?: e.message ?: "Download failed")
+                        .putBoolean(KEY_ERROR_RETRYABLE, isRetryable(e))
                         .build()
                 Result.failure(errorData)
             }
+
+        /**
+         * Returns true when [error] represents a transient network/server problem that may succeed
+         * on retry. Permanent failures (checksum mismatch, insufficient storage, permission errors,
+         * malformed input, and installation failures) are not retryable.
+         */
+        fun isRetryable(error: Throwable): Boolean {
+            if (error is CancellationException) return false
+            if (error is ModelDownloadException) return error.isRetryable
+            if (error is IOException) return true
+            return false
+        }
 
         suspend fun executeDownload(
             urls: List<String>,
@@ -177,7 +205,8 @@ class ModelDownloadWorker(
             showDownloadCompleteNotification()
         }
 
-        return if (result != Result.success() && runAttemptCount < 5) {
+        val isRetryable = result.outputData.getBoolean(KEY_ERROR_RETRYABLE, false)
+        return if (result != Result.success() && isRetryable && runAttemptCount < 5) {
             Result.retry()
         } else {
             result

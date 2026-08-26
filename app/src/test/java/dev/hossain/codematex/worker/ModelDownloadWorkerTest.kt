@@ -3,8 +3,10 @@ package dev.hossain.codematex.worker
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.io.IOException
 import androidx.work.ListenableWorker.Result as WorkResult
 
 /**
@@ -39,10 +41,16 @@ class ModelDownloadWorkerTest {
         }
 
     @Test
-    fun `given download fails - execute download returns failure with error message`() =
+    fun `given permanent download failure - execute download returns failure with non-retryable data`() =
         runTest {
             val fakeDownloader = FakeModelDownloader()
-            fakeDownloader.nextResult = kotlin.Result.failure(IllegalStateException("SHA-256 checksum mismatch"))
+            fakeDownloader.nextResult =
+                kotlin.Result.failure(
+                    ModelDownloadException.ChecksumMismatch(
+                        expected = "expected",
+                        actual = "actual",
+                    ),
+                )
 
             val result =
                 ModelDownloadWorker.executeDownload(
@@ -56,9 +64,72 @@ class ModelDownloadWorkerTest {
             val expectedErrorData =
                 androidx.work.Data
                     .Builder()
-                    .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "SHA-256 checksum mismatch")
+                    .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "SHA-256 checksum mismatch: expected expected, calculated actual")
+                    .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false)
                     .build()
             assertEquals(WorkResult.failure(expectedErrorData), result)
+        }
+
+    @Test
+    fun `given transient download failure - execute download returns failure with retryable data`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            fakeDownloader.nextResult = kotlin.Result.failure(ModelDownloadException.NetworkFailure(IOException("timeout")))
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    url = "https://example.com/model.bin",
+                    outputPath = "/models/model.bin",
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            val expectedErrorData =
+                androidx.work.Data
+                    .Builder()
+                    .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "Network failure: timeout")
+                    .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true)
+                    .build()
+            assertEquals(WorkResult.failure(expectedErrorData), result)
+        }
+
+    @Test
+    fun `given http 500 error - execute download marks error as retryable`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            fakeDownloader.nextResult = kotlin.Result.failure(ModelDownloadException.HttpError(500))
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    url = "https://example.com/model.bin",
+                    outputPath = "/models/model.bin",
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            assertTrue(result is WorkResult.Failure)
+            assertTrue(result.outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false))
+        }
+
+    @Test
+    fun `given http 404 error - execute download marks error as non-retryable`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            fakeDownloader.nextResult = kotlin.Result.failure(ModelDownloadException.HttpError(404))
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    url = "https://example.com/model.bin",
+                    outputPath = "/models/model.bin",
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            assertTrue(result is WorkResult.Failure)
+            assertFalse(result.outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true))
         }
 
     @Test
@@ -204,4 +275,24 @@ class ModelDownloadWorkerTest {
             assertEquals(WorkResult.success(), result)
             assertEquals(expectedSha256, fakeDownloader.multiUrlDownloads.single().expectedSha256)
         }
+
+    @Test
+    fun `isRetryable returns true for network IOException`() {
+        assertTrue(ModelDownloadWorker.isRetryable(IOException("connection reset")))
+    }
+
+    @Test
+    fun `isRetryable returns false for ModelDownloadException permanent failures`() {
+        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.ChecksumMismatch("a", "b")))
+        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.InsufficientStorage(1, 2)))
+        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.InstallationFailure(IOException())))
+    }
+
+    @Test
+    fun `isRetryable returns true for HTTP 5xx and false for HTTP 4xx`() {
+        assertTrue(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(500)))
+        assertTrue(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(503)))
+        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(404)))
+        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(400)))
+    }
 }

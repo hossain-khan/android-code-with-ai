@@ -148,7 +148,10 @@ class HttpModelDownloaderTest {
                 )
 
             assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull()?.message?.contains("HTTP 500") == true)
+            val error = result.exceptionOrNull()
+            assertTrue(error is ModelDownloadException.HttpError)
+            assertEquals(500, (error as ModelDownloadException.HttpError).responseCode)
+            assertTrue(error.isRetryable)
         }
 
     @Test
@@ -345,7 +348,9 @@ class HttpModelDownloaderTest {
                 )
 
             assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() is SecurityException)
+            val error = result.exceptionOrNull()
+            assertTrue(error is ModelDownloadException.ChecksumMismatch)
+            assertFalse((error as ModelDownloadException).isRetryable)
             assertFalse(File(outputPath).exists())
             assertFalse(File("$outputPath.codematextmp").exists())
         }
@@ -403,7 +408,125 @@ class HttpModelDownloaderTest {
                 )
 
             assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() is IOException)
+            val error = result.exceptionOrNull()
+            assertTrue(error is ModelDownloadException.InsufficientStorage)
+            assertFalse((error as ModelDownloadException).isRetryable)
+            assertFalse(File(outputPath).exists())
+        }
+
+    @Test
+    fun `given final move fails - download fails and cleans up temp file`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = createDownloader()
+            downloader.fileMover = { _, _ -> throw IOException("Forced move failure") }
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            val error = result.exceptionOrNull()
+            assertTrue(error is ModelDownloadException.InstallationFailure)
+            assertFalse((error as ModelDownloadException).isRetryable)
+            assertFalse(File(outputPath).exists())
+            assertFalse(File("$outputPath.codematextmp").exists())
+        }
+
+    @Test
+    fun `given destination already exists - atomic install replaces it`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val existingFile = File(outputPath)
+            existingFile.parentFile?.mkdirs()
+            existingFile.writeBytes(ByteArray(100) { 0xFF.toByte() })
+
+            val downloader = createDownloader()
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertEquals(Result.success(Unit), result)
+            assertTrue(existingFile.exists())
+            assertEquals(content.size.toLong(), existingFile.length())
+            assertTrue(content.contentEquals(existingFile.readBytes()))
+            assertFalse(File("$outputPath.codematextmp").exists())
+        }
+
+    @Test
+    fun `given destination size does not match - download fails and removes destination`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = createDownloader()
+            downloader.fileMover = { tmpFile, destination ->
+                destination.parentFile?.mkdirs()
+                destination.writeBytes(ByteArray(100) { 0xFF.toByte() })
+                tmpFile.delete()
+            }
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is ModelDownloadException.InstallationFailure)
+            assertFalse(File(outputPath).exists())
+        }
+
+    @Test
+    fun `given destination hash does not match - download fails and removes destination`() =
+        runTest {
+            val content = ByteArray(1_000) { it.toByte() }
+            val expectedSha256 =
+                MessageDigest
+                    .getInstance("SHA-256")
+                    .digest(content)
+                    .joinToString("") { "%02x".format(it) }
+            server.createContext("/model.bin", ModelFileHandler(content))
+
+            val outputPath = File(outputDir, "model.bin").absolutePath
+            val downloader = createDownloader()
+            // Move the correct bytes, but then corrupt the destination before verification.
+            downloader.fileMover = { tmpFile, destination ->
+                destination.parentFile?.mkdirs()
+                destination.writeBytes(content)
+                destination.writeBytes(ByteArray(1) { 0xFF.toByte() })
+                tmpFile.delete()
+            }
+
+            val result =
+                downloader.download(
+                    url = serverUrl(),
+                    outputPath = outputPath,
+                    expectedSha256 = expectedSha256,
+                    onProgress = {},
+                    shouldCancel = { false },
+                )
+
+            assertTrue(result.isFailure)
+            assertTrue(result.exceptionOrNull() is ModelDownloadException.InstallationFailure)
             assertFalse(File(outputPath).exists())
         }
 
