@@ -82,39 +82,34 @@ class ModelDownloadWorker(
                     Result.success()
                 } else {
                     val error = result.exceptionOrNull() ?: IllegalStateException("Download failed")
-                    val isRetryable = isRetryable(error)
-                    val errorData =
-                        Data
-                            .Builder()
-                            .putString(KEY_ERROR_MESSAGE, error.localizedMessage ?: error.message ?: "Download failed")
-                            .putBoolean(KEY_ERROR_RETRYABLE, isRetryable)
-                            .build()
-                    Result.failure(errorData)
+                    Result.failure(createErrorData(error))
                 }
             } catch (e: kotlinx.coroutines.CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ModelDownloadWorker: Error during download work")
-                val errorData =
-                    Data
-                        .Builder()
-                        .putString(KEY_ERROR_MESSAGE, e.localizedMessage ?: e.message ?: "Download failed")
-                        .putBoolean(KEY_ERROR_RETRYABLE, isRetryable(e))
-                        .build()
-                Result.failure(errorData)
+                Result.failure(createErrorData(e))
             }
+
+        private fun createErrorData(error: Throwable): Data =
+            Data
+                .Builder()
+                .putString(KEY_ERROR_MESSAGE, error.localizedMessage ?: error.message ?: "Download failed")
+                .putBoolean(KEY_ERROR_RETRYABLE, isRetryable(error))
+                .build()
 
         /**
          * Returns true when [error] represents a transient network/server problem that may succeed
          * on retry. Permanent failures (checksum mismatch, insufficient storage, permission errors,
          * malformed input, and installation failures) are not retryable.
          */
-        fun isRetryable(error: Throwable): Boolean {
-            if (error is CancellationException) return false
-            if (error is ModelDownloadException) return error.isRetryable
-            if (error is IOException) return true
-            return false
-        }
+        fun isRetryable(error: Throwable): Boolean =
+            when (error) {
+                is CancellationException -> false
+                is ModelDownloadException -> error.isRetryable
+                is IOException -> true
+                else -> false
+            }
 
         suspend fun executeDownload(
             urls: List<String>,

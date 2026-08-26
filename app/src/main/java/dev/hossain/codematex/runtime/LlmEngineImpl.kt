@@ -121,19 +121,16 @@ class LlmEngineImpl(
             Timber.d("LlmEngineImpl: Inference was cancelled by user (Java CancellationException)")
             throw e
         } catch (e: BackendFailureException) {
-            val failedBackend = e.failedBackend
-            if (failedBackend != LlmEngine.Backend.CPU) {
+            if (e.failedBackend != LlmEngine.Backend.CPU) {
                 Timber.w(
                     e,
-                    "LlmEngineImpl: Inference failed on hardware acceleration ($failedBackend). Falling back to CPU...",
+                    "LlmEngineImpl: Inference failed on hardware acceleration (${e.failedBackend}). Falling back to CPU...",
                 )
                 recreateSessionWithCpu()
-                // Re-throw so the orchestrator can signal the presenter to discard any partial
-                // hardware output before retrying on the newly-created CPU session.
-                throw e
-            } else {
-                throw e
             }
+            // Re-throw so the orchestrator can signal the presenter to discard any partial
+            // hardware output before retrying on the newly-created CPU session.
+            throw e
         }
     }
 
