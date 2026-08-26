@@ -77,7 +77,7 @@ private fun AppInfoSheetContent(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 24.dp, vertical = 24.dp)
                 .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -206,8 +206,6 @@ private fun AppInfoSheetContent(
         ) {
             Text("Close")
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
