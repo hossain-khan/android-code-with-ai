@@ -12,6 +12,9 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
 import javax.inject.Inject
 
@@ -32,6 +35,12 @@ class HttpModelDownloader
         private val okHttpClient: OkHttpClient,
     ) : ModelDownloader {
         internal var spaceChecker: (File) -> Long = { it.usableSpace }
+
+        /**
+         * Test seam for the final install step. The default performs an atomic move with a safe
+         * checked fallback; tests can override it to simulate installation failures.
+         */
+        internal var fileMover: (File, File) -> Unit = { tmpFile, destination -> installFile(tmpFile, destination) }
 
         override suspend fun download(
             urls: List<String>,
@@ -94,7 +103,7 @@ class HttpModelDownloader
                         if (responseCode != 200 && responseCode != 206) {
                             Timber.e("HttpModelDownloader: Failed with response code $responseCode")
                             return@withContext Result.failure(
-                                IllegalStateException("HTTP $responseCode"),
+                                ModelDownloadException.HttpError(responseCode),
                             )
                         }
 
@@ -120,8 +129,9 @@ class HttpModelDownloader
                                 "HttpModelDownloader: Insufficient storage space. Required=$requiredBytes B, Available=$availableSpace B",
                             )
                             return@withContext Result.failure(
-                                IOException(
-                                    "Insufficient storage space: available $availableSpace bytes, required $requiredBytes bytes",
+                                ModelDownloadException.InsufficientStorage(
+                                    availableBytes = availableSpace,
+                                    requiredBytes = requiredBytes,
                                 ),
                             )
                         }
@@ -174,25 +184,96 @@ class HttpModelDownloader
                                 Timber.e("HttpModelDownloader: Checksum mismatch! Expected=$expectedSha256, Actual=$actualHash")
                                 outputTmpFile.delete()
                                 return@withContext Result.failure(
-                                    SecurityException(
-                                        "SHA-256 checksum mismatch: expected $expectedSha256, calculated $actualHash",
+                                    ModelDownloadException.ChecksumMismatch(
+                                        expected = expectedSha256,
+                                        actual = actualHash,
                                     ),
                                 )
                             }
                             Timber.d("HttpModelDownloader: Checksum verified successfully")
                         }
 
-                        outputTmpFile.renameTo(File(outputPath))
+                        val outputFile = File(outputPath)
+                        val expectedSize = if (totalBytes > 0) totalBytes else outputTmpFile.length()
+
+                        try {
+                            fileMover(outputTmpFile, outputFile)
+                        } catch (e: Exception) {
+                            Timber.e(e, "HttpModelDownloader: Failed to install downloaded file")
+                            outputTmpFile.delete()
+                            outputFile.delete()
+                            return@withContext Result.failure(ModelDownloadException.InstallationFailure(e))
+                        }
+
+                        if (!outputFile.exists() || outputFile.length() != expectedSize) {
+                            Timber.e(
+                                "HttpModelDownloader: Destination verification failed. " +
+                                    "exists=${outputFile.exists()}, size=${outputFile.length()}, expected=$expectedSize",
+                            )
+                            outputFile.delete()
+                            return@withContext Result.failure(
+                                ModelDownloadException.InstallationFailure(
+                                    IllegalStateException(
+                                        "Destination verification failed: size=${outputFile.length()}, expected=$expectedSize",
+                                    ),
+                                ),
+                            )
+                        }
+
+                        if (expectedSha256 != null) {
+                            val destinationHash = computeSha256(outputFile, shouldCancel)
+                            if (!destinationHash.equals(expectedSha256, ignoreCase = true)) {
+                                Timber.e(
+                                    "HttpModelDownloader: Destination checksum mismatch! Expected=$expectedSha256, Actual=$destinationHash",
+                                )
+                                outputFile.delete()
+                                return@withContext Result.failure(
+                                    ModelDownloadException.InstallationFailure(
+                                        IllegalStateException(
+                                            "Destination checksum mismatch: expected $expectedSha256, calculated $destinationHash",
+                                        ),
+                                    ),
+                                )
+                            }
+                        }
+
+                        outputTmpFile.delete()
                         Timber.d("HttpModelDownloader: Download completed for $url")
                         Result.success(Unit)
                     }
                 } catch (e: CancellationException) {
                     throw e
+                } catch (e: IOException) {
+                    Timber.e(e, "HttpModelDownloader: Network or file I/O error")
+                    Result.failure(ModelDownloadException.NetworkFailure(e))
                 } catch (e: Exception) {
                     Timber.e(e, "HttpModelDownloader: Error downloading model")
                     Result.failure(e)
                 }
             }
+
+        private fun installFile(
+            tmpFile: File,
+            destination: File,
+        ) {
+            destination.parentFile?.mkdirs()
+            try {
+                Files.move(
+                    tmpFile.toPath(),
+                    destination.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                    StandardCopyOption.ATOMIC_MOVE,
+                )
+            } catch (e: AtomicMoveNotSupportedException) {
+                Timber.w(e, "HttpModelDownloader: Atomic move not supported, falling back to copy+delete")
+                Files.copy(
+                    tmpFile.toPath(),
+                    destination.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING,
+                )
+                tmpFile.delete()
+            }
+        }
 
         private fun computeSha256(
             file: File,
