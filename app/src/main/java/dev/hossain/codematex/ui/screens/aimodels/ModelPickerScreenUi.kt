@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
@@ -53,6 +54,7 @@ import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -78,6 +80,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.formattedContextWindow
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
@@ -85,6 +88,7 @@ import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
+import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -240,6 +244,22 @@ private fun ModelPickerLayout(
         AppInfoBottomSheet(onDismiss = { showAppInfo = false })
     }
 
+    state.configuredModel?.let { configuredModel ->
+        ModelConfigBottomSheet(
+            model = configuredModel,
+            initialConfig = state.configuredModelConfig ?: ModelConfig(),
+            onSaveConfig = { config ->
+                state.eventSink(ModelPickerScreen.Event.SaveModelConfig(configuredModel, config))
+            },
+            onResetConfig = {
+                state.eventSink(ModelPickerScreen.Event.ResetModelConfig(configuredModel))
+            },
+            onDismiss = {
+                state.eventSink(ModelPickerScreen.Event.DismissModelConfig)
+            },
+        )
+    }
+
     Scaffold(
         modifier =
             modifier
@@ -327,6 +347,9 @@ private fun ModelPickerLayout(
                         onDelete = {
                             state.eventSink(ModelPickerScreen.Event.Delete(model))
                         },
+                        onConfigure = {
+                            state.eventSink(ModelPickerScreen.Event.OpenModelConfig(model))
+                        },
                     )
                 }
             }
@@ -403,6 +426,7 @@ private fun ModelCard(
     onCancel: () -> Unit,
     onSelect: () -> Unit,
     onDelete: () -> Unit,
+    onConfigure: () -> Unit,
 ) {
     val isCompatible = compatibility is ModelCompatibility.Compatible
     val uriHandler = LocalUriHandler.current
@@ -712,11 +736,22 @@ private fun ModelCard(
                 if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
                     OutlinedButton(
                         onClick = onCancel,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Cancel Download")
+                    }
+
+                    OutlinedIconButton(
+                        onClick = onConfigure,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Configure ${model.displayName}",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 } else if (model.downloadStatus == DownloadStatus.DOWNLOADED) {
                     Box(modifier = Modifier.weight(1f)) {
@@ -744,6 +779,17 @@ private fun ModelCard(
                     }
 
                     OutlinedIconButton(
+                        onClick = onConfigure,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Configure ${model.displayName}",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+
+                    OutlinedIconButton(
                         onClick = { showDeleteConfirmation = true },
                         colors =
                             IconButtonDefaults.outlinedIconButtonColors(
@@ -766,7 +812,7 @@ private fun ModelCard(
                             }
                         },
                         enabled = isCompatible,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.weight(1f),
                     ) {
                         val icon =
                             when {
@@ -782,6 +828,17 @@ private fun ModelCard(
                                 model.downloadStatus == DownloadStatus.FAILED -> "Retry Download"
                                 else -> "Download Model"
                             },
+                        )
+                    }
+
+                    OutlinedIconButton(
+                        onClick = onConfigure,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Tune,
+                            contentDescription = "Configure ${model.displayName}",
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
@@ -987,6 +1044,7 @@ private fun ModelCardPreview() {
                 onCancel = {},
                 onSelect = {},
                 onDelete = {},
+                onConfigure = {},
             )
             ModelCard(
                 model = sampleModels[1],
@@ -995,6 +1053,7 @@ private fun ModelCardPreview() {
                 onCancel = {},
                 onSelect = {},
                 onDelete = {},
+                onConfigure = {},
             )
         }
     }

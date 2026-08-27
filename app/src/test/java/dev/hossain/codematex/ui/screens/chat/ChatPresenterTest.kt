@@ -15,10 +15,10 @@ import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
-import dev.hossain.codematex.data.repository.ModelConfigStoreImpl
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
@@ -31,7 +31,7 @@ import org.junit.Test
  * Unit tests for [ChatPresenter].
  */
 class ChatPresenterTest {
-    private val configStore: ModelConfigStore = ModelConfigStoreImpl()
+    private val configStore: ModelConfigStore = FakeModelConfigStore()
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
@@ -504,7 +504,7 @@ class ChatPresenterTest {
                     availableModels = listOf(model),
                     selectedModel = model,
                 )
-            val localConfigStore = ModelConfigStoreImpl()
+            val localConfigStore = FakeModelConfigStore()
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
@@ -519,7 +519,7 @@ class ChatPresenterTest {
                 val initialState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(initialState.configInfo).isEqualTo("Temp: 0.7, Top-K: 40, Top-P: 1.0")
 
-                localConfigStore.updateConfig(ModelConfig(temperature = 0.2f, topK = 10, topP = 0.8f, maxTokens = 512))
+                localConfigStore.setConfig(model.id, ModelConfig(temperature = 0.2f, topK = 10, topP = 0.8f, maxTokens = 512))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(updatedState.configInfo).isEqualTo("Temp: 0.2, Top-K: 10, Top-P: 0.8")

@@ -85,7 +85,15 @@ class ChatPresenter(
                     persona = storedPersona
                 }
             }
-            launch {
+        }
+
+        LaunchedEffect(activeModel?.id) {
+            val modelId = activeModel?.id
+            if (modelId != null) {
+                configStore.getConfigFlow(modelId).collect { currentConfig ->
+                    modelConfig = currentConfig
+                }
+            } else {
                 configStore.configFlow.collect { currentConfig ->
                     modelConfig = currentConfig
                 }

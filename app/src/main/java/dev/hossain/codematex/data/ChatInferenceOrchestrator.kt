@@ -130,11 +130,12 @@ class DefaultChatInferenceOrchestrator
         ): Result<List<ChatMessage>> =
             try {
                 Timber.d("ChatInferenceOrchestrator: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
+                val modelConfig = configStore.getConfig(model.id)
                 llmEngine.initialize(
                     modelPath = model.localPath ?: "",
                     backend = model.preferredBackend,
                     systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona),
-                    config = configStore.config,
+                    config = modelConfig,
                 )
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
 
