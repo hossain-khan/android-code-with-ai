@@ -164,6 +164,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.13.0` | `22` | 2026-08-27 | Model catalog expansion (Qwen 2.5 Coder 1.5B, Qwen 3 0.6B, Phi-4 Mini), live context usage gauge, silent background downloads, and complete Google Truth 1.4.5 test suite modernization. |
 | `1.12.2` | `21` | 2026-08-26 | Binary gigabyte (1024^3) memory precision for device RAM detection and compatibility checks, work package alignment, M3 Markdown heading typography hierarchy, and comprehensive KDoc interface documentation. |
 | `1.12.1` | `20` | 2026-08-26 | Multi-tier runtime fallback (NPU -> GPU -> CPU), JNI callback exception isolation, animated responsible AI code disclaimer, idiomatic Kotlin Duration refactoring, and @Immutable Compose stability. |
 | `1.12.0` | `19` | 2026-08-26 | LiteRT JNI safety & native lifecycle hardening, atomic model downloads, transactional Room persistence, monotonic TTFT metrics, and Kotlin 2.4 architecture updates. |

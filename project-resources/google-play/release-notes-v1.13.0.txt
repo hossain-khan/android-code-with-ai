@@ -1,0 +1,5 @@
+What's New in v1.13.0:
+• Expanded Models: Added Qwen 2.5 Coder 1.5B, Qwen 3 0.6B, and Phi-4 Mini models with optimized CDN mirrors.
+• Context Usage Meter: Live token usage gauge in sticky benchmarking bar.
+• Silent Background Downloads: Non-intrusive model downloading without alert chime interrupts.
+• Testing Modernization: Full Google Truth test suite refactoring across entire codebase.
