@@ -948,7 +948,7 @@ private fun HomeScreenPreview() {
                             ChatSession(
                                 id = "2",
                                 title = "Jetpack Compose Performance",
-                                summary = "Stability and smart recomposition debugging techniques.",
+                                summary = "Stability and smart recomposition optimization techniques.",
                                 topic = CodingTopic.ANDROID,
                                 messageCount = 4,
                                 lastActiveAt = 0L,

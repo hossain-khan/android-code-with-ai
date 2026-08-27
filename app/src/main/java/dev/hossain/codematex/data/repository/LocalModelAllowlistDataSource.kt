@@ -106,7 +106,7 @@ class LocalModelAllowlistDataSource
                     license = "Apache 2.0",
                     licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
                     description =
-                        "Best lightweight model for code explanations, syntax fixes, and debugging.",
+                        "Best lightweight model for code explanations, syntax fixes, and Q&A.",
                     downloadUrl =
                         "https://light-llm-storage.gohk.xyz/models/litert-community/Qwen2.5-Coder-1.5B-Instruct/Qwen2.5-Coder-1.5B-Instruct_int4.litertlm",
                     fallbackDownloadUrls =
