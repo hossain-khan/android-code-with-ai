@@ -245,23 +245,7 @@ private fun HomeLayout(
                     }
 
                     if (state.recentSessions.isEmpty()) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.surfaceContainerLow,
-                            shape = MaterialTheme.shapes.large,
-                        ) {
-                            Box(
-                                modifier = Modifier.fillMaxSize().padding(24.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    "No recent sessions yet.\nSelect a topic on the left to start coding!",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        }
+                        EmptySessionsCard(modifier = Modifier.fillMaxWidth())
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -353,6 +337,10 @@ private fun HomeLayout(
                         SessionCard(session) {
                             state.eventSink(HomeScreen.Event.SessionClicked(session.id))
                         }
+                    }
+                } else {
+                    item {
+                        EmptySessionsCard()
                     }
                 }
             }
@@ -663,6 +651,61 @@ private fun SessionCard(
                 tint = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.size(16.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun EmptySessionsCard(modifier: Modifier = Modifier) {
+    Card(
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(48.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = "Start Your First Session",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    text = "Select a topic above to ask questions and learn concepts with your private on-device AI tutor.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }
@@ -1029,6 +1072,16 @@ private fun SessionCardPreview() {
                     modelUsed = "Gemma 4-E2B IT",
                 ),
             onClick = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EmptySessionsCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        EmptySessionsCard(
+            modifier = Modifier.padding(16.dp),
         )
     }
 }
