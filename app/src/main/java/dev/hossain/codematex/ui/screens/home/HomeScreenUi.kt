@@ -963,6 +963,22 @@ private fun HomeScreenPreview() {
     }
 }
 
+@DevicePreviews
+@Composable
+private fun HomeScreenEmptySessionsPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        HomeLayout(
+            state =
+                HomeScreen.State.Success(
+                    recentSessions = emptyList(),
+                    topics = CodingTopic.selectableEntries,
+                    hasDownloadedModel = true,
+                    eventSink = {},
+                ),
+        )
+    }
+}
+
 @ThemePreviews
 @Composable
 private fun HeroBannerPreview() {
