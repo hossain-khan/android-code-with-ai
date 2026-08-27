@@ -83,7 +83,7 @@ class FakeModelAllowlistDataSource(
                     displayName = "Qwen 2.5 Coder 1.5B",
                     modelFile = "Qwen2.5-Coder-1.5B-Instruct_int4.litertlm",
                     commitHash = "main",
-                    sizeInBytes = 1_120_000_000L,
+                    sizeInBytes = 1_117_385_648L,
                     taskTypes = listOf("llm_chat"),
                     runtimeType = "LITERT_LM",
                     minDeviceMemoryInGb = 3,
@@ -92,7 +92,12 @@ class FakeModelAllowlistDataSource(
                     licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
                     description = "Best lightweight model for code explanations, syntax fixes, and debugging.",
                     downloadUrl =
-                        "https://huggingface.co/litert-community/Qwen2.5-Coder-1.5B-Instruct/resolve/main/Qwen2.5-Coder-1.5B-Instruct_int4.litertlm",
+                        "https://light-llm-storage.gohk.xyz/models/litert-community/Qwen2.5-Coder-1.5B-Instruct/Qwen2.5-Coder-1.5B-Instruct_int4.litertlm",
+                    fallbackDownloadUrls =
+                        listOf(
+                            "https://huggingface.co/litert-community/Qwen2.5-Coder-1.5B-Instruct/resolve/main/Qwen2.5-Coder-1.5B-Instruct_int4.litertlm?download=true",
+                        ),
+                    sha256 = "273ecc7771ba2dd5fe1bb6d4d4726ad0353102f04ad094082ccf59bca9f21213",
                     contextWindow = 32768,
                     quantization = "INT4",
                     promptFormat = "CHATML",
