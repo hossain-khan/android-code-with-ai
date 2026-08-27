@@ -1,0 +1,4 @@
+What's New in v1.13.1:
+• Per-Model Hyperparameter Tuning: Configure Temperature, Top-K, Top-P, and Max Tokens per LLM with persistent on-device storage.
+• Interactive Model Config Sheet: Tune parameters from the Model Card with animated setting explanations.
+• Smooth Motion: Enhanced exit animations and full expansion across all modal bottom sheets.
