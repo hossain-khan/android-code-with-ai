@@ -154,7 +154,7 @@ private fun AppInfoSheetContent(
                 PillarRow(
                     icon = Icons.Default.Code,
                     title = "Open-Source Models",
-                    description = "Powered by Gemma 2B & 4B instruction-tuned models distributed via Hugging Face under Apache 2.0.",
+                    description = "Powered by state-of-the-art open-weights models (Gemma, Qwen, Phi) distributed via Hugging Face.",
                 )
             }
         }
