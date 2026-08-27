@@ -21,6 +21,23 @@ class ThroughputTracker(
     private var firstTokenNano = 0L
 
     /**
+     * Number of tokens processed so far.
+     */
+    val currentTokenCount: Int
+        get() = tokenCount
+
+    /**
+     * Time to first token in milliseconds, or null if no token has been emitted yet.
+     */
+    val ttftMs: Long?
+        get() =
+            if (firstTokenNano > 0L) {
+                (firstTokenNano - startNano).nanoseconds.inWholeMilliseconds.coerceAtLeast(0)
+            } else {
+                null
+            }
+
+    /**
      * Records a partial token and returns a human-readable throughput string.
      * Empty strings are ignored so terminal or blank signals do not inflate the token count.
      *

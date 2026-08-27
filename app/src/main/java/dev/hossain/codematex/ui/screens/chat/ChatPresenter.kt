@@ -177,6 +177,9 @@ class ChatPresenter(
                                 chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
                                     when (inferenceEvent) {
                                         is ChatInferenceEvent.Token -> {
+                                            val isFirstToken =
+                                                throughputTracker.currentTokenCount == 0 &&
+                                                    inferenceEvent.partialToken.isNotEmpty()
                                             val lastAgent = messages.last() as? ChatMessage.Agent
                                             if (lastAgent != null) {
                                                 messages =
@@ -187,6 +190,12 @@ class ChatPresenter(
                                                     )
                                             }
                                             throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
+                                            if (isFirstToken) {
+                                                val ttftText = throughputTracker.ttftMs?.let { "${it}ms" } ?: "--"
+                                                Timber.d(
+                                                    "ChatPresenter: First token received (TTFT: $ttftText). Streaming response started...",
+                                                )
+                                            }
                                         }
 
                                         ChatInferenceEvent.Done -> {
@@ -199,8 +208,12 @@ class ChatPresenter(
                                                         isStreaming = false,
                                                     )
                                             }
-                                            throughputInfo = throughputTracker.finalize()
+                                            val finalThroughput = throughputTracker.finalize()
+                                            throughputInfo = finalThroughput
                                             isGenerating = false
+                                            Timber.d(
+                                                "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
+                                            )
 
                                             // Save session message history in an independent try-catch block
                                             // so persistence failures do not discard or overwrite the generated response.
@@ -242,7 +255,10 @@ class ChatPresenter(
                             } catch (e: CancellationException) {
                                 throw e
                             } catch (e: Exception) {
-                                Timber.e(e, "ChatPresenter: Inference failed")
+                                Timber.e(
+                                    e,
+                                    "ChatPresenter: Inference failed after ${throughputTracker.currentTokenCount} tokens",
+                                )
                                 isGenerating = false
                                 throughputInfo = "Error: ${e.message}"
                                 messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
