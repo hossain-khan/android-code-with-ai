@@ -1,11 +1,9 @@
 package dev.hossain.codematex.domain.summary
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LlmSessionSummaryGeneratorTest {
@@ -17,8 +15,8 @@ class LlmSessionSummaryGeneratorTest {
         runTest {
             val summary = generator.generateSummary(emptyList())
 
-            assertEquals("Empty session", summary)
-            assertNull(fakeEngine.lastInput)
+            assertThat(summary).isEqualTo("Empty session")
+            assertThat(fakeEngine.lastInput).isNull()
         }
 
     @Test
@@ -26,7 +24,7 @@ class LlmSessionSummaryGeneratorTest {
         runTest {
             val summary = generator.generateSummary(listOf(ChatMessage.System(" ")))
 
-            assertEquals("Empty session", summary)
+            assertThat(summary).isEqualTo("Empty session")
         }
 
     @Test
@@ -41,11 +39,11 @@ class LlmSessionSummaryGeneratorTest {
 
             val summary = generator.generateSummary(messages)
 
-            assertEquals("A Kotlin summary", summary)
-            assertEquals(1, fakeEngine.isolatedInferenceCalls)
-            assertTrue(fakeEngine.lastInput?.contains("Summarize this coding learning session") == true)
-            assertTrue(fakeEngine.lastInput?.contains("User: Explain Kotlin coroutines") == true)
-            assertTrue(fakeEngine.lastInput?.contains("AI: Coroutines are lightweight threads.") == true)
+            assertThat(summary).isEqualTo("A Kotlin summary")
+            assertThat(fakeEngine.isolatedInferenceCalls).isEqualTo(1)
+            assertThat(fakeEngine.lastInput).contains("Summarize this coding learning session")
+            assertThat(fakeEngine.lastInput).contains("User: Explain Kotlin coroutines")
+            assertThat(fakeEngine.lastInput).contains("AI: Coroutines are lightweight threads.")
         }
 
     @Test
@@ -66,7 +64,7 @@ class LlmSessionSummaryGeneratorTest {
                     ?.substringAfter("AI: ")
                     ?.takeWhile { it == 'a' }
                     ?.length ?: 0
-            assertEquals(200, agentContentLength)
+            assertThat(agentContentLength).isEqualTo(200)
         }
 
     @Test
@@ -81,7 +79,7 @@ class LlmSessionSummaryGeneratorTest {
 
             val summary = generator.generateSummary(messages)
 
-            assertEquals("Coding session about 2 messages", summary)
+            assertThat(summary).isEqualTo("Coding session about 2 messages")
         }
 
     @Test
@@ -96,6 +94,6 @@ class LlmSessionSummaryGeneratorTest {
 
             val summary = generator.generateSummary(messages)
 
-            assertEquals("Coding session about 2 messages", summary)
+            assertThat(summary).isEqualTo("Coding session about 2 messages")
         }
 }

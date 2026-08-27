@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.system.FakeDeviceMemoryProvider
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.util.DeviceMemory
@@ -7,8 +8,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,11 +32,11 @@ class DefaultSystemStatsMonitorTest {
             runCurrent()
             job.cancel()
 
-            assertTrue(emitted.isNotEmpty())
-            assertEquals(0f, emitted.first().cpuPercent, 0.01f)
-            assertEquals(3.5f, emitted.first().ramUsedGb, 0.01f)
-            assertEquals(8.0f, emitted.first().ramTotalGb, 0.01f)
-            assertEquals(3.5f / 8.0f, emitted.first().ramFraction, 0.01f)
+            assertThat(emitted).isNotEmpty()
+            assertThat(emitted.first().cpuPercent).isWithin(0.01f).of(0f)
+            assertThat(emitted.first().ramUsedGb).isWithin(0.01f).of(3.5f)
+            assertThat(emitted.first().ramTotalGb).isWithin(0.01f).of(8.0f)
+            assertThat(emitted.first().ramFraction).isWithin(0.01f).of(3.5f / 8.0f)
         }
 
     @Test
@@ -57,19 +56,19 @@ class DefaultSystemStatsMonitorTest {
             runCurrent()
             job.cancel()
 
-            assertTrue(emitted.isNotEmpty())
-            assertEquals("CPU: 0% • RAM: 4.0 GB / 8.0 GB", emitted.first())
+            assertThat(emitted).isNotEmpty()
+            assertThat(emitted.first()).isEqualTo("CPU: 0% • RAM: 4.0 GB / 8.0 GB")
         }
 
     @Test
     fun `SystemResourceStats calculates fractions and handles bounds`() {
         val stats = SystemResourceStats(cpuPercent = 50f, ramUsedGb = 4f, ramTotalGb = 8f)
-        assertEquals(0.5f, stats.cpuFraction, 0.01f)
-        assertEquals(0.5f, stats.ramFraction, 0.01f)
-        assertEquals("CPU: 50% • RAM: 4.0 GB / 8.0 GB", stats.formattedSummary)
+        assertThat(stats.cpuFraction).isWithin(0.01f).of(0.5f)
+        assertThat(stats.ramFraction).isWithin(0.01f).of(0.5f)
+        assertThat(stats.formattedSummary).isEqualTo("CPU: 50% • RAM: 4.0 GB / 8.0 GB")
 
         val zeroTotalStats = SystemResourceStats(cpuPercent = 120f, ramUsedGb = 5f, ramTotalGb = 0f)
-        assertEquals(1.0f, zeroTotalStats.cpuFraction, 0.01f)
-        assertEquals(0f, zeroTotalStats.ramFraction, 0.01f)
+        assertThat(zeroTotalStats.cpuFraction).isWithin(0.01f).of(1.0f)
+        assertThat(zeroTotalStats.ramFraction).isWithin(0.01f).of(0f)
     }
 }

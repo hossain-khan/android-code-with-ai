@@ -2,9 +2,8 @@ package dev.hossain.codematex.system
 
 import android.content.Context
 import android.content.ContextWrapper
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.util.DeviceMemory
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DeviceMemoryProviderImplTest {
@@ -25,8 +24,8 @@ class DeviceMemoryProviderImplTest {
 
         val stats = provider.getMemoryStats()
 
-        assertEquals(expectedStats, stats)
-        assertEquals(fakeContext, providerContext)
+        assertThat(stats).isEqualTo(expectedStats)
+        assertThat(providerContext).isSameInstanceAs(fakeContext)
     }
 
     @Test
@@ -44,7 +43,7 @@ class DeviceMemoryProviderImplTest {
 
         val ticks = provider.getProcessCpuTicks()
 
-        assertEquals(42L, ticks)
-        assertTrue(called)
+        assertThat(ticks).isEqualTo(42L)
+        assertThat(called).isTrue()
     }
 }

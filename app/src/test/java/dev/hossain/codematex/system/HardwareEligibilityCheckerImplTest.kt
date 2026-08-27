@@ -1,8 +1,6 @@
 package dev.hossain.codematex.system
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class HardwareEligibilityCheckerImplTest {
@@ -20,7 +18,7 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility()
 
-        assertEquals(HardwareEligibility.Eligible, result)
+        assertThat(result).isEqualTo(HardwareEligibility.Eligible)
     }
 
     @Test
@@ -35,7 +33,7 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility()
 
-        assertEquals(HardwareEligibility.Eligible, result)
+        assertThat(result).isEqualTo(HardwareEligibility.Eligible)
     }
 
     @Test
@@ -50,9 +48,9 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility() as HardwareEligibility.Ineligible
 
-        assertTrue(result.reason.contains("64-bit"))
-        assertFalse(result.is64BitSupported)
-        assertEquals(8.0, result.detectedRamGb, 0.01)
+        assertThat(result.reason).contains("64-bit")
+        assertThat(result.is64BitSupported).isFalse()
+        assertThat(result.detectedRamGb).isWithin(0.01).of(8.0)
     }
 
     @Test
@@ -67,10 +65,10 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility() as HardwareEligibility.Ineligible
 
-        assertTrue(result.reason.contains("RAM"))
-        assertTrue(result.is64BitSupported)
-        assertEquals(6.0, result.detectedRamGb, 0.01)
-        assertEquals(7.2, result.minRequiredRamGb, 0.01)
+        assertThat(result.reason).contains("RAM")
+        assertThat(result.is64BitSupported).isTrue()
+        assertThat(result.detectedRamGb).isWithin(0.01).of(6.0)
+        assertThat(result.minRequiredRamGb).isWithin(0.01).of(7.2)
     }
 
     @Test
@@ -85,7 +83,7 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility()
 
-        assertEquals(HardwareEligibility.Eligible, result)
+        assertThat(result).isEqualTo(HardwareEligibility.Eligible)
     }
 
     @Test
@@ -100,6 +98,6 @@ class HardwareEligibilityCheckerImplTest {
 
         val result = checker.checkEligibility()
 
-        assertTrue(result is HardwareEligibility.Ineligible)
+        assertThat(result).isInstanceOf(HardwareEligibility.Ineligible::class.java)
     }
 }

@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -14,7 +15,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -44,8 +44,8 @@ class UserPreferencesStoreImplTest {
     @Test
     fun `given uninitialized store - getSelectedPersona returns default senior engineer`() =
         runTest(testDispatcher) {
-            assertEquals(TutorPersona.SENIOR_ENGINEER, store.getSelectedPersona())
-            assertEquals(TutorPersona.SENIOR_ENGINEER, store.selectedPersonaFlow.first())
+            assertThat(store.getSelectedPersona()).isEqualTo(TutorPersona.SENIOR_ENGINEER)
+            assertThat(store.selectedPersonaFlow.first()).isEqualTo(TutorPersona.SENIOR_ENGINEER)
         }
 
     @Test
@@ -53,8 +53,8 @@ class UserPreferencesStoreImplTest {
         runTest(testDispatcher) {
             store.setSelectedPersona(TutorPersona.BEGINNER_FRIENDLY)
 
-            assertEquals(TutorPersona.BEGINNER_FRIENDLY, store.getSelectedPersona())
-            assertEquals(TutorPersona.BEGINNER_FRIENDLY, store.selectedPersonaFlow.first())
+            assertThat(store.getSelectedPersona()).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
+            assertThat(store.selectedPersonaFlow.first()).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
         }
 
     @Test
@@ -64,8 +64,8 @@ class UserPreferencesStoreImplTest {
                 prefs[stringPreferencesKey("selected_tutor_persona")] = "INVALID_UNKNOWN_PERSONA"
             }
 
-            assertEquals(TutorPersona.SENIOR_ENGINEER, store.getSelectedPersona())
-            assertEquals(TutorPersona.SENIOR_ENGINEER, store.selectedPersonaFlow.first())
+            assertThat(store.getSelectedPersona()).isEqualTo(TutorPersona.SENIOR_ENGINEER)
+            assertThat(store.selectedPersonaFlow.first()).isEqualTo(TutorPersona.SENIOR_ENGINEER)
         }
 
     @Test
@@ -82,14 +82,12 @@ class UserPreferencesStoreImplTest {
 
             job.join()
 
-            assertEquals(
-                listOf(
+            assertThat(collected)
+                .containsExactly(
                     TutorPersona.SENIOR_ENGINEER,
                     TutorPersona.BEGINNER_FRIENDLY,
                     TutorPersona.INTERVIEW_COACH,
-                ),
-                collected,
-            )
+                ).inOrder()
         }
 
     @Test(expected = java.io.IOException::class)

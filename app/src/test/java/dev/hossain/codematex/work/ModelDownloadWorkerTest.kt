@@ -1,10 +1,8 @@
 package dev.hossain.codematex.work
 
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 import androidx.work.ListenableWorker.Result as WorkResult
@@ -33,10 +31,9 @@ class ModelDownloadWorkerTest {
                     onProgress = { progress += it },
                 )
 
-            assertEquals(WorkResult.success(), result)
-            assertEquals(
-                listOf(FakeModelDownloader.DownloadCall("https://example.com/model.bin", "/models/model.bin")),
-                fakeDownloader.downloads,
+            assertThat(result).isEqualTo(WorkResult.success())
+            assertThat(fakeDownloader.downloads).containsExactly(
+                FakeModelDownloader.DownloadCall("https://example.com/model.bin", "/models/model.bin"),
             )
         }
 
@@ -67,7 +64,7 @@ class ModelDownloadWorkerTest {
                     .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "SHA-256 checksum mismatch: expected expected, calculated actual")
                     .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false)
                     .build()
-            assertEquals(WorkResult.failure(expectedErrorData), result)
+            assertThat(result).isEqualTo(WorkResult.failure(expectedErrorData))
         }
 
     @Test
@@ -91,7 +88,7 @@ class ModelDownloadWorkerTest {
                     .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "Network failure: timeout")
                     .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true)
                     .build()
-            assertEquals(WorkResult.failure(expectedErrorData), result)
+            assertThat(result).isEqualTo(WorkResult.failure(expectedErrorData))
         }
 
     @Test
@@ -109,8 +106,8 @@ class ModelDownloadWorkerTest {
                     onProgress = {},
                 )
 
-            assertTrue(result is WorkResult.Failure)
-            assertTrue(result.outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false))
+            assertThat(result).isInstanceOf(WorkResult.Failure::class.java)
+            assertThat((result as WorkResult.Failure).outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false)).isTrue()
         }
 
     @Test
@@ -128,8 +125,8 @@ class ModelDownloadWorkerTest {
                     onProgress = {},
                 )
 
-            assertTrue(result is WorkResult.Failure)
-            assertFalse(result.outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true))
+            assertThat(result).isInstanceOf(WorkResult.Failure::class.java)
+            assertThat((result as WorkResult.Failure).outputData.getBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true)).isFalse()
         }
 
     @Test
@@ -147,8 +144,8 @@ class ModelDownloadWorkerTest {
                 onProgress = { progress += it },
             )
 
-            assertEquals(listOf(0, 25, 50, 75, 100), progress)
-            assertEquals(listOf(0, 25, 50, 75, 100), fakeDownloader.progressReports)
+            assertThat(progress).containsExactly(0, 25, 50, 75, 100).inOrder()
+            assertThat(fakeDownloader.progressReports).containsExactly(0, 25, 50, 75, 100).inOrder()
         }
 
     @Test
@@ -173,14 +170,12 @@ class ModelDownloadWorkerTest {
                 },
             )
 
-            assertEquals(
-                listOf(
+            assertThat(detailedProgress)
+                .containsExactly(
                     Triple(10, 100_000_000L, 1_000_000_000L),
                     Triple(50, 500_000_000L, 1_000_000_000L),
                     Triple(100, 1_000_000_000L, 1_000_000_000L),
-                ),
-                detailedProgress,
-            )
+                ).inOrder()
         }
 
     @Test(expected = CancellationException::class)
@@ -228,10 +223,10 @@ class ModelDownloadWorkerTest {
                     outputPath = "/models/model.bin",
                     modelDownloader = fakeDownloader,
                     isStopped = { false },
-                    onProgress = { assertTrue(false) },
+                    onProgress = { assertThat(true).isFalse() },
                 )
 
-            assertEquals(WorkResult.success(), result)
+            assertThat(result).isEqualTo(WorkResult.success())
         }
 
     @Test
@@ -249,10 +244,10 @@ class ModelDownloadWorkerTest {
                     onProgress = {},
                 )
 
-            assertEquals(WorkResult.success(), result)
-            assertEquals(1, fakeDownloader.multiUrlDownloads.size)
-            assertEquals(urls, fakeDownloader.multiUrlDownloads.single().urls)
-            assertEquals("/models/model.bin", fakeDownloader.multiUrlDownloads.single().outputPath)
+            assertThat(result).isEqualTo(WorkResult.success())
+            assertThat(fakeDownloader.multiUrlDownloads).hasSize(1)
+            assertThat(fakeDownloader.multiUrlDownloads.single().urls).isEqualTo(urls)
+            assertThat(fakeDownloader.multiUrlDownloads.single().outputPath).isEqualTo("/models/model.bin")
         }
 
     @Test
@@ -272,33 +267,33 @@ class ModelDownloadWorkerTest {
                     onProgress = {},
                 )
 
-            assertEquals(WorkResult.success(), result)
-            assertEquals(expectedSha256, fakeDownloader.multiUrlDownloads.single().expectedSha256)
+            assertThat(result).isEqualTo(WorkResult.success())
+            assertThat(fakeDownloader.multiUrlDownloads.single().expectedSha256).isEqualTo(expectedSha256)
         }
 
     @Test
     fun `isRetryable returns true for network IOException`() {
-        assertTrue(ModelDownloadWorker.isRetryable(IOException("connection reset")))
+        assertThat(ModelDownloadWorker.isRetryable(IOException("connection reset"))).isTrue()
     }
 
     @Test
     fun `isRetryable returns false for ModelDownloadException permanent failures`() {
-        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.ChecksumMismatch("a", "b")))
-        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.InsufficientStorage(1, 2)))
-        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.InstallationFailure(IOException())))
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.ChecksumMismatch("a", "b"))).isFalse()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.InsufficientStorage(1, 2))).isFalse()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.InstallationFailure(IOException()))).isFalse()
     }
 
     @Test
     fun `isRetryable returns true for HTTP 5xx and false for HTTP 4xx`() {
-        assertTrue(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(500)))
-        assertTrue(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(503)))
-        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(404)))
-        assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(400)))
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(500))).isTrue()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(503))).isTrue()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(404))).isFalse()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(400))).isFalse()
     }
 
     @Test
     fun `channel constants are properly defined`() {
-        assertEquals("model_download", ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_PROGRESS)
-        assertEquals("model_download_complete", ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_COMPLETE)
+        assertThat(ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_PROGRESS).isEqualTo("model_download")
+        assertThat(ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_COMPLETE).isEqualTo("model_download_complete")
     }
 }

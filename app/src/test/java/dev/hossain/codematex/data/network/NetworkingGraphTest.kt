@@ -1,10 +1,8 @@
 package dev.hossain.codematex.data.network
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.BuildConfig
 import okhttp3.logging.HttpLoggingInterceptor
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.time.Duration.Companion.seconds
 
@@ -18,15 +16,15 @@ class NetworkingGraphTest {
     fun `provideOkHttpClient configures expected timeouts and logging level`() {
         val client = networkingGraph.provideOkHttpClient()
 
-        assertEquals(30.seconds.inWholeMilliseconds, client.connectTimeoutMillis.toLong())
-        assertEquals(30.seconds.inWholeMilliseconds, client.readTimeoutMillis.toLong())
+        assertThat(client.connectTimeoutMillis.toLong()).isEqualTo(30.seconds.inWholeMilliseconds)
+        assertThat(client.readTimeoutMillis.toLong()).isEqualTo(30.seconds.inWholeMilliseconds)
 
         val loggingInterceptor = client.interceptors.filterIsInstance<HttpLoggingInterceptor>().firstOrNull()
         if (BuildConfig.DEBUG) {
-            org.junit.Assert.assertNotNull(loggingInterceptor)
-            assertEquals(HttpLoggingInterceptor.Level.HEADERS, loggingInterceptor?.level)
+            assertThat(loggingInterceptor).isNotNull()
+            assertThat(loggingInterceptor?.level).isEqualTo(HttpLoggingInterceptor.Level.HEADERS)
         } else {
-            org.junit.Assert.assertNull(loggingInterceptor)
+            assertThat(loggingInterceptor).isNull()
         }
     }
 
@@ -34,8 +32,8 @@ class NetworkingGraphTest {
     fun `provideJson is configured to be lenient and ignore unknown keys`() {
         val json = networkingGraph.provideJson()
 
-        assertTrue(json.configuration.ignoreUnknownKeys)
-        assertTrue(json.configuration.isLenient)
+        assertThat(json.configuration.ignoreUnknownKeys).isTrue()
+        assertThat(json.configuration.isLenient).isTrue()
     }
 
     @Test
@@ -45,8 +43,8 @@ class NetworkingGraphTest {
 
         val retrofit = networkingGraph.provideRetrofit(client, json)
 
-        assertEquals("https://example.com/", retrofit.baseUrl().toString())
-        assertEquals(client, retrofit.callFactory())
-        assertTrue(retrofit.converterFactories().isNotEmpty())
+        assertThat(retrofit.baseUrl().toString()).isEqualTo("https://example.com/")
+        assertThat(retrofit.callFactory()).isEqualTo(client)
+        assertThat(retrofit.converterFactories()).isNotEmpty()
     }
 }

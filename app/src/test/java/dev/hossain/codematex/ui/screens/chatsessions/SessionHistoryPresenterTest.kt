@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
+import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
@@ -7,8 +8,6 @@ import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -35,22 +34,22 @@ class SessionHistoryPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertEquals(3, state.allSessions.size)
-                assertEquals(3, state.sessions.size)
-                assertEquals(listOf(CodingTopic.KOTLIN, CodingTopic.ANDROID), state.availableTopics)
-                assertNull(state.selectedTopic)
+                assertThat(state.allSessions).hasSize(3)
+                assertThat(state.sessions).hasSize(3)
+                assertThat(state.availableTopics).containsExactly(CodingTopic.KOTLIN, CodingTopic.ANDROID).inOrder()
+                assertThat(state.selectedTopic).isNull()
 
                 // Select Kotlin filter
                 state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.KOTLIN))
                 val filteredState = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertEquals(CodingTopic.KOTLIN, filteredState.selectedTopic)
-                assertEquals(2, filteredState.sessions.size)
+                assertThat(filteredState.selectedTopic).isEqualTo(CodingTopic.KOTLIN)
+                assertThat(filteredState.sessions).hasSize(2)
 
                 // Toggle Kotlin filter off
                 filteredState.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.KOTLIN))
                 val allState = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertNull(allState.selectedTopic)
-                assertEquals(3, allState.sessions.size)
+                assertThat(allState.selectedTopic).isNull()
+                assertThat(allState.sessions).hasSize(3)
             }
         }
 
@@ -70,9 +69,8 @@ class SessionHistoryPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 state.eventSink(SessionHistoryScreen.Event.OpenSession("s1"))
-                assertEquals(
+                assertThat(navigator.awaitNextScreen()).isEqualTo(
                     ChatScreen(topic = CodingTopic.KOTLIN, sessionId = "s1"),
-                    navigator.awaitNextScreen(),
                 )
             }
         }
@@ -115,15 +113,15 @@ class SessionHistoryPresenterTest {
 
             presenter.test {
                 val errorState = expectMostRecentItem() as SessionHistoryScreen.State.Error
-                assertEquals("Database read failed", errorState.message)
+                assertThat(errorState.message).isEqualTo("Database read failed")
 
                 // Clear error and retry
                 fakeRepo.getException = null
                 errorState.eventSink(SessionHistoryScreen.Event.Retry)
 
                 val successState = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertEquals(1, successState.allSessions.size)
-                assertEquals("s1", successState.allSessions.first().id)
+                assertThat(successState.allSessions).hasSize(1)
+                assertThat(successState.allSessions.first().id).isEqualTo("s1")
             }
         }
 
@@ -145,13 +143,13 @@ class SessionHistoryPresenterTest {
                 // Select topic that exists
                 state.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.KOTLIN))
                 val filteredState = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertEquals(CodingTopic.KOTLIN, filteredState.selectedTopic)
+                assertThat(filteredState.selectedTopic).isEqualTo(CodingTopic.KOTLIN)
 
                 // Select topic that does not exist in sessions
                 filteredState.eventSink(SessionHistoryScreen.Event.SelectTopicFilter(CodingTopic.RUST))
                 val resetFilterState = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                assertNull(resetFilterState.selectedTopic)
-                assertEquals(1, resetFilterState.sessions.size)
+                assertThat(resetFilterState.selectedTopic).isNull()
+                assertThat(resetFilterState.sessions).hasSize(1)
             }
         }
 }

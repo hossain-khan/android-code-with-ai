@@ -4,8 +4,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import com.google.common.truth.Truth.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,8 +36,8 @@ class SessionDatabaseMigrationTest {
         helper.runMigrationsAndValidate(TEST_DB_NAME, 2, true, SessionDatabase.MIGRATION_1_2).use { db ->
             val cursor = db.query("SELECT messageId FROM messages")
             cursor.use {
-                assertTrue(cursor.moveToFirst())
-                assertEquals("", cursor.getString(0))
+                assertThat(cursor.moveToFirst()).isTrue()
+                assertThat(cursor.getString(0)).isEqualTo("")
             }
         }
     }
@@ -66,17 +65,17 @@ class SessionDatabaseMigrationTest {
 
         helper.runMigrationsAndValidate(TEST_DB_NAME, 3, true, SessionDatabase.MIGRATION_2_3).use { db ->
             db.query("SELECT topic FROM sessions ORDER BY id").use { cursor ->
-                assertTrue(cursor.moveToFirst())
-                assertEquals("kotlin", cursor.getString(0))
-                assertTrue(cursor.moveToNext())
-                assertEquals("unknown", cursor.getString(0))
+                assertThat(cursor.moveToFirst()).isTrue()
+                assertThat(cursor.getString(0)).isEqualTo("kotlin")
+                assertThat(cursor.moveToNext()).isTrue()
+                assertThat(cursor.getString(0)).isEqualTo("unknown")
             }
 
             db.query("SELECT type FROM messages ORDER BY messageId").use { cursor ->
-                assertTrue(cursor.moveToFirst())
-                assertEquals("user", cursor.getString(0))
-                assertTrue(cursor.moveToNext())
-                assertEquals("unknown", cursor.getString(0))
+                assertThat(cursor.moveToFirst()).isTrue()
+                assertThat(cursor.getString(0)).isEqualTo("user")
+                assertThat(cursor.moveToNext()).isTrue()
+                assertThat(cursor.getString(0)).isEqualTo("unknown")
             }
         }
     }
@@ -103,13 +102,13 @@ class SessionDatabaseMigrationTest {
                 SessionDatabase.MIGRATION_2_3,
             ).use { db ->
                 db.query("SELECT topic FROM sessions").use { cursor ->
-                    assertTrue(cursor.moveToFirst())
-                    assertEquals("python", cursor.getString(0))
+                    assertThat(cursor.moveToFirst()).isTrue()
+                    assertThat(cursor.getString(0)).isEqualTo("python")
                 }
                 db.query("SELECT messageId, type FROM messages").use { cursor ->
-                    assertTrue(cursor.moveToFirst())
-                    assertEquals("", cursor.getString(0))
-                    assertEquals("agent", cursor.getString(1))
+                    assertThat(cursor.moveToFirst()).isTrue()
+                    assertThat(cursor.getString(0)).isEqualTo("")
+                    assertThat(cursor.getString(1)).isEqualTo("agent")
                 }
             }
     }

@@ -1,6 +1,6 @@
 package dev.hossain.codematex.data.local
 
-import org.junit.Assert.assertSame
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class DatabaseGraphTest {
@@ -15,6 +15,6 @@ class DatabaseGraphTest {
 
         val dao = graph.provideSessionDao(fakeDatabase)
 
-        assertSame(fakeDao, dao)
+        assertThat(dao).isSameInstanceAs(fakeDao)
     }
 }
