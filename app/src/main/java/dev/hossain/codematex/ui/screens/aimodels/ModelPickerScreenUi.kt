@@ -909,6 +909,25 @@ private val sampleModels =
             quantization = "INT4",
             promptFormat = "CHATML",
         ),
+        AiModel(
+            id = "litert-community/Llama-3.2-1B-Instruct",
+            name = "Llama-3.2-1B-Instruct",
+            displayName = "Llama 3.2 1B Instruct",
+            description = "Ultra-lightweight model with massive 128k context window and low memory footprint.",
+            sizeBytes = 850_000_000L,
+            localPath = null,
+            preferredBackend = LlmEngine.Backend.CPU,
+            minDeviceMemoryInGb = 3,
+            downloadUrl = "https://huggingface.co/litert-community/Llama-3.2-1B-Instruct",
+            modelRepoUrl = "https://huggingface.co/litert-community/Llama-3.2-1B-Instruct",
+            license = "Llama 3.2 Community",
+            publisher = "Meta / Google LiteRT Community",
+            downloadStatus = DownloadStatus.NOT_DOWNLOADED,
+            isSelected = false,
+            contextWindow = 131072,
+            quantization = "INT4",
+            promptFormat = "LLAMA_3",
+        ),
     )
 
 @DevicePreviews

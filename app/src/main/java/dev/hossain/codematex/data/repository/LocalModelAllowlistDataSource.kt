@@ -118,5 +118,30 @@ class LocalModelAllowlistDataSource
                     promptFormat = "CHATML",
                     isGatedModel = false,
                 ),
+                ModelEntry(
+                    modelId = "litert-community/Llama-3.2-1B-Instruct",
+                    displayName = "Llama 3.2 1B Instruct",
+                    modelFile = "Llama-3.2-1B-Instruct_int4.litertlm",
+                    commitHash = "main",
+                    sizeInBytes = 850_000_000L,
+                    taskTypes = listOf("llm_chat"),
+                    runtimeType = "LITERT_LM",
+                    minDeviceMemoryInGb = 3,
+                    publisher = "Meta / Google LiteRT Community",
+                    license = "Llama 3.2 Community",
+                    licenseUrl = "https://llama.meta.com/llama3/license/",
+                    description =
+                        "Ultra-lightweight model with massive 128k context window and low memory footprint.",
+                    downloadUrl =
+                        "https://light-llm-storage.gohk.xyz/models/litert-community/Llama-3.2-1B-Instruct/Llama-3.2-1B-Instruct_int4.litertlm",
+                    fallbackDownloadUrls =
+                        listOf(
+                            "https://huggingface.co/litert-community/Llama-3.2-1B-Instruct/resolve/main/Llama-3.2-1B-Instruct_int4.litertlm?download=true",
+                        ),
+                    contextWindow = 131072,
+                    quantization = "INT4",
+                    promptFormat = "LLAMA_3",
+                    isGatedModel = true,
+                ),
             )
     }

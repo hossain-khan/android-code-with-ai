@@ -11,7 +11,7 @@ class LocalModelAllowlistDataSourceTest {
 
         val allowlist = dataSource.loadAllowlist()
 
-        assertEquals(4, allowlist.size)
+        assertEquals(5, allowlist.size)
         assertEquals("litert-community/gemma-4-E2B-it-litert-lm", allowlist[0].modelId)
         assertEquals("gemma-4-E2B-it.litertlm", allowlist[0].modelFile)
         assertEquals(2_588_147_712L, allowlist[0].sizeInBytes)
@@ -43,5 +43,15 @@ class LocalModelAllowlistDataSourceTest {
         assertEquals("INT4", allowlist[3].quantization)
         assertEquals("CHATML", allowlist[3].promptFormat)
         assertEquals("Apache 2.0", allowlist[3].license)
+
+        assertEquals("litert-community/Llama-3.2-1B-Instruct", allowlist[4].modelId)
+        assertEquals("Llama-3.2-1B-Instruct_int4.litertlm", allowlist[4].modelFile)
+        assertEquals(850_000_000L, allowlist[4].sizeInBytes)
+        assertEquals(3, allowlist[4].minDeviceMemoryInGb)
+        assertEquals(131072, allowlist[4].contextWindow)
+        assertEquals("INT4", allowlist[4].quantization)
+        assertEquals("LLAMA_3", allowlist[4].promptFormat)
+        assertEquals("Llama 3.2 Community", allowlist[4].license)
+        assertTrue(allowlist[4].isGatedModel)
     }
 }
