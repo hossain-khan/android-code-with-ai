@@ -2,16 +2,13 @@
 
 package dev.hossain.codematex.runtime
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -35,8 +32,8 @@ class LlmEngineImplTest {
                 backend = LlmEngine.Backend.GPU,
             )
 
-            assertEquals(0, factory.createSessionRequests.size)
-            assertNull(engine.getActiveBackend())
+            assertThat(factory.createSessionRequests).isEmpty()
+            assertThat(engine.getActiveBackend()).isNull()
         }
 
     @Test
@@ -59,14 +56,14 @@ class LlmEngineImplTest {
                 config = ModelConfig(maxTokens = 128),
             )
 
-            assertEquals(1, factory.createSessionRequests.size)
+            assertThat(factory.createSessionRequests).hasSize(1)
             with(factory.createSessionRequests.single()) {
-                assertEquals("/data/model.bin", modelPath)
-                assertEquals(LlmEngine.Backend.GPU, preferredBackend)
-                assertEquals("You are a helpful assistant", systemInstruction)
-                assertEquals(128, config.maxTokens)
+                assertThat(modelPath).isEqualTo("/data/model.bin")
+                assertThat(preferredBackend).isEqualTo(LlmEngine.Backend.GPU)
+                assertThat(systemInstruction).isEqualTo("You are a helpful assistant")
+                assertThat(config.maxTokens).isEqualTo(128)
             }
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.GPU)
         }
 
     @Test
@@ -95,8 +92,8 @@ class LlmEngineImplTest {
                 config = ModelConfig(maxTokens = 256),
             )
 
-            assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(1, fakeEngine.createdConversations.size)
+            assertThat(factory.createSessionRequests).hasSize(1)
+            assertThat(fakeEngine.createdConversations).hasSize(1)
             val systemContent =
                 fakeEngine.createdConversations
                     .single()
@@ -105,7 +102,7 @@ class LlmEngineImplTest {
                     ?.contents
                     ?.first()
                     as? com.google.ai.edge.litertlm.Content.Text
-            assertEquals("Second prompt", systemContent?.text)
+            assertThat(systemContent?.text).isEqualTo("Second prompt")
         }
 
     @Test(expected = IllegalStateException::class)
@@ -140,16 +137,18 @@ class LlmEngineImplTest {
                 }
 
             val message = fakeConversation.sentMessages.single()
-            assertEquals("Hello", message.input)
+            assertThat(message.input).isEqualTo("Hello")
             message.callback.onMessage(textMessage("Hello"))
             message.callback.onMessage(textMessage(" world"))
             message.callback.onDone()
             job.join()
 
-            assertEquals(
-                listOf("Hello" to false, " world" to false, "" to true),
-                emittedTokens,
-            )
+            assertThat(emittedTokens)
+                .containsExactly(
+                    "Hello" to false,
+                    " world" to false,
+                    "" to true,
+                ).inOrder()
         }
 
     @Test
@@ -183,7 +182,7 @@ class LlmEngineImplTest {
                     try {
                         engine.runInference("Hello") { _, _ -> }
                     } catch (e: BackendFailureException) {
-                        assertEquals(LlmEngine.Backend.GPU, e.failedBackend)
+                        assertThat(e.failedBackend).isEqualTo(LlmEngine.Backend.GPU)
                     }
                 }
 
@@ -194,11 +193,11 @@ class LlmEngineImplTest {
             )
             job.join()
 
-            assertEquals(2, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
-            assertTrue("GPU engine should be closed during fallback", gpuEngine.closed)
-            assertTrue("GPU conversation should be closed during fallback", gpuConversation.closed)
-            assertEquals(LlmEngine.Backend.CPU, engine.getActiveBackend())
+            assertThat(factory.createSessionRequests).hasSize(2)
+            assertThat(factory.createSessionRequests[1].preferredBackend).isEqualTo(LlmEngine.Backend.CPU)
+            assertThat(gpuEngine.closed).isTrue()
+            assertThat(gpuConversation.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.CPU)
 
             // A second runInference call now uses the CPU session.
             val emittedTokens = mutableListOf<Pair<String, Boolean>>()
@@ -213,7 +212,7 @@ class LlmEngineImplTest {
             cpuMessage.callback.onDone()
             cpuJob.join()
 
-            assertEquals(listOf("OK" to false, "" to true), emittedTokens)
+            assertThat(emittedTokens).containsExactly("OK" to false, "" to true).inOrder()
         }
 
     @Test
@@ -247,7 +246,7 @@ class LlmEngineImplTest {
                     try {
                         engine.runInference("Hello") { _, _ -> }
                     } catch (e: BackendFailureException) {
-                        assertEquals(LlmEngine.Backend.NPU, e.failedBackend)
+                        assertThat(e.failedBackend).isEqualTo(LlmEngine.Backend.NPU)
                     }
                 }
 
@@ -260,11 +259,11 @@ class LlmEngineImplTest {
                 )
             job.join()
 
-            assertEquals(listOf(LlmEngine.Backend.NPU), factory.fallbackSessionRequests)
-            assertEquals(LlmEngine.Backend.GPU, factory.createSessionRequests[1].preferredBackend)
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
-            assertTrue("NPU engine should be closed during fallback", npuEngine.closed)
-            assertTrue("NPU conversation should be closed during fallback", npuConversation.closed)
+            assertThat(factory.fallbackSessionRequests).containsExactly(LlmEngine.Backend.NPU)
+            assertThat(factory.createSessionRequests[1].preferredBackend).isEqualTo(LlmEngine.Backend.GPU)
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.GPU)
+            assertThat(npuEngine.closed).isTrue()
+            assertThat(npuConversation.closed).isTrue()
         }
 
     @Test
@@ -298,7 +297,7 @@ class LlmEngineImplTest {
                     try {
                         engine.runInference("Hello") { _, _ -> }
                     } catch (e: BackendFailureException) {
-                        assertEquals(LlmEngine.Backend.GPU, e.failedBackend)
+                        assertThat(e.failedBackend).isEqualTo(LlmEngine.Backend.GPU)
                     }
                 }
 
@@ -311,9 +310,9 @@ class LlmEngineImplTest {
                 )
             job.join()
 
-            assertTrue("GPU engine should be closed", gpuEngine.closed)
-            assertTrue("GPU conversation should be closed", gpuConversation.closed)
-            assertEquals(LlmEngine.Backend.CPU, engine.getActiveBackend())
+            assertThat(gpuEngine.closed).isTrue()
+            assertThat(gpuConversation.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.CPU)
         }
 
     @Test
@@ -338,7 +337,7 @@ class LlmEngineImplTest {
                     try {
                         engine.runInference("Hello") { _, _ -> }
                     } catch (e: BackendFailureException) {
-                        assertEquals(LlmEngine.Backend.CPU, e.failedBackend)
+                        assertThat(e.failedBackend).isEqualTo(LlmEngine.Backend.CPU)
                     }
                 }
 
@@ -351,7 +350,7 @@ class LlmEngineImplTest {
                 )
             job.join()
 
-            assertEquals(1, factory.createSessionRequests.size)
+            assertThat(factory.createSessionRequests).hasSize(1)
         }
 
     @Test
@@ -376,7 +375,7 @@ class LlmEngineImplTest {
                     try {
                         engine.runInference("Hello") { _, _ -> }
                     } catch (e: RuntimeException) {
-                        assertEquals("Programming error", e.message)
+                        assertThat(e.message).isEqualTo("Programming error")
                     }
                 }
 
@@ -386,8 +385,8 @@ class LlmEngineImplTest {
                 .onError(RuntimeException("Programming error"))
             job.join()
 
-            assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
+            assertThat(factory.createSessionRequests).hasSize(1)
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.GPU)
         }
 
     @Test
@@ -420,9 +419,9 @@ class LlmEngineImplTest {
             gpuMessage.callback.onError(java.util.concurrent.CancellationException("Task cancelled"))
             job.join()
 
-            assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.GPU, engine.getActiveBackend())
-            assertEquals(listOf("Hello" to false, "" to true), emittedTokens)
+            assertThat(factory.createSessionRequests).hasSize(1)
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.GPU)
+            assertThat(emittedTokens).containsExactly("Hello" to false, "" to true).inOrder()
         }
 
     @Test
@@ -459,9 +458,9 @@ class LlmEngineImplTest {
                 .onError(error)
             job.join()
 
-            assertNotNull(caughtError)
-            assertEquals(error.message, caughtError?.message)
-            assertEquals(1, factory.createSessionRequests.size)
+            assertThat(caughtError).isNotNull()
+            assertThat(caughtError?.message).isEqualTo(error.message)
+            assertThat(factory.createSessionRequests).hasSize(1)
         }
 
     @Test
@@ -483,7 +482,7 @@ class LlmEngineImplTest {
 
             engine.stop()
 
-            assertTrue(fakeConversation.cancelled)
+            assertThat(fakeConversation.cancelled).isTrue()
         }
 
     @Test
@@ -508,8 +507,8 @@ class LlmEngineImplTest {
                 config = ModelConfig(temperature = 0.5f, topK = 20, topP = 0.9f),
             )
 
-            assertTrue(fakeConversation.closed)
-            assertEquals(1, fakeEngine.createdConversations.size)
+            assertThat(fakeConversation.closed).isTrue()
+            assertThat(fakeEngine.createdConversations).hasSize(1)
             val newConversation = fakeEngine.createdConversations.single()
             val newSystemContent =
                 newConversation.config
@@ -517,10 +516,10 @@ class LlmEngineImplTest {
                     ?.contents
                     ?.first()
                     as? com.google.ai.edge.litertlm.Content.Text
-            assertEquals("New system prompt", newSystemContent?.text)
-            assertEquals(0.5, newConversation.config?.samplerConfig?.temperature ?: 0.0, 0.001)
-            assertEquals(20, newConversation.config?.samplerConfig?.topK)
-            assertEquals(0.9, newConversation.config?.samplerConfig?.topP ?: 0.0, 0.001)
+            assertThat(newSystemContent?.text).isEqualTo("New system prompt")
+            assertThat(newConversation.config?.samplerConfig?.temperature ?: 0.0).isWithin(0.001).of(0.5)
+            assertThat(newConversation.config?.samplerConfig?.topK).isEqualTo(20)
+            assertThat(newConversation.config?.samplerConfig?.topP ?: 0.0).isWithin(0.001).of(0.9)
         }
 
     @Test
@@ -551,8 +550,8 @@ class LlmEngineImplTest {
                 }
 
             val message = fakeConversation.sentMessages.single()
-            assertTrue(message.input.contains("Hello"))
-            assertTrue(message.input.contains("Hi there"))
+            assertThat(message.input).contains("Hello")
+            assertThat(message.input).contains("Hi there")
             message.callback.onDone()
             job.join()
         }
@@ -594,12 +593,15 @@ class LlmEngineImplTest {
             val user2Index = message.input.indexOf("User: User2")
             val agent2Index = message.input.indexOf("Assistant: Agent2")
 
-            assertTrue("Expected prompt to contain all turns", user1Index >= 0 && agent1Index >= 0 && user2Index >= 0 && agent2Index >= 0)
-            assertTrue("User1 should come before Agent1", user1Index < agent1Index)
-            assertTrue("Agent1 should come before User2", agent1Index < user2Index)
-            assertTrue("User2 should come before Agent2", user2Index < agent2Index)
-            assertEquals(-1, message.input.indexOf("System"))
-            assertEquals(-1, message.input.indexOf("Error"))
+            assertThat(user1Index).isAtLeast(0)
+            assertThat(agent1Index).isAtLeast(0)
+            assertThat(user2Index).isAtLeast(0)
+            assertThat(agent2Index).isAtLeast(0)
+            assertThat(user1Index).isLessThan(agent1Index)
+            assertThat(agent1Index).isLessThan(user2Index)
+            assertThat(user2Index).isLessThan(agent2Index)
+            assertThat(message.input).doesNotContain("System")
+            assertThat(message.input).doesNotContain("Error")
 
             message.callback.onDone()
             job.join()
@@ -644,17 +646,17 @@ class LlmEngineImplTest {
                     com.google.ai.edge.litertlm
                         .LiteRtLmJniException("GPU failed"),
                 )
-            assertEquals(1, cpuConversation.sentMessages.size)
+            assertThat(cpuConversation.sentMessages).hasSize(1)
             cpuConversation.sentMessages
                 .single()
                 .callback
                 .onDone()
             job.join()
 
-            assertEquals(2, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.CPU, factory.createSessionRequests[1].preferredBackend)
-            assertTrue("GPU engine should be closed during history fallback", gpuEngine.closed)
-            assertTrue("GPU conversation should be closed during history fallback", gpuConversation.closed)
+            assertThat(factory.createSessionRequests).hasSize(2)
+            assertThat(factory.createSessionRequests[1].preferredBackend).isEqualTo(LlmEngine.Backend.CPU)
+            assertThat(gpuEngine.closed).isTrue()
+            assertThat(gpuConversation.closed).isTrue()
         }
 
     @Test
@@ -686,11 +688,11 @@ class LlmEngineImplTest {
             // Native code can still report a late terminal callback while unwinding.
             callback.onDone()
 
-            assertTrue(job.isCancelled)
-            assertTrue(fakeConversation.cancelled)
-            assertTrue(factory.fallbackSessionRequests.isEmpty())
-            assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.NPU, engine.getActiveBackend())
+            assertThat(job.isCancelled).isTrue()
+            assertThat(fakeConversation.cancelled).isTrue()
+            assertThat(factory.fallbackSessionRequests).isEmpty()
+            assertThat(factory.createSessionRequests).hasSize(1)
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.NPU)
         }
 
     @Test
@@ -727,11 +729,11 @@ class LlmEngineImplTest {
                 .onError(expectedError)
             job.join()
 
-            assertTrue(caughtError is IllegalStateException)
-            assertEquals(expectedError.message, caughtError?.message)
-            assertTrue(factory.fallbackSessionRequests.isEmpty())
-            assertEquals(1, factory.createSessionRequests.size)
-            assertEquals(LlmEngine.Backend.NPU, engine.getActiveBackend())
+            assertThat(caughtError).isInstanceOf(IllegalStateException::class.java)
+            assertThat(caughtError?.message).isEqualTo(expectedError.message)
+            assertThat(factory.fallbackSessionRequests).isEmpty()
+            assertThat(factory.createSessionRequests).hasSize(1)
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.NPU)
         }
 
     @Test
@@ -770,10 +772,10 @@ class LlmEngineImplTest {
                 )
             job.join()
 
-            assertTrue(caughtError is BackendFailureException)
-            assertEquals(LlmEngine.Backend.CPU, (caughtError as BackendFailureException).failedBackend)
-            assertTrue(factory.fallbackSessionRequests.isEmpty())
-            assertEquals(1, factory.createSessionRequests.size)
+            assertThat(caughtError).isInstanceOf(BackendFailureException::class.java)
+            assertThat((caughtError as BackendFailureException).failedBackend).isEqualTo(LlmEngine.Backend.CPU)
+            assertThat(factory.fallbackSessionRequests).isEmpty()
+            assertThat(factory.createSessionRequests).hasSize(1)
         }
 
     @Test
@@ -781,7 +783,7 @@ class LlmEngineImplTest {
         runEngineTest {
             engine.restoreHistory(listOf(ChatMessage.User("Hello")))
 
-            assertEquals(0, factory.createSessionRequests.size)
+            assertThat(factory.createSessionRequests).isEmpty()
         }
 
     @Test
@@ -803,9 +805,9 @@ class LlmEngineImplTest {
 
             engine.cleanup()
 
-            assertTrue(fakeConversation.closed)
-            assertTrue(fakeEngine.closed)
-            assertNull(engine.getActiveBackend())
+            assertThat(fakeConversation.closed).isTrue()
+            assertThat(fakeEngine.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isNull()
         }
 
     @Test
@@ -839,7 +841,7 @@ class LlmEngineImplTest {
             message.callback.onDone()
             job.join()
 
-            assertEquals(listOf("" to true), emittedTokens)
+            assertThat(emittedTokens).containsExactly("" to true)
         }
 
     @Test
@@ -878,8 +880,8 @@ class LlmEngineImplTest {
                 .onDone()
             job.join()
 
-            assertTrue(completed)
-            assertEquals(1, terminalCalls)
+            assertThat(completed).isTrue()
+            assertThat(terminalCalls).isEqualTo(1)
         }
 
     @Test
@@ -915,7 +917,12 @@ class LlmEngineImplTest {
             message.callback.onDone()
             job.join()
 
-            assertEquals(listOf("before" to false, "after" to false, "" to true), emittedTokens)
+            assertThat(emittedTokens)
+                .containsExactly(
+                    "before" to false,
+                    "after" to false,
+                    "" to true,
+                ).inOrder()
         }
 
     @Test
@@ -948,7 +955,7 @@ class LlmEngineImplTest {
             message.callback.onDone()
             message.callback.onError(RuntimeException("Late error"))
 
-            assertTrue(fakeConversation.cancelled)
+            assertThat(fakeConversation.cancelled).isTrue()
         }
 
     @Test
@@ -987,9 +994,9 @@ class LlmEngineImplTest {
                 )
             job.join()
 
-            assertTrue("GPU engine should be closed when fallback fails", gpuEngine.closed)
-            assertTrue("GPU conversation should be closed when fallback fails", gpuConversation.closed)
-            assertNull(engine.getActiveBackend())
+            assertThat(gpuEngine.closed).isTrue()
+            assertThat(gpuConversation.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isNull()
         }
 
     @Test
@@ -1018,13 +1025,13 @@ class LlmEngineImplTest {
                 }
 
             // The active chat conversation should not receive the isolated prompt.
-            assertEquals(0, fakeConversation.sentMessages.size)
+            assertThat(fakeConversation.sentMessages).isEmpty()
 
             // A new conversation should have been created from the same engine.
-            assertEquals(1, fakeEngine.createdConversations.size)
+            assertThat(fakeEngine.createdConversations).hasSize(1)
             val isolatedConversation = fakeEngine.createdConversations.single()
-            assertEquals(1, isolatedConversation.sentMessages.size)
-            assertEquals("Summary prompt", isolatedConversation.sentMessages.single().input)
+            assertThat(isolatedConversation.sentMessages).hasSize(1)
+            assertThat(isolatedConversation.sentMessages.single().input).isEqualTo("Summary prompt")
 
             isolatedConversation.sentMessages
                 .single()
@@ -1036,7 +1043,7 @@ class LlmEngineImplTest {
                 .onDone()
             job.join()
 
-            assertEquals(listOf("Short" to false, "" to true), emittedTokens)
+            assertThat(emittedTokens).containsExactly("Short" to false, "" to true).inOrder()
         }
 
     @Test
@@ -1068,8 +1075,8 @@ class LlmEngineImplTest {
                 .onDone()
             job.join()
 
-            assertTrue("Isolated conversation should be closed", isolatedConversation.closed)
-            assertEquals("Active chat conversation should not be closed", false, fakeConversation.closed)
+            assertThat(isolatedConversation.closed).isTrue()
+            assertThat(fakeConversation.closed).isFalse()
         }
 
     @Test
@@ -1105,8 +1112,8 @@ class LlmEngineImplTest {
                 .onError(RuntimeException("Summary failed"))
             job.join()
 
-            assertTrue("Isolated conversation should be closed on error", isolatedConversation.closed)
-            assertEquals("Active chat conversation should not be closed", false, fakeConversation.closed)
+            assertThat(isolatedConversation.closed).isTrue()
+            assertThat(fakeConversation.closed).isFalse()
         }
 
     private fun textMessage(text: String): com.google.ai.edge.litertlm.Message {

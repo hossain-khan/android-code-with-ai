@@ -1,10 +1,9 @@
 package dev.hossain.codematex.util
 
-import org.junit.Assert.assertEquals
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -13,54 +12,54 @@ class TimeFormatterTest {
 
     @Test
     fun `formatRelativeTime returns empty string for zero or negative timestamps`() {
-        assertEquals("", formatRelativeTime(0L, now))
-        assertEquals("", formatRelativeTime(-100L, now))
+        assertThat(formatRelativeTime(0L, now)).isEmpty()
+        assertThat(formatRelativeTime(-100L, now)).isEmpty()
     }
 
     @Test
     fun `formatRelativeTime returns Just now for future or very recent timestamps`() {
-        assertEquals("Just now", formatRelativeTime(now + 10.seconds.inWholeMilliseconds, now))
-        assertEquals("Just now", formatRelativeTime(now - 30.seconds.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now + 10.seconds.inWholeMilliseconds, now)).isEqualTo("Just now")
+        assertThat(formatRelativeTime(now - 30.seconds.inWholeMilliseconds, now)).isEqualTo("Just now")
     }
 
     @Test
     fun `formatRelativeTime returns minutes ago for elapsed under one hour`() {
-        assertEquals("1m ago", formatRelativeTime(now - 1.minutes.inWholeMilliseconds, now))
-        assertEquals("5m ago", formatRelativeTime(now - 5.minutes.inWholeMilliseconds, now))
-        assertEquals("59m ago", formatRelativeTime(now - 59.minutes.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now - 1.minutes.inWholeMilliseconds, now)).isEqualTo("1m ago")
+        assertThat(formatRelativeTime(now - 5.minutes.inWholeMilliseconds, now)).isEqualTo("5m ago")
+        assertThat(formatRelativeTime(now - 59.minutes.inWholeMilliseconds, now)).isEqualTo("59m ago")
     }
 
     @Test
     fun `formatRelativeTime returns hours ago for elapsed under one day`() {
-        assertEquals("1h ago", formatRelativeTime(now - 1.hours.inWholeMilliseconds, now))
-        assertEquals("14h ago", formatRelativeTime(now - 14.hours.inWholeMilliseconds, now))
-        assertEquals("23h ago", formatRelativeTime(now - 23.hours.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now - 1.hours.inWholeMilliseconds, now)).isEqualTo("1h ago")
+        assertThat(formatRelativeTime(now - 14.hours.inWholeMilliseconds, now)).isEqualTo("14h ago")
+        assertThat(formatRelativeTime(now - 23.hours.inWholeMilliseconds, now)).isEqualTo("23h ago")
     }
 
     @Test
     fun `formatRelativeTime returns days ago for elapsed under seven days`() {
-        assertEquals("1d ago", formatRelativeTime(now - 1.days.inWholeMilliseconds, now))
-        assertEquals("2d ago", formatRelativeTime(now - 2.days.inWholeMilliseconds, now))
-        assertEquals("6d ago", formatRelativeTime(now - 6.days.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now - 1.days.inWholeMilliseconds, now)).isEqualTo("1d ago")
+        assertThat(formatRelativeTime(now - 2.days.inWholeMilliseconds, now)).isEqualTo("2d ago")
+        assertThat(formatRelativeTime(now - 6.days.inWholeMilliseconds, now)).isEqualTo("6d ago")
     }
 
     @Test
     fun `formatRelativeTime returns weeks ago for elapsed under thirty days`() {
-        assertEquals("1w ago", formatRelativeTime(now - 7.days.inWholeMilliseconds, now))
-        assertEquals("3w ago", formatRelativeTime(now - 21.days.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now - 7.days.inWholeMilliseconds, now)).isEqualTo("1w ago")
+        assertThat(formatRelativeTime(now - 21.days.inWholeMilliseconds, now)).isEqualTo("3w ago")
     }
 
     @Test
     fun `formatRelativeTime returns months and years for longer elapsed durations`() {
-        assertEquals("1mo ago", formatRelativeTime(now - 30.days.inWholeMilliseconds, now))
-        assertEquals("6mo ago", formatRelativeTime(now - 180.days.inWholeMilliseconds, now))
-        assertEquals("1y ago", formatRelativeTime(now - 365.days.inWholeMilliseconds, now))
-        assertEquals("2y ago", formatRelativeTime(now - 730.days.inWholeMilliseconds, now))
+        assertThat(formatRelativeTime(now - 30.days.inWholeMilliseconds, now)).isEqualTo("1mo ago")
+        assertThat(formatRelativeTime(now - 180.days.inWholeMilliseconds, now)).isEqualTo("6mo ago")
+        assertThat(formatRelativeTime(now - 365.days.inWholeMilliseconds, now)).isEqualTo("1y ago")
+        assertThat(formatRelativeTime(now - 730.days.inWholeMilliseconds, now)).isEqualTo("2y ago")
     }
 
     @Test
     fun `formatRelativeTime handles compound durations correctly`() {
         val compoundPast = now - (1.days + 3.hours + 30.minutes).inWholeMilliseconds
-        assertEquals("1d ago", formatRelativeTime(compoundPast, now))
+        assertThat(formatRelativeTime(compoundPast, now)).isEqualTo("1d ago")
     }
 }

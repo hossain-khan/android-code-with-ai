@@ -1,9 +1,9 @@
 package dev.hossain.codematex.data.repository
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -14,8 +14,8 @@ class ModelConfigStoreTest {
 
     @Test
     fun `given default state - config returns default model config`() {
-        assertEquals(ModelConfig(), store.config)
-        assertEquals(ModelConfig(), store.configFlow.value)
+        assertThat(store.config).isEqualTo(ModelConfig())
+        assertThat(store.configFlow.value).isEqualTo(ModelConfig())
     }
 
     @Test
@@ -25,7 +25,7 @@ class ModelConfigStoreTest {
 
             store.updateConfig(newConfig)
 
-            assertEquals(newConfig, store.config)
-            assertEquals(newConfig, store.configFlow.first())
+            assertThat(store.config).isEqualTo(newConfig)
+            assertThat(store.configFlow.first()).isEqualTo(newConfig)
         }
 }

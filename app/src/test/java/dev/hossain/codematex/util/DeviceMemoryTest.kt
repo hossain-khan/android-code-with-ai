@@ -1,10 +1,8 @@
 package dev.hossain.codematex.util
 
 import android.app.ActivityManager
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.system.MemoryCompatibilityPolicy
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -23,13 +21,13 @@ class DeviceMemoryTest {
                 memoryInfo.totalMem = 8L * MemoryCompatibilityPolicy.BYTES_PER_GB
             }
 
-        assertEquals(8L * MemoryCompatibilityPolicy.BYTES_PER_GB, bytes)
+        assertThat(bytes).isEqualTo(8L * MemoryCompatibilityPolicy.BYTES_PER_GB)
     }
 
     @Test
     fun `given any platform - get process cpu ticks never returns negative value`() {
         // On platforms without /proc (e.g. macOS dev machines) this falls back to 0.
-        assertTrue(DeviceMemory.getProcessCpuTicks() >= 0L)
+        assertThat(DeviceMemory.getProcessCpuTicks()).isAtLeast(0L)
     }
 
     @Test
@@ -40,8 +38,8 @@ class DeviceMemoryTest {
                 memoryInfo.availMem = 12L * MemoryCompatibilityPolicy.BYTES_PER_GB
             }
 
-        assertEquals(16.0f, stats.totalGb, 0.001f)
-        assertEquals(4.0f, stats.usedGb, 0.001f)
+        assertThat(stats.totalGb).isWithin(0.001f).of(16.0f)
+        assertThat(stats.usedGb).isWithin(0.001f).of(4.0f)
     }
 
     @Test
@@ -58,14 +56,14 @@ class DeviceMemoryTest {
 
         val ticks = DeviceMemory.getProcessCpuTicks(statFile.absolutePath)
 
-        assertEquals(300L, ticks)
+        assertThat(ticks).isEqualTo(300L)
     }
 
     @Test
     fun `getProcessCpuTicks returns zero when stat file is missing`() {
         val ticks = DeviceMemory.getProcessCpuTicks("/nonexistent/path/to/stat")
 
-        assertEquals(0L, ticks)
+        assertThat(ticks).isEqualTo(0L)
     }
 
     @Test
@@ -75,6 +73,6 @@ class DeviceMemoryTest {
 
         val ticks = DeviceMemory.getProcessCpuTicks(statFile.absolutePath)
 
-        assertEquals(0L, ticks)
+        assertThat(ticks).isEqualTo(0L)
     }
 }

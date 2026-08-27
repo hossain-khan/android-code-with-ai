@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data.repository
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.local.FakeSessionDao
 import dev.hossain.codematex.data.local.MessageEntity
 import dev.hossain.codematex.data.local.SessionEntity
@@ -8,10 +9,6 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.domain.summary.FakeSessionSummaryGenerator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -61,14 +58,14 @@ class ChatSessionRepositoryImplTest {
             val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             val sessions = repository.getAllSessions().first()
-            assertEquals(1, sessions.size)
-            assertEquals("s1", sessions[0].id)
-            assertEquals(CodingTopic.PYTHON, sessions[0].topic)
-            assertEquals("Kotlin session", sessions[0].title)
-            assertEquals("A session about Kotlin", sessions[0].summary)
-            assertEquals(2, sessions[0].messageCount)
-            assertEquals(1_000L, sessions[0].lastActiveAt)
-            assertEquals("gemma-2-2b-it", sessions[0].modelUsed)
+            assertThat(sessions).hasSize(1)
+            assertThat(sessions[0].id).isEqualTo("s1")
+            assertThat(sessions[0].topic).isEqualTo(CodingTopic.PYTHON)
+            assertThat(sessions[0].title).isEqualTo("Kotlin session")
+            assertThat(sessions[0].summary).isEqualTo("A session about Kotlin")
+            assertThat(sessions[0].messageCount).isEqualTo(2)
+            assertThat(sessions[0].lastActiveAt).isEqualTo(1_000L)
+            assertThat(sessions[0].modelUsed).isEqualTo("gemma-2-2b-it")
         }
 
     @Test
@@ -80,7 +77,7 @@ class ChatSessionRepositoryImplTest {
                 )
             val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
-            assertEquals("s2", repository.getSession("s2")?.id)
+            assertThat(repository.getSession("s2")?.id).isEqualTo("s2")
         }
 
     @Test
@@ -89,7 +86,7 @@ class ChatSessionRepositoryImplTest {
             val dao = FakeSessionDao(sessions = listOf(testSessionEntity(id = "s1")))
             val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
-            assertNull(repository.getSession("unknown"))
+            assertThat(repository.getSession("unknown")).isNull()
         }
 
     @Test
@@ -110,7 +107,7 @@ class ChatSessionRepositoryImplTest {
             val repository = ChatSessionRepositoryImpl(dao, summaryGenerator)
 
             val messages = repository.getMessages("s1")
-            assertEquals(5, messages.size)
+            assertThat(messages).hasSize(5)
 
             val typesAndContent =
                 messages.map {
@@ -121,20 +118,25 @@ class ChatSessionRepositoryImplTest {
                         is ChatMessage.System -> "system" to it.info
                     }
                 }
-            assertEquals(
-                listOf(
+            assertThat(typesAndContent)
+                .containsExactly(
                     "user" to "u",
                     "agent" to "a",
                     "error" to "e",
                     "system" to "s",
                     // Unknown types fall back to System messages
                     "system" to "fallback",
-                ),
-                typesAndContent,
-            )
+                ).inOrder()
 
             // Message IDs stored in Room should be restored exactly.
-            assertEquals(listOf("msg-0", "msg-1", "msg-2", "msg-3", "msg-4"), messages.map { it.id })
+            assertThat(messages.map { it.id })
+                .containsExactly(
+                    "msg-0",
+                    "msg-1",
+                    "msg-2",
+                    "msg-3",
+                    "msg-4",
+                ).inOrder()
         }
 
     @Test
@@ -151,9 +153,9 @@ class ChatSessionRepositoryImplTest {
             repository.saveSession(CodingTopic.KOTLIN, messages)
 
             val session = dao.upsertedSessions.single()
-            assertEquals("Explain Kotlin coroutines", session.title)
-            assertEquals(CodingTopic.KOTLIN.stableId, session.topic)
-            assertEquals(2, session.messageCount)
+            assertThat(session.title).isEqualTo("Explain Kotlin coroutines")
+            assertThat(session.topic).isEqualTo(CodingTopic.KOTLIN.stableId)
+            assertThat(session.messageCount).isEqualTo(2)
         }
 
     @Test
@@ -165,7 +167,7 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User(longMessage)))
 
-            assertEquals("a".repeat(50), dao.upsertedSessions.single().title)
+            assertThat(dao.upsertedSessions.single().title).isEqualTo("a".repeat(50))
         }
 
     @Test
@@ -176,7 +178,7 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.Agent("Hello!")))
 
-            assertEquals("Untitled", dao.upsertedSessions.single().title)
+            assertThat(dao.upsertedSessions.single().title).isEqualTo("Untitled")
         }
 
     @Test
@@ -193,8 +195,8 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, messages)
 
-            assertEquals("Generated summary", dao.upsertedSessions.single().summary)
-            assertEquals(1, summaryGenerator.generateSummaryCalls)
+            assertThat(dao.upsertedSessions.single().summary).isEqualTo("Generated summary")
+            assertThat(summaryGenerator.generateSummaryCalls).isEqualTo(1)
         }
 
     @Test
@@ -213,7 +215,7 @@ class ChatSessionRepositoryImplTest {
                 repository.saveSession(CodingTopic.KOTLIN, messages)
                 throw AssertionError("Expected exception to be thrown")
             } catch (e: RuntimeException) {
-                assertEquals("Summary failed", e.message)
+                assertThat(e.message).isEqualTo("Summary failed")
             }
         }
 
@@ -226,8 +228,8 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, emptyList())
 
-            assertEquals("Empty session", dao.upsertedSessions.single().summary)
-            assertEquals(1, summaryGenerator.generateSummaryCalls)
+            assertThat(dao.upsertedSessions.single().summary).isEqualTo("Empty session")
+            assertThat(summaryGenerator.generateSummaryCalls).isEqualTo(1)
         }
 
     @Test
@@ -246,12 +248,12 @@ class ChatSessionRepositoryImplTest {
             repository.saveSession(CodingTopic.KOTLIN, messages)
 
             val entities = dao.insertedMessages.single()
-            assertEquals(4, entities.size)
-            assertEquals(listOf("user", "agent", "error", "system"), entities.map { it.type })
-            assertEquals(listOf("question", "answer", "boom", "note"), entities.map { it.content })
-            assertEquals(listOf(0, 1, 2, 3), entities.map { it.orderIndex })
+            assertThat(entities).hasSize(4)
+            assertThat(entities.map { it.type }).containsExactly("user", "agent", "error", "system").inOrder()
+            assertThat(entities.map { it.content }).containsExactly("question", "answer", "boom", "note").inOrder()
+            assertThat(entities.map { it.orderIndex }).containsExactly(0, 1, 2, 3).inOrder()
             val sessionId = dao.upsertedSessions.single().id
-            assertTrue(entities.all { it.sessionId == sessionId })
+            assertThat(entities.all { it.sessionId == sessionId }).isTrue()
         }
 
     @Test
@@ -272,15 +274,13 @@ class ChatSessionRepositoryImplTest {
                 sessionId = "existing-session",
             )
 
-            assertEquals(2, dao.upsertedSessions.size)
-            assertTrue(dao.upsertedSessions.all { it.id == "existing-session" })
-            assertEquals(
-                listOf(
+            assertThat(dao.upsertedSessions).hasSize(2)
+            assertThat(dao.upsertedSessions.all { it.id == "existing-session" }).isTrue()
+            assertThat(dao.calls)
+                .containsExactly(
                     "replaceSession:existing-session",
                     "replaceSession:existing-session",
-                ),
-                dao.calls,
-            )
+                ).inOrder()
         }
 
     @Test
@@ -296,7 +296,7 @@ class ChatSessionRepositoryImplTest {
                     sessionId = "existing-session",
                 )
 
-            assertEquals("existing-session", returnedId)
+            assertThat(returnedId).isEqualTo("existing-session")
         }
 
     @Test
@@ -307,8 +307,8 @@ class ChatSessionRepositoryImplTest {
 
             val returnedId = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
 
-            assertEquals(dao.upsertedSessions.single().id, returnedId)
-            assertTrue(returnedId.isNotBlank())
+            assertThat(returnedId).isEqualTo(dao.upsertedSessions.single().id)
+            assertThat(returnedId).isNotEmpty()
         }
 
     @Test
@@ -323,7 +323,7 @@ class ChatSessionRepositoryImplTest {
                 modelUsed = "gemma-4-E2B",
             )
 
-            assertEquals("gemma-4-E2B", dao.upsertedSessions.single().modelUsed)
+            assertThat(dao.upsertedSessions.single().modelUsed).isEqualTo("gemma-4-E2B")
         }
 
     @Test
@@ -334,7 +334,7 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
 
-            assertEquals("unknown", dao.upsertedSessions.single().modelUsed)
+            assertThat(dao.upsertedSessions.single().modelUsed).isEqualTo("unknown")
         }
 
     @Test
@@ -345,7 +345,7 @@ class ChatSessionRepositoryImplTest {
 
             repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
 
-            assertEquals(listOf("replaceSession:${dao.upsertedSessions.single().id}"), dao.calls)
+            assertThat(dao.calls).containsExactly("replaceSession:${dao.upsertedSessions.single().id}")
         }
 
     @Test
@@ -356,8 +356,8 @@ class ChatSessionRepositoryImplTest {
 
             repository.deleteSession("s1")
 
-            assertEquals(listOf("deleteMessages:s1", "deleteSession:s1"), dao.calls)
-            assertTrue(repository.getAllSessions().first().isEmpty())
+            assertThat(dao.calls).containsExactly("deleteMessages:s1", "deleteSession:s1").inOrder()
+            assertThat(repository.getAllSessions().first()).isEmpty()
         }
 
     @Test
@@ -368,7 +368,7 @@ class ChatSessionRepositoryImplTest {
 
             val sessions = repository.getAllSessions().first()
 
-            assertEquals(CodingTopic.UNKNOWN, sessions.single().topic)
+            assertThat(sessions.single().topic).isEqualTo(CodingTopic.UNKNOWN)
         }
 
     @Test
@@ -385,9 +385,9 @@ class ChatSessionRepositoryImplTest {
 
             val messages = repository.getMessages("s1")
 
-            assertEquals(1, messages.size)
+            assertThat(messages).hasSize(1)
             val system = messages.single() as ChatMessage.System
-            assertEquals("fallback", system.info)
+            assertThat(system.info).isEqualTo("fallback")
         }
 
     @Test
@@ -399,10 +399,10 @@ class ChatSessionRepositoryImplTest {
             val id1 = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("A")))
             val id2 = repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("B")))
 
-            assertTrue(id1.isNotBlank())
-            assertTrue(id2.isNotBlank())
-            assertNotEquals(id1, id2)
-            assertEquals(2, dao.upsertedSessions.size)
+            assertThat(id1).isNotEmpty()
+            assertThat(id2).isNotEmpty()
+            assertThat(id1).isNotEqualTo(id2)
+            assertThat(dao.upsertedSessions).hasSize(2)
         }
 
     @Test
@@ -415,7 +415,7 @@ class ChatSessionRepositoryImplTest {
                 repository.saveSession(CodingTopic.KOTLIN, listOf(ChatMessage.User("Hi")))
                 throw AssertionError("Expected exception to be thrown")
             } catch (e: RuntimeException) {
-                assertEquals("replaceSession failed", e.message)
+                assertThat(e.message).isEqualTo("replaceSession failed")
             }
         }
 }

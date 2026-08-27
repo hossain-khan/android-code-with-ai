@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.home
 
+import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
@@ -11,7 +12,6 @@ import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class FakeHardwareEligibilityChecker(
@@ -42,7 +42,7 @@ class HomePresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
-                assertEquals(CodingTopic.selectableEntries, state.topics)
+                assertThat(state.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
             }
         }
 
@@ -68,13 +68,13 @@ class HomePresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.IneligibleDevice
-                assertEquals("Low RAM", state.reason)
-                assertEquals(5.5, state.detectedRamGb, 0.01)
+                assertThat(state.reason).isEqualTo("Low RAM")
+                assertThat(state.detectedRamGb).isWithin(0.01).of(5.5)
 
                 // Dismiss warning
                 state.eventSink(HomeScreen.Event.DismissIneligibilityWarning)
                 val successState = expectMostRecentItem() as HomeScreen.State.Success
-                assertEquals(CodingTopic.selectableEntries, successState.topics)
+                assertThat(successState.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
             }
         }
 
@@ -94,7 +94,7 @@ class HomePresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.TopicSelected(CodingTopic.KOTLIN))
-                assertEquals(ChatScreen(CodingTopic.KOTLIN), navigator.awaitNextScreen())
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ChatScreen(CodingTopic.KOTLIN))
             }
         }
 
@@ -114,7 +114,7 @@ class HomePresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.ManageModels)
-                assertEquals(ModelPickerScreen, navigator.awaitNextScreen())
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ModelPickerScreen)
             }
         }
 
@@ -134,7 +134,7 @@ class HomePresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.ViewAllSessions)
-                assertEquals(SessionHistoryScreen, navigator.awaitNextScreen())
+                assertThat(navigator.awaitNextScreen()).isEqualTo(SessionHistoryScreen)
             }
         }
 }

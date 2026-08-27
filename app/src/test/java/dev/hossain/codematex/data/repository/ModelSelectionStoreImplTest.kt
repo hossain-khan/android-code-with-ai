@@ -3,6 +3,7 @@ package dev.hossain.codematex.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
@@ -11,8 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -42,8 +41,8 @@ class ModelSelectionStoreImplTest {
     @Test
     fun `given uninitialized store - getSelectedModelId returns null`() =
         runTest(testDispatcher) {
-            assertNull(store.getSelectedModelId())
-            assertNull(store.selectedModelIdFlow.first())
+            assertThat(store.getSelectedModelId()).isNull()
+            assertThat(store.selectedModelIdFlow.first()).isNull()
         }
 
     @Test
@@ -51,19 +50,19 @@ class ModelSelectionStoreImplTest {
         runTest(testDispatcher) {
             store.setSelectedModelId("google/gemma-2-2b-it")
 
-            assertEquals("google/gemma-2-2b-it", store.getSelectedModelId())
-            assertEquals("google/gemma-2-2b-it", store.selectedModelIdFlow.first())
+            assertThat(store.getSelectedModelId()).isEqualTo("google/gemma-2-2b-it")
+            assertThat(store.selectedModelIdFlow.first()).isEqualTo("google/gemma-2-2b-it")
         }
 
     @Test
     fun `given null modelId - selection is removed`() =
         runTest(testDispatcher) {
             store.setSelectedModelId("google/gemma-2-2b-it")
-            assertEquals("google/gemma-2-2b-it", store.getSelectedModelId())
+            assertThat(store.getSelectedModelId()).isEqualTo("google/gemma-2-2b-it")
 
             store.setSelectedModelId(null)
-            assertNull(store.getSelectedModelId())
-            assertNull(store.selectedModelIdFlow.first())
+            assertThat(store.getSelectedModelId()).isNull()
+            assertThat(store.selectedModelIdFlow.first()).isNull()
         }
 
     @Test
@@ -80,7 +79,7 @@ class ModelSelectionStoreImplTest {
 
             job.join()
 
-            assertEquals(listOf(null, "model-1", "model-2"), collected)
+            assertThat(collected).containsExactly(null, "model-1", "model-2").inOrder()
         }
 
     @Test(expected = java.io.IOException::class)

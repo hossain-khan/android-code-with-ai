@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
+import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.ChatMessage
@@ -8,7 +9,6 @@ import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 /**
@@ -31,8 +31,8 @@ class SessionDetailPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SessionDetailScreen.State.Success
-                assertEquals(session, state.session)
-                assertEquals(testMessages, state.messages)
+                assertThat(state.session).isEqualTo(session)
+                assertThat(state.messages).containsExactlyElementsIn(testMessages).inOrder()
             }
         }
 
@@ -46,7 +46,7 @@ class SessionDetailPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SessionDetailScreen.State.NotFound
-                assertEquals("unknown", state.sessionId)
+                assertThat(state.sessionId).isEqualTo("unknown")
             }
         }
 
@@ -65,15 +65,15 @@ class SessionDetailPresenterTest {
 
             presenter.test {
                 val errorState = expectMostRecentItem() as SessionDetailScreen.State.Error
-                assertEquals("Database unavailable", errorState.message)
+                assertThat(errorState.message).isEqualTo("Database unavailable")
 
                 // Clear the error and trigger retry
                 fakeRepo.getSessionException = null
                 errorState.eventSink(SessionDetailScreen.Event.Retry)
 
                 val successState = expectMostRecentItem() as SessionDetailScreen.State.Success
-                assertEquals(session, successState.session)
-                assertEquals(testMessages, successState.messages)
+                assertThat(successState.session).isEqualTo(session)
+                assertThat(successState.messages).containsExactlyElementsIn(testMessages).inOrder()
             }
         }
 
@@ -88,9 +88,8 @@ class SessionDetailPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as SessionDetailScreen.State.Success
                 state.eventSink(SessionDetailScreen.Event.ResumeSession)
-                assertEquals(
+                assertThat(navigator.awaitNextScreen()).isEqualTo(
                     ChatScreen(topic = CodingTopic.PYTHON, sessionId = "s1"),
-                    navigator.awaitNextScreen(),
                 )
             }
         }
@@ -107,7 +106,7 @@ class SessionDetailPresenterTest {
                 val state = expectMostRecentItem() as SessionDetailScreen.State.Success
                 state.eventSink(SessionDetailScreen.Event.DeleteSession)
                 navigator.awaitPop()
-                assertEquals(listOf("s1"), fakeRepo.deletedSessionIds)
+                assertThat(fakeRepo.deletedSessionIds).containsExactly("s1")
             }
         }
 

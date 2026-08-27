@@ -1,15 +1,11 @@
 package dev.hossain.codematex.data.repository
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.runtime.LlmEngine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -59,7 +55,7 @@ class ModelRepositoryImplTest {
 
         val model = repository.getSelectedModel()
 
-        assertNull(model)
+        assertThat(model).isNull()
     }
 
     @Test
@@ -74,12 +70,11 @@ class ModelRepositoryImplTest {
 
         val selected = repository.getSelectedModel()
 
-        assertNotNull(selected)
-        assertEquals("litert-community/gemma-4-E2B-it-litert-lm", selected?.id)
-        assertEquals(DownloadStatus.DOWNLOADED, selected?.downloadStatus)
-        assertEquals(
+        assertThat(selected).isNotNull()
+        assertThat(selected?.id).isEqualTo("litert-community/gemma-4-E2B-it-litert-lm")
+        assertThat(selected?.downloadStatus).isEqualTo(DownloadStatus.DOWNLOADED)
+        assertThat(selected?.localPath).isEqualTo(
             "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
-            selected?.localPath,
         )
     }
 
@@ -90,19 +85,17 @@ class ModelRepositoryImplTest {
 
             val models = repository.getAvailableModels().first()
 
-            assertEquals(5, models.size)
-            assertEquals(
-                listOf(
+            assertThat(models).hasSize(5)
+            assertThat(models.map { it.id })
+                .containsExactly(
                     "litert-community/gemma-4-E2B-it-litert-lm",
                     "litert-community/gemma-4-E4B-it-litert-lm",
                     "litert-community/Phi-4-mini-instruct",
                     "litert-community/Qwen2.5-Coder-1.5B-Instruct",
                     "litert-community/Qwen3-0.6B",
-                ),
-                models.map { it.id },
-            )
-            assertTrue(models.all { it.downloadStatus == DownloadStatus.NOT_DOWNLOADED })
-            assertTrue(models.all { it.localPath == null })
+                ).inOrder()
+            assertThat(models.all { it.downloadStatus == DownloadStatus.NOT_DOWNLOADED }).isTrue()
+            assertThat(models.all { it.localPath == null }).isTrue()
         }
 
     @Test
@@ -116,8 +109,8 @@ class ModelRepositoryImplTest {
             val models = repository.getAvailableModels().first()
             val model = models.first { it.id == modelId }
 
-            assertEquals(DownloadStatus.DOWNLOADING, model.downloadStatus)
-            assertEquals(42, model.downloadProgress)
+            assertThat(model.downloadStatus).isEqualTo(DownloadStatus.DOWNLOADING)
+            assertThat(model.downloadProgress).isEqualTo(42)
         }
 
     @Test
@@ -131,8 +124,8 @@ class ModelRepositoryImplTest {
             val models = repository.getAvailableModels().first()
             val model = models.first { it.id == modelId }
 
-            assertEquals(DownloadStatus.FAILED, model.downloadStatus)
-            assertEquals(0, model.downloadProgress)
+            assertThat(model.downloadStatus).isEqualTo(DownloadStatus.FAILED)
+            assertThat(model.downloadProgress).isEqualTo(0)
         }
 
     @Test
@@ -148,9 +141,9 @@ class ModelRepositoryImplTest {
             val models = repository.getAvailableModels().first()
             val model = models.first { it.id == modelId }
 
-            assertEquals(DownloadStatus.DOWNLOADED, model.downloadStatus)
-            assertEquals(100, model.downloadProgress)
-            assertEquals(path, model.localPath)
+            assertThat(model.downloadStatus).isEqualTo(DownloadStatus.DOWNLOADED)
+            assertThat(model.downloadProgress).isEqualTo(100)
+            assertThat(model.localPath).isEqualTo(path)
         }
 
     @Test
@@ -165,8 +158,8 @@ class ModelRepositoryImplTest {
 
         val selected = repository.getSelectedModel()
 
-        assertNotNull(selected)
-        assertEquals("litert-community/gemma-4-E2B-it-litert-lm", selected?.id)
+        assertThat(selected).isNotNull()
+        assertThat(selected?.id).isEqualTo("litert-community/gemma-4-E2B-it-litert-lm")
     }
 
     @Test
@@ -181,15 +174,15 @@ class ModelRepositoryImplTest {
 
         val selected = repository.getSelectedModel()
 
-        assertNotNull(selected)
-        assertEquals("litert-community/gemma-4-E4B-it-litert-lm", selected?.id)
+        assertThat(selected).isNotNull()
+        assertThat(selected?.id).isEqualTo("litert-community/gemma-4-E4B-it-litert-lm")
     }
 
     @Test
     fun `getSelectedModel returns null when nothing is downloaded`() {
         val (repository, _) = createRepository()
 
-        assertNull(repository.getSelectedModel())
+        assertThat(repository.getSelectedModel()).isNull()
     }
 
     @Test
@@ -200,7 +193,7 @@ class ModelRepositoryImplTest {
 
             repository.selectModel(model)
 
-            assertEquals("some/model", deps.selectionStore.getSelectedModelId())
+            assertThat(deps.selectionStore.getSelectedModelId()).isEqualTo("some/model")
         }
 
     @Test
@@ -218,8 +211,8 @@ class ModelRepositoryImplTest {
             val selectedModel = models.first { it.id == "litert-community/gemma-4-E2B-it-litert-lm" }
             val otherModel = models.first { it.id == "litert-community/gemma-4-E4B-it-litert-lm" }
 
-            assertTrue(selectedModel.isSelected)
-            assertFalse(otherModel.isSelected)
+            assertThat(selectedModel.isSelected).isTrue()
+            assertThat(otherModel.isSelected).isFalse()
         }
 
     @Test
@@ -230,17 +223,16 @@ class ModelRepositoryImplTest {
 
             repository.downloadModel(model)
 
-            assertEquals(1, deps.downloadTracker.enqueuedDownloads.size)
+            assertThat(deps.downloadTracker.enqueuedDownloads).hasSize(1)
             val (id, url, path) = deps.downloadTracker.enqueuedDownloads.single()
-            assertEquals(model.id, id)
-            assertEquals(model.downloadUrl, url)
-            assertEquals("/models/custom/task", path)
-            assertEquals(
-                model.displayName,
+            assertThat(id).isEqualTo(model.id)
+            assertThat(url).isEqualTo(model.downloadUrl)
+            assertThat(path).isEqualTo("/models/custom/task")
+            assertThat(
                 deps.downloadTracker.enqueuedRequests
                     .single()
                     .modelName,
-            )
+            ).isEqualTo(model.displayName)
         }
 
     @Test
@@ -252,9 +244,8 @@ class ModelRepositoryImplTest {
             repository.downloadModel(model)
 
             val (_, _, path) = deps.downloadTracker.enqueuedDownloads.single()
-            assertEquals(
+            assertThat(path).isEqualTo(
                 "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
-                path,
             )
         }
 
@@ -267,7 +258,7 @@ class ModelRepositoryImplTest {
             repository.downloadModel(model)
 
             val (_, _, path) = deps.downloadTracker.enqueuedDownloads.single()
-            assertEquals("/fake/models/unknown_vendor/vendor.litertlm", path)
+            assertThat(path).isEqualTo("/fake/models/unknown_vendor/vendor.litertlm")
         }
 
     @Test
@@ -278,7 +269,7 @@ class ModelRepositoryImplTest {
 
             repository.cancelDownload(model)
 
-            assertEquals(listOf("vendor/model"), deps.downloadTracker.cancelledDownloads)
+            assertThat(deps.downloadTracker.cancelledDownloads).containsExactly("vendor/model")
         }
 
     @Test
@@ -290,8 +281,8 @@ class ModelRepositoryImplTest {
 
             repository.deleteModel(testModel(id = modelId, localPath = path))
 
-            assertEquals(listOf(path), deps.fileStorage.deletedPaths)
-            assertNull(deps.selectionStore.getSelectedModelId())
+            assertThat(deps.fileStorage.deletedPaths).containsExactly(path)
+            assertThat(deps.selectionStore.getSelectedModelId()).isNull()
         }
 
     @Test
@@ -302,13 +293,13 @@ class ModelRepositoryImplTest {
             val (repository, _) = createRepository(existingPaths = setOf(path), selectedModelId = modelId)
 
             val initialModels = repository.getAvailableModels().first()
-            assertEquals(DownloadStatus.DOWNLOADED, initialModels.first { it.id == modelId }.downloadStatus)
+            assertThat(initialModels.first { it.id == modelId }.downloadStatus).isEqualTo(DownloadStatus.DOWNLOADED)
 
             repository.deleteModel(testModel(id = modelId, localPath = path))
 
             val updatedModels = repository.getAvailableModels().first()
-            assertEquals(DownloadStatus.NOT_DOWNLOADED, updatedModels.first { it.id == modelId }.downloadStatus)
-            assertFalse(updatedModels.first { it.id == modelId }.isSelected)
+            assertThat(updatedModels.first { it.id == modelId }.downloadStatus).isEqualTo(DownloadStatus.NOT_DOWNLOADED)
+            assertThat(updatedModels.first { it.id == modelId }.isSelected).isFalse()
         }
 
     @Test
@@ -323,7 +314,7 @@ class ModelRepositoryImplTest {
 
             repository.deleteModel(testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", localPath = path))
 
-            assertEquals("litert-community/gemma-4-E4B-it-litert-lm", deps.selectionStore.getSelectedModelId())
+            assertThat(deps.selectionStore.getSelectedModelId()).isEqualTo("litert-community/gemma-4-E4B-it-litert-lm")
         }
 
     @Test
@@ -336,7 +327,7 @@ class ModelRepositoryImplTest {
             val modelToSelect = testModel(id = modelId, localPath = path, status = DownloadStatus.DOWNLOADED)
             repository.selectModel(modelToSelect)
 
-            assertEquals(modelId, deps.selectionStore.getSelectedModelId())
+            assertThat(deps.selectionStore.getSelectedModelId()).isEqualTo(modelId)
         }
 
     @Test
@@ -347,11 +338,8 @@ class ModelRepositoryImplTest {
 
             repository.deleteModel(testModel(id = modelId, localPath = null))
 
-            assertEquals(
-                listOf(
-                    "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
-                ),
-                deps.fileStorage.deletedPaths,
+            assertThat(deps.fileStorage.deletedPaths).containsExactly(
+                "/fake/models/litert-community_gemma-4-E2B-it-litert-lm/gemma-4-E2B-it.litertlm",
             )
         }
 
@@ -363,21 +351,21 @@ class ModelRepositoryImplTest {
             val models = repository.getAvailableModels().first()
             val model = models.first { it.id == "litert-community/gemma-4-E2B-it-litert-lm" }
 
-            assertEquals("gemma-4-E2B-it-litert-lm", model.name)
-            assertEquals("Gemma 4-E2B IT", model.displayName)
-            assertEquals(2_588_147_712L, model.sizeBytes)
-            assertEquals(8, model.minDeviceMemoryInGb)
-            assertEquals(8192, model.contextWindow)
-            assertEquals("INT4", model.quantization)
-            assertEquals("GEMMA", model.promptFormat)
-            assertEquals("Google LiteRT Community", model.publisher)
-            assertEquals("Apache 2.0", model.license)
-            assertEquals("https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm", model.modelRepoUrl)
-            assertTrue(model.description.isNotBlank())
-            assertTrue(model.downloadUrl.contains("light-llm-storage.gohk.xyz"))
-            assertTrue(model.downloadUrl.contains("gemma-4-E2B-it.litertlm"))
-            assertTrue(model.fallbackDownloadUrls.single().contains("huggingface.co"))
-            assertEquals("181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c", model.sha256)
+            assertThat(model.name).isEqualTo("gemma-4-E2B-it-litert-lm")
+            assertThat(model.displayName).isEqualTo("Gemma 4-E2B IT")
+            assertThat(model.sizeBytes).isEqualTo(2_588_147_712L)
+            assertThat(model.minDeviceMemoryInGb).isEqualTo(8)
+            assertThat(model.contextWindow).isEqualTo(8192)
+            assertThat(model.quantization).isEqualTo("INT4")
+            assertThat(model.promptFormat).isEqualTo("GEMMA")
+            assertThat(model.publisher).isEqualTo("Google LiteRT Community")
+            assertThat(model.license).isEqualTo("Apache 2.0")
+            assertThat(model.modelRepoUrl).isEqualTo("https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm")
+            assertThat(model.description).isNotEmpty()
+            assertThat(model.downloadUrl).contains("light-llm-storage.gohk.xyz")
+            assertThat(model.downloadUrl).contains("gemma-4-E2B-it.litertlm")
+            assertThat(model.fallbackDownloadUrls.single()).contains("huggingface.co")
+            assertThat(model.sha256).isEqualTo("181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c")
         }
 
     @Test
@@ -390,8 +378,8 @@ class ModelRepositoryImplTest {
             repository.getAvailableModels().first()
             val selected = repository.getSelectedModel()
 
-            assertNotNull(selected)
-            assertEquals("litert-community/gemma-4-E2B-it-litert-lm", selected?.id)
+            assertThat(selected).isNotNull()
+            assertThat(selected?.id).isEqualTo("litert-community/gemma-4-E2B-it-litert-lm")
         }
 
     @Test
@@ -410,16 +398,15 @@ class ModelRepositoryImplTest {
 
             val models = repository.getAvailableModels().first()
 
-            assertEquals(1, models.size)
-            assertEquals("custom/model", models.single().id)
-            assertEquals(
-                "custom.litertlm",
+            assertThat(models).hasSize(1)
+            assertThat(models.single().id).isEqualTo("custom/model")
+            assertThat(
                 models
                     .single()
                     .downloadUrl
                     .substringAfterLast("/")
                     .substringBefore("?"),
-            )
+            ).isEqualTo("custom.litertlm")
         }
 
     @Test
@@ -429,7 +416,7 @@ class ModelRepositoryImplTest {
 
             val models = repository.getAvailableModels().first()
 
-            assertTrue(models.isEmpty())
+            assertThat(models).isEmpty()
         }
 
     @Test
@@ -442,7 +429,7 @@ class ModelRepositoryImplTest {
             val models = repository.getAvailableModels().first()
             val failedModel = models.first { it.id == modelId }
 
-            assertEquals(DownloadStatus.FAILED, failedModel.downloadStatus)
-            assertEquals("SHA-256 checksum mismatch: expected abc, calculated xyz", failedModel.downloadErrorMessage)
+            assertThat(failedModel.downloadStatus).isEqualTo(DownloadStatus.FAILED)
+            assertThat(failedModel.downloadErrorMessage).isEqualTo("SHA-256 checksum mismatch: expected abc, calculated xyz")
         }
 }

@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.aimodels
 
+import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
@@ -9,9 +10,6 @@ import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -41,9 +39,9 @@ class ModelPickerPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertEquals(listOf(downloadedModel, remoteModel), state.models)
-                assertTrue(state.downloadOverWifiOnly)
-                assertTrue(state.modelCompatibility.values.all { it == ModelCompatibility.Compatible })
+                assertThat(state.models).containsExactly(downloadedModel, remoteModel).inOrder()
+                assertThat(state.downloadOverWifiOnly).isTrue()
+                assertThat(state.modelCompatibility.values.all { it == ModelCompatibility.Compatible }).isTrue()
             }
         }
 
@@ -57,13 +55,13 @@ class ModelPickerPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertTrue(state.downloadOverWifiOnly)
+                assertThat(state.downloadOverWifiOnly).isTrue()
 
                 state.eventSink(ModelPickerScreen.Event.ToggleWifiOnly(false))
 
                 val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertFalse(updatedState.downloadOverWifiOnly)
-                assertFalse(fakePrefs.getDownloadOverWifiOnly())
+                assertThat(updatedState.downloadOverWifiOnly).isFalse()
+                assertThat(fakePrefs.getDownloadOverWifiOnly()).isFalse()
             }
         }
 
@@ -81,14 +79,14 @@ class ModelPickerPresenterTest {
 
             presenter.test {
                 val errorState = expectMostRecentItem() as ModelPickerScreen.State.Error
-                assertEquals("Storage error", errorState.message)
+                assertThat(errorState.message).isEqualTo("Storage error")
 
                 // Clear exception and retry
                 fakeRepo.getException = null
                 errorState.eventSink(ModelPickerScreen.Event.Retry)
 
                 val successState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertEquals(listOf(downloadedModel), successState.models)
+                assertThat(successState.models).containsExactly(downloadedModel)
             }
         }
 
@@ -118,7 +116,7 @@ class ModelPickerPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Download(remoteModel))
-                assertEquals(listOf(remoteModel), fakeRepo.downloadCalls)
+                assertThat(fakeRepo.downloadCalls).containsExactly(remoteModel)
             }
         }
 
@@ -133,7 +131,7 @@ class ModelPickerPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.CancelDownload(remoteModel))
-                assertEquals(listOf(remoteModel), fakeRepo.cancelDownloadCalls)
+                assertThat(fakeRepo.cancelDownloadCalls).containsExactly(remoteModel)
             }
         }
 
@@ -148,7 +146,7 @@ class ModelPickerPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Delete(downloadedModel))
-                assertEquals(listOf(downloadedModel), fakeRepo.deleteCalls)
+                assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
             }
         }
 
@@ -164,7 +162,7 @@ class ModelPickerPresenterTest {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Select(downloadedModel))
                 navigator.awaitPop()
-                assertEquals(downloadedModel, fakeRepo.getSelectedModel())
+                assertThat(fakeRepo.getSelectedModel()).isEqualTo(downloadedModel)
             }
         }
 }

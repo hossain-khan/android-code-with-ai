@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chat
 
+import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
@@ -24,11 +25,6 @@ import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -83,8 +79,8 @@ class ChatPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.NoModelSelected
-                assertFalse(state.hasDownloadedModels)
-                assertEquals(CodingTopic.KOTLIN, state.topic)
+                assertThat(state.hasDownloadedModels).isFalse()
+                assertThat(state.topic).isEqualTo(CodingTopic.KOTLIN)
             }
         }
 
@@ -106,8 +102,8 @@ class ChatPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.NoModelSelected
-                assertTrue(state.hasDownloadedModels)
-                assertEquals(CodingTopic.ANDROID, state.topic)
+                assertThat(state.hasDownloadedModels).isTrue()
+                assertThat(state.topic).isEqualTo(CodingTopic.ANDROID)
             }
         }
 
@@ -130,7 +126,7 @@ class ChatPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.NoModelSelected
                 state.eventSink(ChatScreen.Event.OpenModelPicker)
-                assertEquals(ModelPickerScreen, navigator.awaitNextScreen())
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ModelPickerScreen)
             }
         }
 
@@ -153,10 +149,10 @@ class ChatPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertFalse(state.isPreparing)
-                assertFalse(state.isGenerating)
-                assertEquals(CodingTopic.KOTLIN, state.topic)
-                assertEquals(TutorPersona.SENIOR_ENGINEER, state.persona)
+                assertThat(state.isPreparing).isFalse()
+                assertThat(state.isGenerating).isFalse()
+                assertThat(state.topic).isEqualTo(CodingTopic.KOTLIN)
+                assertThat(state.persona).isEqualTo(TutorPersona.SENIOR_ENGINEER)
             }
         }
 
@@ -181,8 +177,8 @@ class ChatPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(CodingTopic.PYTHON, state.topic)
-                assertEquals(TutorPersona.INTERVIEW_COACH, state.persona)
+                assertThat(state.topic).isEqualTo(CodingTopic.PYTHON)
+                assertThat(state.persona).isEqualTo(TutorPersona.INTERVIEW_COACH)
             }
         }
 
@@ -210,9 +206,9 @@ class ChatPresenterTest {
                 state.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.BEGINNER_FRIENDLY))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(TutorPersona.BEGINNER_FRIENDLY, updatedState.persona)
-                assertEquals(TutorPersona.BEGINNER_FRIENDLY, preferencesStore.getSelectedPersona())
-                assertTrue(fakeChatInferenceOrchestrator.resetConversationPersonas.contains(TutorPersona.BEGINNER_FRIENDLY))
+                assertThat(updatedState.persona).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
+                assertThat(preferencesStore.getSelectedPersona()).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
+                assertThat(fakeChatInferenceOrchestrator.resetConversationPersonas).contains(TutorPersona.BEGINNER_FRIENDLY)
             }
         }
 
@@ -253,9 +249,9 @@ class ChatPresenterTest {
                 state.eventSink(ChatScreen.Event.SendMessage("Explain ViewModel"))
 
                 val generatingState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(45f, generatingState.systemResourceStats?.cpuPercent ?: 0f, 0.01f)
-                assertEquals(3.5f, generatingState.systemResourceStats?.ramUsedGb ?: 0f, 0.01f)
-                assertEquals(8.0f, generatingState.systemResourceStats?.ramTotalGb ?: 0f, 0.01f)
+                assertThat(generatingState.systemResourceStats?.cpuPercent ?: 0f).isWithin(0.01f).of(45f)
+                assertThat(generatingState.systemResourceStats?.ramUsedGb ?: 0f).isWithin(0.01f).of(3.5f)
+                assertThat(generatingState.systemResourceStats?.ramTotalGb ?: 0f).isWithin(0.01f).of(8.0f)
             }
         }
 
@@ -288,20 +284,20 @@ class ChatPresenterTest {
 
             presenter.test {
                 val initialState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(2, initialState.messages.size)
+                assertThat(initialState.messages).hasSize(2)
 
                 // Reset session
                 initialState.eventSink(ChatScreen.Event.ResetSession)
                 val resetState = expectMostRecentItem() as ChatScreen.State.Active
-                assertTrue(resetState.messages.isEmpty())
+                assertThat(resetState.messages).isEmpty()
 
                 // Next message should create a new conversation (passing sessionId = null to saveSession)
                 resetState.eventSink(ChatScreen.Event.SendMessage("New turn"))
                 expectMostRecentItem() // generation & save completes
 
                 val lastSaved = sessionRepo.savedSessions.lastOrNull()
-                assertNotNull(lastSaved)
-                assertNull("SessionId must be null for new conversation after reset", lastSaved?.third)
+                assertThat(lastSaved).isNotNull()
+                assertThat(lastSaved?.third).isNull()
             }
         }
 
@@ -335,12 +331,12 @@ class ChatPresenterTest {
                 initialState.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.INTERVIEW_COACH))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(TutorPersona.INTERVIEW_COACH, updatedState.persona)
+                assertThat(updatedState.persona).isEqualTo(TutorPersona.INTERVIEW_COACH)
 
                 val switchCall = fakeOrchestrator.switchPersonaCalls.lastOrNull()
-                assertNotNull(switchCall)
-                assertEquals(TutorPersona.INTERVIEW_COACH, switchCall?.persona)
-                assertTrue(switchCall?.messages?.any { it is ChatMessage.System } == true)
+                assertThat(switchCall).isNotNull()
+                assertThat(switchCall?.persona).isEqualTo(TutorPersona.INTERVIEW_COACH)
+                assertThat(switchCall?.messages?.any { it is ChatMessage.System }).isTrue()
             }
         }
 
@@ -374,14 +370,14 @@ class ChatPresenterTest {
                 initialState.eventSink(ChatScreen.Event.SendMessage("Write quicksort"))
 
                 val postDoneState = expectMostRecentItem() as ChatScreen.State.Active
-                assertFalse(postDoneState.isGenerating)
-                assertEquals("Disk full", postDoneState.saveErrorMessage)
+                assertThat(postDoneState.isGenerating).isFalse()
+                assertThat(postDoneState.saveErrorMessage).isEqualTo("Disk full")
 
                 // Verify the generated assistant response was NOT deleted or replaced with an Error message
                 val lastMessage = postDoneState.messages.lastOrNull()
-                assertTrue("Expected Agent message but was $lastMessage", lastMessage is ChatMessage.Agent)
-                assertEquals("Generated code answer", (lastMessage as ChatMessage.Agent).content)
-                assertFalse(lastMessage.isStreaming)
+                assertThat(lastMessage).isInstanceOf(ChatMessage.Agent::class.java)
+                assertThat((lastMessage as ChatMessage.Agent).content).isEqualTo("Generated code answer")
+                assertThat(lastMessage.isStreaming).isFalse()
             }
         }
 
@@ -415,15 +411,15 @@ class ChatPresenterTest {
                 initialState.eventSink(ChatScreen.Event.SendMessage("Hello"))
 
                 val failedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals("Temporary DB lock", failedState.saveErrorMessage)
+                assertThat(failedState.saveErrorMessage).isEqualTo("Temporary DB lock")
 
                 // Database lock clears
                 sessionRepo.saveException = null
 
                 failedState.eventSink(ChatScreen.Event.RetrySave)
                 val recoveredState = expectMostRecentItem() as ChatScreen.State.Active
-                assertNull(recoveredState.saveErrorMessage)
-                assertEquals(1, sessionRepo.savedSessions.size)
+                assertThat(recoveredState.saveErrorMessage).isNull()
+                assertThat(sessionRepo.savedSessions).hasSize(1)
             }
         }
 
@@ -453,15 +449,15 @@ class ChatPresenterTest {
                 initialState.eventSink(ChatScreen.Event.SendMessage("Long question"))
 
                 val streamingState = expectMostRecentItem() as ChatScreen.State.Active
-                assertTrue(streamingState.isGenerating)
+                assertThat(streamingState.isGenerating).isTrue()
 
                 streamingState.eventSink(ChatScreen.Event.StopGeneration)
                 val stoppedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertFalse(stoppedState.isGenerating)
+                assertThat(stoppedState.isGenerating).isFalse()
                 val lastMessage = stoppedState.messages.lastOrNull() as? ChatMessage.Agent
-                assertNotNull(lastMessage)
-                assertFalse(lastMessage?.isStreaming == true)
-                assertEquals(1, fakeOrchestrator.stopCalls)
+                assertThat(lastMessage).isNotNull()
+                assertThat(lastMessage?.isStreaming).isFalse()
+                assertThat(fakeOrchestrator.stopCalls).isEqualTo(1)
             }
         }
 
@@ -489,13 +485,13 @@ class ChatPresenterTest {
 
             presenter.test {
                 val initialState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(TutorPersona.SENIOR_ENGINEER, initialState.persona)
+                assertThat(initialState.persona).isEqualTo(TutorPersona.SENIOR_ENGINEER)
 
                 initialState.eventSink(ChatScreen.Event.SelectPersona(TutorPersona.INTERVIEW_COACH))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals(TutorPersona.INTERVIEW_COACH, updatedState.persona)
-                assertEquals(TutorPersona.INTERVIEW_COACH, userPrefsStore.getSelectedPersona())
+                assertThat(updatedState.persona).isEqualTo(TutorPersona.INTERVIEW_COACH)
+                assertThat(userPrefsStore.getSelectedPersona()).isEqualTo(TutorPersona.INTERVIEW_COACH)
             }
         }
 
@@ -521,12 +517,12 @@ class ChatPresenterTest {
 
             presenter.test {
                 val initialState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals("Temp: 0.7, Top-K: 40, Top-P: 1.0", initialState.configInfo)
+                assertThat(initialState.configInfo).isEqualTo("Temp: 0.7, Top-K: 40, Top-P: 1.0")
 
                 localConfigStore.updateConfig(ModelConfig(temperature = 0.2f, topK = 10, topP = 0.8f, maxTokens = 512))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertEquals("Temp: 0.2, Top-K: 10, Top-P: 0.8", updatedState.configInfo)
+                assertThat(updatedState.configInfo).isEqualTo("Temp: 0.2, Top-K: 10, Top-P: 0.8")
             }
         }
 
@@ -551,9 +547,9 @@ class ChatPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertNotNull(state.contextStats)
-                assertEquals(8192, state.contextStats?.maxTokens)
-                assertTrue((state.contextStats?.usedTokens ?: 0) > 0)
+                assertThat(state.contextStats).isNotNull()
+                assertThat(state.contextStats?.maxTokens).isEqualTo(8192)
+                assertThat(state.contextStats?.usedTokens ?: 0).isGreaterThan(0)
             }
         }
 }

@@ -1,5 +1,6 @@
 package dev.hossain.codematex.work
 
+import com.google.common.truth.Truth.assertThat
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
@@ -7,9 +8,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -59,10 +57,10 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
-            assertEquals(content.size.toLong(), File(outputPath).length())
-            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
+            assertThat(File(outputPath).length()).isEqualTo(content.size.toLong())
+            assertThat(File(outputPath).readBytes()).isEqualTo(content)
         }
 
     @Test
@@ -87,10 +85,10 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
-            assertEquals(content.size.toLong(), File(outputPath).length())
-            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
+            assertThat(File(outputPath).length()).isEqualTo(content.size.toLong())
+            assertThat(File(outputPath).readBytes()).isEqualTo(content)
         }
 
     @Test
@@ -121,11 +119,11 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
             // Must be exactly 1000 bytes, not 1400 bytes!
-            assertEquals(1_000L, File(outputPath).length())
-            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+            assertThat(File(outputPath).length()).isEqualTo(1_000L)
+            assertThat(File(outputPath).readBytes()).isEqualTo(content)
         }
 
     @Test
@@ -147,11 +145,11 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
+            assertThat(result.isFailure).isTrue()
             val error = result.exceptionOrNull()
-            assertTrue(error is ModelDownloadException.HttpError)
-            assertEquals(500, (error as ModelDownloadException.HttpError).responseCode)
-            assertTrue(error.isRetryable)
+            assertThat(error).isInstanceOf(ModelDownloadException.HttpError::class.java)
+            assertThat((error as ModelDownloadException.HttpError).responseCode).isEqualTo(500)
+            assertThat(error.isRetryable).isTrue()
         }
 
     @Test
@@ -177,7 +175,7 @@ class HttpModelDownloaderTest {
                 )
                 throw AssertionError("Expected CancellationException")
             } catch (e: CancellationException) {
-                assertEquals("Download cancelled", e.message)
+                assertThat(e.message).isEqualTo("Download cancelled")
             }
         }
 
@@ -198,8 +196,8 @@ class HttpModelDownloaderTest {
                 shouldCancel = { false },
             )
 
-            assertTrue(progressReports.isNotEmpty())
-            assertTrue(progressReports.last() == 100)
+            assertThat(progressReports).isNotEmpty()
+            assertThat(progressReports.last()).isEqualTo(100)
         }
 
     @Test
@@ -221,9 +219,9 @@ class HttpModelDownloaderTest {
                 shouldCancel = { false },
             )
 
-            assertTrue(byteReports.isNotEmpty())
-            assertEquals(100_000L, byteReports.last().second)
-            assertEquals(100_000L, byteReports.last().first)
+            assertThat(byteReports).isNotEmpty()
+            assertThat(byteReports.last().second).isEqualTo(100_000L)
+            assertThat(byteReports.last().first).isEqualTo(100_000L)
         }
 
     @Test
@@ -247,10 +245,10 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
-            assertEquals(content.size.toLong(), File(outputPath).length())
-            assertTrue(content.contentEquals(File(outputPath).readBytes()))
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
+            assertThat(File(outputPath).length()).isEqualTo(content.size.toLong())
+            assertThat(File(outputPath).readBytes()).isEqualTo(content)
         }
 
     @Test
@@ -276,7 +274,7 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
+            assertThat(result.isFailure).isTrue()
         }
 
     @Test
@@ -293,8 +291,8 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(IllegalArgumentException::class.java)
         }
 
     @Test
@@ -321,10 +319,10 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
-            assertEquals(content.size.toLong(), File(outputPath).length())
-            assertFalse(File("$outputPath.codematextmp").exists())
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
+            assertThat(File(outputPath).length()).isEqualTo(content.size.toLong())
+            assertThat(File("$outputPath.codematextmp").exists()).isFalse()
         }
 
     @Test
@@ -347,12 +345,12 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
+            assertThat(result.isFailure).isTrue()
             val error = result.exceptionOrNull()
-            assertTrue(error is ModelDownloadException.ChecksumMismatch)
-            assertFalse((error as ModelDownloadException).isRetryable)
-            assertFalse(File(outputPath).exists())
-            assertFalse(File("$outputPath.codematextmp").exists())
+            assertThat(error).isInstanceOf(ModelDownloadException.ChecksumMismatch::class.java)
+            assertThat((error as ModelDownloadException).isRetryable).isFalse()
+            assertThat(File(outputPath).exists()).isFalse()
+            assertThat(File("$outputPath.codematextmp").exists()).isFalse()
         }
 
     @Test
@@ -381,11 +379,11 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(File(outputPath).exists())
-            assertEquals(goodContent.size.toLong(), File(outputPath).length())
-            assertTrue(goodContent.contentEquals(File(outputPath).readBytes()))
-            assertFalse(File("$outputPath.codematextmp").exists())
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(File(outputPath).exists()).isTrue()
+            assertThat(File(outputPath).length()).isEqualTo(goodContent.size.toLong())
+            assertThat(File(outputPath).readBytes()).isEqualTo(goodContent)
+            assertThat(File("$outputPath.codematextmp").exists()).isFalse()
         }
 
     @Test
@@ -407,11 +405,11 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
+            assertThat(result.isFailure).isTrue()
             val error = result.exceptionOrNull()
-            assertTrue(error is ModelDownloadException.InsufficientStorage)
-            assertFalse((error as ModelDownloadException).isRetryable)
-            assertFalse(File(outputPath).exists())
+            assertThat(error).isInstanceOf(ModelDownloadException.InsufficientStorage::class.java)
+            assertThat((error as ModelDownloadException).isRetryable).isFalse()
+            assertThat(File(outputPath).exists()).isFalse()
         }
 
     @Test
@@ -432,12 +430,12 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
+            assertThat(result.isFailure).isTrue()
             val error = result.exceptionOrNull()
-            assertTrue(error is ModelDownloadException.InstallationFailure)
-            assertFalse((error as ModelDownloadException).isRetryable)
-            assertFalse(File(outputPath).exists())
-            assertFalse(File("$outputPath.codematextmp").exists())
+            assertThat(error).isInstanceOf(ModelDownloadException.InstallationFailure::class.java)
+            assertThat((error as ModelDownloadException).isRetryable).isFalse()
+            assertThat(File(outputPath).exists()).isFalse()
+            assertThat(File("$outputPath.codematextmp").exists()).isFalse()
         }
 
     @Test
@@ -461,11 +459,11 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertEquals(Result.success(Unit), result)
-            assertTrue(existingFile.exists())
-            assertEquals(content.size.toLong(), existingFile.length())
-            assertTrue(content.contentEquals(existingFile.readBytes()))
-            assertFalse(File("$outputPath.codematextmp").exists())
+            assertThat(result).isEqualTo(Result.success(Unit))
+            assertThat(existingFile.exists()).isTrue()
+            assertThat(existingFile.length()).isEqualTo(content.size.toLong())
+            assertThat(existingFile.readBytes()).isEqualTo(content)
+            assertThat(File("$outputPath.codematextmp").exists()).isFalse()
         }
 
     @Test
@@ -490,9 +488,9 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() is ModelDownloadException.InstallationFailure)
-            assertFalse(File(outputPath).exists())
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(ModelDownloadException.InstallationFailure::class.java)
+            assertThat(File(outputPath).exists()).isFalse()
         }
 
     @Test
@@ -525,9 +523,9 @@ class HttpModelDownloaderTest {
                     shouldCancel = { false },
                 )
 
-            assertTrue(result.isFailure)
-            assertTrue(result.exceptionOrNull() is ModelDownloadException.InstallationFailure)
-            assertFalse(File(outputPath).exists())
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(ModelDownloadException.InstallationFailure::class.java)
+            assertThat(File(outputPath).exists()).isFalse()
         }
 
     private class ModelFileHandler(

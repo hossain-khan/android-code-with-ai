@@ -1,8 +1,6 @@
 package dev.hossain.codematex.data
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -16,15 +14,15 @@ class ThroughputTrackerTest {
         val tracker = ThroughputTracker(clockNano = { timeNano })
 
         val emptyResult = tracker.recordToken("")
-        assertEquals("TTFT: -- • Speed: -- t/s (0 tokens)", emptyResult)
+        assertThat(emptyResult).isEqualTo("TTFT: -- • Speed: -- t/s (0 tokens)")
 
         timeNano = 50.milliseconds.inWholeNanoseconds
         val firstResult = tracker.recordToken("Hello")
-        assertEquals("TTFT: 50ms • Speed: -- t/s (1 tokens)", firstResult)
+        assertThat(firstResult).isEqualTo("TTFT: 50ms • Speed: -- t/s (1 tokens)")
 
         // Terminal blank callback should not increment tokens
         val blankResult = tracker.recordToken("")
-        assertEquals("TTFT: 50ms • Speed: -- t/s (1 tokens)", blankResult)
+        assertThat(blankResult).isEqualTo("TTFT: 50ms • Speed: -- t/s (1 tokens)")
     }
 
     @Test
@@ -38,11 +36,11 @@ class ThroughputTrackerTest {
         timeNano = 150.milliseconds.inWholeNanoseconds // 100ms decode for 2 tokens = 20.0 t/s
         val result = tracker.recordToken(" world")
 
-        assertEquals("TTFT: 50ms • Speed: 20.0 t/s (2 tokens)", result)
+        assertThat(result).isEqualTo("TTFT: 50ms • Speed: 20.0 t/s (2 tokens)")
 
         timeNano = 250.milliseconds.inWholeNanoseconds // 200ms decode for 3 tokens = 15.0 t/s
         val result3 = tracker.recordToken("!")
-        assertEquals("TTFT: 50ms • Speed: 15.0 t/s (3 tokens)", result3)
+        assertThat(result3).isEqualTo("TTFT: 50ms • Speed: 15.0 t/s (3 tokens)")
     }
 
     @Test
@@ -61,8 +59,8 @@ class ThroughputTrackerTest {
         tracker.recordToken(" StateFlow")
 
         val result = tracker.finalize()
-        assertEquals("TTFT: 100ms • Speed: 10.0 t/s", result)
-        assertFalse(result.contains("tokens"))
+        assertThat(result).isEqualTo("TTFT: 100ms • Speed: 10.0 t/s")
+        assertThat(result).doesNotContain("tokens")
     }
 
     @Test
@@ -71,7 +69,7 @@ class ThroughputTrackerTest {
 
         val result = tracker.finalize()
 
-        assertEquals("Speed: 0.0 t/s", result)
+        assertThat(result).isEqualTo("Speed: 0.0 t/s")
     }
 
     @Test
@@ -83,6 +81,6 @@ class ThroughputTrackerTest {
         timeNano = 50.milliseconds.inWholeNanoseconds
         val result = tracker.recordToken("token")
 
-        assertTrue(result.startsWith("TTFT: 0ms"))
+        assertThat(result).startsWith("TTFT: 0ms")
     }
 }

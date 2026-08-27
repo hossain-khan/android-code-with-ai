@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
@@ -11,8 +12,6 @@ import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ChatInferenceOrchestratorTest {
@@ -48,8 +47,8 @@ class ChatInferenceOrchestratorTest {
                     existingMessages = emptyList(),
                 )
 
-            assertTrue(result.isSuccess)
-            assertEquals(2, result.getOrThrow().size)
+            assertThat(result.isSuccess).isTrue()
+            assertThat(result.getOrThrow()).hasSize(2)
         }
 
     @Test
@@ -65,7 +64,7 @@ class ChatInferenceOrchestratorTest {
                     existingMessages = existing,
                 )
 
-            assertEquals(existing, result.getOrThrow())
+            assertThat(result.getOrThrow()).containsExactlyElementsIn(existing).inOrder()
         }
 
     @Test
@@ -81,8 +80,8 @@ class ChatInferenceOrchestratorTest {
                     existingMessages = emptyList(),
                 )
 
-            assertTrue(result.isFailure)
-            assertEquals("Init failed", result.exceptionOrNull()?.message)
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()?.message).isEqualTo("Init failed")
         }
 
     @Test
@@ -92,21 +91,19 @@ class ChatInferenceOrchestratorTest {
 
             val events = createOrchestrator().sendMessage("Hi").toList()
 
-            assertEquals(
-                listOf(
+            assertThat(events)
+                .containsExactly(
                     ChatInferenceEvent.Token("Hello"),
                     ChatInferenceEvent.Token(" world"),
                     ChatInferenceEvent.Done,
-                ),
-                events,
-            )
+                ).inOrder()
         }
 
     @Test
     fun `stop delegates to engine`() {
         createOrchestrator().stop()
 
-        assertEquals(1, fakeEngine.stopCalls)
+        assertThat(fakeEngine.stopCalls).isEqualTo(1)
     }
 
     @Test
@@ -114,7 +111,7 @@ class ChatInferenceOrchestratorTest {
         runTest {
             createOrchestrator().resetConversation(CodingTopic.PYTHON)
 
-            assertEquals(1, fakeEngine.resetCalls)
+            assertThat(fakeEngine.resetCalls).isEqualTo(1)
         }
 
     @Test(expected = kotlinx.coroutines.CancellationException::class)
@@ -132,7 +129,7 @@ class ChatInferenceOrchestratorTest {
 
     @Test
     fun `getActiveBackend returns engine backend`() {
-        assertEquals(LlmEngine.Backend.CPU, createOrchestrator().getActiveBackend())
+        assertThat(createOrchestrator().getActiveBackend()).isEqualTo(LlmEngine.Backend.CPU)
     }
 
     @Test
@@ -143,16 +140,14 @@ class ChatInferenceOrchestratorTest {
 
             val events = createOrchestrator().sendMessage("Hi").toList()
 
-            assertEquals(
-                listOf(
+            assertThat(events)
+                .containsExactly(
                     ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
                     ChatInferenceEvent.Token("CPU "),
                     ChatInferenceEvent.Token("response"),
                     ChatInferenceEvent.Done,
-                ),
-                events,
-            )
-            assertEquals(2, fakeEngine.runInferenceCalls)
+                ).inOrder()
+            assertThat(fakeEngine.runInferenceCalls).isEqualTo(2)
         }
 
     @Test
@@ -167,17 +162,15 @@ class ChatInferenceOrchestratorTest {
 
             val events = createOrchestrator().sendMessage("Hi").toList()
 
-            assertEquals(
-                listOf(
+            assertThat(events)
+                .containsExactly(
                     ChatInferenceEvent.BackendFailed(LlmEngine.Backend.NPU),
                     ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
                     ChatInferenceEvent.Token("CPU "),
                     ChatInferenceEvent.Token("response"),
                     ChatInferenceEvent.Done,
-                ),
-                events,
-            )
-            assertEquals(3, fakeEngine.runInferenceCalls)
+                ).inOrder()
+            assertThat(fakeEngine.runInferenceCalls).isEqualTo(3)
         }
 
     @Test
@@ -192,6 +185,6 @@ class ChatInferenceOrchestratorTest {
                 // Expected.
             }
 
-            assertEquals(1, fakeEngine.runInferenceCalls)
+            assertThat(fakeEngine.runInferenceCalls).isEqualTo(1)
         }
 }

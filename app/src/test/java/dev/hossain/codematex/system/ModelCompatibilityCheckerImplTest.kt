@@ -1,7 +1,6 @@
 package dev.hossain.codematex.system
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class ModelCompatibilityCheckerImplTest {
@@ -10,7 +9,7 @@ class ModelCompatibilityCheckerImplTest {
         val provider = FakeDeviceMemoryProvider().apply { returnedTotalBytes = 1L }
         val checker = ModelCompatibilityCheckerImpl(provider, isDevMode = { true })
 
-        assertEquals(ModelCompatibility.Compatible, checker.checkCompatibility(modelMinRamGb = 12))
+        assertThat(checker.checkCompatibility(modelMinRamGb = 12)).isEqualTo(ModelCompatibility.Compatible)
     }
 
     @Test
@@ -18,7 +17,7 @@ class ModelCompatibilityCheckerImplTest {
         val provider = FakeDeviceMemoryProvider().apply { returnedTotalBytes = 1L }
         val checker = ModelCompatibilityCheckerImpl(provider, isDevMode = { false })
 
-        assertEquals(ModelCompatibility.Compatible, checker.checkCompatibility(modelMinRamGb = 0))
+        assertThat(checker.checkCompatibility(modelMinRamGb = 0)).isEqualTo(ModelCompatibility.Compatible)
     }
 
     @Test
@@ -29,7 +28,7 @@ class ModelCompatibilityCheckerImplTest {
             }
         val checker = ModelCompatibilityCheckerImpl(provider, isDevMode = { false })
 
-        assertEquals(ModelCompatibility.Compatible, checker.checkCompatibility(modelMinRamGb = 8))
+        assertThat(checker.checkCompatibility(modelMinRamGb = 8)).isEqualTo(ModelCompatibility.Compatible)
     }
 
     @Test
@@ -42,7 +41,7 @@ class ModelCompatibilityCheckerImplTest {
 
         val result = checker.checkCompatibility(modelMinRamGb = 8) as ModelCompatibility.Incompatible
 
-        assertTrue(result.reason.contains("Requires 8GB RAM"))
+        assertThat(result.reason).contains("Requires 8GB RAM")
     }
 
     @Test
@@ -56,8 +55,8 @@ class ModelCompatibilityCheckerImplTest {
 
         val info = checker.getDeviceMemoryInfo()
 
-        assertEquals(totalBytes, info.totalBytes)
-        assertEquals(8.5, info.displayTotalGb, 0.001)
-        assertEquals("GB", info.displayLabel)
+        assertThat(info.totalBytes).isEqualTo(totalBytes)
+        assertThat(info.displayTotalGb).isWithin(0.001).of(8.5)
+        assertThat(info.displayLabel).isEqualTo("GB")
     }
 }

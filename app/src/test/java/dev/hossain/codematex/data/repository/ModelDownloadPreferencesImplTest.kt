@@ -3,6 +3,7 @@ package dev.hossain.codematex.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
@@ -11,9 +12,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -43,8 +41,8 @@ class ModelDownloadPreferencesImplTest {
     @Test
     fun `given uninitialized preferences - downloadOverWifiOnly defaults to true`() =
         runTest(testDispatcher) {
-            assertTrue(preferences.getDownloadOverWifiOnly())
-            assertTrue(preferences.downloadOverWifiOnlyFlow.first())
+            assertThat(preferences.getDownloadOverWifiOnly()).isTrue()
+            assertThat(preferences.downloadOverWifiOnlyFlow.first()).isTrue()
         }
 
     @Test
@@ -52,12 +50,12 @@ class ModelDownloadPreferencesImplTest {
         runTest(testDispatcher) {
             preferences.setDownloadOverWifiOnly(false)
 
-            assertFalse(preferences.getDownloadOverWifiOnly())
-            assertFalse(preferences.downloadOverWifiOnlyFlow.first())
+            assertThat(preferences.getDownloadOverWifiOnly()).isFalse()
+            assertThat(preferences.downloadOverWifiOnlyFlow.first()).isFalse()
 
             preferences.setDownloadOverWifiOnly(true)
-            assertTrue(preferences.getDownloadOverWifiOnly())
-            assertTrue(preferences.downloadOverWifiOnlyFlow.first())
+            assertThat(preferences.getDownloadOverWifiOnly()).isTrue()
+            assertThat(preferences.downloadOverWifiOnlyFlow.first()).isTrue()
         }
 
     @Test
@@ -74,7 +72,7 @@ class ModelDownloadPreferencesImplTest {
 
             job.join()
 
-            assertEquals(listOf(true, false, true), collected)
+            assertThat(collected).containsExactly(true, false, true).inOrder()
         }
 
     @Test(expected = java.io.IOException::class)

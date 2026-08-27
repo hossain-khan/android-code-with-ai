@@ -3,11 +3,10 @@
 package dev.hossain.codematex.runtime
 
 import com.google.ai.edge.litertlm.EngineConfig
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LlmEngineFactoryTest {
@@ -42,7 +41,7 @@ class LlmEngineFactoryTest {
                 // Expected.
             }
 
-            assertTrue("Engine should be closed after conversation creation fails", fakeEngine.closed)
+            assertThat(fakeEngine.closed).isTrue()
         }
 
     @Test
@@ -72,9 +71,9 @@ class LlmEngineFactoryTest {
                 )
 
             // Success path should not close anything.
-            assertEquals(false, fakeEngine.closed)
-            assertEquals(false, fakeConversation.closed)
-            assertEquals(LlmEngine.Backend.GPU, session.backend)
+            assertThat(fakeEngine.closed).isFalse()
+            assertThat(fakeConversation.closed).isFalse()
+            assertThat(session.backend).isEqualTo(LlmEngine.Backend.GPU)
         }
 
     @Test
@@ -101,8 +100,8 @@ class LlmEngineFactoryTest {
                     config = config,
                 )
 
-            assertEquals(LlmEngine.Backend.GPU, session.backend)
-            assertTrue(fallbackStrategy.isUnsupported(LlmEngine.Backend.NPU))
+            assertThat(session.backend).isEqualTo(LlmEngine.Backend.GPU)
+            assertThat(fallbackStrategy.isUnsupported(LlmEngine.Backend.NPU)).isTrue()
         }
 
     /**

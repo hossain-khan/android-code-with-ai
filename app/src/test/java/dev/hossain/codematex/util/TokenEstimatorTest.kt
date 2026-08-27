@@ -1,27 +1,27 @@
 package dev.hossain.codematex.util
 
+import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
-import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TokenEstimatorTest {
     @Test
     fun `estimateTokens returns 0 for blank or empty string`() {
-        assertEquals(0, TokenEstimator.estimateTokens(""))
-        assertEquals(0, TokenEstimator.estimateTokens("   "))
+        assertThat(TokenEstimator.estimateTokens("")).isEqualTo(0)
+        assertThat(TokenEstimator.estimateTokens("   ")).isEqualTo(0)
     }
 
     @Test
     fun `estimateTokens estimates correct tokens using character ratio`() {
         // 37 characters / 3.7 = 10 tokens
         val text37Chars = "1234567890123456789012345678901234567"
-        assertEquals(10, TokenEstimator.estimateTokens(text37Chars))
+        assertThat(TokenEstimator.estimateTokens(text37Chars)).isEqualTo(10)
     }
 
     @Test
     fun `estimateConversationTokens returns 0 for empty messages and null system prompt`() {
-        assertEquals(0, TokenEstimator.estimateConversationTokens(null, emptyList()))
-        assertEquals(0, TokenEstimator.estimateConversationTokens("", emptyList()))
+        assertThat(TokenEstimator.estimateConversationTokens(null, emptyList())).isEqualTo(0)
+        assertThat(TokenEstimator.estimateConversationTokens("", emptyList())).isEqualTo(0)
     }
 
     @Test
@@ -35,6 +35,6 @@ class TokenEstimatorTest {
         // Total chars = 31 + 30 + 44 = 105 chars
         // 105 / 3.7 = 28.37 -> ceil = 29
         val estimated = TokenEstimator.estimateConversationTokens(systemPrompt, messages)
-        assertEquals(29, estimated)
+        assertThat(estimated).isEqualTo(29)
     }
 }
