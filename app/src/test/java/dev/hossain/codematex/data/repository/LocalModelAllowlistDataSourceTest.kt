@@ -28,10 +28,10 @@ class LocalModelAllowlistDataSourceTest {
 
         assertEquals("litert-community/Phi-4-mini-instruct", allowlist[2].modelId)
         assertEquals("Phi-4-mini-instruct_multi-prefill-seq_q8_ekv4096.litertlm", allowlist[2].modelFile)
-        assertEquals(2_684_354_560L, allowlist[2].sizeInBytes)
-        assertEquals(6, allowlist[2].minDeviceMemoryInGb)
+        assertEquals(3_910_090_752L, allowlist[2].sizeInBytes)
+        assertEquals(12, allowlist[2].minDeviceMemoryInGb)
         assertEquals(128000, allowlist[2].contextWindow)
-        assertEquals("INT4", allowlist[2].quantization)
+        assertEquals("Q8", allowlist[2].quantization)
         assertEquals("PHI", allowlist[2].promptFormat)
         assertEquals("MIT", allowlist[2].license)
 
