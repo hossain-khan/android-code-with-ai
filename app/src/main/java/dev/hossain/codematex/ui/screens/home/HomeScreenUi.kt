@@ -395,7 +395,7 @@ private fun HeroBanner(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        "Learn & Debug Locally",
+                        "Ask & Learn Locally",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.ExtraBold,
                     )
