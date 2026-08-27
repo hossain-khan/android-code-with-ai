@@ -5,16 +5,21 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.FakeChatInferenceOrchestrator
 import dev.hossain.codematex.data.FakeSystemStatsMonitor
+import dev.hossain.codematex.data.FakeTopicPromptProvider
+import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelConfigStoreImpl
+import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -35,6 +40,30 @@ class ChatPresenterTest {
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
     private val fakeUserPreferencesStore = FakeUserPreferencesStore()
+    private val fakeTopicPromptProvider = FakeTopicPromptProvider()
+
+    private fun createPresenter(
+        navigator: com.slack.circuit.runtime.Navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN)),
+        screen: ChatScreen = ChatScreen(CodingTopic.KOTLIN),
+        modelRepository: ModelRepository,
+        sessionRepository: ChatSessionRepository = fakeSessionRepo,
+        configStore: ModelConfigStore = this.configStore,
+        userPreferencesStore: UserPreferencesStore = fakeUserPreferencesStore,
+        chatInferenceOrchestrator: dev.hossain.codematex.data.ChatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+        systemStatsMonitor: dev.hossain.codematex.data.SystemStatsMonitor = fakeSystemStatsMonitor,
+        topicPromptProvider: TopicPromptProvider = fakeTopicPromptProvider,
+    ): ChatPresenter =
+        ChatPresenter(
+            navigator = navigator,
+            screen = screen,
+            modelRepository = modelRepository,
+            sessionRepository = sessionRepository,
+            configStore = configStore,
+            userPreferencesStore = userPreferencesStore,
+            chatInferenceOrchestrator = chatInferenceOrchestrator,
+            systemStatsMonitor = systemStatsMonitor,
+            topicPromptProvider = topicPromptProvider,
+        )
 
     @Test
     fun `given no downloaded models - emits no model selected with false`() =
@@ -46,15 +75,10 @@ class ChatPresenterTest {
                 )
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -74,15 +98,10 @@ class ChatPresenterTest {
                 )
             val navigator = FakeNavigator(ChatScreen(CodingTopic.ANDROID))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.ANDROID),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -102,15 +121,10 @@ class ChatPresenterTest {
                 )
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -131,15 +145,10 @@ class ChatPresenterTest {
                 )
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -163,15 +172,11 @@ class ChatPresenterTest {
             val customPreferencesStore = FakeUserPreferencesStore(initialSelectedPersona = TutorPersona.INTERVIEW_COACH)
             val navigator = FakeNavigator(ChatScreen(CodingTopic.PYTHON))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.PYTHON),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
                     userPreferencesStore = customPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -193,15 +198,11 @@ class ChatPresenterTest {
             val preferencesStore = FakeUserPreferencesStore(initialSelectedPersona = TutorPersona.SENIOR_ENGINEER)
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
                     userPreferencesStore = preferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -239,13 +240,10 @@ class ChatPresenterTest {
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
 
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
                     systemStatsMonitor = customStatsMonitor,
                 )
@@ -280,15 +278,12 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN, sessionId = resumedSessionId))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN, sessionId = resumedSessionId),
                     modelRepository = fakeModelRepo,
                     sessionRepository = sessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -327,15 +322,12 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
                     sessionRepository = sessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -369,15 +361,12 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
                     sessionRepository = sessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -413,15 +402,12 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
                     sessionRepository = sessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -455,15 +441,11 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -497,15 +479,12 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
-                    configStore = configStore,
                     userPreferencesStore = userPrefsStore,
                     chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -533,15 +512,11 @@ class ChatPresenterTest {
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
-                ChatPresenter(
+                createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    sessionRepository = fakeSessionRepo,
                     configStore = localConfigStore,
-                    userPreferencesStore = fakeUserPreferencesStore,
-                    chatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-                    systemStatsMonitor = fakeSystemStatsMonitor,
                 )
 
             presenter.test {
@@ -552,6 +527,33 @@ class ChatPresenterTest {
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertEquals("Temp: 0.2, Top-K: 10, Top-P: 0.8", updatedState.configInfo)
+            }
+        }
+
+    @Test
+    fun `given active model with context window - emits contextStats with calculated used tokens`() =
+        runTest {
+            val model =
+                testModel(
+                    id = "litert-community/gemma-4-E2B-it-litert-lm",
+                    downloadStatus = DownloadStatus.DOWNLOADED,
+                ).copy(contextWindow = 8192)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertNotNull(state.contextStats)
+                assertEquals(8192, state.contextStats?.maxTokens)
+                assertTrue((state.contextStats?.usedTokens ?: 0) > 0)
             }
         }
 }

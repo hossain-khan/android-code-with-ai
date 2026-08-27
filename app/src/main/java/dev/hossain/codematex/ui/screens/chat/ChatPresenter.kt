@@ -15,6 +15,7 @@ import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.ChatInferenceOrchestrator
 import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.data.ThroughputTracker
+import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
@@ -24,8 +25,10 @@ import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
+import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.util.TokenEstimator
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -44,6 +47,7 @@ class ChatPresenter(
     private val userPreferencesStore: UserPreferencesStore,
     private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
     private val systemStatsMonitor: SystemStatsMonitor,
+    private val topicPromptProvider: TopicPromptProvider,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -374,6 +378,18 @@ class ChatPresenter(
                 val memoryText = "Requires ${model.minDeviceMemoryInGb}GB RAM"
                 val configText = "Temp: ${modelConfig.temperature}, Top-K: ${modelConfig.topK}, Top-P: ${modelConfig.topP}"
 
+                val contextStats =
+                    if (model.contextWindow > 0) {
+                        val systemPrompt = topicPromptProvider.buildSystemPrompt(screen.topic, persona)
+                        val usedTokens = TokenEstimator.estimateConversationTokens(systemPrompt, messages)
+                        ContextUsageStats(
+                            usedTokens = usedTokens,
+                            maxTokens = model.contextWindow,
+                        )
+                    } else {
+                        null
+                    }
+
                 ChatScreen.State.Active(
                     messages = messages,
                     isGenerating = isGenerating,
@@ -387,6 +403,7 @@ class ChatPresenter(
                     throughputInfo = throughputInfo,
                     systemStatsInfo = systemStatsInfo,
                     systemResourceStats = systemResourceStats,
+                    contextStats = contextStats,
                     saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
                     eventSink = eventSink,
