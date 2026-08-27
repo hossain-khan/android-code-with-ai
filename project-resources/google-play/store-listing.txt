@@ -15,7 +15,7 @@ FULL DESCRIPTION (Max 4000 characters)
 --------------------------------------------------------------------------------
 CodeMateX is your intelligent, 100% on-device AI coding companion and tutor. Built for mobile engineers, students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
 
-No cloud servers. No subscriptions. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, debugging, and architecture guidance without sending a single byte of your code or queries over the internet.
+No cloud servers. No subscriptions. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, concept learning, and architecture guidance without sending a single byte of your code or queries over the internet.
 
 ✨ KEY FEATURES
 
@@ -34,7 +34,7 @@ Get targeted assistance with interactive topic tracks tailored for modern develo
 • Android Jetpack & Modern Architecture (MVI / MVVM)
 • Jetpack Compose & Material 3 UI/UX
 • Kotlin Coroutines, Asynchronous Flow & Concurrency
-• Bug Triaging & Stacktrace Debugging
+• Code Understanding & Syntax Q&A
 • System Design, Algorithms & Data Structures
 • Python, Swift, Rust, and Web Technologies
 

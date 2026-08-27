@@ -22,7 +22,7 @@ Refer to this checklist when preparing visual marketing assets for the Google Pl
    - *Headline*: "100% Private, On-Device AI Coding Tutor"
    - *Focus*: Topic cards (Kotlin, Jetpack Compose, Coroutines, System Design) and atmospheric lighting.
 2. **Screenshot 2: Interactive Chat & Code Highlighting**
-   - *Headline*: "Instant Code Explanation & Debugging"
+   - *Headline*: "Instant Code Explanation & Q&A"
    - *Focus*: Clean Markdown syntax formatting, code blocks, and copy actions.
 3. **Screenshot 3: Real-Time Hardware Benchmark Panel**
    - *Headline*: "Inspect Real-Time Inference Speed & Hardware"
