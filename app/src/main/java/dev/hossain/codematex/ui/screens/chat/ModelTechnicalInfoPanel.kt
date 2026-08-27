@@ -25,6 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.system.ContextUsageStats
+import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.component.LiveContextTelemetryBar
 import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -128,6 +131,12 @@ internal fun SupportingBenchmarkingCard(
             state.systemResourceStats?.let { stats ->
                 LiveHardwareTelemetryBars(
                     stats = stats,
+                    contextStats = state.contextStats,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+            } ?: state.contextStats?.let { contextStats ->
+                LiveContextTelemetryBar(
+                    contextStats = contextStats,
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                 )
             } ?: state.systemStatsInfo?.let { stats ->
@@ -276,6 +285,12 @@ internal fun ModelTechnicalInfoPanel(
                 state.systemResourceStats?.let { stats ->
                     LiveHardwareTelemetryBars(
                         stats = stats,
+                        contextStats = state.contextStats,
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    )
+                } ?: state.contextStats?.let { contextStats ->
+                    LiveContextTelemetryBar(
+                        contextStats = contextStats,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                     )
                 } ?: state.systemStatsInfo?.let { stats ->
@@ -310,6 +325,8 @@ private fun ModelTechnicalInfoPanelPreview() {
                         configInfo = "Temp: 0.7 • Top-K: 40 • Top-P: 1.0",
                         throughputInfo = "TTFT: 480ms • Speed: 14.2 t/s",
                         systemStatsInfo = null,
+                        systemResourceStats = SystemResourceStats(cpuPercent = 42f, ramUsedGb = 3.8f, ramTotalGb = 8.0f),
+                        contextStats = ContextUsageStats(usedTokens = 1420, maxTokens = 8192),
                         persona = TutorPersona.SENIOR_ENGINEER,
                         isPreparing = false,
                         isGenerating = false,
