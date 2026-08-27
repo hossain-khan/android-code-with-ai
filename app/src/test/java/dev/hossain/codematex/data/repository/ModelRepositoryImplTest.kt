@@ -90,13 +90,14 @@ class ModelRepositoryImplTest {
 
             val models = repository.getAvailableModels().first()
 
-            assertEquals(4, models.size)
+            assertEquals(5, models.size)
             assertEquals(
                 listOf(
                     "litert-community/gemma-4-E2B-it-litert-lm",
                     "litert-community/gemma-4-E4B-it-litert-lm",
                     "litert-community/Phi-4-mini-instruct",
                     "litert-community/Qwen2.5-Coder-1.5B-Instruct",
+                    "litert-community/Llama-3.2-1B-Instruct",
                 ),
                 models.map { it.id },
             )
