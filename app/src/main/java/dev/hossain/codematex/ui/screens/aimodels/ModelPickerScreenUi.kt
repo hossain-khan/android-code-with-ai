@@ -879,7 +879,7 @@ private val sampleModels =
             sizeBytes = 3_910_090_752L,
             localPath = null,
             preferredBackend = LlmEngine.Backend.GPU,
-            minDeviceMemoryInGb = 12,
+            minDeviceMemoryInGb = 14,
             downloadUrl = "https://huggingface.co/litert-community/Phi-4-mini-instruct",
             modelRepoUrl = "https://huggingface.co/litert-community/Phi-4-mini-instruct",
             license = "MIT",
@@ -918,7 +918,7 @@ private val sampleModels =
             sizeBytes = 614_236_160L,
             localPath = null,
             preferredBackend = LlmEngine.Backend.CPU,
-            minDeviceMemoryInGb = 2,
+            minDeviceMemoryInGb = 4,
             downloadUrl =
                 "https://light-llm-storage.gohk.xyz/models/litert-community/Qwen3-0.6B/Qwen3-0.6B.litertlm",
             modelRepoUrl = "https://huggingface.co/litert-community/Qwen3-0.6B",
