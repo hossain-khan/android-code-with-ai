@@ -919,7 +919,8 @@ private val sampleModels =
             localPath = null,
             preferredBackend = LlmEngine.Backend.CPU,
             minDeviceMemoryInGb = 2,
-            downloadUrl = "https://huggingface.co/litert-community/Qwen3-0.6B",
+            downloadUrl =
+                "https://light-llm-storage.gohk.xyz/models/litert-community/Qwen3-0.6B/Qwen3-0.6B.litertlm",
             modelRepoUrl = "https://huggingface.co/litert-community/Qwen3-0.6B",
             license = "Apache 2.0",
             publisher = "Google LiteRT Community",

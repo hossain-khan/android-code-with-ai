@@ -117,11 +117,12 @@ class FakeModelAllowlistDataSource(
                     licenseUrl = "https://www.apache.org/licenses/LICENSE-2.0",
                     description = "Ultra-compact efficient model designed for high-speed local inference on resource-constrained devices.",
                     downloadUrl =
-                        "https://huggingface.co/litert-community/Qwen3-0.6B/resolve/main/Qwen3-0.6B.litertlm",
+                        "https://light-llm-storage.gohk.xyz/models/litert-community/Qwen3-0.6B/Qwen3-0.6B.litertlm",
                     fallbackDownloadUrls =
                         listOf(
                             "https://huggingface.co/litert-community/Qwen3-0.6B/resolve/main/Qwen3-0.6B.litertlm?download=true",
                         ),
+                    sha256 = "555579ff2f4fd13379abe69c1c3ab5200f7338bc92471557f1d6614a6e5ab0b4",
                     contextWindow = 4096,
                     quantization = "INT8",
                     promptFormat = "CHATML",
