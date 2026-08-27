@@ -45,14 +45,14 @@ class LocalModelAllowlistDataSourceTest {
         assertEquals("Apache 2.0", allowlist[3].license)
         assertEquals("273ecc7771ba2dd5fe1bb6d4d4726ad0353102f04ad094082ccf59bca9f21213", allowlist[3].sha256)
 
-        assertEquals("litert-community/Llama-3.2-1B-Instruct", allowlist[4].modelId)
-        assertEquals("Llama-3.2-1B-Instruct_int4.litertlm", allowlist[4].modelFile)
-        assertEquals(850_000_000L, allowlist[4].sizeInBytes)
-        assertEquals(3, allowlist[4].minDeviceMemoryInGb)
-        assertEquals(131072, allowlist[4].contextWindow)
-        assertEquals("INT4", allowlist[4].quantization)
-        assertEquals("LLAMA_3", allowlist[4].promptFormat)
-        assertEquals("Llama 3.2 Community", allowlist[4].license)
-        assertTrue(allowlist[4].isGatedModel)
+        assertEquals("litert-community/Qwen3-0.6B", allowlist[4].modelId)
+        assertEquals("Qwen3-0.6B.litertlm", allowlist[4].modelFile)
+        assertEquals(614_236_160L, allowlist[4].sizeInBytes)
+        assertEquals(2, allowlist[4].minDeviceMemoryInGb)
+        assertEquals(4096, allowlist[4].contextWindow)
+        assertEquals("INT8", allowlist[4].quantization)
+        assertEquals("CHATML", allowlist[4].promptFormat)
+        assertEquals("Apache 2.0", allowlist[4].license)
+        assertEquals(false, allowlist[4].isGatedModel)
     }
 }
