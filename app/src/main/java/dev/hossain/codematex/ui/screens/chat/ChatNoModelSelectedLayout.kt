@@ -146,7 +146,7 @@ internal fun NoModelSelectedLayout(
                             if (state.hasDownloadedModels) {
                                 "You have downloaded models ready on your device. Select an active model to start chatting with your AI coding tutor."
                             } else {
-                                "CodeMateX runs 100% locally on your device for privacy and offline tutoring. Download an open LLM model (e.g. Gemma) to get started."
+                                "CodeMateX runs 100% locally on your device for privacy and offline tutoring. Download an open-weights model to get started."
                             },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
