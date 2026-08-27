@@ -37,12 +37,13 @@ class LocalModelAllowlistDataSourceTest {
 
         assertEquals("litert-community/Qwen2.5-Coder-1.5B-Instruct", allowlist[3].modelId)
         assertEquals("Qwen2.5-Coder-1.5B-Instruct_int4.litertlm", allowlist[3].modelFile)
-        assertEquals(1_120_000_000L, allowlist[3].sizeInBytes)
+        assertEquals(1_117_385_648L, allowlist[3].sizeInBytes)
         assertEquals(3, allowlist[3].minDeviceMemoryInGb)
         assertEquals(32768, allowlist[3].contextWindow)
         assertEquals("INT4", allowlist[3].quantization)
         assertEquals("CHATML", allowlist[3].promptFormat)
         assertEquals("Apache 2.0", allowlist[3].license)
+        assertEquals("273ecc7771ba2dd5fe1bb6d4d4726ad0353102f04ad094082ccf59bca9f21213", allowlist[3].sha256)
 
         assertEquals("litert-community/Llama-3.2-1B-Instruct", allowlist[4].modelId)
         assertEquals("Llama-3.2-1B-Instruct_int4.litertlm", allowlist[4].modelFile)
