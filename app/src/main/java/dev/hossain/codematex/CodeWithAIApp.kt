@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.os.Build
 import androidx.work.Configuration
 import dev.hossain.codematex.di.AppGraph
+import dev.hossain.codematex.work.ModelDownloadWorker
 import dev.zacsweers.metro.createGraphFactory
 import timber.log.Timber
 
@@ -48,19 +49,29 @@ class CodeWithAIApp :
 
     private fun createNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val downloadChannel =
+            val progressChannel =
                 NotificationChannel(
-                    "model_download",
-                    "Model Downloads",
+                    ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_PROGRESS,
+                    "Model Download Progress",
+                    NotificationManager.IMPORTANCE_LOW,
+                ).apply {
+                    description = "Silent ongoing progress notifications for on-device AI model downloads"
+                    setShowBadge(false)
+                }
+
+            val completeChannel =
+                NotificationChannel(
+                    ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_COMPLETE,
+                    "Model Download Completed",
                     NotificationManager.IMPORTANCE_DEFAULT,
                 ).apply {
-                    description = "Notifications for on-device AI model downloads"
+                    description = "Notifications when an on-device AI model download has finished"
                     setShowBadge(true)
                 }
 
             val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager.createNotificationChannel(downloadChannel)
-            Timber.d("Created notification channel: model_download")
+            notificationManager.createNotificationChannels(listOf(progressChannel, completeChannel))
+            Timber.d("Created notification channels for model downloads")
         }
     }
 }

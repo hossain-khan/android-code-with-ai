@@ -44,6 +44,8 @@ class ModelDownloadWorker(
         const val KEY_MODEL_NAME = "model_name"
         const val KEY_ERROR_RETRYABLE = "error_retryable"
         const val NOTIFICATION_ID_DOWNLOAD_COMPLETE = 2
+        const val CHANNEL_ID_DOWNLOAD_PROGRESS = "model_download"
+        const val CHANNEL_ID_DOWNLOAD_COMPLETE = "model_download_complete"
 
         /**
          * Pure business logic for executing a model download, separated from the WorkManager
@@ -233,7 +235,7 @@ class ModelDownloadWorker(
 
         val notification =
             androidx.core.app.NotificationCompat
-                .Builder(applicationContext, "model_download")
+                .Builder(applicationContext, CHANNEL_ID_DOWNLOAD_COMPLETE)
                 .setContentTitle("$modelName is ready!")
                 .setContentText("Download complete. Tap to explore coding topics with your on-device AI tutor!")
                 .setStyle(
@@ -246,6 +248,7 @@ class ModelDownloadWorker(
                 ).setSmallIcon(android.R.drawable.stat_sys_download_done)
                 .setContentIntent(contentPendingIntent)
                 .setAutoCancel(true)
+                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_STATUS)
                 .build()
 
         val notificationManager =
@@ -331,13 +334,15 @@ class ModelDownloadWorker(
 
         val notification =
             androidx.core.app.NotificationCompat
-                .Builder(applicationContext, "model_download")
+                .Builder(applicationContext, CHANNEL_ID_DOWNLOAD_PROGRESS)
                 .setContentTitle("Downloading $modelName")
                 .setContentText(content)
                 .setSmallIcon(android.R.drawable.stat_sys_download)
                 .setContentIntent(contentPendingIntent)
-                .setAutoCancel(true)
+                .setAutoCancel(false)
                 .setOngoing(true)
+                .setOnlyAlertOnce(true)
+                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_PROGRESS)
                 .setProgress(maxProgress, progress, progress <= 0)
                 .addAction(
                     android.R.drawable.ic_menu_close_clear_cancel,

@@ -295,4 +295,10 @@ class ModelDownloadWorkerTest {
         assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(404)))
         assertFalse(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(400)))
     }
+
+    @Test
+    fun `channel constants are properly defined`() {
+        assertEquals("model_download", ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_PROGRESS)
+        assertEquals("model_download_complete", ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_COMPLETE)
+    }
 }
