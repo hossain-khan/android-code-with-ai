@@ -736,22 +736,11 @@ private fun ModelCard(
                 if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
                     OutlinedButton(
                         onClick = onCancel,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Text("Cancel Download")
-                    }
-
-                    OutlinedIconButton(
-                        onClick = onConfigure,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Configure ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
                     }
                 } else if (model.downloadStatus == DownloadStatus.DOWNLOADED) {
                     Box(modifier = Modifier.weight(1f)) {
@@ -812,7 +801,7 @@ private fun ModelCard(
                             }
                         },
                         enabled = isCompatible,
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         val icon =
                             when {
@@ -828,17 +817,6 @@ private fun ModelCard(
                                 model.downloadStatus == DownloadStatus.FAILED -> "Retry Download"
                                 else -> "Download Model"
                             },
-                        )
-                    }
-
-                    OutlinedIconButton(
-                        onClick = onConfigure,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Configure ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
