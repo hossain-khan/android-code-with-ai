@@ -53,6 +53,7 @@ class LocalModelAllowlistDataSourceTest {
         assertEquals("INT8", allowlist[4].quantization)
         assertEquals("CHATML", allowlist[4].promptFormat)
         assertEquals("Apache 2.0", allowlist[4].license)
+        assertEquals("555579ff2f4fd13379abe69c1c3ab5200f7338bc92471557f1d6614a6e5ab0b4", allowlist[4].sha256)
         assertEquals(false, allowlist[4].isGatedModel)
     }
 }
