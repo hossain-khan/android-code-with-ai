@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,6 +57,7 @@ import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 /**
@@ -76,6 +78,7 @@ fun ModelConfigBottomSheet(
         rememberModalBottomSheetState(
             skipPartiallyExpanded = true,
         )
+    val scope = rememberCoroutineScope()
 
     ModalBottomSheet(
         sheetState = sheetState,
@@ -87,14 +90,25 @@ fun ModelConfigBottomSheet(
             model = model,
             initialConfig = initialConfig,
             onSave = { config ->
-                onSaveConfig(config)
-                onDismiss()
+                scope.launch {
+                    sheetState.hide()
+                    onSaveConfig(config)
+                    onDismiss()
+                }
             },
             onReset = {
-                onResetConfig()
-                onDismiss()
+                scope.launch {
+                    sheetState.hide()
+                    onResetConfig()
+                    onDismiss()
+                }
             },
-            onDismiss = onDismiss,
+            onDismiss = {
+                scope.launch {
+                    sheetState.hide()
+                    onDismiss()
+                }
+            },
         )
     }
 }

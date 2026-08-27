@@ -26,7 +26,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import kotlinx.coroutines.launch
 
 /**
  * Material 3 Modal Bottom Sheet allowing users to switch AI Tutor Personas.
@@ -46,16 +49,27 @@ fun TutorPersonaBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    @Suppress("DEPRECATION")
+    val sheetState =
+        rememberModalBottomSheetState(
+            skipPartiallyExpanded = true,
+        )
+    val scope = rememberCoroutineScope()
+
     ModalBottomSheet(
+        sheetState = sheetState,
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         modifier = modifier,
     ) {
         TutorPersonaSheetContent(
             selectedPersona = selectedPersona,
-            onPersonaSelected = {
-                onPersonaSelected(it)
-                onDismiss()
+            onPersonaSelected = { persona ->
+                scope.launch {
+                    sheetState.hide()
+                    onPersonaSelected(persona)
+                    onDismiss()
+                }
             },
         )
     }
