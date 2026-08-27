@@ -14,6 +14,7 @@ class FakeLlmEngine : LlmEngine {
     var isolatedInferenceCalls = 0
     var runInferenceCalls = 0
     var lastInput: String? = null
+    var lastConfig: ModelConfig? = null
     var shouldThrow: Exception? = null
     var backendFailureBackend: LlmEngine.Backend? = null
     var backendFailureBackends: List<LlmEngine.Backend> = emptyList()
@@ -26,6 +27,7 @@ class FakeLlmEngine : LlmEngine {
     ) {
         if (shouldThrow != null) throw shouldThrow!!
         initializeCalls++
+        lastConfig = config
     }
 
     override suspend fun runInference(

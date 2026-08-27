@@ -5,6 +5,7 @@ import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import kotlinx.parcelize.Parcelize
@@ -22,6 +23,8 @@ data object ModelPickerScreen : ParcelableScreen {
             val deviceMemoryInfo: DeviceMemoryInfo,
             val modelCompatibility: Map<String, ModelCompatibility>,
             val downloadOverWifiOnly: Boolean = true,
+            val configuredModel: AiModel? = null,
+            val configuredModelConfig: ModelConfig? = null,
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -54,6 +57,21 @@ data object ModelPickerScreen : ParcelableScreen {
         ) : Event
 
         data class Select(
+            val model: AiModel,
+        ) : Event
+
+        data class OpenModelConfig(
+            val model: AiModel,
+        ) : Event
+
+        data object DismissModelConfig : Event
+
+        data class SaveModelConfig(
+            val model: AiModel,
+            val config: ModelConfig,
+        ) : Event
+
+        data class ResetModelConfig(
             val model: AiModel,
         ) : Event
     }

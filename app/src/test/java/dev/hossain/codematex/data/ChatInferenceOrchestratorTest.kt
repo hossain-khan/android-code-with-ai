@@ -4,9 +4,10 @@ import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
-import dev.hossain.codematex.data.repository.ModelConfigStoreImpl
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
@@ -15,7 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class ChatInferenceOrchestratorTest {
-    private val configStore: ModelConfigStore = ModelConfigStoreImpl()
+    private val configStore: ModelConfigStore = FakeModelConfigStore()
     private val fakeEngine = FakeLlmEngine()
     private val topicPromptProvider = DefaultTopicPromptProvider()
 
@@ -186,5 +187,23 @@ class ChatInferenceOrchestratorTest {
             }
 
             assertThat(fakeEngine.runInferenceCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun `initialize retrieves and uses model-specific configuration`() =
+        runTest {
+            val customConfig = ModelConfig(temperature = 1.4f, topK = 75, topP = 0.85f, maxTokens = 1024)
+            configStore.setConfig("google/gemma-2-2b-it", customConfig)
+
+            val result =
+                createOrchestrator().initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = "session-1",
+                    existingMessages = emptyList(),
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            assertThat(fakeEngine.lastConfig).isEqualTo(customConfig)
         }
 }

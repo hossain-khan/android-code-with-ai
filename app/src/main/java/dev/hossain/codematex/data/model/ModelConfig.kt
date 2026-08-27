@@ -1,5 +1,7 @@
 package dev.hossain.codematex.data.model
 
+import kotlinx.serialization.Serializable
+
 /**
  * Immutable configuration parameters for Large Language Model text generation.
  *
@@ -8,6 +10,7 @@ package dev.hossain.codematex.data.model
  * @property topP nucleus sampling cumulative probability threshold.
  * @property maxTokens maximum number of tokens to decode in a single response.
  */
+@Serializable
 data class ModelConfig(
     val temperature: Float = 0.7f,
     val topK: Int = 40,

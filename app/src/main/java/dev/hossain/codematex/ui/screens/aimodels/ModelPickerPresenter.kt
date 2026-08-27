@@ -12,6 +12,8 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.system.ModelCompatibility
@@ -32,6 +34,7 @@ class ModelPickerPresenter(
     private val modelRepository: ModelRepository,
     private val downloadPreferences: ModelDownloadPreferences,
     private val modelCompatibilityChecker: ModelCompatibilityChecker,
+    private val modelConfigStore: ModelConfigStore,
 ) : Presenter<ModelPickerScreen.State> {
     @Composable
     override fun present(): ModelPickerScreen.State {
@@ -40,6 +43,8 @@ class ModelPickerPresenter(
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
         var downloadOverWifiOnly by rememberRetained { mutableStateOf(true) }
+        var configuredModel by rememberRetained { mutableStateOf<AiModel?>(null) }
+        var configuredModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
@@ -104,6 +109,34 @@ class ModelPickerPresenter(
                         navigator.pop()
                     }
                 }
+
+                is ModelPickerScreen.Event.OpenModelConfig -> {
+                    configuredModel = event.model
+                    scope.launch {
+                        configuredModelConfig = modelConfigStore.getConfig(event.model.id)
+                    }
+                }
+
+                is ModelPickerScreen.Event.DismissModelConfig -> {
+                    configuredModel = null
+                    configuredModelConfig = null
+                }
+
+                is ModelPickerScreen.Event.SaveModelConfig -> {
+                    scope.launch {
+                        modelConfigStore.setConfig(event.model.id, event.config)
+                    }
+                    configuredModel = null
+                    configuredModelConfig = null
+                }
+
+                is ModelPickerScreen.Event.ResetModelConfig -> {
+                    scope.launch {
+                        modelConfigStore.resetConfig(event.model.id)
+                    }
+                    configuredModel = null
+                    configuredModelConfig = null
+                }
             }
         }
 
@@ -125,6 +158,8 @@ class ModelPickerPresenter(
                             model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
                         },
                     downloadOverWifiOnly = downloadOverWifiOnly,
+                    configuredModel = configuredModel,
+                    configuredModelConfig = configuredModelConfig,
                     eventSink = eventSink,
                 )
             }
