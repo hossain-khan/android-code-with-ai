@@ -431,6 +431,7 @@ class LlmEngineImpl(
 
         override fun onDone() {
             if (!terminal.compareAndSet(false, true)) return
+            Timber.d("LlmEngineImpl: Native inference completed successfully (onDone)")
             notifyTerminal()
             completeSuccessfully()
         }
