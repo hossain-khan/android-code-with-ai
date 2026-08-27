@@ -97,7 +97,7 @@ class ModelRepositoryImplTest {
                     "litert-community/gemma-4-E4B-it-litert-lm",
                     "litert-community/Phi-4-mini-instruct",
                     "litert-community/Qwen2.5-Coder-1.5B-Instruct",
-                    "litert-community/Llama-3.2-1B-Instruct",
+                    "litert-community/Qwen3-0.6B",
                 ),
                 models.map { it.id },
             )
