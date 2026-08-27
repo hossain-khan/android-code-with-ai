@@ -1,5 +1,10 @@
 package dev.hossain.codematex.ui.overlay
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,9 +25,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -34,7 +41,9 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -152,6 +161,9 @@ private fun ModelConfigSheetContent(
         // Sliders & Controls
         ConfigSliderItem(
             title = "Max tokens (512-${maxTokensLimit.toInt()})",
+            description =
+                "Limits response length. Higher values allow complete code files and detailed explanations; " +
+                    "lower values generate quicker, concise answers.",
             value = maxTokens,
             valueRange = 512f..maxTokensLimit,
             steps = 0,
@@ -161,6 +173,9 @@ private fun ModelConfigSheetContent(
 
         ConfigSliderItem(
             title = "TopK (1-100)",
+            description =
+                "Limits sampling to the top K most likely words. Lower values make code predictable and strict; " +
+                    "higher values allow more varied phrasing.",
             value = topK,
             valueRange = 1f..100f,
             steps = 99,
@@ -170,6 +185,9 @@ private fun ModelConfigSheetContent(
 
         ConfigSliderItem(
             title = "TopP (0.00-1.00)",
+            description =
+                "Samples dynamically from the most probable words up to cumulative percentage P. " +
+                    "Lower values keep answers focused; higher values allow natural variety.",
             value = topP,
             valueRange = 0.0f..1.0f,
             steps = 0,
@@ -179,6 +197,9 @@ private fun ModelConfigSheetContent(
 
         ConfigSliderItem(
             title = "Temperature (0.00-2.00)",
+            description =
+                "Controls creativity and randomness. Lower values (0.1–0.3) produce precise, deterministic code; " +
+                    "higher values (0.7–1.2) produce more creative and diverse responses.",
             value = temperature,
             valueRange = 0.0f..2.0f,
             steps = 0,
@@ -245,6 +266,7 @@ private fun ModelConfigSheetContent(
 @Composable
 private fun ConfigSliderItem(
     title: String,
+    description: String,
     value: Float,
     valueRange: ClosedFloatingPointRange<Float>,
     steps: Int,
@@ -252,16 +274,54 @@ private fun ConfigSliderItem(
     onValueChange: (Float) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showDescription by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            IconButton(
+                onClick = { showDescription = !showDescription },
+                modifier = Modifier.size(24.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = "Explain $title",
+                    tint =
+                        if (showDescription) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                        },
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = showDescription,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
