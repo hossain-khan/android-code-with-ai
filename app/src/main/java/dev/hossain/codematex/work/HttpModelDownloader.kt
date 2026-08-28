@@ -163,8 +163,8 @@ class HttpModelDownloader
 
                                     val progress = if (totalBytes > 0) (downloadedBytes * 100 / totalBytes).toInt() else -1
 
-                                    if (progress != lastReportedProgress &&
-                                        (progress % 5 == 0 || downloadedBytes - lastReportedBytes >= reportInterval)
+                                    if ((progress != -1 && progress != lastReportedProgress) ||
+                                        (progress == -1 && downloadedBytes - lastReportedBytes >= reportInterval)
                                     ) {
                                         lastReportedProgress = progress
                                         lastReportedBytes = downloadedBytes
