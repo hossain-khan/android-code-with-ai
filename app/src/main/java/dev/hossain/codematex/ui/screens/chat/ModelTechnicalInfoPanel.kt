@@ -1,5 +1,16 @@
 package dev.hossain.codematex.ui.screens.chat
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -7,7 +18,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -22,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
@@ -157,16 +168,44 @@ internal fun ModelTechnicalInfoPanel(
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow,
+            ),
+        label = "ChevronRotation",
+    )
+
+    val surfaceColor by animateColorAsState(
+        targetValue =
+            if (isExpanded) {
+                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            },
+        label = "PanelSurfaceColor",
+    )
+
     Surface(
         modifier =
             modifier
                 .fillMaxWidth()
                 .clickable { isExpanded = !isExpanded },
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        tonalElevation = 1.dp,
+        color = surfaceColor,
+        tonalElevation = if (isExpanded) 2.dp else 1.dp,
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .animateContentSize(
+                        animationSpec =
+                            spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessMediumLow,
+                            ),
+                    ).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(
@@ -215,7 +254,11 @@ internal fun ModelTechnicalInfoPanel(
                     }
 
                     // Collapsed speed indicator if active or benchmark metrics when done
-                    if (!isExpanded) {
+                    AnimatedVisibility(
+                        visible = !isExpanded,
+                        enter = fadeIn(animationSpec = tween(150)),
+                        exit = fadeOut(animationSpec = tween(100)),
+                    ) {
                         if (state.isGenerating) {
                             Text(
                                 text = "• Generating...",
@@ -234,71 +277,81 @@ internal fun ModelTechnicalInfoPanel(
                 }
 
                 Icon(
-                    imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    imageVector = Icons.Default.ExpandMore,
                     contentDescription = if (isExpanded) "Collapse info" else "Expand info",
+                    modifier = Modifier.rotate(chevronRotation),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
-            if (isExpanded) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = fadeIn(animationSpec = tween(150)) + expandVertically(),
+                exit = fadeOut(animationSpec = tween(100)) + shrinkVertically(),
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 4.dp),
                 ) {
-                    state.modelSize?.let {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        state.modelSize?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                         Text(
-                            text = it,
+                            text = "•",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        state.modelMemory?.let {
+                            Text(
+                                text = it,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    state.modelMemory?.let {
+
+                    state.configInfo?.let { config ->
                         Text(
-                            text = it,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = config,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                }
 
-                state.configInfo?.let { config ->
-                    Text(
-                        text = config,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                    state.throughputInfo?.let { throughput ->
+                        Text(
+                            text = throughput,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
 
-                state.throughputInfo?.let { throughput ->
-                    Text(
-                        text = throughput,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-
-                state.systemResourceStats?.let { stats ->
-                    LiveHardwareTelemetryBars(
-                        stats = stats,
-                        contextStats = state.contextStats,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    )
-                } ?: state.contextStats?.let { contextStats ->
-                    LiveContextTelemetryBar(
-                        contextStats = contextStats,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    )
-                } ?: state.systemStatsInfo?.let { stats ->
-                    Text(
-                        text = stats,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                    )
+                    state.systemResourceStats?.let { stats ->
+                        LiveHardwareTelemetryBars(
+                            stats = stats,
+                            contextStats = state.contextStats,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        )
+                    } ?: state.contextStats?.let { contextStats ->
+                        LiveContextTelemetryBar(
+                            contextStats = contextStats,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        )
+                    } ?: state.systemStatsInfo?.let { stats ->
+                        Text(
+                            text = stats,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                        )
+                    }
                 }
             }
         }
