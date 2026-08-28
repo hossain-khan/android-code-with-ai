@@ -51,6 +51,7 @@ androidxWork = "2.11.2"
 # On-device AI
 litertlm = "0.15.0"
 markdownRenderer = "0.44.0"
+composeHighlight = "0.33.0"
 room = "2.7.2"
 timber = "5.0.1"
 
@@ -128,7 +129,9 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 # Markdown rendering - https://github.com/mikepenz/multiplatform-markdown-renderer
 markdown-renderer = { group = "com.mikepenz", name = "multiplatform-markdown-renderer", version.ref = "markdownRenderer" }
 markdown-renderer-m3 = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-m3", version.ref = "markdownRenderer" }
-markdown-renderer-code = { group = "com.mikepenz", name = "multiplatform-markdown-renderer-code", version.ref = "markdownRenderer" }
+
+# Syntax Highlighting - https://github.com/hossain-khan/android-compose-highlight
+compose-highlight = { group = "dev.hossain", name = "compose-highlight", version.ref = "composeHighlight" }
 
 # Logging - https://github.com/JakeWharton/timber
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

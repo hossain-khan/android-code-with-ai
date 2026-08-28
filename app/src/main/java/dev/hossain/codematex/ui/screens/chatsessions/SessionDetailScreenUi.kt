@@ -779,14 +779,23 @@ private val sampleDetailMessages =
 @Composable
 private fun SessionDetailScreenPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        SessionDetailLayout(
-            state =
-                SessionDetailScreen.State.Success(
-                    session = sampleSession,
-                    messages = sampleDetailMessages,
-                    eventSink = {},
-                ),
-        )
+        dev.hossain.highlight.ui.HighlightThemeProvider(
+            lightHighlightTheme =
+                dev.hossain.highlight.ui
+                    .rememberTomorrowLightTheme(),
+            darkHighlightTheme =
+                dev.hossain.highlight.ui
+                    .rememberTomorrowNightTheme(),
+        ) {
+            SessionDetailLayout(
+                state =
+                    SessionDetailScreen.State.Success(
+                        session = sampleSession,
+                        messages = sampleDetailMessages,
+                        eventSink = {},
+                    ),
+            )
+        }
     }
 }
 

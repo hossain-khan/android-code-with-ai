@@ -380,6 +380,15 @@ private val sampleActiveChatState =
 @Composable
 private fun ChatScreenActivePreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        ChatLayout(state = sampleActiveChatState)
+        dev.hossain.highlight.ui.HighlightThemeProvider(
+            lightHighlightTheme =
+                dev.hossain.highlight.ui
+                    .rememberTomorrowLightTheme(),
+            darkHighlightTheme =
+                dev.hossain.highlight.ui
+                    .rememberTomorrowNightTheme(),
+        ) {
+            ChatLayout(state = sampleActiveChatState)
+        }
     }
 }
