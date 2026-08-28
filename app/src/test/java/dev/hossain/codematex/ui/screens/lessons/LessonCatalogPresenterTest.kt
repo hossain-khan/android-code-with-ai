@@ -4,6 +4,7 @@ import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.repository.FakeLearningRepository
+import dev.hossain.codematex.data.repository.GoCourseContent
 import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.PythonCourseContent
 import dev.hossain.codematex.data.repository.TypeScriptCourseContent
@@ -26,10 +27,11 @@ class LessonCatalogPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonCatalogScreen.State.Success
-                assertThat(state.courses).hasSize(3)
+                assertThat(state.courses).hasSize(4)
                 assertThat(state.courses.first().id).isEqualTo(KotlinCourseContent.COURSE_ID)
                 assertThat(state.courses[1].id).isEqualTo(PythonCourseContent.COURSE_ID)
                 assertThat(state.courses[2].id).isEqualTo(TypeScriptCourseContent.COURSE_ID)
+                assertThat(state.courses[3].id).isEqualTo(GoCourseContent.COURSE_ID)
             }
         }
 
@@ -106,6 +108,25 @@ class LessonCatalogPresenterTest {
                 state.eventSink(LessonCatalogScreen.Event.OpenCourse(TypeScriptCourseContent.COURSE_ID))
 
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen(TypeScriptCourseContent.COURSE_ID))
+            }
+        }
+
+    @Test
+    fun `given open go course event - navigates to go chapter screen`() =
+        runTest {
+            val navigator = FakeNavigator(LessonCatalogScreen)
+            val presenter =
+                LessonCatalogPresenter(
+                    navigator = navigator,
+                    screen = LessonCatalogScreen,
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonCatalogScreen.State.Success
+                state.eventSink(LessonCatalogScreen.Event.OpenCourse(GoCourseContent.COURSE_ID))
+
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen(GoCourseContent.COURSE_ID))
             }
         }
 }

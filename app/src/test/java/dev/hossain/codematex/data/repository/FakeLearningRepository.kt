@@ -16,6 +16,7 @@ class FakeLearningRepository(
             KotlinCourseContent.course,
             PythonCourseContent.course,
             TypeScriptCourseContent.course,
+            GoCourseContent.course,
         ),
 ) : LearningRepository {
     private val lessonStatusMap = MutableStateFlow<Map<String, LessonStatus>>(emptyMap())

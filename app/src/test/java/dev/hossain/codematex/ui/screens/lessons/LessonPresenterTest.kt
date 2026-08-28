@@ -5,6 +5,7 @@ import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.FakeLearningRepository
+import dev.hossain.codematex.data.repository.GoCourseContent
 import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.PythonCourseContent
 import dev.hossain.codematex.data.repository.TypeScriptCourseContent
@@ -140,6 +141,29 @@ class LessonPresenterTest {
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.TYPESCRIPT)
                 assertThat(chatScreen.initialPrompt).contains("Your First TypeScript Program")
                 assertThat(chatScreen.initialPrompt).contains("TypeScript Foundations")
+            }
+        }
+
+    @Test
+    fun `given go lesson - resolves go course and tutor topic`() =
+        runTest {
+            val navigator = FakeNavigator(LessonScreen("go-first-program"))
+            val presenter =
+                LessonPresenter(
+                    navigator = navigator,
+                    screen = LessonScreen("go-first-program"),
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.course.id).isEqualTo(GoCourseContent.COURSE_ID)
+                state.eventSink(LessonScreen.Event.AskAi)
+
+                val chatScreen = navigator.awaitNextScreen() as ChatScreen
+                assertThat(chatScreen.topic).isEqualTo(CodingTopic.GO)
+                assertThat(chatScreen.initialPrompt).contains("Your First Go Program")
+                assertThat(chatScreen.initialPrompt).contains("Go Foundations")
             }
         }
 

@@ -10,6 +10,7 @@ class CourseContentTest {
             KotlinCourseContent.course,
             PythonCourseContent.course,
             TypeScriptCourseContent.course,
+            GoCourseContent.course,
         )
 
     @Test
@@ -137,6 +138,62 @@ class CourseContentTest {
                 "What does K extends keyof T ensure in getProperty?" to 0,
                 "What does a mapped type transform?" to 1,
                 "Why is unknown safer than any for external data?" to 1,
+            ).inOrder()
+    }
+
+    @Test
+    fun `go course has expected foundation coverage`() {
+        val go = GoCourseContent.course
+
+        assertThat(go.language).isEqualTo("Go")
+        assertThat(go.chapters).hasSize(8)
+        assertThat(go.lessonCount).isEqualTo(24)
+        assertThat(go.chapters.flatMap { it.lessons }.map { it.id })
+            .containsExactly(
+                "go-first-program",
+                "go-variables-and-types",
+                "go-strings-and-formatting",
+                "go-if-and-switch",
+                "go-for-and-range",
+                "go-slices-and-maps",
+                "go-function-basics",
+                "go-multiple-results-and-errors",
+                "go-methods-and-pointers",
+                "go-structs",
+                "go-interfaces",
+                "go-composition-and-embedding",
+                "go-packages-and-visibility",
+                "go-error-wrapping",
+                "go-tests-and-gofmt",
+                "go-goroutines",
+                "go-channels",
+                "go-select-and-context",
+                "go-json",
+                "go-http-client",
+                "go-file-paths",
+                "go-generics",
+                "go-table-tests",
+                "go-package-design",
+            ).inOrder()
+    }
+
+    @Test
+    fun `go quiz answers match the language concepts`() {
+        val quizzes =
+            GoCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { lesson -> lesson.blocks.filterIsInstance<LessonBlock.Quiz>() }
+
+        assertThat(quizzes.map { it.question to it.answerIndex })
+            .containsExactly(
+                "What does := do inside a function?" to 0,
+                "What does range provide when iterating over a slice?" to 1,
+                "What should a caller usually do before using a value returned with error?" to 1,
+                "How does a Go type satisfy an interface?" to 1,
+                "What does %w preserve when used with fmt.Errorf?" to 0,
+                "What is a channel used for?" to 1,
+                "What should HTTP client code do with response.Body?" to 1,
+                "Why use t.Run in a table-driven test?" to 0,
             ).inOrder()
     }
 
