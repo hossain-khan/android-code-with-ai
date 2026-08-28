@@ -2,6 +2,9 @@ package dev.hossain.codematex.ui.screens.aimodels
 
 import android.Manifest
 import android.os.Build
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -665,10 +668,14 @@ private fun ModelCard(
             }
 
             if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
-                val progress = model.downloadProgress.coerceIn(0, 100) / 100f
+                val animatedProgress by animateFloatAsState(
+                    targetValue = model.downloadProgress.coerceIn(0, 100) / 100f,
+                    animationSpec = tween(durationMillis = 350, easing = LinearOutSlowInEasing),
+                    label = "DownloadProgressAnimation",
+                )
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     LinearWavyProgressIndicator(
-                        progress = { progress },
+                        progress = { animatedProgress },
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Row(
