@@ -3,6 +3,7 @@
 package dev.hossain.codematex.ui.component
 
 import com.google.common.truth.Truth.assertThat
+import org.intellij.markdown.MarkdownElementTypes
 import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
 import org.intellij.markdown.parser.MarkdownParser
 import org.junit.Test
@@ -24,7 +25,7 @@ class MarkdownMessageTest {
             """.trimMargin()
 
         val rootNode = parser.buildMarkdownTreeFromString(markdown)
-        val codeFenceNode = rootNode.children.first { it.type.name == "CODE_FENCE" }
+        val codeFenceNode = rootNode.children.first { it.type == MarkdownElementTypes.CODE_FENCE }
 
         val (language, code) = extractCodeFenceInfo(markdown, codeFenceNode)
 
@@ -51,7 +52,7 @@ class MarkdownMessageTest {
             """.trimMargin()
 
         val rootNode = parser.buildMarkdownTreeFromString(markdown)
-        val codeFenceNode = rootNode.children.first { it.type.name == "CODE_FENCE" }
+        val codeFenceNode = rootNode.children.first { it.type == MarkdownElementTypes.CODE_FENCE }
 
         val (language, code) = extractCodeFenceInfo(markdown, codeFenceNode)
 
@@ -69,7 +70,7 @@ class MarkdownMessageTest {
             """.trimMargin()
 
         val rootNode = parser.buildMarkdownTreeFromString(markdown)
-        val codeFenceNode = rootNode.children.first { it.type.name == "CODE_FENCE" }
+        val codeFenceNode = rootNode.children.first { it.type == MarkdownElementTypes.CODE_FENCE }
 
         val (language, code) = extractCodeFenceInfo(markdown, codeFenceNode)
 
@@ -87,7 +88,7 @@ class MarkdownMessageTest {
             """.trimMargin()
 
         val rootNode = parser.buildMarkdownTreeFromString(markdown)
-        val codeBlockNode = rootNode.children.first { it.type.name == "CODE_BLOCK" }
+        val codeBlockNode = rootNode.children.first { it.type == MarkdownElementTypes.CODE_BLOCK }
 
         val code = extractCodeBlockContent(markdown, codeBlockNode)
 

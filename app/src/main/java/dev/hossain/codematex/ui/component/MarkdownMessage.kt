@@ -19,6 +19,7 @@ import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.hossain.highlight.ui.SyntaxHighlightedCode
 import dev.hossain.highlight.ui.rememberTomorrowLightTheme
 import dev.hossain.highlight.ui.rememberTomorrowNightTheme
+import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
 
 /**
@@ -114,10 +115,10 @@ internal fun extractCodeFenceInfo(
     var fenceEndNode: ASTNode? = null
 
     fun findNodes(current: ASTNode) {
-        if (current.type.name == "FENCE_LANG" && language.isEmpty()) {
+        if (current.type == MarkdownTokenTypes.FENCE_LANG && language.isEmpty()) {
             language = content.substring(current.startOffset, current.endOffset).trim()
         }
-        if (current.type.name == "CODE_FENCE_END") {
+        if (current.type == MarkdownTokenTypes.CODE_FENCE_END) {
             fenceEndNode = current
         }
         for (child in current.children) {
