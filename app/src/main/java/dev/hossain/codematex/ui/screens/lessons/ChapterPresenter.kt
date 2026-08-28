@@ -11,7 +11,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningCourse
-import dev.hossain.codematex.data.repository.LearningRepository
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory

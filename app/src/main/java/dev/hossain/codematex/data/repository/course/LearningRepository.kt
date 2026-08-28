@@ -1,4 +1,4 @@
-package dev.hossain.codematex.data.repository
+package dev.hossain.codematex.data.repository.course
 
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter

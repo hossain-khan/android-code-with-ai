@@ -44,6 +44,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningCourse
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -259,7 +260,7 @@ private fun LessonCatalogPreview() {
         Surface {
             LessonCatalogScreenContent(
                 LessonCatalogScreen.State.Success(
-                    courses = listOf(dev.hossain.codematex.data.repository.KotlinCourseContent.course),
+                    courses = listOf(KotlinCourseContent.course),
                     progress = emptyMap(),
                     eventSink = {},
                 ),

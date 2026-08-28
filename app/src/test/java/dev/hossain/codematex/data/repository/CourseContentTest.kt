@@ -2,6 +2,11 @@ package dev.hossain.codematex.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.LessonBlock
+import dev.hossain.codematex.data.repository.course.GoCourseContent
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import org.junit.Test
 
 class CourseContentTest {
