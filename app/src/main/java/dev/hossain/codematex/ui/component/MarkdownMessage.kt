@@ -104,37 +104,44 @@ private fun ChatMarkdownCodeFence(
 
 /**
  * Extracts language identifier and raw code content from a fenced code block [ASTNode].
+ * Preserves all internal line breaks, blank lines, and whitespace indentation.
  */
 internal fun extractCodeFenceInfo(
     content: String,
     node: ASTNode,
 ): Pair<String, String> {
     var language = ""
-    val codeBuilder = StringBuilder()
+    var fenceEndNode: ASTNode? = null
 
-    for (child in node.children) {
-        when (child.type.name) {
-            "FENCE_LANG" -> {
-                language = content.substring(child.startOffset, child.endOffset).trim()
-            }
-
-            "CODE_FENCE_CONTENT" -> {
-                codeBuilder.append(content.substring(child.startOffset, child.endOffset))
-            }
+    fun findNodes(current: ASTNode) {
+        if (current.type.name == "FENCE_LANG" && language.isEmpty()) {
+            language = content.substring(current.startOffset, current.endOffset).trim()
+        }
+        if (current.type.name == "CODE_FENCE_END") {
+            fenceEndNode = current
+        }
+        for (child in current.children) {
+            findNodes(child)
         }
     }
 
-    val rawCode =
-        if (codeBuilder.isNotEmpty()) {
-            codeBuilder.toString()
+    findNodes(node)
+
+    val firstNewline = content.indexOf('\n', startIndex = node.startOffset)
+    val start =
+        if (firstNewline != -1 && firstNewline < node.endOffset) {
+            firstNewline + 1
         } else {
-            val fullSnippet = content.substring(node.startOffset, node.endOffset)
-            val lines = fullSnippet.lines()
-            if (lines.size > 2) {
-                lines.subList(1, lines.size - 1).joinToString("\n")
-            } else {
-                fullSnippet
-            }
+            node.startOffset
+        }
+
+    val end = fenceEndNode?.startOffset ?: node.endOffset
+
+    val rawCode =
+        if (start <= end && end <= content.length) {
+            content.substring(start, end)
+        } else {
+            content.substring(node.startOffset, node.endOffset)
         }
 
     return Pair(language, rawCode.trimEnd())
@@ -148,7 +155,7 @@ internal fun extractCodeBlockContent(
     node: ASTNode,
 ): String {
     val rawText = content.substring(node.startOffset, node.endOffset)
-    return rawText.trimEnd()
+    return rawText.trimIndent().trimEnd()
 }
 
 @ThemePreviews
