@@ -72,6 +72,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -267,7 +268,22 @@ private fun ModelPickerLayout(
                 .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
         topBar = {
             TopAppBar(
-                title = { Text("AI Models", fontWeight = FontWeight.Bold) },
+                title = {
+                    Column {
+                        Text("AI Models", fontWeight = FontWeight.Bold)
+                        val selectedModel = state.models.firstOrNull { it.isSelected }
+                        if (selectedModel != null) {
+                            Text(
+                                text = "Active: ${selectedModel.displayName}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { state.eventSink(ModelPickerScreen.Event.Back) }) {
                         Icon(
