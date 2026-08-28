@@ -15,8 +15,9 @@ import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.rememberMarkdownState
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
-import dev.hossain.highlight.ui.SyntaxHighlightedCode
+import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCode
 import dev.hossain.highlight.ui.rememberTomorrowLightTheme
 import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import org.intellij.markdown.MarkdownTokenTypes
@@ -28,7 +29,7 @@ import org.intellij.markdown.ast.ASTNode
  * The parser state is hoisted with [rememberMarkdownState] and [retainState] enabled so that
  * rapidly-updating streaming content does not flash a loading state between tokens. Fenced and
  * indented code blocks are intercepted via the library's component plugin API and rendered with
- * rich syntax highlighting via [SyntaxHighlightedCode] (powered by compose-highlight and Highlight.js).
+ * streaming-optimized syntax highlighting via [StreamingSyntaxHighlightedCode] (powered by compose-highlight and Highlight.js).
  *
  * @param content Markdown text to render.
  * @param modifier Modifier applied to the root [Markdown] composable.
@@ -69,15 +70,16 @@ fun MarkdownMessage(
 }
 
 /**
- * Custom renderer for indented code blocks. Renders the snippet as plain code using [SyntaxHighlightedCode].
+ * Custom renderer for indented code blocks. Renders the snippet as plain code using [StreamingSyntaxHighlightedCode].
  */
+@OptIn(ExperimentalHighlightApi::class)
 @Composable
 private fun ChatMarkdownCodeBlock(
     content: String,
     node: ASTNode,
 ) {
     val code = extractCodeBlockContent(content, node)
-    SyntaxHighlightedCode(
+    StreamingSyntaxHighlightedCode(
         code = code,
         language = "text",
         showLineNumbers = false,
@@ -87,15 +89,16 @@ private fun ChatMarkdownCodeBlock(
 
 /**
  * Custom renderer for fenced code blocks. Extracts language identifier and code content, rendering
- * with full Highlight.js syntax highlighting, line numbers, and copy action.
+ * with streaming-optimized syntax highlighting, span-transfer preservation, line numbers, and copy action.
  */
+@OptIn(ExperimentalHighlightApi::class)
 @Composable
 private fun ChatMarkdownCodeFence(
     content: String,
     node: ASTNode,
 ) {
     val (language, code) = extractCodeFenceInfo(content, node)
-    SyntaxHighlightedCode(
+    StreamingSyntaxHighlightedCode(
         code = code,
         language = language.ifEmpty { "text" },
         showLineNumbers = true,
