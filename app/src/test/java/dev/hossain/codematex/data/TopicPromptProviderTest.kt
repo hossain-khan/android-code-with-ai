@@ -47,4 +47,14 @@ class TopicPromptProviderTest {
         assertThat(pythonPrompt).contains("Python")
         assertThat(pythonPrompt).isEqualTo(kotlinPrompt.replace("Kotlin", "Python"))
     }
+
+    @Test
+    fun `buildSystemPrompt includes anti-thinking critical rule across all personas`() {
+        for (persona in TutorPersona.entries) {
+            val prompt = provider.buildSystemPrompt(CodingTopic.KOTLIN, persona)
+            assertThat(prompt).contains("CRITICAL RULE:")
+            assertThat(prompt).contains("Do NOT generate or output any internal thoughts")
+            assertThat(prompt).contains("Output ONLY the final direct response")
+        }
+    }
 }
