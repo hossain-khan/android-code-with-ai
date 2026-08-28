@@ -5,13 +5,13 @@ import org.junit.Test
 
 class MemoryCompatibilityPolicyTest {
     @Test
-    fun `minimum required bytes for 8GB model is 7_730_941_132`() {
-        assertThat(MemoryCompatibilityPolicy.minimumRequiredBytes(8)).isEqualTo(7_730_941_132L)
+    fun `minimum required bytes for 8GB model is 7_200_000_000`() {
+        assertThat(MemoryCompatibilityPolicy.minimumRequiredBytes(8)).isEqualTo(7_200_000_000L)
     }
 
     @Test
-    fun `minimum required bytes for 12GB model is 11_596_411_699`() {
-        assertThat(MemoryCompatibilityPolicy.minimumRequiredBytes(12)).isEqualTo(11_596_411_699L)
+    fun `minimum required bytes for 12GB model is 10_800_000_000`() {
+        assertThat(MemoryCompatibilityPolicy.minimumRequiredBytes(12)).isEqualTo(10_800_000_000L)
     }
 
     @Test
