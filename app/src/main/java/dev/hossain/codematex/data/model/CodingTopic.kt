@@ -11,6 +11,7 @@ enum class CodingTopic(
     KOTLIN("Kotlin", "kotlin"),
     PYTHON("Python", "python"),
     JAVASCRIPT("JavaScript", "javascript"),
+    TYPESCRIPT("TypeScript", "typescript"),
     RUST("Rust", "rust"),
     GO("Go", "go"),
     SWIFT("Swift", "swift"),

@@ -68,6 +68,23 @@ val CodingTopic.visualInfo: TopicVisualInfo
                 )
             }
 
+            CodingTopic.TYPESCRIPT -> {
+                TopicVisualInfo(
+                    topic = this,
+                    accentColor = Color(0xFF3178C6),
+                    secondaryAccentColor = Color(0xFF9CC7F5),
+                    tagline = "Typed JavaScript for reliable web and server applications",
+                    iconGlyph = "TS",
+                    starterPrompts =
+                        listOf(
+                            "Explain TypeScript narrowing with a discriminated union",
+                            "When should I use interfaces versus type aliases?",
+                            "Show a generic function constrained by keyof",
+                            "How should strict mode shape a TypeScript project?",
+                        ),
+                )
+            }
+
             CodingTopic.RUST -> {
                 TopicVisualInfo(
                     topic = this,

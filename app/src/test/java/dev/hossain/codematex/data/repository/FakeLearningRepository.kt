@@ -15,6 +15,7 @@ class FakeLearningRepository(
         listOf(
             KotlinCourseContent.course,
             PythonCourseContent.course,
+            TypeScriptCourseContent.course,
         ),
 ) : LearningRepository {
     private val lessonStatusMap = MutableStateFlow<Map<String, LessonStatus>>(emptyMap())

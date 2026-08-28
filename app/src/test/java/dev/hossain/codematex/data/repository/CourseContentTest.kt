@@ -5,7 +5,12 @@ import dev.hossain.codematex.data.model.LessonBlock
 import org.junit.Test
 
 class CourseContentTest {
-    private val courses = listOf(KotlinCourseContent.course, PythonCourseContent.course)
+    private val courses =
+        listOf(
+            KotlinCourseContent.course,
+            PythonCourseContent.course,
+            TypeScriptCourseContent.course,
+        )
 
     @Test
     fun `bundled courses have unique stable IDs`() {
@@ -77,6 +82,61 @@ class CourseContentTest {
                 "python-command-line",
                 "python-http-basics",
                 "python-asyncio",
+            ).inOrder()
+    }
+
+    @Test
+    fun `typescript course has expected foundation coverage`() {
+        val typescript = TypeScriptCourseContent.course
+
+        assertThat(typescript.language).isEqualTo("TypeScript")
+        assertThat(typescript.chapters).hasSize(8)
+        assertThat(typescript.lessonCount).isEqualTo(24)
+        assertThat(typescript.chapters.flatMap { it.lessons }.map { it.id })
+            .containsExactly(
+                "typescript-first-program",
+                "typescript-primitives-and-inference",
+                "typescript-arrays-and-tuples",
+                "typescript-object-shapes",
+                "typescript-optional-readonly",
+                "typescript-literal-types",
+                "typescript-union-types",
+                "typescript-narrowing",
+                "typescript-discriminated-unions",
+                "typescript-function-types",
+                "typescript-generics-basics",
+                "typescript-overloads",
+                "typescript-generic-constraints",
+                "typescript-keyof-and-indexed-access",
+                "typescript-utility-types",
+                "typescript-classes",
+                "typescript-interfaces-and-implements",
+                "typescript-modules",
+                "typescript-conditional-types",
+                "typescript-mapped-types",
+                "typescript-template-literal-types",
+                "typescript-strict-mode",
+                "typescript-unknown-and-validation",
+                "typescript-tsconfig",
+            ).inOrder()
+    }
+
+    @Test
+    fun `typescript quiz answers match the official type system concepts`() {
+        val quizzes =
+            TypeScriptCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { lesson -> lesson.blocks.filterIsInstance<LessonBlock.Quiz>() }
+
+        assertThat(quizzes.map { it.question to it.answerIndex })
+            .containsExactly(
+                "What does TypeScript usually infer for const lessons = 24?" to 1,
+                "What does the ? in bio?: string mean?" to 1,
+                "What does typeof value === \"number\" help TypeScript do?" to 1,
+                "Why use a type parameter in first<T>(values: T[]): T | undefined?" to 0,
+                "What does K extends keyof T ensure in getProperty?" to 0,
+                "What does a mapped type transform?" to 1,
+                "Why is unknown safer than any for external data?" to 1,
             ).inOrder()
     }
 
