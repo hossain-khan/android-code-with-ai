@@ -6,6 +6,7 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.KotlinCourseContent
+import dev.hossain.codematex.data.repository.PythonCourseContent
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -92,6 +93,29 @@ class LessonPresenterTest {
                 assertThat(chatScreen.saveToHistory).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Hello, Kotlin")
                 assertThat(chatScreen.initialPrompt).contains("Kotlin Foundations")
+            }
+        }
+
+    @Test
+    fun `given python lesson - resolves python course and tutor topic`() =
+        runTest {
+            val navigator = FakeNavigator(LessonScreen("python-hello-world"))
+            val presenter =
+                LessonPresenter(
+                    navigator = navigator,
+                    screen = LessonScreen("python-hello-world"),
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.course.id).isEqualTo(PythonCourseContent.COURSE_ID)
+                state.eventSink(LessonScreen.Event.AskAi)
+
+                val chatScreen = navigator.awaitNextScreen() as ChatScreen
+                assertThat(chatScreen.topic).isEqualTo(CodingTopic.PYTHON)
+                assertThat(chatScreen.initialPrompt).contains("Hello, Python")
+                assertThat(chatScreen.initialPrompt).contains("Python Foundations")
             }
         }
 

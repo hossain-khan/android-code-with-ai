@@ -5,7 +5,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -36,7 +35,6 @@ class LessonCatalogPresenter(
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
-        val scope = rememberCoroutineScope()
 
         LaunchedEffect(retryTrigger) {
             isLoading = true
@@ -52,7 +50,7 @@ class LessonCatalogPresenter(
                     courses = loadedCourses
                     isLoading = false
                     loadedCourses.forEach { course ->
-                        scope.launch {
+                        launch {
                             learningRepository.observeCourseProgress(course.id).collect { value ->
                                 progress = progress + (course.id to value)
                             }

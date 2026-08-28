@@ -13,7 +13,6 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
-import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.LearningRepository
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
@@ -44,12 +43,16 @@ class LessonPresenter(
                 lesson = loadedLesson
                 course = learningRepository.getCourseForLesson(screen.lessonId)
                 if (loadedLesson != null) {
-                    learningRepository.markLessonStarted(loadedLesson.id)
-                    learningRepository
-                        .observeLessonStatus(loadedLesson.id)
-                        .collect { status ->
-                            isCompleted = status == dev.hossain.codematex.data.model.LessonStatus.COMPLETED
-                        }
+                    if (course != null) {
+                        learningRepository.markLessonStarted(loadedLesson.id)
+                        learningRepository
+                            .observeLessonStatus(loadedLesson.id)
+                            .collect { status ->
+                                isCompleted = status == dev.hossain.codematex.data.model.LessonStatus.COMPLETED
+                            }
+                    } else {
+                        errorMessage = "Course for lesson '${screen.lessonId}' not found"
+                    }
                 } else {
                     errorMessage = "Lesson '${screen.lessonId}' not found"
                 }
@@ -106,9 +109,8 @@ class LessonPresenter(
         }
 
         val nextLesson = nextLessonId(course, lesson?.id)
-        val resolvedCourse = course ?: KotlinCourseContent.course
         return when {
-            lesson != null -> LessonScreen.State.Success(lesson!!, resolvedCourse, isCompleted, nextLesson, eventSink)
+            lesson != null && course != null -> LessonScreen.State.Success(lesson!!, course!!, isCompleted, nextLesson, eventSink)
             errorMessage != null -> LessonScreen.State.NotFound(errorMessage!!, eventSink)
             else -> LessonScreen.State.Loading
         }
@@ -118,7 +120,7 @@ class LessonPresenter(
         course: LearningCourse?,
         currentId: String?,
     ): String? {
-        val lessons = course?.chapters?.flatMap { it.lessons } ?: KotlinCourseContent.course.chapters.flatMap { it.lessons }
+        val lessons = course?.chapters?.flatMap { it.lessons }.orEmpty()
         val index = lessons.indexOfFirst { it.id == currentId }
         return lessons.getOrNull(index + 1)?.id
     }

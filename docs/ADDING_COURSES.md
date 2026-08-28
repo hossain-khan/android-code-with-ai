@@ -24,7 +24,8 @@ Room lesson progress
 Important existing files:
 
 - `data/model/LearningModels.kt` — Course, chapter, lesson, block, and progress models.
-- `data/repository/KotlinCourseContent.kt` — Current bundled Kotlin course.
+- `data/repository/KotlinCourseContent.kt` — Bundled Kotlin Foundations course.
+- `data/repository/PythonCourseContent.kt` — Bundled Python Foundations course.
 - `data/repository/LearningRepository.kt` — Course/progress repository contract.
 - `data/repository/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
 - `data/local/LessonProgressEntity.kt` — Room progress entity.

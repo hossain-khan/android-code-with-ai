@@ -296,7 +296,10 @@ private fun LessonBody(
                         Text("Mark complete")
                     }
                 } else {
-                    OutlinedButton(onClick = {}) {
+                    OutlinedButton(
+                        enabled = false,
+                        onClick = {},
+                    ) {
                         Icon(Icons.Default.Check, contentDescription = null)
                         Text("Completed")
                     }
