@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data.repository
 
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
@@ -42,6 +43,10 @@ class FakeLearningRepository(
         courses.firstOrNull { course ->
             course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
         }
+
+    override suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse? = courses.firstOrNull { it.topic == topic }
+
+    override suspend fun getTopicsWithCourses(): Set<CodingTopic> = courses.map { it.topic }.toSet()
 
     override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
         lessonStatusMap.map { statuses ->

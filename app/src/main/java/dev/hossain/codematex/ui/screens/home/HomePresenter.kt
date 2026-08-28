@@ -14,6 +14,7 @@ import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -34,10 +35,12 @@ class HomePresenter(
     private val sessionRepository: ChatSessionRepository,
     private val modelRepository: ModelRepository,
     private val hardwareEligibilityChecker: HardwareEligibilityChecker,
+    private val learningRepository: LearningRepository,
 ) : Presenter<HomeScreen.State> {
     @Composable
     override fun present(): HomeScreen.State {
         var recentSessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
+        var topicsWithCourses by rememberRetained { mutableStateOf<Set<CodingTopic>>(emptySet()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         var isWarningDismissed by rememberRetained { mutableStateOf(false) }
 
@@ -45,6 +48,7 @@ class HomePresenter(
         val hasDownloadedModel = modelRepository.getSelectedModel() != null
 
         LaunchedEffect(Unit) {
+            topicsWithCourses = learningRepository.getTopicsWithCourses()
             Timber.d("HomePresenter: Loading sessions")
             sessionRepository
                 .getAllSessions()
@@ -106,6 +110,7 @@ class HomePresenter(
                 recentSessions = recentSessions,
                 topics = CodingTopic.selectableEntries,
                 hasDownloadedModel = hasDownloadedModel,
+                topicsWithCourses = topicsWithCourses,
                 eventSink = eventSink,
             )
         }

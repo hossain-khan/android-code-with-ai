@@ -214,6 +214,7 @@ private fun HomeLayout(
                         items(state.topics) { topic ->
                             TopicCard(
                                 topic = topic,
+                                hasCourse = state.topicsWithCourses.contains(topic),
                                 onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
                             )
                         }
@@ -310,6 +311,7 @@ private fun HomeLayout(
                         items(state.topics) { topic ->
                             TopicCompactCard(
                                 topic = topic,
+                                hasCourse = state.topicsWithCourses.contains(topic),
                                 onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
                             )
                         }
@@ -452,6 +454,7 @@ private fun TopicCard(
     topic: CodingTopic,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    hasCourse: Boolean = false,
 ) {
     val visualInfo = topic.visualInfo
     Card(
@@ -475,19 +478,50 @@ private fun TopicCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = visualInfo.accentColor.copy(alpha = 0.15f),
-                    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(
-                        text = visualInfo.iconGlyph,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = visualInfo.accentColor,
-                    )
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = visualInfo.accentColor.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                    ) {
+                        Text(
+                            text = visualInfo.iconGlyph,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = visualInfo.accentColor,
+                        )
+                    }
+
+                    if (hasCourse) {
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = visualInfo.accentColor.copy(alpha = 0.12f),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.MenuBook,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = visualInfo.accentColor,
+                                )
+                                Text(
+                                    "Course",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = visualInfo.accentColor,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Icon(
@@ -520,6 +554,7 @@ private fun TopicCompactCard(
     topic: CodingTopic,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    hasCourse: Boolean = false,
 ) {
     val visualInfo = topic.visualInfo
     OutlinedCard(
@@ -538,18 +573,50 @@ private fun TopicCompactCard(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = visualInfo.accentColor.copy(alpha = 0.15f),
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = visualInfo.iconGlyph,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                    color = visualInfo.accentColor,
-                )
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = visualInfo.accentColor.copy(alpha = 0.15f),
+                ) {
+                    Text(
+                        text = visualInfo.iconGlyph,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+
+                if (hasCourse) {
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = visualInfo.accentColor.copy(alpha = 0.12f),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.MenuBook,
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = visualInfo.accentColor,
+                            )
+                            Text(
+                                "Course",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = visualInfo.accentColor,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
             }
 
             Text(
@@ -1048,13 +1115,37 @@ private fun TopicCardPreview() {
         ) {
             TopicCard(
                 topic = CodingTopic.KOTLIN,
+                hasCourse = true,
                 onClick = {},
                 modifier = Modifier.weight(1f),
             )
             TopicCard(
                 topic = CodingTopic.ANDROID,
+                hasCourse = false,
                 onClick = {},
                 modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun TopicCompactCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            TopicCompactCard(
+                topic = CodingTopic.RUST,
+                hasCourse = true,
+                onClick = {},
+            )
+            TopicCompactCard(
+                topic = CodingTopic.SWIFT,
+                hasCourse = false,
+                onClick = {},
             )
         }
     }

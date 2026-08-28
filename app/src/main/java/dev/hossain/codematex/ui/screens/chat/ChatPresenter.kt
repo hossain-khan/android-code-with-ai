@@ -19,15 +19,18 @@ import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import dev.hossain.codematex.util.TokenEstimator
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -48,6 +51,7 @@ class ChatPresenter(
     private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
     private val systemStatsMonitor: SystemStatsMonitor,
     private val topicPromptProvider: TopicPromptProvider,
+    private val learningRepository: LearningRepository,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -65,7 +69,12 @@ class ChatPresenter(
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
+        var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var hasSentInitialPrompt by rememberRetained { mutableStateOf(false) }
+
+        LaunchedEffect(screen.topic) {
+            availableCourse = learningRepository.getCourseForTopic(screen.topic)
+        }
 
         LaunchedEffect(Unit) {
             val initial = modelRepository.getSelectedModel()
@@ -375,6 +384,10 @@ class ChatPresenter(
                     navigator.goTo(ModelPickerScreen)
                 }
 
+                is ChatScreen.Event.OpenCourse -> {
+                    navigator.goTo(ChapterScreen(event.courseId))
+                }
+
                 ChatScreen.Event.Back -> {
                     navigator.pop()
                 }
@@ -450,6 +463,7 @@ class ChatPresenter(
                     saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
                     saveToHistory = screen.saveToHistory,
+                    availableCourse = availableCourse,
                     eventSink = eventSink,
                 )
             }

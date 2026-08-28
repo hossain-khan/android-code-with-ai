@@ -28,6 +28,7 @@ data object HomeScreen : ParcelableScreen {
             val recentSessions: List<ChatSession>,
             val topics: List<CodingTopic>,
             val hasDownloadedModel: Boolean,
+            val topicsWithCourses: Set<CodingTopic> = emptySet(),
             val eventSink: (Event) -> Unit,
         ) : State
     }
