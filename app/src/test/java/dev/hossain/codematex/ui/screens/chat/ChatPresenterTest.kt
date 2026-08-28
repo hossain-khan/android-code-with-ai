@@ -11,19 +11,23 @@ import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -37,6 +41,20 @@ class ChatPresenterTest {
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
     private val fakeUserPreferencesStore = FakeUserPreferencesStore()
     private val fakeTopicPromptProvider = FakeTopicPromptProvider()
+    private val fakeLearningRepo =
+        FakeLearningRepository(
+            courses =
+                listOf(
+                    LearningCourse(
+                        id = "kotlin-foundations",
+                        language = "Kotlin",
+                        title = "Kotlin Foundations",
+                        description = "Learn Kotlin",
+                        version = 1,
+                        chapters = emptyList(),
+                    ),
+                ),
+        )
 
     private fun createPresenter(
         navigator: com.slack.circuit.runtime.Navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN)),
@@ -48,6 +66,7 @@ class ChatPresenterTest {
         chatInferenceOrchestrator: dev.hossain.codematex.data.ChatInferenceOrchestrator = fakeChatInferenceOrchestrator,
         systemStatsMonitor: dev.hossain.codematex.data.SystemStatsMonitor = fakeSystemStatsMonitor,
         topicPromptProvider: TopicPromptProvider = fakeTopicPromptProvider,
+        learningRepository: LearningRepository = fakeLearningRepo,
     ): ChatPresenter =
         ChatPresenter(
             navigator = navigator,
@@ -59,6 +78,7 @@ class ChatPresenterTest {
             chatInferenceOrchestrator = chatInferenceOrchestrator,
             systemStatsMonitor = systemStatsMonitor,
             topicPromptProvider = topicPromptProvider,
+            learningRepository = learningRepository,
         )
 
     @Test
@@ -613,6 +633,51 @@ class ChatPresenterTest {
                 // Should auto-send and produce messages
                 val finalState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(finalState.messages.any { it is ChatMessage.User && it.content == "Initial question" }).isTrue()
+            }
+        }
+
+    @Test
+    fun `given topic with course - resolves availableCourse in active state`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
+            }
+        }
+
+    @Test
+    fun `given OpenCourse event - navigates to chapter screen`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                state.eventSink(ChatScreen.Event.OpenCourse("kotlin-foundations"))
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
             }
         }
 }

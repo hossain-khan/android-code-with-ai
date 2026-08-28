@@ -6,6 +6,7 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
@@ -47,6 +48,7 @@ data class ChatScreen(
             val saveErrorMessage: String? = null,
             val topic: CodingTopic,
             val saveToHistory: Boolean = true,
+            val availableCourse: LearningCourse? = null,
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -80,6 +82,10 @@ data class ChatScreen(
         ) : Event
 
         data object OpenModelPicker : Event
+
+        data class OpenCourse(
+            val courseId: String,
+        ) : Event
 
         data object Back : Event
     }

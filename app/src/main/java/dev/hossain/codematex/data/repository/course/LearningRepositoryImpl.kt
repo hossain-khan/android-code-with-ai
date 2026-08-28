@@ -3,6 +3,7 @@ package dev.hossain.codematex.data.repository.course
 import dev.hossain.codematex.data.local.LessonProgressDao
 import dev.hossain.codematex.data.local.LessonProgressEntity
 import dev.hossain.codematex.data.local.toLessonStatus
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
@@ -49,6 +50,12 @@ class LearningRepositoryImpl
             bundledCourses.firstOrNull { course ->
                 course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
             }
+
+        override suspend fun getCourseForTopic(topic: dev.hossain.codematex.data.model.CodingTopic): LearningCourse? =
+            bundledCourses.firstOrNull { it.topic == topic }
+
+        override suspend fun getTopicsWithCourses(): Set<dev.hossain.codematex.data.model.CodingTopic> =
+            bundledCourses.map { it.topic }.toSet()
 
         override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->

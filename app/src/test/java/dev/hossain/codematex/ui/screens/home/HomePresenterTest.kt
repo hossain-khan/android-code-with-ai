@@ -4,7 +4,9 @@ import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
+import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
@@ -26,9 +28,31 @@ class FakeHardwareEligibilityChecker(
 class HomePresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeModelRepo = FakeModelRepository()
+    private val fakeLearningRepo =
+        FakeLearningRepository(
+            courses =
+                listOf(
+                    LearningCourse(
+                        id = "kotlin-foundations",
+                        language = "Kotlin",
+                        title = "Kotlin Foundations",
+                        description = "Learn Kotlin",
+                        version = 1,
+                        chapters = emptyList(),
+                    ),
+                    LearningCourse(
+                        id = "rust-foundations",
+                        language = "Rust",
+                        title = "Rust Foundations",
+                        description = "Learn Rust",
+                        version = 1,
+                        chapters = emptyList(),
+                    ),
+                ),
+        )
 
     @Test
-    fun `given device is eligible - emits success state`() =
+    fun `given device is eligible - emits success state with topics and available courses`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
             val presenter =
@@ -38,11 +62,13 @@ class HomePresenterTest {
                     sessionRepository = fakeSessionRepo,
                     modelRepository = fakeModelRepo,
                     hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
                 )
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 assertThat(state.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
+                assertThat(state.topicsWithCourses).containsExactly(CodingTopic.KOTLIN, CodingTopic.RUST)
             }
         }
 
@@ -64,6 +90,7 @@ class HomePresenterTest {
                     sessionRepository = fakeSessionRepo,
                     modelRepository = fakeModelRepo,
                     hardwareEligibilityChecker = FakeHardwareEligibilityChecker(ineligible),
+                    learningRepository = fakeLearningRepo,
                 )
 
             presenter.test {
@@ -89,6 +116,7 @@ class HomePresenterTest {
                     sessionRepository = fakeSessionRepo,
                     modelRepository = fakeModelRepo,
                     hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
                 )
 
             presenter.test {
@@ -109,6 +137,7 @@ class HomePresenterTest {
                     sessionRepository = fakeSessionRepo,
                     modelRepository = fakeModelRepo,
                     hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
                 )
 
             presenter.test {
@@ -129,6 +158,7 @@ class HomePresenterTest {
                     sessionRepository = fakeSessionRepo,
                     modelRepository = fakeModelRepo,
                     hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
                 )
 
             presenter.test {

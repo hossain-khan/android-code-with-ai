@@ -215,6 +215,10 @@ private fun ChatLayout(
                         EmptyChatTopicStarters(
                             visualInfo = visualInfo,
                             enabled = !state.isPreparing && !state.isGenerating,
+                            course = state.availableCourse,
+                            onStartCourse = { courseId ->
+                                state.eventSink(ChatScreen.Event.OpenCourse(courseId))
+                            },
                             onPromptSelected = { prompt ->
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
@@ -291,6 +295,10 @@ private fun ChatLayout(
                     EmptyChatTopicStarters(
                         visualInfo = visualInfo,
                         enabled = !state.isPreparing && !state.isGenerating,
+                        course = state.availableCourse,
+                        onStartCourse = { courseId ->
+                            state.eventSink(ChatScreen.Event.OpenCourse(courseId))
+                        },
                         onPromptSelected = { prompt ->
                             keyboardController?.hide()
                             focusManager.clearFocus()

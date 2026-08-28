@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data.repository.course
 
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
@@ -22,6 +23,12 @@ interface LearningRepository {
 
     /** Returns the parent course containing [lessonId], or `null` if not found. */
     suspend fun getCourseForLesson(lessonId: String): LearningCourse?
+
+    /** Returns the course associated with [topic], or `null` if none exists. */
+    suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse?
+
+    /** Returns all coding topics that currently have a bundled guided course. */
+    suspend fun getTopicsWithCourses(): Set<CodingTopic>
 
     /** Observes aggregate completion and resume information for [courseId]. */
     fun observeCourseProgress(courseId: String): Flow<CourseProgress>
