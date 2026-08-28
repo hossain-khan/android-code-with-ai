@@ -13,6 +13,14 @@ data class LearningCourse(
 ) {
     val lessonCount: Int
         get() = chapters.sumOf { it.lessons.size }
+
+    val topic: CodingTopic
+        get() =
+            CodingTopic.entries.find {
+                it.displayName.equals(language, ignoreCase = true) ||
+                    it.stableId.equals(language, ignoreCase = true) ||
+                    id.startsWith(it.stableId, ignoreCase = true)
+            } ?: CodingTopic.KOTLIN
 }
 
 @Immutable

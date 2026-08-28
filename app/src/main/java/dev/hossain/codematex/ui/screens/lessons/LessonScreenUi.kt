@@ -14,7 +14,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
@@ -65,7 +67,12 @@ fun LessonScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val visualInfo = CodingTopic.KOTLIN.visualInfo
+    val visualInfo =
+        if (state is LessonScreen.State.Success) {
+            state.course.topic.visualInfo
+        } else {
+            CodingTopic.KOTLIN.visualInfo
+        }
     val isExpanded =
         currentWindowAdaptiveInfoV2().windowSizeClass.isWidthAtLeastBreakpoint(
             WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND,
@@ -232,6 +239,53 @@ private fun LessonBody(
             }
         }
         item {
+            val visualInfo = state.course.topic.visualInfo
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                onClick = { state.eventSink(LessonScreen.Event.AskAi) },
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = visualInfo.accentColor.copy(alpha = 0.15f),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Ask AI Tutor",
+                            tint = visualInfo.accentColor,
+                            modifier = Modifier.padding(10.dp),
+                        )
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Ask AI about this lesson",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            text = "Chat with the on-device tutor for deep explanations, code walkthroughs, or custom exercises.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = visualInfo.accentColor,
+                    )
+                }
+            }
+        }
+        item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 if (!state.isCompleted) {
                     Button(onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) }) {
@@ -272,26 +326,33 @@ private fun LessonBlockContent(block: LessonBlock) {
                     code = block.code,
                     language = block.language,
                     showLineNumbers = true,
-                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    modifier = Modifier.padding(12.dp),
                 )
             }
         }
 
         is LessonBlock.Quiz -> {
-            QuizBlock(block)
+            QuizContent(block)
         }
     }
 }
 
 @Composable
-private fun QuizBlock(block: LessonBlock.Quiz) {
+private fun QuizContent(block: LessonBlock.Quiz) {
     var selected by remember { mutableStateOf<Int?>(null) }
     Card(
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Check your understanding", fontWeight = FontWeight.Bold)
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                "Quick Check",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
             Text(block.question)
             block.options.forEachIndexed { index, option ->
                 OutlinedButton(
@@ -316,7 +377,7 @@ private fun QuizBlock(block: LessonBlock.Quiz) {
 @Composable
 private fun LessonPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        androidx.compose.material3.Surface {
+        Surface {
             LessonScreenContent(
                 LessonScreen.State.Success(
                     lesson =
@@ -324,6 +385,7 @@ private fun LessonPreview() {
                             .first()
                             .lessons
                             .first(),
+                    course = dev.hossain.codematex.data.repository.KotlinCourseContent.course,
                     isCompleted = false,
                     nextLessonId = "kotlin-variables",
                     eventSink = {},

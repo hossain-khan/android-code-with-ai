@@ -16,6 +16,8 @@ import kotlinx.serialization.Serializable
 data class ChatScreen(
     val topic: CodingTopic,
     val sessionId: String? = null,
+    val saveToHistory: Boolean = true,
+    val initialPrompt: String? = null,
 ) : ParcelableScreen {
     @Immutable
     @Serializable
@@ -44,6 +46,7 @@ data class ChatScreen(
             val contextStats: ContextUsageStats? = null,
             val saveErrorMessage: String? = null,
             val topic: CodingTopic,
+            val saveToHistory: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State
 

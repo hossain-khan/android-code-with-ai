@@ -22,17 +22,25 @@ class LearningRepositoryImpl
     constructor(
         private val lessonProgressDao: LessonProgressDao,
     ) : LearningRepository {
-        override fun getCourses(): Flow<List<LearningCourse>> = kotlinx.coroutines.flow.flowOf(listOf(KotlinCourseContent.course))
+        private val bundledCourses = listOf(KotlinCourseContent.course)
 
-        override suspend fun getCourse(courseId: String): LearningCourse? = KotlinCourseContent.course.takeIf { it.id == courseId }
+        override fun getCourses(): Flow<List<LearningCourse>> = kotlinx.coroutines.flow.flowOf(bundledCourses)
+
+        override suspend fun getCourse(courseId: String): LearningCourse? = bundledCourses.firstOrNull { it.id == courseId }
 
         override suspend fun getChapter(chapterId: String): LearningChapter? =
-            KotlinCourseContent.course.chapters.firstOrNull { it.id == chapterId }
+            bundledCourses.flatMap { it.chapters }.firstOrNull { it.id == chapterId }
 
         override suspend fun getLesson(lessonId: String): LearningLesson? =
-            KotlinCourseContent.course.chapters
+            bundledCourses
+                .flatMap { it.chapters }
                 .flatMap { it.lessons }
                 .firstOrNull { it.id == lessonId }
+
+        override suspend fun getCourseForLesson(lessonId: String): LearningCourse? =
+            bundledCourses.firstOrNull { course ->
+                course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
+            }
 
         override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->

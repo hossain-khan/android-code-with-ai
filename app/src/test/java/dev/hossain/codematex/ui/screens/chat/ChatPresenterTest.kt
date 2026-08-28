@@ -552,4 +552,67 @@ class ChatPresenterTest {
                 assertThat(state.contextStats?.usedTokens ?: 0).isGreaterThan(0)
             }
         }
+
+    @Test
+    fun `given ephemeral session with saveToHistory false - does not save conversation to session repository`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeSessionRepo = FakeChatSessionRepository()
+            fakeChatInferenceOrchestrator.messageEvents =
+                listOf(
+                    ChatInferenceEvent.Token("Lesson response"),
+                    ChatInferenceEvent.Done,
+                )
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN, saveToHistory = false),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                )
+
+            presenter.test {
+                val active = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(active.saveToHistory).isFalse()
+                active.eventSink(ChatScreen.Event.SendMessage("Explain this lesson"))
+
+                // Wait for generation to complete
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.messages).isNotEmpty()
+                assertThat(fakeSessionRepo.savedSessions).isEmpty()
+            }
+        }
+
+    @Test
+    fun `given screen with initialPrompt - automatically triggers send message`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeSessionRepo = FakeChatSessionRepository()
+            fakeChatInferenceOrchestrator.messageEvents =
+                listOf(
+                    ChatInferenceEvent.Token("Auto-response"),
+                    ChatInferenceEvent.Done,
+                )
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN, saveToHistory = false, initialPrompt = "Initial question"),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                )
+
+            presenter.test {
+                // Should auto-send and produce messages
+                val finalState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(finalState.messages.any { it is ChatMessage.User && it.content == "Initial question" }).isTrue()
+            }
+        }
 }

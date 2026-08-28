@@ -19,6 +19,7 @@ data class LessonScreen(
 
         data class Success(
             val lesson: LearningLesson,
+            val course: dev.hossain.codematex.data.model.LearningCourse,
             val isCompleted: Boolean,
             val nextLessonId: String?,
             val eventSink: (Event) -> Unit,
@@ -35,6 +36,8 @@ data class LessonScreen(
         data object MarkCompleted : Event
 
         data object NextLesson : Event
+
+        data object AskAi : Event
 
         data object Back : Event
     }

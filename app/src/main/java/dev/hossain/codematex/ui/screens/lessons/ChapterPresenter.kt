@@ -35,11 +35,14 @@ class ChapterPresenter(
 
         LaunchedEffect(screen.courseId) {
             try {
-                course = learningRepository.getCourse(screen.courseId)
-                if (course != null) {
+                val loadedCourse = learningRepository.getCourse(screen.courseId)
+                course = loadedCourse
+                if (loadedCourse != null) {
                     learningRepository.observeCourseProgress(screen.courseId).collect {
                         progress = it
                     }
+                } else {
+                    errorMessage = "Course '${screen.courseId}' not found"
                 }
             } catch (error: CancellationException) {
                 throw error

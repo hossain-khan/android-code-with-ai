@@ -286,23 +286,15 @@ If a language needs a visual identity, add it to the existing topic metadata or
 introduce a dedicated course visual metadata model instead of hardcoding colors in
 individual screens.
 
-## Q&A integration
+## Q&A integration ("Ask AI Tutor")
 
-Guided Lessons and open-ended Q&A are separate experiences:
+Guided Lessons and open-ended Q&A are interconnected seamlessly:
 
-- Lessons provide the curated learning path.
-- Q&A provides flexible explanations and problem solving.
-
-If a future change adds “Ask about this lesson”:
-
-1. Add an optional `lessonId` or `LessonAiContext` to `ChatScreen`.
-2. Pass only the current lesson’s relevant content into the system prompt.
-3. Keep the existing JNI and inference lifecycle unchanged.
-4. Preserve the callback-retention and sequential async rules in `AGENTS.md`.
-5. Store lesson association as nullable chat-session metadata so old sessions remain
-   compatible.
-
-Do not put an entire course into the model context.
+- Lessons provide the curated offline learning path and knowledge checks.
+- Each lesson provides an "Ask AI about this lesson" action that deep-links into `ChatScreen`.
+- To avoid cluttering the user's permanent session history with transient study queries, lesson Q&A launches with `saveToHistory = false`.
+- The chat session is pre-seeded with the lesson's title, course context, and summary, allowing the on-device AI tutor to answer deep questions, explain nuances, or generate interactive practice problems.
+- Course theming is dynamic: `course.topic.visualInfo` provides matching ambient lighting and badge colors for all supported programming languages.
 
 ## Suggested local verification before release
 

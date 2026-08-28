@@ -10,9 +10,12 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.LearningRepository
+import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -30,20 +33,25 @@ class LessonPresenter(
     @Composable
     override fun present(): LessonScreen.State {
         var lesson by rememberRetained { mutableStateOf<LearningLesson?>(null) }
+        var course by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var isCompleted by rememberRetained { mutableStateOf(false) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.lessonId) {
             try {
-                lesson = learningRepository.getLesson(screen.lessonId)
-                lesson?.let {
-                    learningRepository.markLessonStarted(it.id)
+                val loadedLesson = learningRepository.getLesson(screen.lessonId)
+                lesson = loadedLesson
+                course = learningRepository.getCourseForLesson(screen.lessonId)
+                if (loadedLesson != null) {
+                    learningRepository.markLessonStarted(loadedLesson.id)
                     learningRepository
-                        .observeLessonStatus(it.id)
+                        .observeLessonStatus(loadedLesson.id)
                         .collect { status ->
                             isCompleted = status == dev.hossain.codematex.data.model.LessonStatus.COMPLETED
                         }
+                } else {
+                    errorMessage = "Lesson '${screen.lessonId}' not found"
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -63,7 +71,32 @@ class LessonPresenter(
                 }
 
                 LessonScreen.Event.NextLesson -> {
-                    nextLessonId(lesson?.id)?.let { navigator.goTo(LessonScreen(it)) }
+                    nextLessonId(course, lesson?.id)?.let { navigator.goTo(LessonScreen(it)) }
+                }
+
+                LessonScreen.Event.AskAi -> {
+                    val currentLesson = lesson
+                    if (currentLesson != null) {
+                        val currentCourse = course
+                        val topic = currentCourse?.topic ?: CodingTopic.KOTLIN
+                        val courseTitle = currentCourse?.title ?: topic.displayName
+                        val prompt =
+                            """I am studying the lesson "${currentLesson.title}" in the $courseTitle course.
+                            |
+                            |Lesson summary:
+                            |${currentLesson.summary}
+                            |
+                            |Can you explain this concept in depth, show a practical code example, and give me a quick exercise to test my understanding?
+                            """.trimMargin()
+
+                        navigator.goTo(
+                            ChatScreen(
+                                topic = topic,
+                                saveToHistory = false,
+                                initialPrompt = prompt,
+                            ),
+                        )
+                    }
                 }
 
                 LessonScreen.Event.Back -> {
@@ -72,16 +105,20 @@ class LessonPresenter(
             }
         }
 
-        val nextLesson = nextLessonId(lesson?.id)
+        val nextLesson = nextLessonId(course, lesson?.id)
+        val resolvedCourse = course ?: KotlinCourseContent.course
         return when {
-            lesson != null -> LessonScreen.State.Success(lesson!!, isCompleted, nextLesson, eventSink)
+            lesson != null -> LessonScreen.State.Success(lesson!!, resolvedCourse, isCompleted, nextLesson, eventSink)
             errorMessage != null -> LessonScreen.State.NotFound(errorMessage!!, eventSink)
             else -> LessonScreen.State.Loading
         }
     }
 
-    private fun nextLessonId(currentId: String?): String? {
-        val lessons = KotlinCourseContent.course.chapters.flatMap { it.lessons }
+    private fun nextLessonId(
+        course: LearningCourse?,
+        currentId: String?,
+    ): String? {
+        val lessons = course?.chapters?.flatMap { it.lessons } ?: KotlinCourseContent.course.chapters.flatMap { it.lessons }
         val index = lessons.indexOfFirst { it.id == currentId }
         return lessons.getOrNull(index + 1)?.id
     }

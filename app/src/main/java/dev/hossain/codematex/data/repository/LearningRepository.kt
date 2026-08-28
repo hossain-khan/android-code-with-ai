@@ -20,6 +20,9 @@ interface LearningRepository {
     /** Returns the lesson with [lessonId], or `null` when it is not bundled. */
     suspend fun getLesson(lessonId: String): LearningLesson?
 
+    /** Returns the parent course containing [lessonId], or `null` if not found. */
+    suspend fun getCourseForLesson(lessonId: String): LearningCourse?
+
     /** Observes aggregate completion and resume information for [courseId]. */
     fun observeCourseProgress(courseId: String): Flow<CourseProgress>
 

@@ -62,7 +62,12 @@ fun ChapterScreenContent(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    val visualInfo = CodingTopic.KOTLIN.visualInfo
+    val visualInfo =
+        if (state is ChapterScreen.State.Success) {
+            state.course.topic.visualInfo
+        } else {
+            CodingTopic.KOTLIN.visualInfo
+        }
     val isExpanded =
         currentWindowAdaptiveInfoV2().windowSizeClass.isWidthAtLeastBreakpoint(
             WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND,
@@ -75,7 +80,12 @@ fun ChapterScreenContent(
                 .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
-                title = { Text("Kotlin Foundations", fontWeight = FontWeight.Bold) },
+                title = {
+                    Text(
+                        if (state is ChapterScreen.State.Success) state.course.title else "Guided Lessons",
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         when (state) {

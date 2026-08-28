@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -127,16 +128,40 @@ private fun CourseCard(
     onClick: () -> Unit,
 ) {
     val percent = progress?.completionPercent ?: 0
+    val visualInfo = course.topic.visualInfo
     Card(
         modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = visualInfo.accentColor.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                ) {
+                    Text(
+                        text = visualInfo.iconGlyph,
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+                Text(
+                    text = course.language,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = visualInfo.accentColor,
+                )
+            }
             Text(course.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Text(
                 course.description,
@@ -148,10 +173,11 @@ private fun CourseCard(
             Text(
                 "${course.chapters.size} chapters • ${course.lessonCount} lessons • $percent% complete",
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
+                color = visualInfo.accentColor,
             )
             LinearWavyProgressIndicator(
                 progress = { percent / 100f },
+                color = visualInfo.accentColor,
                 modifier = Modifier.fillMaxWidth(),
             )
             Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
