@@ -37,9 +37,9 @@ import dev.hossain.codematex.ui.theme.visualInfo
 @Composable
 internal fun EmptyChatTopicStarters(
     visualInfo: TopicVisualInfo,
-    enabled: Boolean = true,
     onPromptSelected: (String) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Column(
         modifier =

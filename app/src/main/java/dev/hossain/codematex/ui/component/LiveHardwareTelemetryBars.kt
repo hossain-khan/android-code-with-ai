@@ -53,8 +53,8 @@ import java.util.Locale
 @Composable
 fun LiveHardwareTelemetryBars(
     stats: SystemResourceStats,
-    contextStats: ContextUsageStats? = null,
     modifier: Modifier = Modifier,
+    contextStats: ContextUsageStats? = null,
     cpuColor: Color = MaterialTheme.colorScheme.primary,
     ramColor: Color = MaterialTheme.colorScheme.tertiary,
     contextColor: Color = MaterialTheme.colorScheme.secondary,
