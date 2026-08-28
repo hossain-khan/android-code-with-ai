@@ -1,0 +1,5 @@
+What's New in v1.15.0:
+• New Syntax Highlighting Engine: Rich syntax highlighting powered by Highlight.js & compose-highlight across Kotlin, Python, C++, SQL, JS, and more.
+• Smooth Token Streaming: Zero-flicker code block rendering during real-time on-device AI generation.
+• Code Block Features: Line numbers, language badges, and one-tap copy buttons.
+• Whitespace & Formatting: Preserves exact code indentation, whitespace, and line breaks.
