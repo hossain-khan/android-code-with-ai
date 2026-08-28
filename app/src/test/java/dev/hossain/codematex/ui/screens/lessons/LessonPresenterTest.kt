@@ -7,6 +7,7 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.PythonCourseContent
+import dev.hossain.codematex.data.repository.TypeScriptCourseContent
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -116,6 +117,29 @@ class LessonPresenterTest {
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.PYTHON)
                 assertThat(chatScreen.initialPrompt).contains("Hello, Python")
                 assertThat(chatScreen.initialPrompt).contains("Python Foundations")
+            }
+        }
+
+    @Test
+    fun `given typescript lesson - resolves typescript course and tutor topic`() =
+        runTest {
+            val navigator = FakeNavigator(LessonScreen("typescript-first-program"))
+            val presenter =
+                LessonPresenter(
+                    navigator = navigator,
+                    screen = LessonScreen("typescript-first-program"),
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.course.id).isEqualTo(TypeScriptCourseContent.COURSE_ID)
+                state.eventSink(LessonScreen.Event.AskAi)
+
+                val chatScreen = navigator.awaitNextScreen() as ChatScreen
+                assertThat(chatScreen.topic).isEqualTo(CodingTopic.TYPESCRIPT)
+                assertThat(chatScreen.initialPrompt).contains("Your First TypeScript Program")
+                assertThat(chatScreen.initialPrompt).contains("TypeScript Foundations")
             }
         }
 
