@@ -24,13 +24,13 @@ Room lesson progress
 Important existing files:
 
 - `data/model/LearningModels.kt` — Course, chapter, lesson, block, and progress models.
-- `data/repository/KotlinCourseContent.kt` — Bundled Kotlin Foundations course.
-- `data/repository/PythonCourseContent.kt` — Bundled Python Foundations course.
-- `data/repository/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
-- `data/repository/GoCourseContent.kt` — Bundled Go Foundations course.
-- `data/repository/RustCourseContent.kt` — Bundled Rust Foundations course.
-- `data/repository/LearningRepository.kt` — Course/progress repository contract.
-- `data/repository/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
+- `data/repository/course/KotlinCourseContent.kt` — Bundled Kotlin Foundations course.
+- `data/repository/course/PythonCourseContent.kt` — Bundled Python Foundations course.
+- `data/repository/course/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
+- `data/repository/course/GoCourseContent.kt` — Bundled Go Foundations course.
+- `data/repository/course/RustCourseContent.kt` — Bundled Rust Foundations course.
+- `data/repository/course/LearningRepository.kt` — Course/progress repository contract.
+- `data/repository/course/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
 - `data/local/LessonProgressEntity.kt` — Room progress entity.
 - `data/local/LessonProgressDao.kt` — Progress DAO.
 - `ui/screens/lessons/` — Catalog, chapter, and lesson screens.
@@ -112,14 +112,16 @@ Create a dedicated content file rather than putting a second language inside
 Recommended naming:
 
 ```text
-data/repository/PythonCourseContent.kt
-data/repository/RustCourseContent.kt
-data/repository/JavaScriptCourseContent.kt
+data/repository/course/PythonCourseContent.kt
+data/repository/course/RustCourseContent.kt
+data/repository/course/JavaScriptCourseContent.kt
 ```
 
 Each content object should expose one stable course:
 
 ```kotlin
+package dev.hossain.codematex.data.repository.course
+
 object PythonCourseContent {
     const val COURSE_ID = "python-foundations"
 
@@ -208,6 +210,9 @@ private val bundledCourses =
     listOf(
         KotlinCourseContent.course,
         PythonCourseContent.course,
+        TypeScriptCourseContent.course,
+        GoCourseContent.course,
+        RustCourseContent.course,
     )
 ```
 

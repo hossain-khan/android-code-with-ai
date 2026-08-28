@@ -13,7 +13,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
-import dev.hossain.codematex.data.repository.LearningRepository
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted

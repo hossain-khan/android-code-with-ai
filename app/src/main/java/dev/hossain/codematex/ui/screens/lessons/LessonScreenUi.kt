@@ -50,6 +50,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LessonBlock
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -387,11 +388,11 @@ private fun LessonPreview() {
             LessonScreenContent(
                 LessonScreen.State.Success(
                     lesson =
-                        dev.hossain.codematex.data.repository.KotlinCourseContent.course.chapters
+                        KotlinCourseContent.course.chapters
                             .first()
                             .lessons
                             .first(),
-                    course = dev.hossain.codematex.data.repository.KotlinCourseContent.course,
+                    course = KotlinCourseContent.course,
                     isCompleted = false,
                     nextLessonId = "kotlin-variables",
                     eventSink = {},

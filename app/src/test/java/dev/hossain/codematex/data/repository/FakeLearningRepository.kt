@@ -5,6 +5,12 @@ import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonStatus
+import dev.hossain.codematex.data.repository.course.GoCourseContent
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.LearningRepository
+import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

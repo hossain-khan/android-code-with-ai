@@ -45,6 +45,7 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -280,7 +281,7 @@ private fun ChapterPreview() {
         Surface {
             ChapterScreenContent(
                 ChapterScreen.State.Success(
-                    dev.hossain.codematex.data.repository.KotlinCourseContent.course,
+                    KotlinCourseContent.course,
                     dev.hossain.codematex.data.model
                         .CourseProgress("kotlin-foundations", 1, 24, "kotlin-variables"),
                     {},

@@ -5,11 +5,11 @@ import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.FakeLearningRepository
-import dev.hossain.codematex.data.repository.GoCourseContent
-import dev.hossain.codematex.data.repository.KotlinCourseContent
-import dev.hossain.codematex.data.repository.PythonCourseContent
-import dev.hossain.codematex.data.repository.RustCourseContent
-import dev.hossain.codematex.data.repository.TypeScriptCourseContent
+import dev.hossain.codematex.data.repository.course.GoCourseContent
+import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test

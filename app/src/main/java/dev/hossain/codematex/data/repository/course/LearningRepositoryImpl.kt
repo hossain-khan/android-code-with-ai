@@ -1,4 +1,4 @@
-package dev.hossain.codematex.data.repository
+package dev.hossain.codematex.data.repository.course
 
 import dev.hossain.codematex.data.local.LessonProgressDao
 import dev.hossain.codematex.data.local.LessonProgressEntity
@@ -12,6 +12,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -31,7 +32,7 @@ class LearningRepositoryImpl
                 RustCourseContent.course,
             )
 
-        override fun getCourses(): Flow<List<LearningCourse>> = kotlinx.coroutines.flow.flowOf(bundledCourses)
+        override fun getCourses(): Flow<List<LearningCourse>> = flowOf(bundledCourses)
 
         override suspend fun getCourse(courseId: String): LearningCourse? = bundledCourses.firstOrNull { it.id == courseId }
 
