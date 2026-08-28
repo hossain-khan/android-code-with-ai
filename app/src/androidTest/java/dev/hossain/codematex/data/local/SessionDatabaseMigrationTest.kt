@@ -113,6 +113,23 @@ class SessionDatabaseMigrationTest {
             }
     }
 
+    @Test
+    fun migrate3To4_addsLessonProgressTable() {
+        helper.createDatabase(TEST_DB_NAME, 3).use { }
+
+        helper
+            .runMigrationsAndValidate(
+                TEST_DB_NAME,
+                4,
+                true,
+                SessionDatabase.MIGRATION_3_4,
+            ).use { db ->
+                db.query("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'lesson_progress'").use { cursor ->
+                    assertThat(cursor.moveToFirst()).isTrue()
+                }
+            }
+    }
+
     private companion object {
         private const val TEST_DB_NAME = "test-sessions.db"
     }

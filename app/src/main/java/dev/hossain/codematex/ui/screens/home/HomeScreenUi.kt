@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
@@ -146,6 +147,9 @@ private fun HomeLayout(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = {
+                    IconButton(onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) }) {
+                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Guided Lessons")
+                    }
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ManageModels) }) {
                         Icon(Icons.Default.Memory, contentDescription = "Manage Models")
                     }

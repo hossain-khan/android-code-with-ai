@@ -44,6 +44,8 @@ data object HomeScreen : ParcelableScreen {
 
         data object ManageModels : Event
 
+        data object GuidedLessons : Event
+
         data object ViewAllSessions : Event
 
         data object DismissIneligibilityWarning : Event

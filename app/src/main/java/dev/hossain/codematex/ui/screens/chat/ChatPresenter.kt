@@ -65,6 +65,7 @@ class ChatPresenter(
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
+        var hasSentInitialPrompt by rememberRetained { mutableStateOf(false) }
 
         LaunchedEffect(Unit) {
             val initial = modelRepository.getSelectedModel()
@@ -223,23 +224,28 @@ class ChatPresenter(
                                                 "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
                                             )
 
-                                            // Save session message history in an independent try-catch block
-                                            // so persistence failures do not discard or overwrite the generated response.
-                                            Timber.d("ChatPresenter: Saving session message history...")
-                                            try {
-                                                currentSessionId =
-                                                    sessionRepository.saveSession(
-                                                        topic = screen.topic,
-                                                        messages = messages,
-                                                        sessionId = currentSessionId,
-                                                        modelUsed = modelName,
-                                                    )
+                                            if (screen.saveToHistory) {
+                                                // Save session message history in an independent try-catch block
+                                                // so persistence failures do not discard or overwrite the generated response.
+                                                Timber.d("ChatPresenter: Saving session message history...")
+                                                try {
+                                                    currentSessionId =
+                                                        sessionRepository.saveSession(
+                                                            topic = screen.topic,
+                                                            messages = messages,
+                                                            sessionId = currentSessionId,
+                                                            modelUsed = modelName,
+                                                        )
+                                                    saveErrorMessage = null
+                                                } catch (e: CancellationException) {
+                                                    throw e
+                                                } catch (e: Exception) {
+                                                    Timber.e(e, "ChatPresenter: Failed to save session history")
+                                                    saveErrorMessage = e.message ?: "Failed to save conversation"
+                                                }
+                                            } else {
+                                                Timber.d("ChatPresenter: Ephemeral session active, skipping persistence.")
                                                 saveErrorMessage = null
-                                            } catch (e: CancellationException) {
-                                                throw e
-                                            } catch (e: Exception) {
-                                                Timber.e(e, "ChatPresenter: Failed to save session history")
-                                                saveErrorMessage = e.message ?: "Failed to save conversation"
                                             }
                                         }
 
@@ -375,6 +381,19 @@ class ChatPresenter(
             }
         }
 
+        LaunchedEffect(isPreparing, activeModel, screen.initialPrompt) {
+            val prompt = screen.initialPrompt
+            if (prompt != null &&
+                !hasSentInitialPrompt &&
+                !isPreparing &&
+                activeModel?.downloadStatus == DownloadStatus.DOWNLOADED &&
+                messages.isEmpty()
+            ) {
+                hasSentInitialPrompt = true
+                eventSink(ChatScreen.Event.SendMessage(prompt))
+            }
+        }
+
         return when {
             errorMessage != null -> {
                 ChatScreen.State.Error(errorMessage!!, screen.topic, eventSink)
@@ -430,6 +449,7 @@ class ChatPresenter(
                     contextStats = contextStats,
                     saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
+                    saveToHistory = screen.saveToHistory,
                     eventSink = eventSink,
                 )
             }
