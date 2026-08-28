@@ -51,7 +51,7 @@ androidxWork = "2.11.2"
 # On-device AI
 litertlm = "0.15.0"
 markdownRenderer = "0.44.0"
-composeHighlight = "0.33.0"
+composeHighlight = "0.34.0"
 room = "2.7.2"
 timber = "5.0.1"
 
