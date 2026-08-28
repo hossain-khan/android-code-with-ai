@@ -11,6 +11,7 @@ class CourseContentTest {
             PythonCourseContent.course,
             TypeScriptCourseContent.course,
             GoCourseContent.course,
+            RustCourseContent.course,
         )
 
     @Test
@@ -194,6 +195,62 @@ class CourseContentTest {
                 "What is a channel used for?" to 1,
                 "What should HTTP client code do with response.Body?" to 1,
                 "Why use t.Run in a table-driven test?" to 0,
+            ).inOrder()
+    }
+
+    @Test
+    fun `rust course has expected foundation coverage`() {
+        val rust = RustCourseContent.course
+
+        assertThat(rust.language).isEqualTo("Rust")
+        assertThat(rust.chapters).hasSize(8)
+        assertThat(rust.lessonCount).isEqualTo(24)
+        assertThat(rust.chapters.flatMap { it.lessons }.map { it.id })
+            .containsExactly(
+                "rust-first-program",
+                "rust-variables-and-mutability",
+                "rust-scalar-and-compound-types",
+                "rust-functions-and-expressions",
+                "rust-if-and-loop",
+                "rust-match-and-patterns",
+                "rust-ownership-and-moves",
+                "rust-references-and-borrowing",
+                "rust-slices-and-strings",
+                "rust-structs-and-methods",
+                "rust-enums-and-option",
+                "rust-pattern-destructuring",
+                "rust-vectors-and-strings",
+                "rust-hashmaps-and-iterating",
+                "rust-result-and-question-mark",
+                "rust-generic-functions",
+                "rust-traits-and-impl",
+                "rust-lifetimes",
+                "rust-modules-and-visibility",
+                "rust-iterators-and-closures",
+                "rust-unit-tests",
+                "rust-threads-and-move",
+                "rust-channels-and-smart-pointers",
+                "rust-cargo-and-package-design",
+            ).inOrder()
+    }
+
+    @Test
+    fun `rust quiz answers match the language concepts`() {
+        val quizzes =
+            RustCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { lesson -> lesson.blocks.filterIsInstance<LessonBlock.Quiz>() }
+
+        assertThat(quizzes.map { it.question to it.answerIndex })
+            .containsExactly(
+                "What does adding mut to a Rust binding allow?" to 0,
+                "What is special about an if expression in Rust?" to 0,
+                "What normally happens when a String is assigned to another binding?" to 0,
+                "What does Option<T> represent?" to 0,
+                "What does ? do when a Result is Err?" to 0,
+                "What does a Rust trait primarily define?" to 0,
+                "When does a typical iterator adapter such as map run?" to 0,
+                "What does a channel send between threads?" to 0,
             ).inOrder()
     }
 

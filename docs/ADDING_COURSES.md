@@ -28,6 +28,7 @@ Important existing files:
 - `data/repository/PythonCourseContent.kt` — Bundled Python Foundations course.
 - `data/repository/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
 - `data/repository/GoCourseContent.kt` — Bundled Go Foundations course.
+- `data/repository/RustCourseContent.kt` — Bundled Rust Foundations course.
 - `data/repository/LearningRepository.kt` — Course/progress repository contract.
 - `data/repository/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
 - `data/local/LessonProgressEntity.kt` — Room progress entity.
@@ -244,6 +245,18 @@ go vet ./...
 For runnable examples, also run the relevant package with `go run .`. Keep
 validation projects isolated per lesson when examples define their own `main`
 function or package-level declarations.
+
+For Rust examples, run:
+
+```bash
+rustfmt --check src/main.rs
+cargo check
+cargo test
+cargo clippy -- -D warnings
+```
+
+Use a separate temporary Cargo project for each lesson when examples define their
+own `main` function or crate-level items.
 
 ## Progress and database rules
 
