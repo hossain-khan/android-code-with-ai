@@ -28,6 +28,7 @@ class LearningRepositoryImpl
                 PythonCourseContent.course,
                 TypeScriptCourseContent.course,
                 GoCourseContent.course,
+                RustCourseContent.course,
             )
 
         override fun getCourses(): Flow<List<LearningCourse>> = kotlinx.coroutines.flow.flowOf(bundledCourses)

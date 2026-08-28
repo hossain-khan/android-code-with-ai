@@ -8,6 +8,7 @@ import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.GoCourseContent
 import dev.hossain.codematex.data.repository.KotlinCourseContent
 import dev.hossain.codematex.data.repository.PythonCourseContent
+import dev.hossain.codematex.data.repository.RustCourseContent
 import dev.hossain.codematex.data.repository.TypeScriptCourseContent
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
@@ -164,6 +165,29 @@ class LessonPresenterTest {
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.GO)
                 assertThat(chatScreen.initialPrompt).contains("Your First Go Program")
                 assertThat(chatScreen.initialPrompt).contains("Go Foundations")
+            }
+        }
+
+    @Test
+    fun `given rust lesson - resolves rust course and tutor topic`() =
+        runTest {
+            val navigator = FakeNavigator(LessonScreen("rust-first-program"))
+            val presenter =
+                LessonPresenter(
+                    navigator = navigator,
+                    screen = LessonScreen("rust-first-program"),
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.course.id).isEqualTo(RustCourseContent.COURSE_ID)
+                state.eventSink(LessonScreen.Event.AskAi)
+
+                val chatScreen = navigator.awaitNextScreen() as ChatScreen
+                assertThat(chatScreen.topic).isEqualTo(CodingTopic.RUST)
+                assertThat(chatScreen.initialPrompt).contains("Your First Rust Program")
+                assertThat(chatScreen.initialPrompt).contains("Rust Foundations")
             }
         }
 
