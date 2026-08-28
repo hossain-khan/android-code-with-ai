@@ -1,0 +1,4 @@
+What's New in v1.15.1:
+• Direct AI Answers: Added strict system prompt constraints to ensure the on-device AI executes reasoning silently without outputting internal thought steps or scratchpads.
+• Code Highlighting Stability: Refinements to Markdown rendering and streaming code block performance.
+• General improvements and bug fixes.
