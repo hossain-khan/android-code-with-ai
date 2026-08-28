@@ -1,0 +1,7 @@
+What's New in v1.14.0:
+• Fluid Download Progress: Smooth 1% progress reporting and animated progress bar for model downloads.
+• Quick Copy: Long-press your chat message to easily copy it with tactile haptics.
+• Active Model in Top Bar: See your selected model immediately in the AI Models header.
+• Telemetry Animations: Smooth spring animations for the chat technical info panel.
+• First-Time Onboarding: Helpful starter cards when starting fresh.
+• Product copy & UI refinements.

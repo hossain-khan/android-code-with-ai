@@ -164,6 +164,8 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.14.0` | `24` | 2026-08-27 | Fluid 1% model download progress with Compose animation, user chat message long-press copy with haptics, active model TopAppBar subtitle, technical telemetry panel spring animations, and first-time onboarding empty state card. |
+| `1.13.1` | `23` | 2026-08-27 | Per-model hyperparameter tuning with animated setting explanations, smooth exit animations across all modal bottom sheets, conditional tune button visibility, and full sheet expansion. |
 | `1.13.0` | `22` | 2026-08-27 | Model catalog expansion (Qwen 2.5 Coder 1.5B, Qwen 3 0.6B, Phi-4 Mini), live context usage gauge, silent background downloads, and complete Google Truth 1.4.5 test suite modernization. |
 | `1.12.2` | `21` | 2026-08-26 | Binary gigabyte (1024^3) memory precision for device RAM detection and compatibility checks, work package alignment, M3 Markdown heading typography hierarchy, and comprehensive KDoc interface documentation. |
 | `1.12.1` | `20` | 2026-08-26 | Multi-tier runtime fallback (NPU -> GPU -> CPU), JNI callback exception isolation, animated responsible AI code disclaimer, idiomatic Kotlin Duration refactoring, and @Immutable Compose stability. |
