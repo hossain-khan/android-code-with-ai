@@ -11,7 +11,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 class FakeLearningRepository(
-    var courses: List<LearningCourse> = listOf(KotlinCourseContent.course),
+    var courses: List<LearningCourse> =
+        listOf(
+            KotlinCourseContent.course,
+            PythonCourseContent.course,
+        ),
 ) : LearningRepository {
     private val lessonStatusMap = MutableStateFlow<Map<String, LessonStatus>>(emptyMap())
 

@@ -22,7 +22,11 @@ class LearningRepositoryImpl
     constructor(
         private val lessonProgressDao: LessonProgressDao,
     ) : LearningRepository {
-        private val bundledCourses = listOf(KotlinCourseContent.course)
+        private val bundledCourses =
+            listOf(
+                KotlinCourseContent.course,
+                PythonCourseContent.course,
+            )
 
         override fun getCourses(): Flow<List<LearningCourse>> = kotlinx.coroutines.flow.flowOf(bundledCourses)
 
