@@ -19,6 +19,7 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
+import dev.hossain.codematex.ui.screens.lessons.LessonCatalogScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -72,6 +73,10 @@ class HomePresenter(
 
                 HomeScreen.Event.ManageModels -> {
                     navigator.goTo(ModelPickerScreen)
+                }
+
+                HomeScreen.Event.GuidedLessons -> {
+                    navigator.goTo(LessonCatalogScreen)
                 }
 
                 HomeScreen.Event.ViewAllSessions -> {

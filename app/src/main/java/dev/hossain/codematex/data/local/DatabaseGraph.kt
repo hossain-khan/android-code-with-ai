@@ -41,6 +41,7 @@ interface DatabaseGraph {
                 .addMigrations(
                     SessionDatabase.MIGRATION_1_2,
                     SessionDatabase.MIGRATION_2_3,
+                    SessionDatabase.MIGRATION_3_4,
                 )
         if (policy.allowDestructiveMigration) {
             // Debug-only safety net: recreate the database when there is no matching migration.
@@ -51,4 +52,8 @@ interface DatabaseGraph {
 
     @Provides
     fun provideSessionDao(db: SessionDatabase): SessionDao = db.sessionDao()
+
+    /** Provides the DAO used to persist Guided Lessons progress. */
+    @Provides
+    fun provideLessonProgressDao(db: SessionDatabase): LessonProgressDao = db.lessonProgressDao()
 }

@@ -6,12 +6,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
-    entities = [SessionEntity::class, MessageEntity::class],
-    version = 3,
+    entities = [SessionEntity::class, MessageEntity::class, LessonProgressEntity::class],
+    version = 4,
     exportSchema = true,
 )
 abstract class SessionDatabase : RoomDatabase() {
     abstract fun sessionDao(): SessionDao
+
+    abstract fun lessonProgressDao(): LessonProgressDao
 
     companion object {
         /**
@@ -61,6 +63,26 @@ abstract class SessionDatabase : RoomDatabase() {
                             WHEN 'system' THEN 'system'
                             ELSE 'unknown'
                         END
+                        """.trimIndent(),
+                    )
+                }
+            }
+
+        /**
+         * Migration from version 3 to 4: adds local Guided Lessons progress.
+         */
+        val MIGRATION_3_4 =
+            object : Migration(3, 4) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS lesson_progress (
+                            lessonId TEXT NOT NULL,
+                            courseId TEXT NOT NULL,
+                            status TEXT NOT NULL,
+                            lastOpenedAt INTEGER NOT NULL,
+                            PRIMARY KEY(lessonId)
+                        )
                         """.trimIndent(),
                     )
                 }
