@@ -151,12 +151,12 @@ Every screen with dynamic lists MUST include an expressive empty state:
 - Interactive prompt chips or primary action button.
 
 ### E. Markdown Rendering & Code Blocks
-LLM responses are rendered in native Compose using **`multiplatform-markdown-renderer`** ([github.com/mikepenz/multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer)) via [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt):
-- **Artifacts**: `com.mikepenz:multiplatform-markdown-renderer-m3` and `multiplatform-markdown-renderer-code` (`v0.44.0`).
+LLM responses are rendered in native Compose using **`multiplatform-markdown-renderer`** ([github.com/mikepenz/multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer)) and syntax highlighting via **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt):
+- **Artifacts**: `com.mikepenz:multiplatform-markdown-renderer-m3` (`v0.44.0`) and `dev.hossain:compose-highlight` (`v0.33.0`).
 - **Anti-Flicker State**: Uses `rememberMarkdownState(content, retainState = true)` to hoist parser state and retain the previous AST during rapid token streaming, preventing loading flashes.
 - **Monospace Code Block & Inline Code Styling**:
   - **Inline Code**: Styled with `fontFamily = FontFamily.Monospace`, `12.5.sp` size, and `16.sp` line-height via `markdownTypography(code = ...)`.
-  - **Code Blocks & Fences**: Intercepted via `markdownComponents` and rendered with `MarkdownHighlightedCodeBlock` / `MarkdownHighlightedCodeFence`. Explicitly styled with `TextStyle(fontFamily = FontFamily.Monospace, fontSize = 12.5.sp, lineHeight = 16.sp)` and `showHeader = true` for language badge display.
+  - **Code Blocks & Fences**: Intercepted via `markdownComponents` and rendered with `SyntaxHighlightedCode` (powered by Highlight.js). Features line numbers (`showLineNumbers = true`), language badges, and quick copy action.
 - **Typography Sizing**:
   - Base body text: `MaterialTheme.typography.bodyMedium` (`14.sp`, `20.sp` line height).
   - Monospace code text: `12.5.sp` with `16.sp` line height.

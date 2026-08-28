@@ -238,7 +238,9 @@ dependencies {
     // Markdown rendering
     implementation(libs.markdown.renderer)
     implementation(libs.markdown.renderer.m3)
-    implementation(libs.markdown.renderer.code)
+
+    // Syntax Highlighting (Highlight.js for Compose)
+    implementation(libs.compose.highlight)
 
     // Logging
     implementation(libs.timber)

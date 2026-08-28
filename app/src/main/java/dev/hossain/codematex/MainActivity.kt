@@ -29,6 +29,9 @@ import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.home.HomeScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.highlight.ui.HighlightThemeProvider
+import dev.hossain.highlight.ui.rememberTomorrowLightTheme
+import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
@@ -102,19 +105,24 @@ class MainActivity
                         }
 
                         // See https://slackhq.github.io/circuit/circuit-content/
-                        CircuitCompositionLocals(circuit) {
-                            // See https://slackhq.github.io/circuit/shared-elements/
-                            SharedElementTransitionLayout {
-                                // See https://slackhq.github.io/circuit/overlays/
-                                ContentWithOverlays {
-                                    NavigableCircuitContent(
-                                        navigator = navigator,
-                                        navStack = navStack,
-                                        decoratorFactory =
-                                            remember {
-                                                GestureNavigationDecorationFactory()
-                                            },
-                                    )
+                        HighlightThemeProvider(
+                            lightHighlightTheme = rememberTomorrowLightTheme(),
+                            darkHighlightTheme = rememberTomorrowNightTheme(),
+                        ) {
+                            CircuitCompositionLocals(circuit) {
+                                // See https://slackhq.github.io/circuit/shared-elements/
+                                SharedElementTransitionLayout {
+                                    // See https://slackhq.github.io/circuit/overlays/
+                                    ContentWithOverlays {
+                                        NavigableCircuitContent(
+                                            navigator = navigator,
+                                            navStack = navStack,
+                                            decoratorFactory =
+                                                remember {
+                                                    GestureNavigationDecorationFactory()
+                                                },
+                                        )
+                                    }
                                 }
                             }
                         }
