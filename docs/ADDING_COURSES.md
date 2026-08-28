@@ -27,6 +27,7 @@ Important existing files:
 - `data/repository/KotlinCourseContent.kt` — Bundled Kotlin Foundations course.
 - `data/repository/PythonCourseContent.kt` — Bundled Python Foundations course.
 - `data/repository/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
+- `data/repository/GoCourseContent.kt` — Bundled Go Foundations course.
 - `data/repository/LearningRepository.kt` — Course/progress repository contract.
 - `data/repository/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
 - `data/local/LessonProgressEntity.kt` — Room progress entity.
@@ -225,6 +226,24 @@ course ID in shared repository logic.
 For more than a few courses, refactor the repository to use a
 `BundledLearningContentDataSource` and a course index instead of growing one
 repository file.
+
+## Suggested local verification
+
+Before bundling new course materials, validate every code example with the
+language's local compiler and formatter when available. This is a one-off content
+verification step and does not need to be part of CI.
+
+For Go examples, run:
+
+```bash
+gofmt -w .
+go test ./...
+go vet ./...
+```
+
+For runnable examples, also run the relevant package with `go run .`. Keep
+validation projects isolated per lesson when examples define their own `main`
+function or package-level declarations.
 
 ## Progress and database rules
 
