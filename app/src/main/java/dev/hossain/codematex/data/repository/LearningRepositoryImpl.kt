@@ -44,7 +44,7 @@ class LearningRepositoryImpl
 
         override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->
-                val course = KotlinCourseContent.course.takeIf { it.id == courseId }
+                val course = bundledCourses.firstOrNull { it.id == courseId }
                 val lessons = course?.chapters.orEmpty().flatMap { it.lessons }
                 val completed = stored.count { it.toLessonStatus() == LessonStatus.COMPLETED }
                 val current =
@@ -64,12 +64,13 @@ class LearningRepositoryImpl
 
         override suspend fun markLessonStarted(lessonId: String) {
             val lesson = getLesson(lessonId) ?: return
+            val course = getCourseForLesson(lesson.id) ?: return
             val existing = lessonProgressDao.getLessonProgress(lesson.id)
             if (existing?.toLessonStatus() == LessonStatus.COMPLETED) return
             lessonProgressDao.upsert(
                 LessonProgressEntity(
                     lessonId = lesson.id,
-                    courseId = KotlinCourseContent.course.id,
+                    courseId = course.id,
                     status = LessonStatus.IN_PROGRESS.name,
                     lastOpenedAt = System.currentTimeMillis(),
                 ),
@@ -78,10 +79,11 @@ class LearningRepositoryImpl
 
         override suspend fun markLessonCompleted(lessonId: String) {
             val lesson = getLesson(lessonId) ?: return
+            val course = getCourseForLesson(lesson.id) ?: return
             lessonProgressDao.upsert(
                 LessonProgressEntity(
                     lessonId = lesson.id,
-                    courseId = KotlinCourseContent.course.id,
+                    courseId = course.id,
                     status = LessonStatus.COMPLETED.name,
                     lastOpenedAt = System.currentTimeMillis(),
                 ),

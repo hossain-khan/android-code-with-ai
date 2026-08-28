@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -140,6 +141,7 @@ fun LessonScreenContent(
                     ) {
                         LessonOutline(
                             lesson = state.lesson,
+                            course = state.course,
                             modifier = Modifier.widthIn(max = 320.dp).padding(vertical = 16.dp),
                         )
                         LessonBody(
@@ -158,6 +160,7 @@ fun LessonScreenContent(
 @Composable
 private fun LessonOutline(
     lesson: dev.hossain.codematex.data.model.LearningLesson,
+    course: LearningCourse,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -171,7 +174,7 @@ private fun LessonOutline(
         ) {
             Text("Lesson flow", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Text(
-                "Kotlin Foundations",
+                course.title,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
