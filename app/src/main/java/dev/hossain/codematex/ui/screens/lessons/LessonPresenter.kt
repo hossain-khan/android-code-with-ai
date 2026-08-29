@@ -13,6 +13,7 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
@@ -48,7 +49,7 @@ class LessonPresenter(
                         learningRepository
                             .observeLessonStatus(loadedLesson.id)
                             .collect { status ->
-                                isCompleted = status == dev.hossain.codematex.data.model.LessonStatus.COMPLETED
+                                isCompleted = status == LessonStatus.COMPLETED
                             }
                     } else {
                         errorMessage = "Course for lesson '${screen.lessonId}' not found"

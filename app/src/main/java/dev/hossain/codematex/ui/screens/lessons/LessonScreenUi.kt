@@ -57,6 +57,7 @@ import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
+import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.component.MarkdownMessage
@@ -169,7 +170,7 @@ fun LessonScreenContent(
 
 @Composable
 private fun LessonOutline(
-    lesson: dev.hossain.codematex.data.model.LearningLesson,
+    lesson: LearningLesson,
     course: LearningCourse,
     modifier: Modifier = Modifier,
 ) {

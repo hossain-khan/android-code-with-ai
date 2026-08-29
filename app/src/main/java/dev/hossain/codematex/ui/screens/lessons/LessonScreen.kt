@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -19,7 +20,7 @@ data class LessonScreen(
 
         data class Success(
             val lesson: LearningLesson,
-            val course: dev.hossain.codematex.data.model.LearningCourse,
+            val course: LearningCourse,
             val isCompleted: Boolean,
             val nextLessonId: String?,
             val eventSink: (Event) -> Unit,

@@ -1,12 +1,15 @@
 package dev.hossain.codematex.ui.screens.chat
 
 import com.google.common.truth.Truth.assertThat
+import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
+import dev.hossain.codematex.data.ChatInferenceOrchestrator
 import dev.hossain.codematex.data.FakeChatInferenceOrchestrator
 import dev.hossain.codematex.data.FakeSystemStatsMonitor
 import dev.hossain.codematex.data.FakeTopicPromptProvider
+import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
@@ -58,14 +61,14 @@ class ChatPresenterTest {
         )
 
     private fun createPresenter(
-        navigator: com.slack.circuit.runtime.Navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN)),
+        navigator: Navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN)),
         screen: ChatScreen = ChatScreen(CodingTopic.KOTLIN),
         modelRepository: ModelRepository,
         sessionRepository: ChatSessionRepository = fakeSessionRepo,
         configStore: ModelConfigStore = this.configStore,
         userPreferencesStore: UserPreferencesStore = fakeUserPreferencesStore,
-        chatInferenceOrchestrator: dev.hossain.codematex.data.ChatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-        systemStatsMonitor: dev.hossain.codematex.data.SystemStatsMonitor = fakeSystemStatsMonitor,
+        chatInferenceOrchestrator: ChatInferenceOrchestrator = fakeChatInferenceOrchestrator,
+        systemStatsMonitor: SystemStatsMonitor = fakeSystemStatsMonitor,
         topicPromptProvider: TopicPromptProvider = fakeTopicPromptProvider,
         learningRepository: LearningRepository = fakeLearningRepo,
     ): ChatPresenter =

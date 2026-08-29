@@ -59,6 +59,8 @@ class LlmEngineImpl(
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
+    override fun isInitialized(): Boolean = engine != null
+
     /**
      * Initializes the LiteRT LLM engine.
      *

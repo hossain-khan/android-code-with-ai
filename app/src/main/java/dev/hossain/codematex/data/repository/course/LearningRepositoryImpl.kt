@@ -51,11 +51,9 @@ class LearningRepositoryImpl
                 course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
             }
 
-        override suspend fun getCourseForTopic(topic: dev.hossain.codematex.data.model.CodingTopic): LearningCourse? =
-            bundledCourses.firstOrNull { it.topic == topic }
+        override suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse? = bundledCourses.firstOrNull { it.topic == topic }
 
-        override suspend fun getTopicsWithCourses(): Set<dev.hossain.codematex.data.model.CodingTopic> =
-            bundledCourses.map { it.topic }.toSet()
+        override suspend fun getTopicsWithCourses(): Set<CodingTopic> = bundledCourses.map { it.topic }.toSet()
 
         override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->

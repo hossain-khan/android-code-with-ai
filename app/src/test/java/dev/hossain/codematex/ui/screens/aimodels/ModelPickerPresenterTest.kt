@@ -11,6 +11,7 @@ import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
+import dev.hossain.codematex.system.ModelCompatibilityChecker
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -24,7 +25,7 @@ class ModelPickerPresenterTest {
         testModel(id = "google/gemma-4-e2b", downloadStatus = DownloadStatus.NOT_DOWNLOADED, localPath = null)
 
     private val fakeCompatibilityChecker =
-        object : dev.hossain.codematex.system.ModelCompatibilityChecker {
+        object : ModelCompatibilityChecker {
             override fun checkCompatibility(modelMinRamGb: Int): ModelCompatibility = ModelCompatibility.Compatible
 
             override fun getDeviceMemoryInfo(): DeviceMemoryInfo =

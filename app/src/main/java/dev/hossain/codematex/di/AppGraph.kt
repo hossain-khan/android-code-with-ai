@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.work.WorkManager
 import com.slack.circuit.foundation.Circuit
+import dev.hossain.codematex.system.SystemMemoryManager
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Multibinds
@@ -59,6 +60,7 @@ interface AppGraph {
     val workManager: WorkManager
     val workerFactory: AppWorkerFactory
     val dataStore: DataStore<Preferences>
+    val systemMemoryManager: SystemMemoryManager
 
     @Provides
     fun providesWorkManager(

@@ -64,6 +64,11 @@ interface LlmEngine {
     fun getActiveBackend(): Backend?
 
     /**
+     * Returns `true` if a model engine session is currently initialized and residing in memory.
+     */
+    fun isInitialized(): Boolean = getActiveBackend() != null
+
+    /**
      * Closes active conversations and releases native C++ memory allocations and engine handles.
      */
     fun cleanup()
