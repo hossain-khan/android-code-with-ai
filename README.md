@@ -88,8 +88,6 @@ app/src/main/java/dev/hossain/codematex/
 │   ├── repository/                 # Model and Session repository implementations
 │   │   └── course/                 # Bundled course content (Kotlin, Python, TS, Go, Rust) & LearningRepository
 │   ├── ChatInferenceOrchestrator.kt # Inference lifecycle & token streaming orchestration
-│   ├── SystemStatsMonitor.kt       # CPU/RAM live telemetry monitor
-│   ├── ThroughputTracker.kt        # TTFT and tokens/sec throughput calculator
 │   └── TopicPromptProvider.kt      # System prompts & tutor persona definitions
 ├── domain/
 │   └── summary/                    # Session summary generators and LLM prompt formatters
@@ -99,11 +97,6 @@ app/src/main/java/dev/hossain/codematex/
 │   ├── component/                  # Reusable UI widgets, MarkdownMessage, telemetry bars, gradient scrims
 │   ├── overlay/                    # Bottom sheet dialogs and overlays (ModelConfig, ModelInfo, PersonaPicker)
 │   ├── screens/                    # Circuit MVI Screens, Presenters, and UI Composables
-│   │   ├── aimodels/               # Model picker & download management screen
-│   │   ├── chat/                   # Interactive chat screen, starter prompts, message bubbles
-│   │   ├── chatsessions/           # Session history list and detailed session viewer
-│   │   ├── home/                   # Adaptive home dashboard & topic cards
-│   │   └── lessons/                # Course catalog, chapter syllabus, and interactive lesson viewer
 │   └── theme/                      # Material 3 Expressive theme, typography, and topic visual info
 ├── util/                           # Formatting utilities, device memory helpers, and token estimator
 ├── work/                           # ModelDownloadWorker & HttpModelDownloader (WorkManager)
