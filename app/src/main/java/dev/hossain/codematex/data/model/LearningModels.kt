@@ -82,6 +82,7 @@ data class CourseProgress(
     val completedLessons: Int,
     val totalLessons: Int,
     val currentLessonId: String?,
+    val completedLessonIds: Set<String> = emptySet(),
 ) {
     val completionPercent: Int
         get() = if (totalLessons == 0) 0 else (completedLessons * 100 / totalLessons)

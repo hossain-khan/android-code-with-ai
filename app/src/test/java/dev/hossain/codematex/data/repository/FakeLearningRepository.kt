@@ -52,8 +52,8 @@ class FakeLearningRepository(
         lessonStatusMap.map { statuses ->
             val course = getCourse(courseId)
             val allLessons = course?.chapters.orEmpty().flatMap { it.lessons }
-            val completed = allLessons.count { statuses[it.id] == LessonStatus.COMPLETED }
-            CourseProgress(courseId, completed, allLessons.size, null)
+            val completedIds = allLessons.filter { statuses[it.id] == LessonStatus.COMPLETED }.map { it.id }.toSet()
+            CourseProgress(courseId, completedIds.size, allLessons.size, null, completedIds)
         }
 
     override fun observeLessonStatus(lessonId: String): Flow<LessonStatus> =
