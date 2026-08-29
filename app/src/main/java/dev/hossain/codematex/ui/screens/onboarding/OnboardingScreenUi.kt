@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.onboarding
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
@@ -62,11 +63,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
+import dev.hossain.codematex.R
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -83,9 +86,10 @@ private data class OnboardingPageData(
 )
 
 private data class FeatureItem(
-    val icon: ImageVector,
     val title: String,
     val description: String,
+    val icon: ImageVector? = null,
+    @DrawableRes val iconRes: Int? = null,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -296,7 +300,7 @@ private fun OnboardingPageSlide(
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Icon(
-                    imageVector = Icons.Default.BugReport,
+                    painter = painterResource(R.drawable.github_logo),
                     contentDescription = null,
                     modifier = Modifier.size(18.dp),
                 )
@@ -349,12 +353,21 @@ private fun FeatureCard(
                         .background(accentColor.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    imageVector = feature.icon,
-                    contentDescription = null,
-                    tint = accentColor,
-                    modifier = Modifier.size(20.dp),
-                )
+                if (feature.iconRes != null) {
+                    Icon(
+                        painter = painterResource(feature.iconRes),
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp),
+                    )
+                } else if (feature.icon != null) {
+                    Icon(
+                        imageVector = feature.icon,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(20.dp),
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -581,7 +594,7 @@ private fun getOnboardingPages(): List<OnboardingPageData> =
                         description = "Notice quirks or have ideas? We actively welcome issue reports and feature requests.",
                     ),
                     FeatureItem(
-                        icon = Icons.Default.CheckCircle,
+                        iconRes = R.drawable.github_logo,
                         title = "Community Driven",
                         description = "Join discussions on GitHub to request new model weights, languages, and features.",
                     ),
