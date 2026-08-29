@@ -1,0 +1,6 @@
+What's New in v1.16.1:
+• Course Progress: Distinct Completed, Current, and Upcoming status badges in chapter views.
+• Touch-Aware Chat: Auto-scroll smoothly pauses when dragging to read past messages.
+• Ask-AI Reliability: Seamlessly launches AI context from lessons without prompt delay.
+• Dismissable Course Banner: Close chat course suggestions with saved topic preferences.
+• UI Polish: Improved flex layouts preventing chip squishing across screen sizes.
