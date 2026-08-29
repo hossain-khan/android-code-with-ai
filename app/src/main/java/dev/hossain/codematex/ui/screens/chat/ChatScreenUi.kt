@@ -219,9 +219,6 @@ private fun ChatLayout(
                             onStartCourse = { courseId ->
                                 state.eventSink(ChatScreen.Event.OpenCourse(courseId))
                             },
-                            onDismissCourseBanner = {
-                                state.eventSink(ChatScreen.Event.DismissCourseBanner(state.topic))
-                            },
                             onPromptSelected = { prompt ->
                                 keyboardController?.hide()
                                 focusManager.clearFocus()
@@ -301,9 +298,6 @@ private fun ChatLayout(
                         course = state.availableCourse,
                         onStartCourse = { courseId ->
                             state.eventSink(ChatScreen.Event.OpenCourse(courseId))
-                        },
-                        onDismissCourseBanner = {
-                            state.eventSink(ChatScreen.Event.DismissCourseBanner(state.topic))
                         },
                         onPromptSelected = { prompt ->
                             keyboardController?.hide()

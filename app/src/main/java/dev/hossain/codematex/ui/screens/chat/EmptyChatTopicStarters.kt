@@ -16,12 +16,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
@@ -49,7 +47,6 @@ internal fun EmptyChatTopicStarters(
     enabled: Boolean = true,
     course: LearningCourse? = null,
     onStartCourse: ((String) -> Unit)? = null,
-    onDismissCourseBanner: (() -> Unit)? = null,
 ) {
     Column(
         modifier =
@@ -131,40 +128,20 @@ internal fun EmptyChatTopicStarters(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                modifier = Modifier.weight(1f, fill = false),
-                            ) {
-                                Text(
-                                    text = "Guided Course",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = visualInfo.accentColor,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                                Text(
-                                    text = "• ${course.chapters.size} ch, ${course.lessonCount} lessons",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                            if (onDismissCourseBanner != null) {
-                                IconButton(
-                                    onClick = onDismissCourseBanner,
-                                    modifier = Modifier.size(24.dp),
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Dismiss course banner",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        modifier = Modifier.size(16.dp),
-                                    )
-                                }
-                            }
+                            Text(
+                                text = "Guided Course",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = visualInfo.accentColor,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = "• ${course.chapters.size} ch, ${course.lessonCount} lessons",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         }
                         Text(
                             text = course.title,
@@ -311,7 +288,6 @@ private fun EmptyChatTopicStartersWithCoursePreview() {
                             ),
                     ),
                 onStartCourse = {},
-                onDismissCourseBanner = {},
                 onPromptSelected = {},
             )
         }

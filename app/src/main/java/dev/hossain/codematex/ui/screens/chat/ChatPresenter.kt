@@ -401,6 +401,10 @@ class ChatPresenter(
                 }
 
                 is ChatScreen.Event.OpenCourse -> {
+                    scope.launch {
+                        userPreferencesStore.dismissCourseBanner(screen.topic)
+                        availableCourse = null
+                    }
                     navigator.goTo(ChapterScreen(event.courseId))
                 }
 
