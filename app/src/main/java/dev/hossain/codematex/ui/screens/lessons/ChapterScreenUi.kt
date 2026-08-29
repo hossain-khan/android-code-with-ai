@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
@@ -214,7 +216,7 @@ private fun EmptyChapterState() {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Surface(
-            shape = androidx.compose.foundation.shape.CircleShape,
+            shape = CircleShape,
             color = MaterialTheme.colorScheme.primaryContainer,
         ) {
             Icon(
@@ -235,7 +237,7 @@ private fun EmptyChapterState() {
 @Composable
 private fun ChapterCard(
     chapter: LearningChapter,
-    progress: dev.hossain.codematex.data.model.CourseProgress,
+    progress: CourseProgress,
     onLessonClick: (LearningLesson) -> Unit,
 ) {
     Card(
@@ -282,8 +284,7 @@ private fun ChapterPreview() {
             ChapterScreenContent(
                 ChapterScreen.State.Success(
                     KotlinCourseContent.course,
-                    dev.hossain.codematex.data.model
-                        .CourseProgress("kotlin-foundations", 6, 24, "kotlin-variables"),
+                    CourseProgress("kotlin-foundations", 6, 24, "kotlin-variables"),
                     {},
                 ),
             )
