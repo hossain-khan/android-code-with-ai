@@ -74,5 +74,7 @@ data object ModelPickerScreen : ParcelableScreen {
         data class ResetModelConfig(
             val model: AiModel,
         ) : Event
+
+        data object OpenDebugScreen : Event
     }
 }
