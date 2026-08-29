@@ -33,6 +33,27 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Circuit Presenter for [DebugScreen], providing on-device LLM runtime profiling and memory diagnostics.
+ *
+ * This presenter manages:
+ * - **Model Loading Diagnostics**: Measures initialization latency (TTFL in milliseconds) and memory growth
+ *   across Native C++ heap, JVM heap, and device RAM.
+ * - **Model Unload & Cleanup**: Executes [LlmEngine.cleanup] to close active conversations and engine handles,
+ *   triggers JVM garbage collection, and measures reclaimed native and system memory.
+ * - **Real-Time Telemetry**: Periodically samples [DebugMemoryStats] (Native Heap, JVM Heap, Device RAM, CPU)
+ *   every 750ms while the screen is active.
+ * - **Inference Benchmarking**: Streams tokens on an isolated session to evaluate Time-to-First-Token (TTFT),
+ *   decode throughput (tokens/second), and generation duration.
+ * - **Device & Storage Inspection**: Extracts hardware specifications and lists downloaded model files on disk.
+ *
+ * @param navigator Circuit navigator for screen transitions.
+ * @param screen Screen argument representation for [DebugScreen].
+ * @param modelRepository Repository providing available and downloaded LLM models.
+ * @param llmEngine High-level on-device LiteRT-LM runtime engine.
+ * @param configStore Model sampler and generation configuration store.
+ * @param debugMemoryProvider Low-level memory sampler providing native heap, JVM heap, and system RAM metrics.
+ */
 @AssistedInject
 class DebugPresenter(
     @Assisted private val navigator: Navigator,
@@ -42,6 +63,9 @@ class DebugPresenter(
     private val configStore: ModelConfigStore,
     private val debugMemoryProvider: DebugMemoryProvider,
 ) : Presenter<DebugScreen.State> {
+    /**
+     * Assisted injection factory for [DebugPresenter].
+     */
     @CircuitInject(DebugScreen::class, AppScope::class)
     @AssistedFactory
     interface Factory {
@@ -151,6 +175,7 @@ class DebugPresenter(
                     statusMessage = "Set test backend to: ${event.backend.name}"
                 }
 
+                // Handles explicit model loading and initialization latency/memory measurement
                 DebugScreen.Event.LoadModel -> {
                     val model = selectedModel
                     if (model == null) {
@@ -195,6 +220,7 @@ class DebugPresenter(
                     }
                 }
 
+                // Closes engine handles and triggers JVM GC to measure memory reclaimed
                 DebugScreen.Event.UnloadModel -> {
                     scope.launch {
                         isUnloadingModel = true
@@ -228,6 +254,7 @@ class DebugPresenter(
                     benchmarkPrompt = event.prompt
                 }
 
+                // Runs isolated inference to evaluate TTFT, decode throughput (t/s), and generation duration
                 DebugScreen.Event.RunBenchmark -> {
                     if (!isModelLoaded && selectedModel?.localPath == null) {
                         statusMessage = "Load a model first before running inference benchmark."
@@ -293,12 +320,14 @@ class DebugPresenter(
                     }
                 }
 
+                // Cancels ongoing token generation
                 DebugScreen.Event.StopBenchmark -> {
                     llmEngine.stop()
                     isBenchmarking = false
                     statusMessage = "Benchmark stopped by user."
                 }
 
+                // Requests explicit JVM Garbage Collection and updates telemetry
                 DebugScreen.Event.TriggerGc -> {
                     val reclaimedBytes = debugMemoryProvider.triggerGc()
                     val reclaimedMb = reclaimedBytes / (1024f * 1024f)
