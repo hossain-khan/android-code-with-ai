@@ -54,6 +54,7 @@ import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -367,11 +368,13 @@ private fun ChapterCard(
 
                         Column(Modifier.weight(1f)) {
                             Row(
+                                modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
                                 Text(
-                                    "${chapter.order}.${lesson.order} ${lesson.title}",
+                                    text = "${chapter.order}.${lesson.order} ${lesson.title}",
+                                    modifier = Modifier.weight(1f, fill = false),
                                     fontWeight = if (isCurrent || isCompleted) FontWeight.Bold else FontWeight.SemiBold,
                                     color =
                                         when {
@@ -391,6 +394,8 @@ private fun ChapterCard(
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = visualAccent,
+                                            maxLines = 1,
+                                            softWrap = false,
                                         )
                                     }
                                 } else if (isCompleted) {
@@ -404,6 +409,8 @@ private fun ChapterCard(
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = visualAccent,
+                                            maxLines = 1,
+                                            softWrap = false,
                                         )
                                     }
                                 }
@@ -438,6 +445,30 @@ private fun ChapterCardPreview() {
                             completedLessonIds = setOf("kotlin-intro"),
                         ),
                     visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onLessonClick = {},
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChapterCardPythonPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                ChapterCard(
+                    chapter = PythonCourseContent.course.chapters.first(),
+                    progress =
+                        CourseProgress(
+                            courseId = "python-foundations",
+                            completedLessons = 3,
+                            totalLessons = 24,
+                            currentLessonId = "python-control-flow",
+                            completedLessonIds = setOf("python-intro", "python-variables", "python-data-types"),
+                        ),
+                    visualAccent = CodingTopic.PYTHON.visualInfo.accentColor,
                     onLessonClick = {},
                 )
             }
