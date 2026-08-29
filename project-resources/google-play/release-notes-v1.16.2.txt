@@ -1,0 +1,5 @@
+What's New in v1.16.2:
+• Memory Management: Smart background eviction frees 2-4GB RAM when idle, preventing device slowdowns.
+• Pre-Flight RAM Safety: Validates device memory headroom before loading AI models to ensure stability.
+• Runtime Debug Screen: Real-time telemetry dashboard for memory usage, engine state, and performance.
+• Course Banner Polish: Guided course starter cards auto-dismiss on tap and remember your preferences.
