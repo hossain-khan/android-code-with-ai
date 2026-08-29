@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
@@ -292,7 +292,8 @@ private fun ChapterCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             chapter.lessons.forEach { lesson ->
-                val isCurrent = lesson.id == progress.currentLessonId
+                val isCompleted = progress.completedLessonIds.contains(lesson.id)
+                val isCurrent = lesson.id == progress.currentLessonId && !isCompleted
                 Surface(
                     modifier =
                         Modifier
@@ -300,30 +301,70 @@ private fun ChapterCard(
                             .clip(MaterialTheme.shapes.medium)
                             .clickable { onLessonClick(lesson) },
                     shape = MaterialTheme.shapes.medium,
-                    color = if (isCurrent) visualAccent.copy(alpha = 0.12f) else Color.Transparent,
-                    border = if (isCurrent) BorderStroke(1.dp, visualAccent.copy(alpha = 0.4f)) else null,
+                    color =
+                        when {
+                            isCurrent -> visualAccent.copy(alpha = 0.12f)
+                            isCompleted -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                            else -> Color.Transparent
+                        },
+                    border =
+                        when {
+                            isCurrent -> BorderStroke(1.dp, visualAccent.copy(alpha = 0.4f))
+                            isCompleted -> BorderStroke(1.dp, visualAccent.copy(alpha = 0.25f))
+                            else -> null
+                        },
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        Icon(
-                            imageVector =
-                                if (isCurrent) {
-                                    Icons.Default.PlayArrow
-                                } else {
-                                    Icons.Default.CheckCircle
-                                },
-                            contentDescription = null,
-                            tint =
-                                if (isCurrent) {
-                                    visualAccent
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant
-                                },
-                            modifier = Modifier.size(20.dp),
-                        )
+                        when {
+                            isCompleted -> {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = visualAccent,
+                                    modifier = Modifier.size(20.dp),
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Completed",
+                                            tint = MaterialTheme.colorScheme.surface,
+                                            modifier = Modifier.size(13.dp),
+                                        )
+                                    }
+                                }
+                            }
+
+                            isCurrent -> {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = visualAccent.copy(alpha = 0.2f),
+                                    border = BorderStroke(1.5.dp, visualAccent),
+                                    modifier = Modifier.size(20.dp),
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Default.PlayArrow,
+                                            contentDescription = "Current",
+                                            tint = visualAccent,
+                                            modifier = Modifier.size(13.dp),
+                                        )
+                                    }
+                                }
+                            }
+
+                            else -> {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color.Transparent,
+                                    border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outlineVariant),
+                                    modifier = Modifier.size(20.dp),
+                                ) {}
+                            }
+                        }
+
                         Column(Modifier.weight(1f)) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
@@ -331,8 +372,13 @@ private fun ChapterCard(
                             ) {
                                 Text(
                                     "${chapter.order}.${lesson.order} ${lesson.title}",
-                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
-                                    color = if (isCurrent) visualAccent else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (isCurrent || isCompleted) FontWeight.Bold else FontWeight.SemiBold,
+                                    color =
+                                        when {
+                                            isCurrent -> visualAccent
+                                            isCompleted -> MaterialTheme.colorScheme.onSurface
+                                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
                                 )
                                 if (isCurrent) {
                                     Surface(
@@ -341,6 +387,19 @@ private fun ChapterCard(
                                     ) {
                                         Text(
                                             text = "Current",
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = visualAccent,
+                                        )
+                                    }
+                                } else if (isCompleted) {
+                                    Surface(
+                                        shape = MaterialTheme.shapes.extraSmall,
+                                        color = visualAccent.copy(alpha = 0.15f),
+                                    ) {
+                                        Text(
+                                            text = "Done",
                                             modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
@@ -370,7 +429,14 @@ private fun ChapterCardPreview() {
             Box(Modifier.padding(16.dp)) {
                 ChapterCard(
                     chapter = KotlinCourseContent.course.chapters.first(),
-                    progress = CourseProgress("kotlin-foundations", 1, 24, "kotlin-variables"),
+                    progress =
+                        CourseProgress(
+                            courseId = "kotlin-foundations",
+                            completedLessons = 1,
+                            totalLessons = 24,
+                            currentLessonId = "kotlin-variables",
+                            completedLessonIds = setOf("kotlin-intro"),
+                        ),
                     visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
                     onLessonClick = {},
                 )
@@ -388,7 +454,13 @@ private fun ChapterPreview() {
             ChapterScreenContent(
                 ChapterScreen.State.Success(
                     KotlinCourseContent.course,
-                    CourseProgress("kotlin-foundations", 6, 24, "kotlin-variables"),
+                    CourseProgress(
+                        courseId = "kotlin-foundations",
+                        completedLessons = 2,
+                        totalLessons = 24,
+                        currentLessonId = "kotlin-functions",
+                        completedLessonIds = setOf("kotlin-intro", "kotlin-variables"),
+                    ),
                     {},
                 ),
             )

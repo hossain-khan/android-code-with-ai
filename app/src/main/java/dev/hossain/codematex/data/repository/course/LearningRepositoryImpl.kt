@@ -61,17 +61,24 @@ class LearningRepositoryImpl
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->
                 val course = bundledCourses.firstOrNull { it.id == courseId }
                 val lessons = course?.chapters.orEmpty().flatMap { it.lessons }
-                val completed = stored.count { it.toLessonStatus() == LessonStatus.COMPLETED }
+                val completedIds =
+                    stored
+                        .filter { it.toLessonStatus() == LessonStatus.COMPLETED }
+                        .map { it.lessonId }
+                        .toSet()
                 val current =
                     stored
                         .filter { it.toLessonStatus() == LessonStatus.IN_PROGRESS }
                         .maxByOrNull { it.lastOpenedAt }
                         ?.lessonId
-                        ?: lessons
-                            .firstOrNull { lesson ->
-                                stored.none { it.lessonId == lesson.id && it.toLessonStatus() == LessonStatus.COMPLETED }
-                            }?.id
-                CourseProgress(courseId, completed, lessons.size, current)
+                        ?: lessons.firstOrNull { lesson -> lesson.id !in completedIds }?.id
+                CourseProgress(
+                    courseId = courseId,
+                    completedLessons = completedIds.size,
+                    totalLessons = lessons.size,
+                    currentLessonId = current,
+                    completedLessonIds = completedIds,
+                )
             }
 
         override fun observeLessonStatus(lessonId: String): Flow<LessonStatus> =
