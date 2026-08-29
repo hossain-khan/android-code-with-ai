@@ -3,19 +3,23 @@ package dev.hossain.codematex.ui.screens.lessons
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -37,6 +41,8 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -152,7 +158,7 @@ fun ChapterScreenContent(
                             }
                         } else {
                             gridItems(course.chapters) { chapter ->
-                                ChapterCard(chapter, state.progress) { lesson ->
+                                ChapterCard(chapter, state.progress, visualAccent = visualInfo.accentColor) { lesson ->
                                     state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
                                 }
                             }
@@ -173,7 +179,7 @@ fun ChapterScreenContent(
                             }
                         } else {
                             lazyItems(course.chapters) { chapter ->
-                                ChapterCard(chapter, state.progress) { lesson ->
+                                ChapterCard(chapter, state.progress, visualAccent = visualInfo.accentColor) { lesson ->
                                     state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
                                 }
                             }
@@ -240,38 +246,134 @@ private fun EmptyChapterState() {
 private fun ChapterCard(
     chapter: LearningChapter,
     progress: CourseProgress,
+    visualAccent: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
     onLessonClick: (LearningLesson) -> Unit,
 ) {
     Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        border = BorderStroke(1.dp, visualAccent.copy(alpha = 0.25f)),
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("${chapter.order}. ${chapter.title}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(chapter.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            chapter.lessons.forEach { lesson ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().clickable { onLessonClick(lesson) }.padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Column(
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualAccent.copy(alpha = 0.08f))
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = visualAccent.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, visualAccent.copy(alpha = 0.35f)),
                 ) {
-                    Icon(
-                        Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        tint =
-                            if (lesson.id ==
-                                progress.currentLessonId
-                            ) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.outline
-                            },
+                    Text(
+                        text = "Chapter ${chapter.order}",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = visualAccent,
                     )
-                    Column(Modifier.weight(1f)) {
-                        Text("${chapter.order}.${lesson.order} ${lesson.title}", fontWeight = FontWeight.SemiBold)
-                        Text("${lesson.estimatedMinutes} min • ${lesson.summary}", style = MaterialTheme.typography.bodySmall)
+                }
+                Text(
+                    text = chapter.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+            Text(
+                text = chapter.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            chapter.lessons.forEach { lesson ->
+                val isCurrent = lesson.id == progress.currentLessonId
+                Surface(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.medium)
+                            .clickable { onLessonClick(lesson) },
+                    shape = MaterialTheme.shapes.medium,
+                    color = if (isCurrent) visualAccent.copy(alpha = 0.12f) else Color.Transparent,
+                    border = if (isCurrent) BorderStroke(1.dp, visualAccent.copy(alpha = 0.4f)) else null,
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            imageVector =
+                                if (isCurrent) {
+                                    Icons.Default.PlayArrow
+                                } else {
+                                    Icons.Default.CheckCircle
+                                },
+                            contentDescription = null,
+                            tint =
+                                if (isCurrent) {
+                                    visualAccent
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                            modifier = Modifier.size(20.dp),
+                        )
+                        Column(Modifier.weight(1f)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Text(
+                                    "${chapter.order}.${lesson.order} ${lesson.title}",
+                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
+                                    color = if (isCurrent) visualAccent else MaterialTheme.colorScheme.onSurface,
+                                )
+                                if (isCurrent) {
+                                    Surface(
+                                        shape = MaterialTheme.shapes.extraSmall,
+                                        color = visualAccent.copy(alpha = 0.2f),
+                                    ) {
+                                        Text(
+                                            text = "Current",
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = visualAccent,
+                                        )
+                                    }
+                                }
+                            }
+                            Text(
+                                "${lesson.estimatedMinutes} min • ${lesson.summary}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChapterCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                ChapterCard(
+                    chapter = KotlinCourseContent.course.chapters.first(),
+                    progress = CourseProgress("kotlin-foundations", 1, 24, "kotlin-variables"),
+                    visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onLessonClick = {},
+                )
             }
         }
     }

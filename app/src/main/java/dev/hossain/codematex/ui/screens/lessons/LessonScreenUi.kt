@@ -1,13 +1,18 @@
 package dev.hossain.codematex.ui.screens.lessons
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,7 +23,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -42,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -56,6 +64,7 @@ import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import dev.hossain.codematex.ui.theme.TopicVisualInfo
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.SyntaxHighlightedCode
@@ -238,8 +247,9 @@ private fun LessonBody(
                 }
             }
         } else {
+            val visualInfo = state.course.topic.visualInfo
             items(state.lesson.blocks.toList()) { block ->
-                LessonBlockContent(block)
+                LessonBlockContent(block, visualInfo)
             }
         }
         item {
@@ -254,7 +264,11 @@ private fun LessonBody(
                 onClick = { state.eventSink(LessonScreen.Event.AskAi) },
             ) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
+                            .padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(14.dp),
                 ) {
@@ -290,25 +304,57 @@ private fun LessonBody(
             }
         }
         item {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val visualInfo = state.course.topic.visualInfo
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 if (!state.isCompleted) {
-                    Button(onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) }) {
+                    OutlinedButton(
+                        onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) },
+                        modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                    ) {
                         Icon(Icons.Default.Check, contentDescription = null)
+                        Spacer(Modifier.width(6.dp))
                         Text("Mark complete")
                     }
                 } else {
-                    OutlinedButton(
-                        enabled = false,
-                        onClick = {},
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = visualInfo.accentColor.copy(alpha = 0.15f),
+                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+                        modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
                     ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                        Text("Completed")
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = visualInfo.accentColor,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Completed",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = visualInfo.accentColor,
+                            )
+                        }
                     }
                 }
                 state.nextLessonId?.let {
-                    Button(onClick = { state.eventSink(LessonScreen.Event.NextLesson) }) {
-                        Text("Next")
-                        Icon(Icons.Default.ChevronRight, contentDescription = null)
+                    Button(
+                        onClick = { state.eventSink(LessonScreen.Event.NextLesson) },
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("Next lesson")
+                        Spacer(Modifier.width(6.dp))
+                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
                     }
                 }
             }
@@ -318,7 +364,10 @@ private fun LessonBody(
 
 @OptIn(ExperimentalHighlightApi::class)
 @Composable
-private fun LessonBlockContent(block: LessonBlock) {
+private fun LessonBlockContent(
+    block: LessonBlock,
+    visualInfo: TopicVisualInfo,
+) {
     when (block) {
         is LessonBlock.Markdown -> {
             MarkdownMessage(block.content)
@@ -327,7 +376,7 @@ private fun LessonBlockContent(block: LessonBlock) {
         is LessonBlock.Code -> {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
             ) {
                 SyntaxHighlightedCode(
                     code = block.code,
@@ -339,40 +388,210 @@ private fun LessonBlockContent(block: LessonBlock) {
         }
 
         is LessonBlock.Quiz -> {
-            QuizContent(block)
+            QuizContent(block, visualInfo)
         }
     }
 }
 
 @Composable
-private fun QuizContent(block: LessonBlock.Quiz) {
+private fun QuizContent(
+    block: LessonBlock.Quiz,
+    visualInfo: TopicVisualInfo,
+    modifier: Modifier = Modifier,
+) {
     var selected by remember { mutableStateOf<Int?>(null) }
     Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.08f))
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text(
-                "Quick Check",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-            Text(block.question)
-            block.options.forEachIndexed { index, option ->
-                OutlinedButton(
-                    onClick = { selected = index },
-                    modifier = Modifier.fillMaxWidth(),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Surface(
+                    shape = MaterialTheme.shapes.extraSmall,
+                    color = visualInfo.accentColor.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
                 ) {
-                    Text(option, modifier = Modifier.weight(1f))
+                    Text(
+                        text = "Quiz",
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+                Text(
+                    "Quick Check",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Text(
+                text = block.question,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                block.options.forEachIndexed { index, option ->
+                    val optionLetter = ('A' + index).toString()
+                    val isChosen = selected == index
+                    val isCorrectAnswer = index == block.answerIndex
+                    val isRevealed = selected != null
+
+                    val containerColor =
+                        when {
+                            !isRevealed -> MaterialTheme.colorScheme.surfaceContainerHigh
+                            isCorrectAnswer -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                            isChosen -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                            else -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                        }
+
+                    val borderColor =
+                        when {
+                            !isRevealed -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            isCorrectAnswer -> MaterialTheme.colorScheme.primary
+                            isChosen -> MaterialTheme.colorScheme.error
+                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                        }
+
+                    Surface(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .clickable { selected = index },
+                        shape = MaterialTheme.shapes.medium,
+                        color = containerColor,
+                        border = BorderStroke(1.dp, borderColor),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color =
+                                    when {
+                                        !isRevealed -> visualInfo.accentColor.copy(alpha = 0.15f)
+                                        isCorrectAnswer -> MaterialTheme.colorScheme.primary
+                                        isChosen -> MaterialTheme.colorScheme.error
+                                        else -> MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                                modifier = Modifier.size(24.dp),
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    if (isRevealed && (isCorrectAnswer || isChosen)) {
+                                        Icon(
+                                            imageVector = if (isCorrectAnswer) Icons.Default.Check else Icons.Default.Close,
+                                            contentDescription = null,
+                                            tint =
+                                                if (isCorrectAnswer) {
+                                                    MaterialTheme.colorScheme.onPrimary
+                                                } else {
+                                                    MaterialTheme.colorScheme.onError
+                                                },
+                                            modifier = Modifier.size(14.dp),
+                                        )
+                                    } else {
+                                        Text(
+                                            text = optionLetter,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (!isRevealed) visualInfo.accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+
+                            Text(
+                                text = option,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
                 }
             }
+
             selected?.let { answer ->
-                Text(
-                    if (answer == block.answerIndex) "Correct! ${block.explanation}" else "Not quite. ${block.explanation}",
-                    color = if (answer == block.answerIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                val isCorrect = answer == block.answerIndex
+                val resultContainerColor =
+                    if (isCorrect) {
+                        visualInfo.accentColor.copy(alpha = 0.12f)
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                    }
+                val resultBorderColor =
+                    if (isCorrect) {
+                        visualInfo.accentColor.copy(alpha = 0.4f)
+                    } else {
+                        MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                    }
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = resultContainerColor,
+                    border = BorderStroke(1.dp, resultBorderColor),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Icon(
+                            imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Info,
+                            contentDescription = null,
+                            tint = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(20.dp).padding(top = 2.dp),
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(
+                                text = if (isCorrect) "Correct!" else "Explanation",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
+                            )
+                            Text(
+                                text = block.explanation,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun QuizContentPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                QuizContent(
+                    block =
+                        LessonBlock.Quiz(
+                            question = "Which keyword creates an immutable read-only variable in Kotlin?",
+                            options = listOf("val", "var", "const", "let"),
+                            answerIndex = 0,
+                            explanation = "'val' declares a read-only variable whose value cannot be reassigned once initialized.",
+                        ),
+                    visualInfo = CodingTopic.KOTLIN.visualInfo,
                 )
             }
         }

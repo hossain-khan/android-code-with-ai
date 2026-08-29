@@ -660,10 +660,14 @@ private fun SessionCard(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             ),
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
+                    .padding(16.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
