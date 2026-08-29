@@ -58,7 +58,7 @@ import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
-import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCode
+import dev.hossain.highlight.ui.SyntaxHighlightedCode
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -329,7 +329,7 @@ private fun LessonBlockContent(block: LessonBlock) {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
             ) {
-                StreamingSyntaxHighlightedCode(
+                SyntaxHighlightedCode(
                     code = block.code,
                     language = block.language,
                     showLineNumbers = true,
