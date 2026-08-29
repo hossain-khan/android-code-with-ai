@@ -19,6 +19,7 @@ data class ChatScreen(
     val sessionId: String? = null,
     val saveToHistory: Boolean = true,
     val initialPrompt: String? = null,
+    val showCourseBanner: Boolean = true,
 ) : ParcelableScreen {
     @Immutable
     @Serializable
@@ -85,6 +86,10 @@ data class ChatScreen(
 
         data class OpenCourse(
             val courseId: String,
+        ) : Event
+
+        data class DismissCourseBanner(
+            val topic: CodingTopic,
         ) : Event
 
         data object Back : Event

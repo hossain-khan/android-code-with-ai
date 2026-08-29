@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.common.truth.Truth.assertThat
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -106,5 +107,23 @@ class UserPreferencesStoreImplTest {
                 }
             val failingStore = UserPreferencesStoreImpl(failingDataStore)
             failingStore.setSelectedPersona(TutorPersona.BEGINNER_FRIENDLY)
+        }
+
+    @Test
+    fun `given uninitialized store - dismissedCourseBannerTopicsFlow emits empty set`() =
+        runTest(testDispatcher) {
+            assertThat(store.dismissedCourseBannerTopicsFlow.first()).isEmpty()
+        }
+
+    @Test
+    fun `given dismissCourseBanner - persists topic and updates flow`() =
+        runTest(testDispatcher) {
+            store.dismissCourseBanner(CodingTopic.KOTLIN)
+
+            assertThat(store.dismissedCourseBannerTopicsFlow.first()).containsExactly("KOTLIN")
+
+            store.dismissCourseBanner(CodingTopic.PYTHON)
+
+            assertThat(store.dismissedCourseBannerTopicsFlow.first()).containsExactly("KOTLIN", "PYTHON")
         }
 }

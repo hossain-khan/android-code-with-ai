@@ -28,6 +28,7 @@ import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -678,6 +679,79 @@ class ChatPresenterTest {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
                 state.eventSink(ChatScreen.Event.OpenCourse("kotlin-foundations"))
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
+            }
+        }
+
+    @Test
+    fun `given showCourseBanner is false - availableCourse is null`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN, showCourseBanner = false),
+                    modelRepository = fakeModelRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.availableCourse).isNull()
+            }
+        }
+
+    @Test
+    fun `given topic is in dismissedCourseBannerTopics - availableCourse is null`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakePrefs = FakeUserPreferencesStore(initialDismissedTopics = setOf("KOTLIN"))
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    userPreferencesStore = fakePrefs,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.availableCourse).isNull()
+            }
+        }
+
+    @Test
+    fun `given DismissCourseBanner event - dismisses banner in preferences and clears availableCourse`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakePrefs = FakeUserPreferencesStore()
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    userPreferencesStore = fakePrefs,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
+
+                state.eventSink(ChatScreen.Event.DismissCourseBanner(CodingTopic.KOTLIN))
+
+                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(updatedState.availableCourse).isNull()
+                assertThat(fakePrefs.dismissedCourseBannerTopicsFlow.first()).contains("KOTLIN")
             }
         }
 }

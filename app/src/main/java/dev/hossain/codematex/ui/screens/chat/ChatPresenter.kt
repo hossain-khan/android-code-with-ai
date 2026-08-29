@@ -71,10 +71,16 @@ class ChatPresenter(
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
+        var dismissedCourseBannerTopics by rememberRetained { mutableStateOf<Set<String>>(emptySet()) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
 
-        LaunchedEffect(screen.topic) {
-            availableCourse = learningRepository.getCourseForTopic(screen.topic)
+        LaunchedEffect(screen.topic, screen.showCourseBanner, dismissedCourseBannerTopics) {
+            val isDismissed = dismissedCourseBannerTopics.contains(screen.topic.name)
+            if (screen.showCourseBanner && !isDismissed) {
+                availableCourse = learningRepository.getCourseForTopic(screen.topic)
+            } else {
+                availableCourse = null
+            }
         }
 
         LaunchedEffect(Unit) {
@@ -94,6 +100,11 @@ class ChatPresenter(
             launch {
                 userPreferencesStore.selectedPersonaFlow.collect { storedPersona ->
                     persona = storedPersona
+                }
+            }
+            launch {
+                userPreferencesStore.dismissedCourseBannerTopicsFlow.collect { dismissed ->
+                    dismissedCourseBannerTopics = dismissed
                 }
             }
         }
@@ -391,6 +402,13 @@ class ChatPresenter(
 
                 is ChatScreen.Event.OpenCourse -> {
                     navigator.goTo(ChapterScreen(event.courseId))
+                }
+
+                is ChatScreen.Event.DismissCourseBanner -> {
+                    scope.launch {
+                        userPreferencesStore.dismissCourseBanner(event.topic)
+                        availableCourse = null
+                    }
                 }
 
                 ChatScreen.Event.Back -> {

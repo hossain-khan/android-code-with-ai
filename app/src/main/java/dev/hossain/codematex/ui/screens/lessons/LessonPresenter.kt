@@ -97,6 +97,7 @@ class LessonPresenter(
                                 topic = topic,
                                 saveToHistory = false,
                                 initialPrompt = prompt,
+                                showCourseBanner = false,
                             ),
                         )
                     }
