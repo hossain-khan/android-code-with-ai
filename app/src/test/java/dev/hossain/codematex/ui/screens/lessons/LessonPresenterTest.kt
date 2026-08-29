@@ -94,6 +94,7 @@ class LessonPresenterTest {
                 val chatScreen = navigator.awaitNextScreen() as ChatScreen
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.KOTLIN)
                 assertThat(chatScreen.saveToHistory).isFalse()
+                assertThat(chatScreen.showCourseBanner).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Hello, Kotlin")
                 assertThat(chatScreen.initialPrompt).contains("Kotlin Foundations")
             }
@@ -117,6 +118,7 @@ class LessonPresenterTest {
 
                 val chatScreen = navigator.awaitNextScreen() as ChatScreen
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.PYTHON)
+                assertThat(chatScreen.showCourseBanner).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Hello, Python")
                 assertThat(chatScreen.initialPrompt).contains("Python Foundations")
             }
@@ -140,6 +142,7 @@ class LessonPresenterTest {
 
                 val chatScreen = navigator.awaitNextScreen() as ChatScreen
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.TYPESCRIPT)
+                assertThat(chatScreen.showCourseBanner).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Your First TypeScript Program")
                 assertThat(chatScreen.initialPrompt).contains("TypeScript Foundations")
             }
@@ -163,6 +166,7 @@ class LessonPresenterTest {
 
                 val chatScreen = navigator.awaitNextScreen() as ChatScreen
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.GO)
+                assertThat(chatScreen.showCourseBanner).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Your First Go Program")
                 assertThat(chatScreen.initialPrompt).contains("Go Foundations")
             }
@@ -186,6 +190,7 @@ class LessonPresenterTest {
 
                 val chatScreen = navigator.awaitNextScreen() as ChatScreen
                 assertThat(chatScreen.topic).isEqualTo(CodingTopic.RUST)
+                assertThat(chatScreen.showCourseBanner).isFalse()
                 assertThat(chatScreen.initialPrompt).contains("Your First Rust Program")
                 assertThat(chatScreen.initialPrompt).contains("Rust Foundations")
             }
