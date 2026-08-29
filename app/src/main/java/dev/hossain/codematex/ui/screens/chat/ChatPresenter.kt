@@ -69,8 +69,9 @@ class ChatPresenter(
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
+        var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
-        var hasSentInitialPrompt by rememberRetained { mutableStateOf(false) }
+        var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
 
         LaunchedEffect(screen.topic) {
             availableCourse = learningRepository.getCourseForTopic(screen.topic)
@@ -122,10 +123,12 @@ class ChatPresenter(
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
+                isModelInitialized = false
                 return@LaunchedEffect
             }
             Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
             isPreparing = true
+            isModelInitialized = false
             errorMessage = null
             try {
                 val result =
@@ -141,9 +144,11 @@ class ChatPresenter(
                         if (loadedMessages.isNotEmpty()) {
                             messages = loadedMessages
                         }
+                        isModelInitialized = true
                         Timber.d("ChatPresenter: Model initialized successfully")
                     }.onFailure { error ->
                         Timber.e(error, "ChatPresenter: Model initialization failed")
+                        isModelInitialized = false
                         errorMessage = error.message
                     }
             } catch (e: CancellationException) {
@@ -394,11 +399,12 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(isPreparing, activeModel, screen.initialPrompt) {
+        LaunchedEffect(isPreparing, isModelInitialized, activeModel, screen.initialPrompt) {
             val prompt = screen.initialPrompt
             if (prompt != null &&
                 !hasSentInitialPrompt &&
                 !isPreparing &&
+                isModelInitialized &&
                 activeModel?.downloadStatus == DownloadStatus.DOWNLOADED &&
                 messages.isEmpty()
             ) {
