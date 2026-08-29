@@ -470,7 +470,10 @@ private fun TopicCard(
         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.3f)),
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
+                    .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(
@@ -570,7 +573,10 @@ private fun TopicCompactCard(
         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
+                    .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(

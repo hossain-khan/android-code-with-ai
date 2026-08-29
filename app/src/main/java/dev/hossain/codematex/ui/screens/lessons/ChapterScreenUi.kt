@@ -283,7 +283,7 @@ private fun ChapterPreview() {
                 ChapterScreen.State.Success(
                     KotlinCourseContent.course,
                     dev.hossain.codematex.data.model
-                        .CourseProgress("kotlin-foundations", 1, 24, "kotlin-variables"),
+                        .CourseProgress("kotlin-foundations", 6, 24, "kotlin-variables"),
                     {},
                 ),
             )
