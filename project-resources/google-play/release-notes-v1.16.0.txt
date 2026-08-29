@@ -1,0 +1,5 @@
+What's New in v1.16.0:
+• Guided Learning Courses: Bundled interactive starter courses for Kotlin, Python, TypeScript, Go, and Rust.
+• Interactive Quizzes: Instant answer validation with rich explanations and topic-accented feedback.
+• Ephemeral Ask-AI Tutor: Chat directly with on-device AI for deep lesson walkthroughs.
+• Expressive Polish: Topic-themed radial lighting, chapter syllabus tracking, and highlighted code blocks.
