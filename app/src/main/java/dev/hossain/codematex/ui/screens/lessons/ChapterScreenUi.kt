@@ -24,7 +24,7 @@ import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -190,15 +190,17 @@ private fun CourseProgressHeader(
     course: LearningCourse,
     state: ChapterScreen.State.Success,
 ) {
+    val visualInfo = course.topic.visualInfo
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(course.description, style = MaterialTheme.typography.bodyLarge)
         Text(
             "${state.progress.completedLessons}/${state.progress.totalLessons} lessons complete",
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = visualInfo.accentColor,
         )
-        LinearWavyProgressIndicator(
-            progress = { state.progress.completionPercent / 100f },
+        LinearProgressIndicator(
+            progress = { (state.progress.completionPercent / 100f).coerceIn(0f, 1f) },
+            color = visualInfo.accentColor,
             modifier = Modifier.fillMaxWidth(),
         )
         OutlinedButton(onClick = { state.eventSink(ChapterScreen.Event.ResetProgress) }) {
