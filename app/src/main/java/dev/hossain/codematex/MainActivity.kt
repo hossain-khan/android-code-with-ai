@@ -7,10 +7,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,9 +27,11 @@ import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
+import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.home.HomeScreen
+import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.hossain.highlight.ui.rememberTomorrowLightTheme
@@ -63,6 +67,7 @@ import dev.zacsweers.metro.binding
 class MainActivity
     constructor(
         private val circuit: Circuit,
+        private val userPreferencesStore: UserPreferencesStore,
     ) : ComponentActivity() {
         private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
 
@@ -78,14 +83,20 @@ class MainActivity
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background,
                     ) {
+                        val isOnboardingCompleted by userPreferencesStore.isOnboardingCompletedFlow.collectAsState(initial = null)
+                        val completed = isOnboardingCompleted ?: return@Surface
+
                         // Cold-start deep link initialization: if launched directly via deep link,
                         // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
+                        // On first run without deep links, seed with OnboardingScreen.
                         val initialStack =
                             remember {
                                 if (pendingDeepLinkScreen != null) {
                                     val target = pendingDeepLinkScreen!!
                                     pendingDeepLinkScreen = null
                                     listOf(HomeScreen, target)
+                                } else if (!completed) {
+                                    listOf(OnboardingScreen)
                                 } else {
                                     listOf(HomeScreen)
                                 }

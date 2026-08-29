@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -113,7 +115,12 @@ fun HomeScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalFoundationApi::class,
+)
 @Composable
 private fun HomeLayout(
     state: HomeScreen.State.Success,
@@ -136,6 +143,13 @@ private fun HomeLayout(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier =
+                            Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .combinedClickable(
+                                    onClick = {},
+                                    onLongClick = { state.eventSink(HomeScreen.Event.AppTour) },
+                                ),
                     ) {
                         Icon(
                             Icons.Default.AutoAwesome,

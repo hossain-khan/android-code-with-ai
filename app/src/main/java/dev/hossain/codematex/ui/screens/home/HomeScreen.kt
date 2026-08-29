@@ -49,6 +49,8 @@ data object HomeScreen : ParcelableScreen {
 
         data object ViewAllSessions : Event
 
+        data object AppTour : Event
+
         data object DismissIneligibilityWarning : Event
     }
 }
