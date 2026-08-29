@@ -275,6 +275,7 @@ private fun LiveMemoryDashboard(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(
+                    modifier = Modifier.weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -288,15 +289,27 @@ private fun LiveMemoryDashboard(
                         text = "Real-Time Memory & CPU",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
 
                 OutlinedButton(
                     onClick = onTriggerGc,
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(32.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(30.dp),
                 ) {
-                    Text("Trigger GC", style = MaterialTheme.typography.labelSmall)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CleaningServices,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp),
+                        )
+                        Text("Run GC", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
 
@@ -306,6 +319,7 @@ private fun LiveMemoryDashboard(
                 valueText = "${"%.1f".format(stats.nativeAllocatedMb)} / ${"%.1f".format(stats.nativeTotalMb)} MB",
                 fraction = if (stats.nativeTotalMb > 0f) stats.nativeAllocatedMb / stats.nativeTotalMb else 0f,
                 tint = MaterialTheme.colorScheme.primary,
+                subValueText = "${"%.1f".format(stats.nativeFreeMb)} MB free in native heap",
             )
 
             // JVM Heap Meter
@@ -314,16 +328,16 @@ private fun LiveMemoryDashboard(
                 valueText = "${"%.1f".format(stats.jvmUsedMb)} / ${"%.1f".format(stats.jvmMaxMb)} MB",
                 fraction = if (stats.jvmMaxMb > 0f) stats.jvmUsedMb / stats.jvmMaxMb else 0f,
                 tint = MaterialTheme.colorScheme.secondary,
+                subValueText = "${"%.1f".format(stats.jvmTotalMb)} MB committed JVM heap",
             )
 
             // System RAM Meter
             MemoryMeterRow(
                 label = "Device RAM",
-                valueText = "${"%.2f".format(
-                    stats.ramUsedGb,
-                )} / ${"%.2f".format(stats.ramTotalGb)} GB (Avail: ${"%.2f".format(stats.ramAvailGb)} GB)",
+                valueText = "${"%.2f".format(stats.ramUsedGb)} / ${"%.2f".format(stats.ramTotalGb)} GB",
                 fraction = if (stats.ramTotalGb > 0f) stats.ramUsedGb / stats.ramTotalGb else 0f,
                 tint = if (stats.isLowMemory) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.tertiary,
+                subValueText = "${"%.2f".format(stats.ramAvailGb)} GB available" + if (stats.isLowMemory) " • ⚠️ Low Memory Flag" else "",
             )
         }
     }
@@ -335,14 +349,25 @@ private fun MemoryMeterRow(
     valueText: String,
     fraction: Float,
     tint: androidx.compose.ui.graphics.Color,
+    subValueText: String? = null,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(text = label, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
-            Text(text = valueText, style = MaterialTheme.typography.labelSmall, fontFamily = FontFamily.Monospace)
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Medium,
+            )
+            Text(
+                text = valueText,
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
         LinearProgressIndicator(
             progress = { fraction.coerceIn(0f, 1f) },
@@ -350,6 +375,13 @@ private fun MemoryMeterRow(
             color = tint,
             trackColor = MaterialTheme.colorScheme.surfaceContainerHighest,
         )
+        if (subValueText != null) {
+            Text(
+                text = subValueText,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
     }
 }
 
@@ -394,12 +426,25 @@ private fun ModelLifecycleCard(state: DebugScreen.State.Success) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 state.models.forEach { model ->
+                    val isDownloaded = model.downloadStatus == DownloadStatus.DOWNLOADED
                     FilterChip(
                         selected = state.selectedModel?.id == model.id,
                         onClick = { state.eventSink(DebugScreen.Event.SelectModel(model)) },
+                        leadingIcon =
+                            if (isDownloaded) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Downloaded",
+                                        modifier = Modifier.size(14.dp),
+                                    )
+                                }
+                            } else {
+                                null
+                            },
                         label = {
                             Text(
-                                text = model.name + if (model.downloadStatus == DownloadStatus.DOWNLOADED) " (Downloaded)" else "",
+                                text = model.displayName.ifBlank { model.name },
                                 maxLines = 1,
                             )
                         },
