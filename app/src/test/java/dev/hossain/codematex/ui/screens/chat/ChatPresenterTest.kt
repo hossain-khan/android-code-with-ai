@@ -659,7 +659,7 @@ class ChatPresenterTest {
         }
 
     @Test
-    fun `given OpenCourse event - navigates to chapter screen`() =
+    fun `given OpenCourse event - navigates to chapter screen and dismisses course banner`() =
         runTest {
             val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
             val fakeModelRepo =
@@ -667,18 +667,26 @@ class ChatPresenterTest {
                     availableModels = listOf(model),
                     selectedModel = model,
                 )
+            val fakePrefs = FakeUserPreferencesStore()
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
                 createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
+                    userPreferencesStore = fakePrefs,
                 )
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
+
                 state.eventSink(ChatScreen.Event.OpenCourse("kotlin-foundations"))
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
+
+                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(updatedState.availableCourse).isNull()
+                assertThat(fakePrefs.dismissedCourseBannerTopicsFlow.first()).contains("KOTLIN")
             }
         }
 
