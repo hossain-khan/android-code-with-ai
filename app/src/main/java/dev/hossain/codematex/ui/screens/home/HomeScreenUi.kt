@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
@@ -155,6 +156,9 @@ private fun HomeLayout(
                     }
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
+                    }
+                    IconButton(onClick = { state.eventSink(HomeScreen.Event.AppTour) }) {
+                        Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "App Overview & Tour")
                     }
                 },
             )

@@ -3,6 +3,7 @@ package dev.hossain.codematex.data.repository
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.IOException
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -35,6 +36,11 @@ interface UserPreferencesStore {
     val dismissedCourseBannerTopicsFlow: Flow<Set<String>>
 
     /**
+     * Observable flow of whether the user has completed or skipped the first-time onboarding walkthrough.
+     */
+    val isOnboardingCompletedFlow: Flow<Boolean>
+
+    /**
      * Returns the currently selected tutor persona, or [TutorPersona.SENIOR_ENGINEER] if none is stored.
      */
     suspend fun getSelectedPersona(): TutorPersona
@@ -48,6 +54,16 @@ interface UserPreferencesStore {
      * Marks the guided course banner for [topic] as permanently dismissed by the user.
      */
     suspend fun dismissCourseBanner(topic: CodingTopic)
+
+    /**
+     * Returns whether the onboarding walkthrough has been completed.
+     */
+    suspend fun isOnboardingCompleted(): Boolean
+
+    /**
+     * Persists the onboarding completion state.
+     */
+    suspend fun setOnboardingCompleted(completed: Boolean)
 }
 
 @SingleIn(AppScope::class)
@@ -89,6 +105,19 @@ class UserPreferencesStoreImpl
                     prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] ?: emptySet()
                 }.distinctUntilChanged()
 
+        override val isOnboardingCompletedFlow: Flow<Boolean> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    prefs[KEY_ONBOARDING_COMPLETED] ?: false
+                }.distinctUntilChanged()
+
         override suspend fun getSelectedPersona(): TutorPersona = selectedPersonaFlow.first()
 
         override suspend fun setSelectedPersona(persona: TutorPersona) {
@@ -104,8 +133,17 @@ class UserPreferencesStoreImpl
             }
         }
 
+        override suspend fun isOnboardingCompleted(): Boolean = isOnboardingCompletedFlow.first()
+
+        override suspend fun setOnboardingCompleted(completed: Boolean) {
+            dataStore.edit { prefs ->
+                prefs[KEY_ONBOARDING_COMPLETED] = completed
+            }
+        }
+
         companion object {
             private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
             private val KEY_DISMISSED_COURSE_BANNER_TOPICS = stringSetPreferencesKey("dismissed_course_banner_topics")
+            private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
         }
     }

@@ -13,6 +13,7 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
+import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -165,6 +166,27 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.ViewAllSessions)
                 assertThat(navigator.awaitNextScreen()).isEqualTo(SessionHistoryScreen)
+            }
+        }
+
+    @Test
+    fun `given app tour event - navigates to onboarding screen`() =
+        runTest {
+            val navigator = FakeNavigator(HomeScreen)
+            val presenter =
+                HomePresenter(
+                    navigator = navigator,
+                    screen = HomeScreen,
+                    sessionRepository = fakeSessionRepo,
+                    modelRepository = fakeModelRepo,
+                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                state.eventSink(HomeScreen.Event.AppTour)
+                assertThat(navigator.awaitNextScreen()).isEqualTo(OnboardingScreen)
             }
         }
 }
