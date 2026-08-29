@@ -137,6 +137,10 @@ class ModelPickerPresenter(
                     configuredModel = null
                     configuredModelConfig = null
                 }
+
+                ModelPickerScreen.Event.OpenDebugScreen -> {
+                    navigator.goTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+                }
             }
         }
 

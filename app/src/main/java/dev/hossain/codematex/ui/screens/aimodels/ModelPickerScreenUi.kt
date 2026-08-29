@@ -245,7 +245,13 @@ private fun ModelPickerLayout(
         }
 
     if (showAppInfo) {
-        AppInfoBottomSheet(onDismiss = { showAppInfo = false })
+        AppInfoBottomSheet(
+            onDismiss = { showAppInfo = false },
+            onOpenDebugScreen = {
+                showAppInfo = false
+                state.eventSink(ModelPickerScreen.Event.OpenDebugScreen)
+            },
+        )
     }
 
     state.configuredModel?.let { configuredModel ->

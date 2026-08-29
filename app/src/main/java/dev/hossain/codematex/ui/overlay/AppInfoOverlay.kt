@@ -15,8 +15,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.filled.Language
@@ -55,6 +57,7 @@ import kotlinx.coroutines.launch
 fun AppInfoBottomSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenDebugScreen: (() -> Unit)? = null,
 ) {
     @Suppress("DEPRECATION")
     val sheetState =
@@ -76,6 +79,17 @@ fun AppInfoBottomSheet(
                     onDismiss()
                 }
             },
+            onOpenDebugScreen =
+                if (onOpenDebugScreen != null) {
+                    {
+                        scope.launch {
+                            sheetState.hide()
+                            onOpenDebugScreen()
+                        }
+                    }
+                } else {
+                    null
+                },
             modifier = Modifier.radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
         )
     }
@@ -85,6 +99,7 @@ fun AppInfoBottomSheet(
 private fun AppInfoSheetContent(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenDebugScreen: (() -> Unit)? = null,
 ) {
     val uriHandler = LocalUriHandler.current
     val scrollState = rememberScrollState()
@@ -140,6 +155,62 @@ private fun AppInfoSheetContent(
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
                 )
+            }
+        }
+
+        // Debug-only Model & Runtime Debugger Entry Point
+        if (BuildConfig.DEBUG && onOpenDebugScreen != null) {
+            Card(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenDebugScreen() },
+                shape = MaterialTheme.shapes.large,
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)),
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f),
+                        modifier = Modifier.size(40.dp),
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.BugReport,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Model & Runtime Debugger",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                        Text(
+                            text = "Inspect LLM loading, memory impact, performance, and unloader diagnostics.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "Open Debugger",
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
 

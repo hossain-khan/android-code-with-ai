@@ -279,4 +279,22 @@ class ModelPickerPresenterTest {
                 assertThat(updatedState.configuredModelConfig).isNull()
             }
         }
+
+    @Test
+    fun `given open debug screen event - navigates to DebugScreen`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakePrefs = FakeModelDownloadPreferences()
+            val fakeConfigStore = FakeModelConfigStore()
+            val navigator = FakeNavigator(ModelPickerScreen)
+            val presenter =
+                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
+                state.eventSink(ModelPickerScreen.Event.OpenDebugScreen)
+
+                assertThat(navigator.awaitNextScreen()).isEqualTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+            }
+        }
 }
