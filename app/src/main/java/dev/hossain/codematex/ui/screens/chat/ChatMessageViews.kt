@@ -14,6 +14,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -57,10 +59,30 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.MarkdownMessage
+import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
+import dev.hossain.codematex.ui.theme.visualInfo
 import kotlinx.coroutines.launch
 
+/**
+ * Renders the scrollable feed of chat messages using a reversed [LazyColumn].
+ *
+ * ### Auto-Scroll & User Intervention Business Logic:
+ * 1. **Live Token Streaming**: While the LLM is generating (`state.isGenerating`), the list auto-scrolls
+ *    to index 0 (the bottom of the feed) on each incoming token chunk.
+ * 2. **User Manual Intervention**: Uses [collectIsDraggedAsState] on [listState]'s interaction source to
+ *    reliably differentiate physical user touch/drag gestures from programmatic [LazyListState.scrollToItem] calls.
+ * 3. **Viewport Freezing on Scroll-Up**: If the user actively touches/drags the screen to scroll up away from
+ *    the bottom (`!isAtBottom`), auto-scrolling is immediately halted (`userScrolledUp = true`) so the user can
+ *    read conversation history undisturbed by streaming token updates.
+ * 4. **Auto-Scroll Resumption**: Auto-scrolling is automatically restored when:
+ *    - The user scrolls or flings back to the bottom (`isAtBottom == true`).
+ *    - The user taps the floating "Jump to Bottom ↓" / "New Response ↓" pill.
+ *    - A new message is submitted / turn begins (detected via `state.messages.size` change).
+ */
 @Composable
 internal fun ChatMessageList(
     state: ChatScreen.State.Active,
@@ -74,6 +96,9 @@ internal fun ChatMessageList(
     // Track whether the user has explicitly scrolled up to view message history
     var userScrolledUp by remember { mutableStateOf(false) }
 
+    // Track active user touch/drag gesture on the list (programmatic scrollToItem does not set isDragged)
+    val isDragged by listState.interactionSource.collectIsDraggedAsState()
+
     // Check if the viewport is currently anchored at the bottom (index 0 in reverseLayout)
     val isAtBottom by remember {
         derivedStateOf {
@@ -81,21 +106,27 @@ internal fun ChatMessageList(
         }
     }
 
-    // Detect user manual scroll gesture: if scrolling away from bottom, mark userScrolledUp
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (listState.isScrollInProgress) {
-            userScrolledUp = !isAtBottom
+    // Detect user manual scroll gestures:
+    // 1. If the user actively drags away from the bottom, disable streaming auto-scrolling immediately.
+    // 2. When the list settles or the user drags back to the bottom, re-enable auto-scrolling.
+    LaunchedEffect(isDragged, isAtBottom) {
+        if (isDragged) {
+            if (!isAtBottom) {
+                userScrolledUp = true
+            }
+        } else if (isAtBottom) {
+            userScrolledUp = false
         }
     }
 
-    // Auto-scroll on new message added (user sent message or new session)
+    // Auto-scroll to bottom whenever a new turn starts (user sent message or new session loaded)
     val messageCount = state.messages.size
     LaunchedEffect(messageCount) {
         userScrolledUp = false
         listState.scrollToItem(0)
     }
 
-    // Smart auto-scroll during token streaming (token count increases) as long as user hasn't scrolled up
+    // Auto-scroll during live token streaming as long as the user has not intervened by scrolling up
     val lastMessageContentLength = (state.messages.lastOrNull() as? ChatMessage.Agent)?.content?.length ?: 0
     LaunchedEffect(lastMessageContentLength, state.isGenerating) {
         if (state.isGenerating && !userScrolledUp) {
@@ -297,6 +328,39 @@ internal fun MessageBubble(
                         modifier = Modifier.padding(top = 4.dp),
                     )
                 }
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun MessageBubblePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                MessageBubble(
+                    message = ChatMessage.User("How do I filter a list in Kotlin?"),
+                    visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onCopy = {},
+                )
+                MessageBubble(
+                    message =
+                        ChatMessage.Agent(
+                            """You can use the `filter` function:
+                            |```kotlin
+                            |val numbers = listOf(1, 2, 3, 4, 5)
+                            |val evens = numbers.filter { it % 2 == 0 }
+                            |println(evens) // [2, 4]
+                            |```
+                            """.trimMargin(),
+                        ),
+                    visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onCopy = {},
+                )
             }
         }
     }

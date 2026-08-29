@@ -187,9 +187,14 @@ Quick-check quizzes in lesson screens feature real-time visual validation feedba
 Chapter syllabi clearly distinguish lesson progression states:
 - **Completed Lesson**: Solid topic-colored circular badge with `✓` (`Icons.Default.Check`), bold `Done` badge chip, and subtle topic accent border.
 - **Current Active Lesson**: Ringed topic badge with `▶` (`Icons.Default.PlayArrow`), bold `Current` badge chip, and glowing container (`visualAccent.copy(alpha = 0.12f)` with 1.dp accent border).
-- **Upcoming Lesson**: Subtle hollow outline ring (`BorderStroke(1.5.dp, colorScheme.outlineVariant)`) with muted typography.
+### H. Chat Auto-Scroll & User Intervention
+The chat message list uses a reverse-layout `LazyColumn` with smart auto-scroll management:
+- **Live Token Streaming**: When the LLM generates tokens (`state.isGenerating`), the viewport auto-scrolls to index 0.
+- **User Intervention (Gesture Tracking)**: Uses `listState.interactionSource.collectIsDraggedAsState()` to detect physical touch/drag gestures without triggering on programmatic `scrollToItem(0)`.
+- **Viewport Freezing**: If the user scrolls upward (`!isAtBottom`), auto-scrolling is immediately disabled so earlier messages can be read without interruption.
+- **Resumption**: Auto-scrolling resumes when the user scrolls back to the bottom, taps the floating "Jump to Bottom ↓" pill, or submits a new message.
 
-### H. Compose Previews for Modular UI Elements
+### I. Compose Previews for Modular UI Elements
 Whenever creating or updating modular composable components, always include comprehensive preview functions at the bottom of the file:
 - Annotate with `@ThemePreviews` (and `@DevicePreviews` for full screen layouts).
 - Always wrap preview calls with `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }`.
