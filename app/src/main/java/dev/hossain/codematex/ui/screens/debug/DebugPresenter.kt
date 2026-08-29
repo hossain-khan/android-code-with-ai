@@ -137,7 +137,16 @@ class DebugPresenter(
         // Real-time telemetry monitoring loop
         LaunchedEffect(Unit) {
             while (isActive) {
-                telemetryStats = debugMemoryProvider.getDebugMemoryStats()
+                val stats = debugMemoryProvider.getDebugMemoryStats()
+                telemetryStats = stats
+                Timber.d(
+                    "DebugPresenter [TELEMETRY]: nativeAllocatedMb=%.1f, jvmUsedMb=%.1f, ramUsedGb=%.2f/%.2f, isLowMemory=%b",
+                    stats.nativeAllocatedMb,
+                    stats.jvmUsedMb,
+                    stats.ramUsedGb,
+                    stats.ramTotalGb,
+                    stats.isLowMemory,
+                )
                 delay(750.milliseconds)
             }
         }
@@ -168,11 +177,13 @@ class DebugPresenter(
                 is DebugScreen.Event.SelectModel -> {
                     selectedModel = event.model
                     statusMessage = "Selected model: ${event.model.name}"
+                    Timber.d("DebugPresenter: Selected model: ${event.model.name} (${event.model.id})")
                 }
 
                 is DebugScreen.Event.SelectBackend -> {
                     selectedBackend = event.backend
                     statusMessage = "Set test backend to: ${event.backend.name}"
+                    Timber.d("DebugPresenter: Target backend changed to: ${event.backend.name}")
                 }
 
                 // Handles explicit model loading and initialization latency/memory measurement
@@ -190,6 +201,12 @@ class DebugPresenter(
                     scope.launch {
                         isLoadingModel = true
                         statusMessage = "Initializing ${model.name} on ${selectedBackend.name}..."
+                        Timber.i(
+                            "DebugPresenter [LOAD_START]: model=%s, backend=%s, path=%s",
+                            model.name,
+                            selectedBackend.name,
+                            model.localPath,
+                        )
                         val beforeSnap = debugMemoryProvider.captureSnapshot()
 
                         try {
@@ -211,8 +228,17 @@ class DebugPresenter(
                                 "Native Δ: ${"%.1f".format(
                                     delta.deltaNativeMb,
                                 )} MB, RAM Δ: ${"%.1f".format(delta.deltaSystemMb)} MB"
+                            Timber.i(
+                                "DebugPresenter [LOAD_SUCCESS]: model=%s, activeBackend=%s, durationMs=%d, deltaNativeMb=%.1f, deltaJvmMb=%.1f, deltaSystemMb=%.1f",
+                                model.name,
+                                activeBackend?.name ?: selectedBackend.name,
+                                delta.durationMs,
+                                delta.deltaNativeMb,
+                                delta.deltaJvmMb,
+                                delta.deltaSystemMb,
+                            )
                         } catch (e: Exception) {
-                            Timber.e(e, "DebugPresenter: Load failed")
+                            Timber.e(e, "DebugPresenter [LOAD_ERROR]: Failed initializing %s on %s", model.name, selectedBackend.name)
                             statusMessage = "Load failed: ${e.message}"
                         } finally {
                             isLoadingModel = false
@@ -224,12 +250,14 @@ class DebugPresenter(
                 DebugScreen.Event.UnloadModel -> {
                     scope.launch {
                         isUnloadingModel = true
+                        val modelToUnload = loadedModelName ?: "Current Model"
                         statusMessage = "Unloading model from memory and releasing native buffers..."
+                        Timber.i("DebugPresenter [UNLOAD_START]: model=%s", modelToUnload)
                         val beforeSnap = debugMemoryProvider.captureSnapshot()
 
                         try {
                             llmEngine.cleanup()
-                            debugMemoryProvider.triggerGc()
+                            val gcBytes = debugMemoryProvider.triggerGc()
                             val afterSnap = debugMemoryProvider.captureSnapshot()
                             val delta = afterSnap.diffFrom(beforeSnap)
                             lastUnloadDelta = delta
@@ -241,8 +269,17 @@ class DebugPresenter(
                                 "Native freed: ${"%.1f".format(
                                     -delta.deltaNativeMb,
                                 )} MB, System RAM freed: ${"%.1f".format(-delta.deltaSystemMb)} MB"
+                            Timber.i(
+                                "DebugPresenter [UNLOAD_SUCCESS]: model=%s, durationMs=%d, freedNativeMb=%.1f, freedJvmMb=%.1f, freedSystemMb=%.1f, gcReclaimedMb=%.1f",
+                                modelToUnload,
+                                delta.durationMs,
+                                -delta.deltaNativeMb,
+                                -delta.deltaJvmMb,
+                                -delta.deltaSystemMb,
+                                gcBytes / (1024f * 1024f),
+                            )
                         } catch (e: Exception) {
-                            Timber.e(e, "DebugPresenter: Unload failed")
+                            Timber.e(e, "DebugPresenter [UNLOAD_ERROR]: Failed unloading %s", modelToUnload)
                             statusMessage = "Unload error: ${e.message}"
                         } finally {
                             isUnloadingModel = false
@@ -269,6 +306,11 @@ class DebugPresenter(
                         benchmarkTotalTokens = 0
                         benchmarkDurationMs = null
                         statusMessage = "Running benchmark evaluation..."
+                        Timber.i(
+                            "DebugPresenter [BENCHMARK_START]: model=%s, promptLength=%d",
+                            selectedModel?.name ?: loadedModelName ?: "Unknown",
+                            benchmarkPrompt.length,
+                        )
 
                         val startTime = System.currentTimeMillis()
                         var firstTokenTime: Long? = null
@@ -286,6 +328,7 @@ class DebugPresenter(
                                     val ttft = now - startTime
                                     firstTokenTime = now
                                     benchmarkTtftMs = ttft
+                                    Timber.d("DebugPresenter [BENCHMARK_TTFT]: ttftMs=%d", ttft)
                                 }
 
                                 if (partial.isNotEmpty()) {
@@ -309,10 +352,17 @@ class DebugPresenter(
                                     statusMessage =
                                         "Benchmark finished: $tokenCount tokens in ${totalDuration}ms " +
                                         "(TTFT: ${benchmarkTtftMs ?: 0}ms, Speed: ${"%.1f".format(benchmarkSpeedTps ?: 0f)} t/s)"
+                                    Timber.i(
+                                        "DebugPresenter [BENCHMARK_SUCCESS]: tokens=%d, durationMs=%d, ttftMs=%d, speedTps=%.2f",
+                                        tokenCount,
+                                        totalDuration,
+                                        benchmarkTtftMs ?: 0,
+                                        benchmarkSpeedTps ?: 0f,
+                                    )
                                 }
                             }
                         } catch (e: Exception) {
-                            Timber.e(e, "DebugPresenter: Benchmark failed")
+                            Timber.e(e, "DebugPresenter [BENCHMARK_ERROR]: Inference benchmark failed")
                             statusMessage = "Benchmark error: ${e.message}"
                         } finally {
                             isBenchmarking = false
@@ -325,6 +375,7 @@ class DebugPresenter(
                     llmEngine.stop()
                     isBenchmarking = false
                     statusMessage = "Benchmark stopped by user."
+                    Timber.i("DebugPresenter [BENCHMARK_CANCELLED]: Benchmark stopped by user")
                 }
 
                 // Requests explicit JVM Garbage Collection and updates telemetry
@@ -333,6 +384,7 @@ class DebugPresenter(
                     val reclaimedMb = reclaimedBytes / (1024f * 1024f)
                     telemetryStats = debugMemoryProvider.getDebugMemoryStats()
                     statusMessage = "Garbage collection completed. Reclaimed ${"%.2f".format(reclaimedMb)} MB of JVM heap."
+                    Timber.i("DebugPresenter [GC_TRIGGER]: reclaimedJvmMb=%.2f", reclaimedMb)
                 }
 
                 is DebugScreen.Event.DeleteModel -> {
