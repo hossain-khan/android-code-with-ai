@@ -27,6 +27,10 @@ import javax.inject.Inject
 
 /**
  * Result of a memory headroom evaluation before initiating heavy workloads.
+ *
+ * Official Android Reference:
+ * - [Manage your app's memory](https://developer.android.com/topic/performance/memory/manage-app-memory)
+ * - [Low memory killers (LMK)](https://developer.android.com/topic/performance/vitals/lmk)
  */
 sealed interface MemoryHeadroomResult {
     /**
@@ -55,10 +59,20 @@ sealed interface MemoryHeadroomResult {
  * coordinates background model eviction to prevent Low Memory Killer (LMK) process termination,
  * validates pre-flight RAM headroom before loading multi-gigabyte models, and tracks historical
  * LMK process exit reasons ([android.app.ApplicationExitInfo]).
+ *
+ * ## Official Android Documentation & Guidelines:
+ * - [Manage your app's memory](https://developer.android.com/topic/performance/memory/manage-app-memory)
+ * - [Low memory killers (LMK) on Android Vitals](https://developer.android.com/topic/performance/vitals/lmk)
+ * - [ComponentCallbacks2.onTrimMemory](https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int))
+ * - [ActivityManager.MemoryInfo](https://developer.android.com/reference/android/app/ActivityManager#getMemoryInfo(android.app.ActivityManager.MemoryInfo))
+ * - [ApplicationExitInfo.REASON_LOW_MEMORY](https://developer.android.com/reference/android/app/ApplicationExitInfo#REASON_LOW_MEMORY)
  */
 interface SystemMemoryManager {
     /**
      * Evaluates whether the device has sufficient available RAM to safely initialize an on-device model.
+     *
+     * Official Guide:
+     * - https://developer.android.com/reference/android/app/ActivityManager#getMemoryInfo(android.app.ActivityManager.MemoryInfo)
      *
      * @param requiredHeadroomBytes Minimum recommended available RAM in bytes (default: 1.2 GB).
      */
@@ -66,32 +80,48 @@ interface SystemMemoryManager {
 
     /**
      * Handles OS memory trimming signals ([ComponentCallbacks2.onTrimMemory]).
+     *
+     * Official Guide:
+     * - https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)
      */
     fun onTrimMemory(level: Int)
 
     /**
      * Handles system-wide critical low memory events ([ComponentCallbacks2.onLowMemory]).
+     *
+     * Official Guide:
+     * - https://developer.android.com/reference/android/content/ComponentCallbacks#onLowMemory()
      */
     fun onLowMemory()
 
     /**
      * Registers memory callbacks and activity lifecycle listeners on the [application].
+     *
+     * Official Guide:
+     * - https://developer.android.com/reference/android/app/Application#registerActivityLifecycleCallbacks(android.app.Application.ActivityLifecycleCallbacks)
+     * - https://developer.android.com/reference/android/app/Application#registerComponentCallbacks(android.content.ComponentCallbacks)
      */
     fun register(application: Application)
 
     /**
      * Inspects historical process termination reasons (API 30+) to log LMK diagnoses.
+     *
+     * Official Guide:
+     * - https://developer.android.com/reference/android/app/ApplicationExitInfo#REASON_LOW_MEMORY
      */
     fun checkHistoricalExitReasons()
 
     companion object {
         /**
          * Minimum recommended free RAM headroom (1.2 GB) required to safely initialize on-device models.
+         * On-device LLMs allocate directly into unified native C++ and GPU memory; maintaining this
+         * buffer prevents device thrashing and foreground process terminations.
          */
         const val DEFAULT_MIN_HEADROOM_BYTES: Long = 1_200_000_000L // 1.2 GB
 
         /**
          * Background idle grace duration before evicting model weights from native memory (3 minutes).
+         * Allows quick app-switching (e.g. checking a notification or copying code) without reloading weights.
          */
         const val BACKGROUND_EVICTION_DELAY_MS: Long = 3 * 60 * 1000L // 3 minutes
     }
@@ -140,6 +170,10 @@ class SystemMemoryManagerImpl
         private var backgroundEvictionJob: Job? = null
         private var startedActivityCount = 0
 
+        /**
+         * ComponentCallbacks2 listener for responding to memory pressure events.
+         * See: https://developer.android.com/reference/android/content/ComponentCallbacks2
+         */
         private val componentCallbacks =
             object : ComponentCallbacks2 {
                 override fun onTrimMemory(level: Int) {
@@ -155,15 +189,31 @@ class SystemMemoryManagerImpl
                 override fun onConfigurationChanged(newConfig: Configuration) {}
             }
 
+        /**
+         * ActivityLifecycleCallbacks listener for tracking foreground visibility.
+         * When all activities stop (app backgrounded), starts the background eviction grace timer.
+         * When any activity starts or resumes, immediately cancels the background eviction timer.
+         * See: https://developer.android.com/reference/android/app/Application.ActivityLifecycleCallbacks
+         */
         private val activityLifecycleCallbacks =
             object : Application.ActivityLifecycleCallbacks {
                 override fun onActivityStarted(activity: Activity) {
                     startedActivityCount++
+                    Timber.d(
+                        "SystemMemoryManager [LIFECYCLE_CHANGE]: Activity started (%s). Active count: %d",
+                        activity.localClassName,
+                        startedActivityCount,
+                    )
                     cancelBackgroundEviction()
                 }
 
                 override fun onActivityStopped(activity: Activity) {
                     startedActivityCount = (startedActivityCount - 1).coerceAtLeast(0)
+                    Timber.d(
+                        "SystemMemoryManager [LIFECYCLE_CHANGE]: Activity stopped (%s). Active count: %d",
+                        activity.localClassName,
+                        startedActivityCount,
+                    )
                     if (startedActivityCount == 0) {
                         scheduleBackgroundEviction()
                     }
@@ -188,6 +238,11 @@ class SystemMemoryManagerImpl
                 override fun onActivityDestroyed(activity: Activity) {}
             }
 
+        /**
+         * Evaluates available RAM against the required headroom threshold.
+         * Uses [ActivityManager.MemoryInfo] to read totalMem, availMem, and lowMemory.
+         * See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
+         */
         override fun checkMemoryHeadroom(requiredHeadroomBytes: Long): MemoryHeadroomResult {
             val provider = memoryInfoProvider
             val (availMemBytes, isLowMemory) =
@@ -204,7 +259,8 @@ class SystemMemoryManagerImpl
                 val availMb = availMemBytes / (1024f * 1024f)
                 val reqMb = requiredHeadroomBytes / (1024f * 1024f)
                 Timber.w(
-                    "SystemMemoryManager: Memory constrained (avail=%.1f MB, required=%.1f MB, isLowMemory=%b)",
+                    "SystemMemoryManager [HEADROOM_CONSTRAINED]: Device memory is constrained " +
+                        "(available=%.1f MB, required=%.1f MB, isLowMemory=%b)",
                     availMb,
                     reqMb,
                     isLowMemory,
@@ -215,13 +271,24 @@ class SystemMemoryManagerImpl
                     isLowMemory = isLowMemory,
                 )
             } else {
+                Timber.d(
+                    "SystemMemoryManager [HEADROOM_CHECK]: Memory headroom sufficient (available=%.1f MB, required=%.1f MB)",
+                    availMemBytes / (1024f * 1024f),
+                    requiredHeadroomBytes / (1024f * 1024f),
+                )
                 MemoryHeadroomResult.Sufficient
             }
         }
 
+        /**
+         * Handles system trimming signals.
+         * - TRIM_MEMORY_UI_HIDDEN: App UI is no longer visible; start grace timer before model eviction.
+         * - TRIM_MEMORY_RUNNING_CRITICAL / TRIM_MEMORY_BACKGROUND / etc: Immediate eviction to prevent LMK.
+         * See: https://developer.android.com/reference/android/content/ComponentCallbacks2#onTrimMemory(int)
+         */
         @Suppress("DEPRECATION")
         override fun onTrimMemory(level: Int) {
-            Timber.i("SystemMemoryManager [ON_TRIM_MEMORY]: level=%d", level)
+            Timber.i("SystemMemoryManager [ON_TRIM_MEMORY]: Received OS trim level=%d", level)
             when (level) {
                 ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN -> {
                     scheduleBackgroundEviction()
@@ -233,30 +300,49 @@ class SystemMemoryManagerImpl
                 ComponentCallbacks2.TRIM_MEMORY_MODERATE,
                 ComponentCallbacks2.TRIM_MEMORY_COMPLETE,
                 -> {
-                    Timber.w("SystemMemoryManager: Critical memory trim signal (level=%d). Evicting LLM immediately.", level)
+                    Timber.w(
+                        "SystemMemoryManager [ON_TRIM_MEMORY]: Critical memory trim signal (level=%d). " +
+                            "Releasing LLM native buffers immediately to avoid Low Memory Killer (LMK).",
+                        level,
+                    )
                     cancelBackgroundEviction()
                     evictModelMemory("TrimLevel=$level")
                 }
 
                 else -> {
-                    Timber.d("SystemMemoryManager: Non-critical trim level %d received", level)
+                    Timber.d("SystemMemoryManager [ON_TRIM_MEMORY]: Non-critical trim level %d received", level)
                 }
             }
         }
 
+        /**
+         * Handles system-wide critical low memory events.
+         * See: https://developer.android.com/reference/android/content/ComponentCallbacks#onLowMemory()
+         */
         override fun onLowMemory() {
-            Timber.w("SystemMemoryManager [ON_LOW_MEMORY]: System-wide low memory event. Releasing LLM native buffers immediately.")
+            Timber.w(
+                "SystemMemoryManager [ON_LOW_MEMORY]: System-wide low memory event triggered by OS. " +
+                    "Releasing LLM native buffers immediately.",
+            )
             cancelBackgroundEviction()
             evictModelMemory("onLowMemory")
         }
 
+        /**
+         * Registers memory and lifecycle callbacks on the application instance.
+         */
         override fun register(application: Application) {
             application.registerComponentCallbacks(componentCallbacks)
             application.registerActivityLifecycleCallbacks(activityLifecycleCallbacks)
             checkHistoricalExitReasons()
-            Timber.d("SystemMemoryManager: Registered memory and lifecycle callbacks")
+            Timber.d("SystemMemoryManager: Registered memory and activity lifecycle callbacks")
         }
 
+        /**
+         * Inspects recent process termination reasons using ApplicationExitInfo (API 30+).
+         * Helps diagnose if the previous app run was killed by the OS Low Memory Killer (LMK).
+         * See: https://developer.android.com/reference/android/app/ApplicationExitInfo#REASON_LOW_MEMORY
+         */
         override fun checkHistoricalExitReasons() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
@@ -265,7 +351,7 @@ class SystemMemoryManagerImpl
                         when (lastExit.reason) {
                             android.app.ApplicationExitInfo.REASON_LOW_MEMORY -> {
                                 Timber.w(
-                                    "SystemMemoryManager [LMK_DIAGNOSTIC]: Previous process was killed by Low Memory Killer (LMK). " +
+                                    "SystemMemoryManager [LMK_DIAGNOSTIC]: Previous process run was killed by Low Memory Killer (LMK). " +
                                         "PSS: %.1f MB, RSS: %.1f MB, Description: %s",
                                     lastExit.pss / (1024f * 1024f),
                                     lastExit.rss / (1024f * 1024f),
@@ -275,31 +361,37 @@ class SystemMemoryManagerImpl
 
                             android.app.ApplicationExitInfo.REASON_CRASH_NATIVE -> {
                                 Timber.w(
-                                    "SystemMemoryManager [CRASH_DIAGNOSTIC]: Previous process had native crash. Description: %s",
+                                    "SystemMemoryManager [CRASH_DIAGNOSTIC]: Previous process run had native crash. Description: %s",
                                     lastExit.description ?: "None",
                                 )
                             }
 
                             else -> {
-                                Timber.d("SystemMemoryManager: Previous process exit reason code: %d", lastExit.reason)
+                                Timber.d(
+                                    "SystemMemoryManager [EXIT_DIAGNOSTIC]: Previous process exit reason code: %d",
+                                    lastExit.reason,
+                                )
                             }
                         }
                     }
                 } catch (e: Exception) {
-                    Timber.w(e, "SystemMemoryManager: Could not retrieve historical process exit reasons")
+                    Timber.w(e, "SystemMemoryManager [EXIT_DIAGNOSTIC]: Could not retrieve historical process exit reasons")
                 }
             }
         }
 
+        /**
+         * Schedules background eviction after [backgroundEvictionDelayMs].
+         */
         private fun scheduleBackgroundEviction() {
             if (!llmEngine.isInitialized()) {
-                Timber.d("SystemMemoryManager: Engine not loaded, skipping background eviction schedule")
+                Timber.d("SystemMemoryManager [TRIM_TIMER_SKIP]: Engine not loaded in memory, skipping eviction schedule")
                 return
             }
             cancelBackgroundEviction()
             Timber.i(
-                "SystemMemoryManager [TRIM_TIMER_START]: App moved to background (TRIM_MEMORY_UI_HIDDEN). " +
-                    "Scheduling eviction in %d ms",
+                "SystemMemoryManager [TRIM_TIMER_START]: App UI is in background. " +
+                    "Scheduling native LLM memory eviction in %d ms (grace period)",
                 backgroundEvictionDelayMs,
             )
             backgroundEvictionJob =
@@ -309,22 +401,38 @@ class SystemMemoryManagerImpl
                 }
         }
 
+        /**
+         * Cancels any active background eviction timer when returning to the foreground.
+         */
         private fun cancelBackgroundEviction() {
             if (backgroundEvictionJob?.isActive == true) {
-                Timber.d("SystemMemoryManager [TRIM_TIMER_CANCEL]: App returned to foreground, cancelling background eviction")
+                Timber.i("SystemMemoryManager [TRIM_TIMER_CANCEL]: App returned to foreground, cancelling background eviction")
                 backgroundEvictionJob?.cancel()
             }
             backgroundEvictionJob = null
         }
 
+        /**
+         * Invokes [LlmEngine.cleanup] to deallocate native C++ tensors and unified GPU OpenCL buffers.
+         */
         private fun evictModelMemory(triggerReason: String) {
             if (llmEngine.isInitialized()) {
-                Timber.i("SystemMemoryManager [EVICT_START]: Releasing native model buffers (reason=%s)", triggerReason)
+                Timber.i(
+                    "SystemMemoryManager [EVICT_START]: Releasing native model buffers and accelerator sessions (trigger=%s)",
+                    triggerReason,
+                )
                 try {
                     llmEngine.cleanup()
-                    Timber.i("SystemMemoryManager [EVICT_SUCCESS]: Native buffers successfully released (reason=%s)", triggerReason)
+                    Timber.i(
+                        "SystemMemoryManager [EVICT_SUCCESS]: Native buffers successfully released back to OS (trigger=%s)",
+                        triggerReason,
+                    )
                 } catch (e: Exception) {
-                    Timber.e(e, "SystemMemoryManager [EVICT_ERROR]: Failed to cleanup LLM engine")
+                    Timber.e(
+                        e,
+                        "SystemMemoryManager [EVICT_ERROR]: Failed to cleanup LLM engine (trigger=%s)",
+                        triggerReason,
+                    )
                 }
             }
         }

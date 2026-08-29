@@ -136,9 +136,18 @@ class DefaultChatInferenceOrchestrator
             try {
                 // Pre-flight memory headroom check:
                 // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
+                // On-device LLMs allocate 1.5GB–3.5GB of physical RAM across native C++ and GPU buffers.
+                // Failing to validate available RAM before loading can trigger kernel Low Memory Killer (LMK) kills.
+                // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
                 if (model.localPath != null && model.localPath != DEV_STUB_MODEL_PATH) {
                     val headroomResult = systemMemoryManager.checkMemoryHeadroom()
                     if (headroomResult is MemoryHeadroomResult.Constrained) {
+                        Timber.w(
+                            "ChatInferenceOrchestrator [PRE_FLIGHT_OOM_GUARD]: Blocking model load due to memory pressure " +
+                                "(available=%d bytes, required=%d bytes)",
+                            headroomResult.availMemBytes,
+                            headroomResult.requiredBytes,
+                        )
                         throw LowMemoryException(
                             availMemBytes = headroomResult.availMemBytes,
                             requiredBytes = headroomResult.requiredBytes,
@@ -146,7 +155,9 @@ class DefaultChatInferenceOrchestrator
                     }
                 }
 
-                Timber.d("ChatInferenceOrchestrator: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
+                Timber.d(
+                    "ChatInferenceOrchestrator [INIT_START]: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}",
+                )
                 val modelConfig = configStore.getConfig(model.id)
                 llmEngine.initialize(
                     modelPath = model.localPath ?: "",
