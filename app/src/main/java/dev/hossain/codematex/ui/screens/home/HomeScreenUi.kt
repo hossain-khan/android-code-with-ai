@@ -4,8 +4,10 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +32,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
@@ -114,7 +115,12 @@ fun HomeScreenContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalFoundationApi::class,
+)
 @Composable
 private fun HomeLayout(
     state: HomeScreen.State.Success,
@@ -137,6 +143,13 @@ private fun HomeLayout(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier =
+                            Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .combinedClickable(
+                                    onClick = {},
+                                    onLongClick = { state.eventSink(HomeScreen.Event.AppTour) },
+                                ),
                     ) {
                         Icon(
                             Icons.Default.AutoAwesome,
@@ -156,9 +169,6 @@ private fun HomeLayout(
                     }
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
-                    }
-                    IconButton(onClick = { state.eventSink(HomeScreen.Event.AppTour) }) {
-                        Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "App Overview & Tour")
                     }
                 },
             )
