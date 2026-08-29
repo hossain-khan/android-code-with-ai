@@ -58,13 +58,31 @@ val visualInfo = topic.visualInfo
 
 ### Ambient Gradient Scrims ([GradientScrim.kt](../app/src/main/java/dev/hossain/codematex/ui/component/GradientScrim.kt))
 
-Use radial gradient scrims on screen scaffolds and hero banners:
+- **Screen Scaffolds & Hero Banners**: Apply radial gradient scrims directly to the root scaffold:
 ```kotlin
 Scaffold(
     modifier = modifier
         .nestedScroll(scrollBehavior.nestedScrollConnection)
         .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
 ) { ... }
+```
+
+- **Card-Level Glow & Topic Borders**: Because `Card` paints `containerColor` on its internal surface, apply `.radialGradientScrim()` to the **inner container** (`Row` or `Column`) of the card rather than the outer card modifier, and pair with a topic-tinted border:
+```kotlin
+Card(
+    shape = MaterialTheme.shapes.large,
+    colors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+    ),
+    border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
+            .padding(16.dp),
+    ) { ... }
+}
 ```
 
 ---
@@ -78,7 +96,7 @@ Scaffold(
 - **Secondary Metadata**: `MaterialTheme.typography.bodySmall` / `labelSmall` with `MaterialTheme.colorScheme.onSurfaceVariant` or `outline`.
 
 ### Shape System
-- **Cards & Hero Banners**: `MaterialTheme.shapes.large` (16.dp) or `extraLarge` (28.dp) with subtle 1.dp border (`BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))`).
+- **Cards & Hero Banners**: `MaterialTheme.shapes.large` (16.dp) or `extraLarge` (28.dp) with subtle 1.dp border (`BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))` or topic accent tint).
 - **Pills & Glyphs**: `MaterialTheme.shapes.extraSmall` (4.dp) or `small` (8.dp).
 - **Action Buttons & Avatar Icons**: `CircleShape` or `MaterialTheme.shapes.large`.
 - **Asymmetric Message Bubbles**:
@@ -127,9 +145,10 @@ Scaffold(
 }
 ```
 
-### B. Progress Indicators (Material 3 Expressive)
-- Use `CircularWavyProgressIndicator()` for indeterminate loading.
-- Use `LinearWavyProgressIndicator(progress = { progressFloat })` for downloads and determinate progress.
+### B. Progress Indicators: Animated Wavy vs. Static Gauge
+- **Indeterminate Loading**: Use `CircularWavyProgressIndicator()`.
+- **In-Flight / Downloading Determinate Progress**: Use `LinearWavyProgressIndicator(progress = { progressFloat })` for fluid, animated motion during background model downloads.
+- **Static Completion Gauges**: Use standard Material 3 `LinearProgressIndicator(progress = { progressFloat }, color = visualInfo.accentColor)` for static completion percentages (e.g. Course & Chapter progress headers) to avoid distracting continuous wave animation.
 
 ### C. Cards with Borders
 When creating cards with containers, always use `Card` or `OutlinedCard` with explicit `border` (do NOT use `border` on `ElevatedCard`):
@@ -150,19 +169,27 @@ Every screen with dynamic lists MUST include an expressive empty state:
 - Clear title and explanatory subtitle.
 - Interactive prompt chips or primary action button.
 
-### E. Markdown Rendering & Code Blocks
-LLM responses are rendered in native Compose using **`multiplatform-markdown-renderer`** ([github.com/mikepenz/multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer)) and syntax highlighting via **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt):
-- **Artifacts**: `com.mikepenz:multiplatform-markdown-renderer-m3` (`v0.44.0`) and `dev.hossain:compose-highlight` (`v0.34.0`).
-- **Anti-Flicker State**: Uses `rememberMarkdownState(content, retainState = true)` to hoist parser state and retain the previous AST during rapid token streaming, preventing loading flashes.
-- **Monospace Code Block & Inline Code Styling**:
-  - **Inline Code**: Styled with `fontFamily = FontFamily.Monospace`, `12.5.sp` size, and `16.sp` line-height via `markdownTypography(code = ...)`.
-  - **Code Blocks & Fences**: Intercepted via `markdownComponents` and rendered with `StreamingSyntaxHighlightedCode` (powered by Highlight.js). Features span-transfer snapshotting, line numbers (`showLineNumbers = true`), language badges, and quick copy action.
-- **Typography Sizing**:
-  - Base body text: `MaterialTheme.typography.bodyMedium` (`14.sp`, `20.sp` line height).
-  - Monospace code text: `12.5.sp` with `16.sp` line height.
-- **GitHub Alert Callouts**: Natively renders `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, and `[!CAUTION]` alert banners.
+### E. Syntax Highlighting & Code Blocks
+CodeMateX uses **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) (`dev.hossain:compose-highlight:0.34.0`):
+- **Streaming Chat Messages**: LLM responses are parsed with `multiplatform-markdown-renderer-m3` (`v0.44.0`) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt) using `StreamingSyntaxHighlightedCode`. It retains token spans during live inference to eliminate streaming flicker.
+- **Static Lesson Blocks**: Rendered directly with `SyntaxHighlightedCode` in [`LessonScreenUi`](../app/src/main/java/dev/hossain/codematex/ui/screens/lessons/LessonScreenUi.kt) for lightweight, zero-recalculation static syntax highlighting with line numbers.
 
-### F. Compose Previews for Modular UI Elements
+### F. Interactive Quizzes & Quick Checks
+Quick-check quizzes in lesson screens feature real-time visual validation feedback:
+- **Option Cards**: M3 `Surface` cards with circular letter glyphs (`A`, `B`, `C`, `D`).
+- **Selection State**:
+  - Correct selection: `MaterialTheme.colorScheme.primaryContainer` with `Icons.Default.Check`.
+  - Incorrect selection: `MaterialTheme.colorScheme.errorContainer` with `Icons.Default.Close`.
+  - Unrevealed options: `MaterialTheme.colorScheme.surfaceContainerHigh`.
+- **Explanation Banner**: Topic- or error-bordered alert callout displaying an icon (`CheckCircle` / `Info`) and detailed explanation text.
+
+### G. Curriculum Tracking & Lesson Status Badges
+Chapter syllabi clearly distinguish lesson progression states:
+- **Completed Lesson**: Solid topic-colored circular badge with `✓` (`Icons.Default.Check`), bold `Done` badge chip, and subtle topic accent border.
+- **Current Active Lesson**: Ringed topic badge with `▶` (`Icons.Default.PlayArrow`), bold `Current` badge chip, and glowing container (`visualAccent.copy(alpha = 0.12f)` with 1.dp accent border).
+- **Upcoming Lesson**: Subtle hollow outline ring (`BorderStroke(1.5.dp, colorScheme.outlineVariant)`) with muted typography.
+
+### H. Compose Previews for Modular UI Elements
 Whenever creating or updating modular composable components, always include comprehensive preview functions at the bottom of the file:
 - Annotate with `@ThemePreviews` (and `@DevicePreviews` for full screen layouts).
 - Always wrap preview calls with `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }`.
@@ -176,9 +203,11 @@ Whenever creating or updating modular composable components, always include comp
 Before finishing any UI task, verify the following checklist:
 
 - [ ] **M3 Surface Container Hierarchy**: Are cards using `surfaceContainerLow` and top/bottom bars using `surfaceContainer`?
+- [ ] **Card Scrims & Topic Borders**: Is `radialGradientScrim` applied to the inner card container with `visualInfo.accentColor` borders?
+- [ ] **Progress Indicators**: Is `LinearWavyProgressIndicator` used for downloads and static `LinearProgressIndicator` used for curriculum headers?
 - [ ] **Adaptive Layout**: Is the screen responsive using `currentWindowAdaptiveInfoV2()`?
 - [ ] **Compose Previews**: Are `@ThemePreviews` added with multiple visual states for new or modified modular UI components?
-- [ ] **Wavy Progress**: Are loading states using `CircularWavyProgressIndicator` / `LinearWavyProgressIndicator`?
-- [ ] **Atmospheric Glow**: Is `radialGradientScrim` applied where appropriate?
+- [ ] **Curriculum Status Badges**: Are completed vs. current vs. upcoming lessons distinctly marked?
 - [ ] **Empty States**: Are empty lists handled gracefully with informative visuals?
 - [ ] **Formatting & Checks**: Did you run `./gradlew formatKotlin` and `./gradlew check`?
+
