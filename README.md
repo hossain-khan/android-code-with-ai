@@ -8,18 +8,14 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 
 ## ✨ Features
 
-- 🧠 **On-Device Inference** - Powered by Google's **LiteRT-LM** runtime with hardware acceleration across GPU, NPU, and CPU via XNNPack delegates.
-- 🤖 **Gemma 4 Models** - Support for **Gemma 4 E2B** (2.6 GB, 8 GB RAM) and **Gemma 4 E4B** (3.7 GB, 12 GB RAM) instruction-tuned weights.
-- 🎓 **Guided Learning Courses** - 5 bundled, comprehensive programming courses (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**) featuring chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and persistent progress tracking.
-- 🧭 **Topic & Course Discovery** - Topic cards with course availability badges on the Home screen and empty chat state course callout cards to eliminate prompt paralysis.
-- 🎭 **Tutor Personas** - Switchable tutoring personalities (**Senior Software Engineer**, **Helpful Mentor**, **Interviewer**, **Code Reviewer**).
-- 🛡️ **Hardware Fallback Engine** - Automated recovery loop (NPU ➔ GPU ➔ CPU) preventing crashes on devices with missing OpenCL drivers.
-- 🎨 **Material 3 Expressive & Adaptive** - Dynamic atmospheric gradient lighting, topic theme accents, and multi-pane adaptive layouts for phones, foldables, and tablets.
-- 💬 **Live Telemetry & Streaming** - Real-time Time-to-First-Token (TTFT) and decode throughput tracking (tokens/sec) directly in the chat interface.
-- ⌨️ **Fluid Markdown & Syntax Highlighting** - High-performance code highlighting powered by [compose-highlight](https://github.com/hossain-khan/android-compose-highlight) (Highlight.js) and [multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer).
-- 💾 **Session History & Auto-Summaries** - Persistent multi-turn conversation storage in Room database with AI-generated session summaries.
-- 📥 **Resilient Model Downloader** - Background WorkManager service featuring HTTP Range byte chunking, automatic resume, and cancellation support.
-- 🛠️ **Dev Mode** - Instant stub simulation for testing and UI development without downloading multi-gigabyte weights.
+- 🧠 **100% On-Device AI** - Run Large Language Models locally on your device with complete privacy, zero cloud dependency, and no subscription fees.
+- 🤖 **Curated Model Catalog** - Download and run optimized coding models (Gemma, Qwen Coder, Phi-4 Mini) with automatic hardware acceleration.
+- 🎓 **Interactive Guided Courses** - 5 bundled curricula (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**) with chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and progress tracking.
+- 🧭 **Topic Discovery & Starters** - Explore programming topics with prompt starters and course recommendations to kickstart learning.
+- 🎭 **Tutor Personas** - Tailor AI explanations with switchable teaching styles (**Senior Architect**, **Beginner Tutor**, **Interview Coach**).
+- 💬 **Rich Markdown & Code Highlighting** - Formatted responses with fast syntax highlighting, line numbers, and copy-to-clipboard actions.
+- 💾 **Chat History & Summaries** - Multi-turn conversation persistence with automatic AI-generated session summaries.
+- 🎨 **Material 3 Expressive & Adaptive** - Modern Material You theming with dynamic topic accents and responsive layouts for phones, foldables, and tablets.
 
 ---
 
