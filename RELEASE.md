@@ -9,7 +9,7 @@ This document outlines the standard release lifecycle and CI/CD automation workf
 ```mermaid
 graph TD
     A[Checkout chore/bump-version-X.Y.Z] --> B[Bump versionCode & versionName in app/build.gradle.kts]
-    B --> C[Draft Google Play Release Notes in project-resources/google-play/]
+    B --> C[Draft Google Play Release Notes in project-resources/google-play/release-notes/]
     C --> D[Run ./gradlew formatKotlin && ./gradlew check]
     D --> E[Open & Merge Pull Request to main]
     E --> F[Tag Release vX.Y.Z on main]
@@ -53,7 +53,7 @@ defaultConfig {
 ---
 
 ### Step 3: Create Google Play Release Notes
-Create a new release notes file under [`project-resources/google-play/release-notes-vX.Y.Z.txt`](project-resources/google-play/).
+Create a new release notes file under [`project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt`](project-resources/google-play/release-notes/).
 
 > [!IMPORTANT]
 > **Google Play Console Character Limit**: Release notes must be **strictly under 500 characters** per language.
@@ -87,7 +87,7 @@ Ensure that:
 ### Step 5: Commit, Push, and Open Pull Request
 Commit the version bump and release notes:
 ```bash
-git add app/build.gradle.kts project-resources/google-play/release-notes-vX.Y.Z.txt
+git add app/build.gradle.kts project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt
 git commit -m "Bump version to X.Y.Z (versionCode N) with release notes"
 git push -u origin chore/bump-version-X.Y.Z
 ```
@@ -164,6 +164,8 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.16.2` | `29` | 2026-08-29 | System low memory handling & 3-minute background eviction grace timer, pre-flight RAM headroom checks preventing device OOM/LMK kills, on-device LLM runtime debug telemetry screen, and course starter card tap auto-dismissal. |
+| `1.16.1` | `28` | 2026-08-28 | Course progress badges (Completed, Current, Upcoming), touch-aware chat auto-scroll pause on drag, and course banner preference persistence. |
 | `1.16.0` | `27` | 2026-08-28 | Bundled Interactive Guided Learning Courses (Kotlin, Python, TypeScript, Go, Rust), syntax highlighting with `compose-highlight`, interactive Quick Check quizzes with instant feedback, ephemeral Ask AI Tutor chat, and topic-accented atmospheric radial glow across Home and Course cards. |
 | `1.15.1` | `26` | 2026-08-28 | Direct AI answers with silent thought constraints in system prompts, Markdown & streaming code block stability. |
 | `1.15.0` | `25` | 2026-08-28 | Syntax-highlighted Markdown code blocks with Highlight.js and line numbers, adaptive top app bar actions, full crash error traces. |
