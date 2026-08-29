@@ -604,7 +604,7 @@ private fun getOnboardingPages(): List<OnboardingPageData> =
 
 @ThemePreviews
 @Composable
-private fun OnboardingScreenUiPreview() {
+private fun OnboardingScreenUiPage0PrivacyPreview() {
     CodeWithAIAppTheme {
         Surface {
             OnboardingScreenUi(
@@ -622,7 +622,43 @@ private fun OnboardingScreenUiPreview() {
 
 @ThemePreviews
 @Composable
-private fun OnboardingScreenUiFeedbackPagePreview() {
+private fun OnboardingScreenUiPage1CoursesPreview() {
+    CodeWithAIAppTheme {
+        Surface {
+            OnboardingScreenUi(
+                state =
+                    OnboardingScreen.State.Content(
+                        currentPage = 1,
+                        pageCount = 4,
+                        hasDownloadedModel = false,
+                        eventSink = {},
+                    ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun OnboardingScreenUiPage2HardwarePreview() {
+    CodeWithAIAppTheme {
+        Surface {
+            OnboardingScreenUi(
+                state =
+                    OnboardingScreen.State.Content(
+                        currentPage = 2,
+                        pageCount = 4,
+                        hasDownloadedModel = false,
+                        eventSink = {},
+                    ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun OnboardingScreenUiPage3CommunityFeedbackPreview() {
     CodeWithAIAppTheme {
         Surface {
             OnboardingScreenUi(
