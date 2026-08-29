@@ -164,6 +164,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.16.3` | `30` | 2026-08-29 | First-time user onboarding walkthrough introducing on-device privacy, interactive guided courses & quizzes, and hardware acceleration; community feedback & GitHub issue reporting integration; full edge-to-edge support with safe navigation bar insets; and home title long-press easter egg. |
 | `1.16.2` | `29` | 2026-08-29 | System low memory handling & 3-minute background eviction grace timer, pre-flight RAM headroom checks preventing device OOM/LMK kills, on-device LLM runtime debug telemetry screen, and course starter card tap auto-dismissal. |
 | `1.16.1` | `28` | 2026-08-28 | Course progress badges (Completed, Current, Upcoming), touch-aware chat auto-scroll pause on drag, and course banner preference persistence. |
 | `1.16.0` | `27` | 2026-08-28 | Bundled Interactive Guided Learning Courses (Kotlin, Python, TypeScript, Go, Rust), syntax highlighting with `compose-highlight`, interactive Quick Check quizzes with instant feedback, ephemeral Ask AI Tutor chat, and topic-accented atmospheric radial glow across Home and Course cards. |

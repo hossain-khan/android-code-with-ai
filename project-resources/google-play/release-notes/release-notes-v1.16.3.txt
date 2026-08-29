@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.16.3:
+• First-Time User Onboarding: Walkthrough exploring on-device privacy, guided courses & quizzes, and hardware acceleration.
+• Community Feedback: Direct GitHub issue reporting to share feedback and request features.
+• Full Edge-to-Edge Experience: Optimized layout with safe insets for system and gesture navigation.
+• Easter Egg: Long-press the app title on the home screen anytime to replay the tour!
