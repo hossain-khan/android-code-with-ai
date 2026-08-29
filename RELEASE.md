@@ -9,7 +9,7 @@ This document outlines the standard release lifecycle and CI/CD automation workf
 ```mermaid
 graph TD
     A[Checkout chore/bump-version-X.Y.Z] --> B[Bump versionCode & versionName in app/build.gradle.kts]
-    B --> C[Draft Google Play Release Notes in project-resources/google-play/]
+    B --> C[Draft Google Play Release Notes in project-resources/google-play/release-notes/]
     C --> D[Run ./gradlew formatKotlin && ./gradlew check]
     D --> E[Open & Merge Pull Request to main]
     E --> F[Tag Release vX.Y.Z on main]
@@ -53,7 +53,7 @@ defaultConfig {
 ---
 
 ### Step 3: Create Google Play Release Notes
-Create a new release notes file under [`project-resources/google-play/release-notes-vX.Y.Z.txt`](project-resources/google-play/).
+Create a new release notes file under [`project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt`](project-resources/google-play/release-notes/).
 
 > [!IMPORTANT]
 > **Google Play Console Character Limit**: Release notes must be **strictly under 500 characters** per language.
@@ -87,7 +87,7 @@ Ensure that:
 ### Step 5: Commit, Push, and Open Pull Request
 Commit the version bump and release notes:
 ```bash
-git add app/build.gradle.kts project-resources/google-play/release-notes-vX.Y.Z.txt
+git add app/build.gradle.kts project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt
 git commit -m "Bump version to X.Y.Z (versionCode N) with release notes"
 git push -u origin chore/bump-version-X.Y.Z
 ```
