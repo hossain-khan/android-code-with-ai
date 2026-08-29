@@ -59,6 +59,7 @@ interface AppGraph {
     val workManager: WorkManager
     val workerFactory: AppWorkerFactory
     val dataStore: DataStore<Preferences>
+    val systemMemoryManager: dev.hossain.codematex.system.SystemMemoryManager
 
     @Provides
     fun providesWorkManager(

@@ -7,8 +7,12 @@ import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.runtime.BackendFailureException
+import dev.hossain.codematex.runtime.DEV_STUB_MODEL_PATH
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LlmEngine.Backend
+import dev.hossain.codematex.runtime.LowMemoryException
+import dev.hossain.codematex.system.MemoryHeadroomResult
+import dev.hossain.codematex.system.SystemMemoryManager
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
@@ -120,6 +124,7 @@ class DefaultChatInferenceOrchestrator
         private val sessionRepository: ChatSessionRepository,
         private val configStore: ModelConfigStore,
         private val topicPromptProvider: TopicPromptProvider,
+        private val systemMemoryManager: SystemMemoryManager,
     ) : ChatInferenceOrchestrator {
         override suspend fun initialize(
             model: AiModel,
@@ -129,6 +134,18 @@ class DefaultChatInferenceOrchestrator
             persona: TutorPersona,
         ): Result<List<ChatMessage>> =
             try {
+                // Pre-flight memory headroom check:
+                // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
+                if (model.localPath != null && model.localPath != DEV_STUB_MODEL_PATH) {
+                    val headroomResult = systemMemoryManager.checkMemoryHeadroom()
+                    if (headroomResult is MemoryHeadroomResult.Constrained) {
+                        throw LowMemoryException(
+                            availMemBytes = headroomResult.availMemBytes,
+                            requiredBytes = headroomResult.requiredBytes,
+                        )
+                    }
+                }
+
                 Timber.d("ChatInferenceOrchestrator: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
                 val modelConfig = configStore.getConfig(model.id)
                 llmEngine.initialize(

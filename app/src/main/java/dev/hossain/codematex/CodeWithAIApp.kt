@@ -44,6 +44,7 @@ class CodeWithAIApp :
             Timber.plant(Timber.DebugTree())
         }
         Timber.d("CodeWithAIApp created")
+        appGraph.systemMemoryManager.register(this)
         createNotificationChannels()
     }
 

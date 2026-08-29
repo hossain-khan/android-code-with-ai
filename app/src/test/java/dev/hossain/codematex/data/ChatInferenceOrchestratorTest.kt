@@ -11,6 +11,9 @@ import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.runtime.LowMemoryException
+import dev.hossain.codematex.system.FakeSystemMemoryManager
+import dev.hossain.codematex.system.MemoryHeadroomResult
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -19,13 +22,18 @@ class ChatInferenceOrchestratorTest {
     private val configStore: ModelConfigStore = FakeModelConfigStore()
     private val fakeEngine = FakeLlmEngine()
     private val topicPromptProvider = DefaultTopicPromptProvider()
+    private val fakeMemoryManager = FakeSystemMemoryManager()
 
-    private fun createOrchestrator(messages: List<ChatMessage> = emptyList()) =
+    private fun createOrchestrator(
+        messages: List<ChatMessage> = emptyList(),
+        memoryManager: FakeSystemMemoryManager = fakeMemoryManager,
+    ): ChatInferenceOrchestrator =
         DefaultChatInferenceOrchestrator(
             llmEngine = fakeEngine,
             sessionRepository = FakeChatSessionRepository(messages = messages),
             configStore = configStore,
             topicPromptProvider = topicPromptProvider,
+            systemMemoryManager = memoryManager,
         )
 
     private fun testModel() =
@@ -205,5 +213,33 @@ class ChatInferenceOrchestratorTest {
 
             assertThat(result.isSuccess).isTrue()
             assertThat(fakeEngine.lastConfig).isEqualTo(customConfig)
+        }
+
+    @Test
+    fun `initialize fails with LowMemoryException when memory is constrained`() =
+        runTest {
+            val constrainedMemoryManager =
+                FakeSystemMemoryManager(
+                    headroomResult =
+                        MemoryHeadroomResult.Constrained(
+                            availMemBytes = 500_000_000L,
+                            requiredBytes = 1_200_000_000L,
+                            isLowMemory = true,
+                        ),
+                )
+
+            val result =
+                createOrchestrator(
+                    memoryManager = constrainedMemoryManager,
+                ).initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = emptyList(),
+                )
+
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).isInstanceOf(LowMemoryException::class.java)
+            assertThat(fakeEngine.initializeCalls).isEqualTo(0)
         }
 }

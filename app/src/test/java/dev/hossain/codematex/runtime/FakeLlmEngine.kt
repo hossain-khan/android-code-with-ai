@@ -77,7 +77,12 @@ class FakeLlmEngine : LlmEngine {
 
     override fun getActiveBackend(): LlmEngine.Backend? = LlmEngine.Backend.CPU
 
+    var isInitializedValue: Boolean = true
+
+    override fun isInitialized(): Boolean = isInitializedValue
+
     override fun cleanup() {
         cleanupCalls++
+        isInitializedValue = false
     }
 }
