@@ -44,7 +44,10 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningCourse
+import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustCourseContent
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -136,7 +139,10 @@ private fun CourseCard(
         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
         Column(
-            modifier = Modifier.padding(20.dp),
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
+                    .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Row(
@@ -262,6 +268,33 @@ private fun LessonCatalogPreview() {
                 LessonCatalogScreen.State.Success(
                     courses = listOf(KotlinCourseContent.course),
                     progress = emptyMap(),
+                    eventSink = {},
+                ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@DevicePreviews
+@Composable
+private fun LessonCatalogMoreItemsPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            LessonCatalogScreenContent(
+                LessonCatalogScreen.State.Success(
+                    courses =
+                        listOf(
+                            KotlinCourseContent.course,
+                            RustCourseContent.course,
+                            PythonCourseContent.course,
+                            GoCourseContent.course,
+                        ),
+                    progress =
+                        mapOf(
+                            KotlinCourseContent.course.id to CourseProgress(KotlinCourseContent.course.id, 5, 15, null),
+                            RustCourseContent.course.id to CourseProgress(RustCourseContent.course.id, 8, 24, null),
+                        ),
                     eventSink = {},
                 ),
             )
