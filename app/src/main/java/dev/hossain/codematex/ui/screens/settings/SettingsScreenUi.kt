@@ -24,6 +24,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Memory
@@ -188,12 +189,11 @@ private fun SettingsContent(
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
             ) {
                 Column {
-                    SettingsSwitchRow(
-                        icon = Icons.Default.FormatListNumbered,
-                        title = "Line Numbers in Code Blocks",
-                        subtitle = "Show line numbering in syntax-highlighted code",
-                        checked = state.showLineNumbers,
-                        onCheckedChange = { state.eventSink(SettingsScreen.Event.LineNumbersToggled(it)) },
+                    SettingsClickableRow(
+                        icon = Icons.Default.Code,
+                        title = "Code Block Display & Themes",
+                        subtitle = "Theme: ${state.codeTheme.displayName} • Line numbers: ${if (state.showLineNumbers) "On" else "Off"}",
+                        onClick = { state.eventSink(SettingsScreen.Event.CodeBlockSettingsClicked) },
                     )
                     HorizontalDivider(
                         modifier = Modifier.padding(horizontal = 16.dp),

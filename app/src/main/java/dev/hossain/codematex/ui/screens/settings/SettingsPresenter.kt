@@ -11,6 +11,7 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.BuildConfig
+import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -19,6 +20,7 @@ import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
+import dev.hossain.codematex.ui.screens.settings.code.CodeBlockSettingsScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -48,6 +50,8 @@ class SettingsPresenter(
             .collectAsState(initial = true)
         val showLineNumbers by userPreferencesStore.showLineNumbersFlow
             .collectAsState(initial = true)
+        val codeTheme by userPreferencesStore.codeThemeFlow
+            .collectAsState(initial = CodeTheme.TOMORROW)
         val hapticFeedbackEnabled by userPreferencesStore.hapticFeedbackEnabledFlow
             .collectAsState(initial = true)
         val ramEvictionMinutes by userPreferencesStore.ramEvictionMinutesFlow
@@ -130,6 +134,10 @@ class SettingsPresenter(
                     showRamEvictionDialog = event.show
                 }
 
+                SettingsScreen.Event.CodeBlockSettingsClicked -> {
+                    navigator.goTo(CodeBlockSettingsScreen)
+                }
+
                 SettingsScreen.Event.ManageModelsClicked -> {
                     navigator.goTo(ModelPickerScreen)
                 }
@@ -168,6 +176,7 @@ class SettingsPresenter(
             selectedPersona = selectedPersona,
             isWifiOnlyDownload = isWifiOnlyDownload,
             showLineNumbers = showLineNumbers,
+            codeTheme = codeTheme,
             hapticFeedbackEnabled = hapticFeedbackEnabled,
             ramEvictionMinutes = ramEvictionMinutes,
             storageUsedBytes = storageUsedBytes,

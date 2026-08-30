@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -13,8 +15,11 @@ import com.mikepenz.markdown.compose.components.markdownComponents
 import com.mikepenz.markdown.m3.Markdown
 import com.mikepenz.markdown.m3.markdownTypography
 import com.mikepenz.markdown.model.rememberMarkdownState
+import dev.hossain.codematex.data.model.CodeBlockPreset
+import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import dev.hossain.highlight.ui.CodeBlockStyle
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCode
@@ -22,6 +27,14 @@ import dev.hossain.highlight.ui.rememberTomorrowLightTheme
 import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import org.intellij.markdown.MarkdownTokenTypes
 import org.intellij.markdown.ast.ASTNode
+
+/**
+ * CompositionLocal providing active [CodeBlockSettings] for code rendering across markdown components.
+ */
+val LocalCodeBlockSettings =
+    staticCompositionLocalOf {
+        CodeBlockSettings()
+    }
 
 /**
  * Renders a chat message Markdown string using [multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer).
@@ -78,11 +91,32 @@ private fun ChatMarkdownCodeBlock(
     content: String,
     node: ASTNode,
 ) {
+    val settings = LocalCodeBlockSettings.current
     val code = extractCodeBlockContent(content, node)
+
+    val baseStyle =
+        if (settings.preset == CodeBlockPreset.COMPACT) {
+            CodeBlockStyle.Compact
+        } else {
+            CodeBlockStyle.Default
+        }
+
+    val effectiveStyle =
+        remember(baseStyle, settings.fontSize) {
+            baseStyle.copy(
+                textStyle =
+                    baseStyle.textStyle.copy(
+                        fontSize = settings.fontSize.sizeSp.sp,
+                        lineHeight = (settings.fontSize.sizeSp * 1.35f).sp,
+                    ),
+            )
+        }
+
     StreamingSyntaxHighlightedCode(
         code = code,
         language = "text",
         showLineNumbers = false,
+        style = effectiveStyle,
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     )
 }
@@ -97,11 +131,44 @@ private fun ChatMarkdownCodeFence(
     content: String,
     node: ASTNode,
 ) {
+    val settings = LocalCodeBlockSettings.current
     val (language, code) = extractCodeFenceInfo(content, node)
+
+    val baseStyle =
+        if (settings.preset == CodeBlockPreset.COMPACT) {
+            CodeBlockStyle.Compact
+        } else {
+            CodeBlockStyle.Default
+        }
+
+    val effectiveStyle =
+        remember(baseStyle, settings.fontSize) {
+            baseStyle.copy(
+                textStyle =
+                    baseStyle.textStyle.copy(
+                        fontSize = settings.fontSize.sizeSp.sp,
+                        lineHeight = (settings.fontSize.sizeSp * 1.35f).sp,
+                    ),
+            )
+        }
+
     StreamingSyntaxHighlightedCode(
         code = code,
         language = language.ifEmpty { "text" },
-        showLineNumbers = true,
+        showLineNumbers = settings.showLineNumbers,
+        style = effectiveStyle,
+        languageLabel =
+            if (settings.showLanguageLabel) {
+                null
+            } else {
+                { }
+            },
+        copyButton =
+            if (settings.showCopyButton) {
+                null
+            } else {
+                { }
+            },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     )
 }

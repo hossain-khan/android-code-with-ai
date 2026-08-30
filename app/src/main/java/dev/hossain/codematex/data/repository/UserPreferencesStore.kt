@@ -9,6 +9,10 @@ import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
+import dev.hossain.codematex.data.model.CodeBlockPreset
+import dev.hossain.codematex.data.model.CodeBlockSettings
+import dev.hossain.codematex.data.model.CodeFontSize
+import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.zacsweers.metro.AppScope
@@ -16,6 +20,7 @@ import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -60,6 +65,36 @@ interface UserPreferencesStore {
      * Observable flow of the idle RAM eviction timeout in minutes before background model unloading.
      */
     val ramEvictionMinutesFlow: Flow<Int>
+
+    /**
+     * Observable flow of the selected code block syntax highlighting theme.
+     */
+    val codeThemeFlow: Flow<CodeTheme>
+
+    /**
+     * Observable flow of whether the language identifier badge is shown on code block headers.
+     */
+    val showLanguageLabelFlow: Flow<Boolean>
+
+    /**
+     * Observable flow of whether the copy action button is shown on code block headers.
+     */
+    val showCopyButtonFlow: Flow<Boolean>
+
+    /**
+     * Observable flow of the code block padding and density preset.
+     */
+    val codeBlockPresetFlow: Flow<CodeBlockPreset>
+
+    /**
+     * Observable flow of the code text font size preset.
+     */
+    val codeFontSizeFlow: Flow<CodeFontSize>
+
+    /**
+     * Observable flow of the unified [CodeBlockSettings] snapshot.
+     */
+    val codeBlockSettingsFlow: Flow<CodeBlockSettings>
 
     /**
      * Returns the currently selected tutor persona, or [TutorPersona.SENIOR_ENGINEER] if none is stored.
@@ -125,6 +160,56 @@ interface UserPreferencesStore {
      * Persists the idle RAM eviction timeout in minutes.
      */
     suspend fun setRamEvictionMinutes(minutes: Int)
+
+    /**
+     * Returns the active code syntax highlighting theme.
+     */
+    suspend fun getCodeTheme(): CodeTheme
+
+    /**
+     * Persists the code syntax highlighting theme.
+     */
+    suspend fun setCodeTheme(theme: CodeTheme)
+
+    /**
+     * Returns whether language labels are displayed on code headers.
+     */
+    suspend fun isShowLanguageLabelEnabled(): Boolean
+
+    /**
+     * Persists the language label display preference.
+     */
+    suspend fun setShowLanguageLabel(show: Boolean)
+
+    /**
+     * Returns whether the copy button is displayed on code headers.
+     */
+    suspend fun isShowCopyButtonEnabled(): Boolean
+
+    /**
+     * Persists the copy button display preference.
+     */
+    suspend fun setShowCopyButton(show: Boolean)
+
+    /**
+     * Returns the active code block layout density preset.
+     */
+    suspend fun getCodeBlockPreset(): CodeBlockPreset
+
+    /**
+     * Persists the code block layout density preset.
+     */
+    suspend fun setCodeBlockPreset(preset: CodeBlockPreset)
+
+    /**
+     * Returns the active code font size preset.
+     */
+    suspend fun getCodeFontSize(): CodeFontSize
+
+    /**
+     * Persists the code font size preset.
+     */
+    suspend fun setCodeFontSize(fontSize: CodeFontSize)
 }
 
 @SingleIn(AppScope::class)
@@ -231,6 +316,134 @@ class UserPreferencesStoreImpl
                     prefs[KEY_RAM_EVICTION_MINUTES] ?: 3
                 }.distinctUntilChanged()
 
+        override val codeThemeFlow: Flow<CodeTheme> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    val stored = prefs[KEY_CODE_THEME] ?: return@map CodeTheme.TOMORROW
+                    try {
+                        CodeTheme.valueOf(stored)
+                    } catch (e: IllegalArgumentException) {
+                        CodeTheme.TOMORROW
+                    }
+                }.distinctUntilChanged()
+
+        override val showLanguageLabelFlow: Flow<Boolean> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
+                }.distinctUntilChanged()
+
+        override val showCopyButtonFlow: Flow<Boolean> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    prefs[KEY_SHOW_COPY_BUTTON] ?: true
+                }.distinctUntilChanged()
+
+        override val codeBlockPresetFlow: Flow<CodeBlockPreset> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    val stored = prefs[KEY_CODE_BLOCK_PRESET] ?: return@map CodeBlockPreset.COMFORTABLE
+                    try {
+                        CodeBlockPreset.valueOf(stored)
+                    } catch (e: IllegalArgumentException) {
+                        CodeBlockPreset.COMFORTABLE
+                    }
+                }.distinctUntilChanged()
+
+        override val codeFontSizeFlow: Flow<CodeFontSize> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    val stored = prefs[KEY_CODE_FONT_SIZE] ?: return@map CodeFontSize.MEDIUM
+                    try {
+                        CodeFontSize.valueOf(stored)
+                    } catch (e: IllegalArgumentException) {
+                        CodeFontSize.MEDIUM
+                    }
+                }.distinctUntilChanged()
+
+        override val codeBlockSettingsFlow: Flow<CodeBlockSettings> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    val theme =
+                        prefs[KEY_CODE_THEME]?.let {
+                            try {
+                                CodeTheme.valueOf(it)
+                            } catch (e: IllegalArgumentException) {
+                                CodeTheme.TOMORROW
+                            }
+                        } ?: CodeTheme.TOMORROW
+                    val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: true
+                    val showLang = prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
+                    val showCopy = prefs[KEY_SHOW_COPY_BUTTON] ?: true
+                    val preset =
+                        prefs[KEY_CODE_BLOCK_PRESET]?.let {
+                            try {
+                                CodeBlockPreset.valueOf(it)
+                            } catch (e: IllegalArgumentException) {
+                                CodeBlockPreset.COMFORTABLE
+                            }
+                        } ?: CodeBlockPreset.COMFORTABLE
+                    val fontSize =
+                        prefs[KEY_CODE_FONT_SIZE]?.let {
+                            try {
+                                CodeFontSize.valueOf(it)
+                            } catch (e: IllegalArgumentException) {
+                                CodeFontSize.MEDIUM
+                            }
+                        } ?: CodeFontSize.MEDIUM
+
+                    CodeBlockSettings(
+                        theme = theme,
+                        showLineNumbers = showLines,
+                        showLanguageLabel = showLang,
+                        showCopyButton = showCopy,
+                        preset = preset,
+                        fontSize = fontSize,
+                    )
+                }.distinctUntilChanged()
+
         override suspend fun getSelectedPersona(): TutorPersona = selectedPersonaFlow.first()
 
         override suspend fun setSelectedPersona(persona: TutorPersona) {
@@ -286,6 +499,46 @@ class UserPreferencesStoreImpl
             }
         }
 
+        override suspend fun getCodeTheme(): CodeTheme = codeThemeFlow.first()
+
+        override suspend fun setCodeTheme(theme: CodeTheme) {
+            dataStore.edit { prefs ->
+                prefs[KEY_CODE_THEME] = theme.name
+            }
+        }
+
+        override suspend fun isShowLanguageLabelEnabled(): Boolean = showLanguageLabelFlow.first()
+
+        override suspend fun setShowLanguageLabel(show: Boolean) {
+            dataStore.edit { prefs ->
+                prefs[KEY_SHOW_LANGUAGE_LABEL] = show
+            }
+        }
+
+        override suspend fun isShowCopyButtonEnabled(): Boolean = showCopyButtonFlow.first()
+
+        override suspend fun setShowCopyButton(show: Boolean) {
+            dataStore.edit { prefs ->
+                prefs[KEY_SHOW_COPY_BUTTON] = show
+            }
+        }
+
+        override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.first()
+
+        override suspend fun setCodeBlockPreset(preset: CodeBlockPreset) {
+            dataStore.edit { prefs ->
+                prefs[KEY_CODE_BLOCK_PRESET] = preset.name
+            }
+        }
+
+        override suspend fun getCodeFontSize(): CodeFontSize = codeFontSizeFlow.first()
+
+        override suspend fun setCodeFontSize(fontSize: CodeFontSize) {
+            dataStore.edit { prefs ->
+                prefs[KEY_CODE_FONT_SIZE] = fontSize.name
+            }
+        }
+
         companion object {
             private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
             private val KEY_DISMISSED_COURSE_BANNER_TOPICS = stringSetPreferencesKey("dismissed_course_banner_topics")
@@ -294,5 +547,10 @@ class UserPreferencesStoreImpl
             private val KEY_SHOW_LINE_NUMBERS = booleanPreferencesKey("show_line_numbers")
             private val KEY_HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback_enabled")
             private val KEY_RAM_EVICTION_MINUTES = intPreferencesKey("ram_eviction_minutes")
+            private val KEY_CODE_THEME = stringPreferencesKey("code_block_theme")
+            private val KEY_SHOW_LANGUAGE_LABEL = booleanPreferencesKey("code_show_language_label")
+            private val KEY_SHOW_COPY_BUTTON = booleanPreferencesKey("code_show_copy_button")
+            private val KEY_CODE_BLOCK_PRESET = stringPreferencesKey("code_block_preset")
+            private val KEY_CODE_FONT_SIZE = stringPreferencesKey("code_font_size")
         }
     }
