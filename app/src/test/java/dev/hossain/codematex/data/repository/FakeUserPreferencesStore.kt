@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.model.CodeFontSize
 import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +28,7 @@ class FakeUserPreferencesStore(
     initialShowCopyButton: Boolean = true,
     initialCodeBlockPreset: CodeBlockPreset = CodeBlockPreset.COMFORTABLE,
     initialCodeFontSize: CodeFontSize = CodeFontSize.MEDIUM,
+    initialDeveloperProfile: DeveloperProfile = DeveloperProfile(),
 ) : UserPreferencesStore {
     override val selectedPersonaFlow: Flow<TutorPersona>
         field = MutableStateFlow(initialSelectedPersona)
@@ -84,6 +86,9 @@ class FakeUserPreferencesStore(
                     fontSize = font,
                 )
             }
+
+    override val developerProfileFlow: Flow<DeveloperProfile>
+        field = MutableStateFlow(initialDeveloperProfile)
 
     var shouldThrowOnWrite: Boolean = false
 
@@ -191,5 +196,14 @@ class FakeUserPreferencesStore(
             throw IOException("Fake disk write failure")
         }
         codeFontSizeFlow.value = fontSize
+    }
+
+    override suspend fun getDeveloperProfile(): DeveloperProfile = developerProfileFlow.value
+
+    override suspend fun setDeveloperProfile(profile: DeveloperProfile) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        developerProfileFlow.value = profile
     }
 }

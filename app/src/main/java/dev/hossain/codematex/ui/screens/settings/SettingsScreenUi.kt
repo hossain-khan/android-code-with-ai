@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Vibration
 import androidx.compose.material.icons.filled.Wifi
@@ -131,8 +132,8 @@ private fun SettingsContent(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            // Section 1: AI Tutor & Persona
-            SettingsSectionHeader(title = "AI Tutor & Persona")
+            // Section 1: AI Persona & Tutoring Style
+            SettingsSectionHeader(title = "AI Persona & Tutoring Style")
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.large,
@@ -147,6 +148,16 @@ private fun SettingsContent(
                             "${state.selectedPersona.iconGlyph} ${state.selectedPersona.displayName} • " +
                                 state.selectedPersona.tagline,
                         onClick = { state.eventSink(SettingsScreen.Event.ShowPersonaDialog(true)) },
+                    )
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                    )
+                    SettingsClickableRow(
+                        icon = Icons.Default.Psychology,
+                        title = "Developer Profile & Context",
+                        subtitle = state.developerProfile.getDisplaySummary(),
+                        onClick = { state.eventSink(SettingsScreen.Event.DeveloperProfileClicked) },
                     )
                 }
             }

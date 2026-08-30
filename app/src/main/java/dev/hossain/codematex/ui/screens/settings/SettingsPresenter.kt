@@ -12,6 +12,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.data.model.CodeTheme
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -21,6 +22,7 @@ import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.code.CodeBlockSettingsScreen
+import dev.hossain.codematex.ui.screens.settings.profile.DeveloperProfileSettingsScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -46,6 +48,8 @@ class SettingsPresenter(
 
         val selectedPersona by userPreferencesStore.selectedPersonaFlow
             .collectAsState(initial = TutorPersona.SENIOR_ENGINEER)
+        val developerProfile by userPreferencesStore.developerProfileFlow
+            .collectAsState(initial = DeveloperProfile())
         val isWifiOnlyDownload by userPreferencesStore.isWifiOnlyDownloadEnabledFlow
             .collectAsState(initial = true)
         val showLineNumbers by userPreferencesStore.showLineNumbersFlow
@@ -134,6 +138,10 @@ class SettingsPresenter(
                     showRamEvictionDialog = event.show
                 }
 
+                SettingsScreen.Event.DeveloperProfileClicked -> {
+                    navigator.goTo(DeveloperProfileSettingsScreen)
+                }
+
                 SettingsScreen.Event.CodeBlockSettingsClicked -> {
                     navigator.goTo(CodeBlockSettingsScreen)
                 }
@@ -174,6 +182,7 @@ class SettingsPresenter(
 
         return SettingsScreen.State.Content(
             selectedPersona = selectedPersona,
+            developerProfile = developerProfile,
             isWifiOnlyDownload = isWifiOnlyDownload,
             showLineNumbers = showLineNumbers,
             codeTheme = codeTheme,
