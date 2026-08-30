@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.component
 
+import android.graphics.Matrix
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -44,20 +45,22 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.center
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.PaintingStyle
+import androidx.compose.ui.graphics.Shader
+import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.SweepGradientShader
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -187,7 +190,7 @@ fun Modifier.glowBorder(
             val radiusPx = glowRadius.toPx()
             if (radiusPx > 0f && glowAlpha > 0f) {
                 drawGlowHalo(
-                    colors = glowColors,
+                    brush = Brush.horizontalGradient(glowColors),
                     glowRadius = radiusPx,
                     glowAlpha = glowAlpha,
                     shape = shape,
@@ -311,31 +314,34 @@ fun Modifier.animatedGlowBorder(
         remember { androidx.compose.runtime.mutableFloatStateOf(0f) }
     }
 
+    val haloColors =
+        remember(glowColors) {
+            glowColors.filter { it != Color.Transparent }.ifEmpty { DefaultGlowColors }
+        }
+
     return this
         .drawBehind {
             val radiusPx = glowRadius.toPx()
             if (radiusPx > 0f && glowAlpha > 0f) {
-                rotate(rotation) {
-                    drawGlowHalo(
-                        colors = glowColors.filter { it != Color.Transparent }.ifEmpty { DefaultGlowColors },
-                        glowRadius = radiusPx,
-                        glowAlpha = glowAlpha,
-                        shape = shape,
-                    )
-                }
+                val haloBrush = createRotatingSweepBrush(haloColors, rotation)
+                drawGlowHalo(
+                    brush = haloBrush,
+                    glowRadius = radiusPx,
+                    glowAlpha = glowAlpha,
+                    shape = shape,
+                )
             }
         }.drawWithContent {
             drawContent()
             val strokePx = borderWidth.toPx()
             val outline = shape.createOutline(size, layoutDirection, this)
+            val borderBrush = createRotatingSweepBrush(glowColors, rotation)
 
-            rotate(rotation) {
-                drawOutline(
-                    outline = outline,
-                    brush = Brush.sweepGradient(glowColors),
-                    style = Stroke(width = strokePx),
-                )
-            }
+            drawOutline(
+                outline = outline,
+                brush = borderBrush,
+                style = Stroke(width = strokePx),
+            )
         }
 }
 
@@ -407,38 +413,50 @@ fun AnimatedGlowButton(
 }
 
 /**
+ * Creates a [ShaderBrush] with a sweep gradient rotated by [rotationDegrees]
+ * around the center of the element using a local [Matrix].
+ */
+private fun createRotatingSweepBrush(
+    colors: List<Color>,
+    rotationDegrees: Float,
+): Brush =
+    object : ShaderBrush() {
+        override fun createShader(size: Size): Shader {
+            val shader =
+                SweepGradientShader(
+                    center = size.center,
+                    colors = colors,
+                )
+            val matrix =
+                Matrix().apply {
+                    postRotate(rotationDegrees, size.width / 2f, size.height / 2f)
+                }
+            shader.setLocalMatrix(matrix)
+            return shader
+        }
+    }
+
+/**
  * Helper to draw a soft diffused glow halo behind an outline shape.
  */
 private fun DrawScope.drawGlowHalo(
-    colors: List<Color>,
+    brush: Brush,
     glowRadius: Float,
     glowAlpha: Float,
     shape: Shape,
 ) {
     val outline = shape.createOutline(size, layoutDirection, this)
-    val paint =
-        Paint().apply {
-            this.style = PaintingStyle.Stroke
-            this.strokeWidth = glowRadius
-            this.strokeCap = StrokeCap.Round
-            this.strokeJoin = StrokeJoin.Round
-        }
 
-    drawIntoCanvas { canvas ->
-        // Draw multi-layered soft outer rings for a rich diffused glow
-        for (i in 1..3) {
-            val stepFraction = i / 3f
-            val alpha = (glowAlpha / i)
-            val brush =
-                Brush.horizontalGradient(
-                    colors = colors.map { it.copy(alpha = it.alpha * alpha) },
-                )
-            drawOutline(
-                outline = outline,
-                brush = brush,
-                style = Stroke(width = glowRadius * stepFraction),
-            )
-        }
+    // Draw multi-layered soft outer rings for a rich diffused glow
+    for (i in 1..3) {
+        val stepFraction = i / 3f
+        val alpha = (glowAlpha / i)
+        drawOutline(
+            outline = outline,
+            brush = brush,
+            alpha = alpha,
+            style = Stroke(width = glowRadius * stepFraction),
+        )
     }
 }
 
