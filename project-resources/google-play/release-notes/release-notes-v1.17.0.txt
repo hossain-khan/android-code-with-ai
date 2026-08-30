@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.17.0:
+• Centralized Settings: Manage AI personas, RAM eviction, Wi-Fi downloads, haptics, and storage in one place.
+• Code Block Customization: Pick syntax themes (Tomorrow, Atom One, GitHub, Dracula), line numbers, density, and font size with live preview.
+• Custom Developer Context: Set your seniority, languages, and custom directives injected into AI conversations.
+• Streamlined UI: Reorganized app info & technical architecture in Settings.
