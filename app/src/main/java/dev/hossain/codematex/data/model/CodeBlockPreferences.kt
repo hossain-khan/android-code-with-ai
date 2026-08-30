@@ -73,7 +73,7 @@ enum class CodeFontSize(
         sizeSp = 11.5f,
     ),
     MEDIUM(
-        displayName = "Medium (Default)",
+        displayName = "Medium",
         sizeSp = 13.0f,
     ),
     LARGE(
