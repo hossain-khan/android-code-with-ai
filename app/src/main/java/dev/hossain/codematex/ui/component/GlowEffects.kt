@@ -346,6 +346,79 @@ fun Modifier.animatedGlowBorder(
 }
 
 /**
+ * A ready-to-use button composable with a static multi-color gradient border, diffused ambient glow halo,
+ * tactile ripple feedback, and Material 3 styling.
+ *
+ * ### Example Usage:
+ * ```kotlin
+ * GlowButton(
+ *     onClick = { },
+ *     glowColors = listOf(Color(0xFF4285F4), Color(0xFF9B72CB)),
+ * ) {
+ *     Text("Get Started")
+ *     Spacer(Modifier.width(6.dp))
+ *     Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+ * }
+ * ```
+ *
+ * @param onClick Callback invoked when the button is clicked.
+ * @param modifier Modifier applied to the button layout.
+ * @param enabled Whether the button is interactable.
+ * @param glowColors Gradient color list for the border and glow halo.
+ * @param glowRadius Blur radius of the ambient glow halo.
+ * @param glowAlpha Opacity of the ambient glow halo.
+ * @param strokeWidth Stroke thickness of the gradient border.
+ * @param shape Shape of the button (defaults to [CircleShape] pill).
+ * @param containerColor Background container color.
+ * @param contentColor Tint color for text and icons inside the button.
+ * @param content Content row placed inside the button.
+ */
+@Composable
+fun GlowButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    glowColors: List<Color> = DefaultGlowColors,
+    glowRadius: Dp = 16.dp,
+    glowAlpha: Float = 0.45f,
+    strokeWidth: Dp = 1.5.dp,
+    shape: Shape = CircleShape,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+
+    Surface(
+        modifier =
+            modifier
+                .glowBorder(
+                    glowColors = glowColors,
+                    glowRadius = glowRadius,
+                    glowAlpha = glowAlpha,
+                    strokeWidth = strokeWidth,
+                    shape = shape,
+                ).clickable(
+                    interactionSource = interactionSource,
+                    indication = ripple(bounded = true),
+                    enabled = enabled,
+                    role = Role.Button,
+                    onClick = onClick,
+                ),
+        shape = shape,
+        color = containerColor,
+        contentColor = contentColor,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            content = content,
+        )
+    }
+}
+
+/**
  * A ready-to-use button composable with built-in rotating glow border, tactile ripple feedback,
  * and Material 3 elevated styling.
  *

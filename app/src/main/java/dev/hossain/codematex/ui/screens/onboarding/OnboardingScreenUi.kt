@@ -70,7 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
-import dev.hossain.codematex.ui.component.AnimatedGlowButton
+import dev.hossain.codematex.ui.component.GlowButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -475,20 +475,18 @@ private fun OnboardingBottomBar(
                     )
                 }
             } else {
-                AnimatedGlowButton(
+                GlowButton(
                     onClick = onGetStarted,
                     shape = MaterialTheme.shapes.large,
-                    isGlowing = true,
                     glowColors =
                         listOf(
-                            Color.Transparent,
-                            Color.Transparent,
-                            accentColor.copy(alpha = 0.85f),
+                            accentColor.copy(alpha = 0.9f),
                             Color(0xFF4285F4),
                             Color(0xFF9B72CB),
                             Color(0xFFD96570),
-                            Color.Transparent,
                         ),
+                    glowRadius = 14.dp,
+                    glowAlpha = 0.5f,
                     containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
