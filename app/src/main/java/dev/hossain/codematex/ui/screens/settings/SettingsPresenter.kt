@@ -14,6 +14,7 @@ import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
+import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -35,6 +36,7 @@ class SettingsPresenter(
     private val userPreferencesStore: UserPreferencesStore,
     private val modelRepository: ModelRepository,
     private val chatSessionRepository: ChatSessionRepository,
+    private val modelDownloadPreferences: ModelDownloadPreferences,
 ) : Presenter<SettingsScreen.State> {
     @Composable
     override fun present(): SettingsScreen.State {
@@ -86,6 +88,7 @@ class SettingsPresenter(
                     coroutineScope.launch {
                         try {
                             userPreferencesStore.setWifiOnlyDownloadEnabled(event.enabled)
+                            modelDownloadPreferences.setDownloadOverWifiOnly(event.enabled)
                         } catch (e: Exception) {
                             Timber.e(e, "SettingsPresenter: Failed to update wifi only download")
                         }

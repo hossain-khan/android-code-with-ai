@@ -37,7 +37,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -56,8 +55,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -322,13 +319,6 @@ private fun ModelPickerLayout(
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 DeviceMemoryBanner(deviceMemoryInfo = state.deviceMemoryInfo)
-            }
-
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                DownloadSettingsCard(
-                    downloadOverWifiOnly = state.downloadOverWifiOnly,
-                    onToggleWifiOnly = { state.eventSink(ModelPickerScreen.Event.ToggleWifiOnly(it)) },
-                )
             }
 
             if (state.models.isEmpty()) {
@@ -688,8 +678,14 @@ private fun ModelCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
+                        val statusText =
+                            if (model.downloadProgress == 0) {
+                                "Queued (Waiting for Wi-Fi or network)..."
+                            } else {
+                                "Downloading model weights..."
+                            }
                         Text(
-                            "Downloading model weights...",
+                            statusText,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -854,62 +850,6 @@ private fun ModelCard(
     }
 }
 
-@Composable
-private fun DownloadSettingsCard(
-    downloadOverWifiOnly: Boolean,
-    onToggleWifiOnly: (Boolean) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(40.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.Wifi,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = "Download on Wi-Fi only",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = "Prevent large model downloads (2.6GB–3.7GB) from consuming cellular data",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Switch(
-                checked = downloadOverWifiOnly,
-                onCheckedChange = onToggleWifiOnly,
-            )
-        }
-    }
-}
-
 // ==========================================
 // Previews
 // ==========================================
@@ -1006,7 +946,6 @@ private fun ModelPickerScreenPreview() {
                     models = sampleModels,
                     deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
                     modelCompatibility = sampleModels.associate { it.id to ModelCompatibility.Compatible },
-                    downloadOverWifiOnly = true,
                     eventSink = {},
                 ),
         )
@@ -1019,18 +958,6 @@ private fun DeviceMemoryBannerPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         DeviceMemoryBanner(
             deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
-
-@ThemePreviews
-@Composable
-private fun DownloadSettingsCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        DownloadSettingsCard(
-            downloadOverWifiOnly = true,
-            onToggleWifiOnly = {},
             modifier = Modifier.padding(16.dp),
         )
     }

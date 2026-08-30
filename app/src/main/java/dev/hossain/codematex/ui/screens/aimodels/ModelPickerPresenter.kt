@@ -14,7 +14,6 @@ import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.ModelConfigStore
-import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.system.ModelCompatibilityChecker
@@ -32,7 +31,6 @@ class ModelPickerPresenter(
     @Assisted private val navigator: Navigator,
     @Assisted private val screen: ModelPickerScreen,
     private val modelRepository: ModelRepository,
-    private val downloadPreferences: ModelDownloadPreferences,
     private val modelCompatibilityChecker: ModelCompatibilityChecker,
     private val modelConfigStore: ModelConfigStore,
 ) : Presenter<ModelPickerScreen.State> {
@@ -42,16 +40,9 @@ class ModelPickerPresenter(
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
-        var downloadOverWifiOnly by rememberRetained { mutableStateOf(true) }
         var configuredModel by rememberRetained { mutableStateOf<AiModel?>(null) }
         var configuredModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
         val scope = rememberCoroutineScope()
-
-        LaunchedEffect(Unit) {
-            downloadPreferences.downloadOverWifiOnlyFlow.collect { enabled ->
-                downloadOverWifiOnly = enabled
-            }
-        }
 
         LaunchedEffect(retryTrigger) {
             isLoading = true
@@ -77,12 +68,6 @@ class ModelPickerPresenter(
 
                 is ModelPickerScreen.Event.Retry -> {
                     retryTrigger++
-                }
-
-                is ModelPickerScreen.Event.ToggleWifiOnly -> {
-                    scope.launch {
-                        downloadPreferences.setDownloadOverWifiOnly(event.enabled)
-                    }
                 }
 
                 is ModelPickerScreen.Event.Download -> {
@@ -161,7 +146,6 @@ class ModelPickerPresenter(
                         models.associate { model ->
                             model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
                         },
-                    downloadOverWifiOnly = downloadOverWifiOnly,
                     configuredModel = configuredModel,
                     configuredModelConfig = configuredModelConfig,
                     eventSink = eventSink,

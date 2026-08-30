@@ -22,7 +22,6 @@ data object ModelPickerScreen : ParcelableScreen {
             val models: List<AiModel>,
             val deviceMemoryInfo: DeviceMemoryInfo,
             val modelCompatibility: Map<String, ModelCompatibility>,
-            val downloadOverWifiOnly: Boolean = true,
             val configuredModel: AiModel? = null,
             val configuredModelConfig: ModelConfig? = null,
             val eventSink: (Event) -> Unit,
@@ -39,10 +38,6 @@ data object ModelPickerScreen : ParcelableScreen {
         data object Back : Event
 
         data object Retry : Event
-
-        data class ToggleWifiOnly(
-            val enabled: Boolean,
-        ) : Event
 
         data class Download(
             val model: AiModel,
