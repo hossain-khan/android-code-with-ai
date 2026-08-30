@@ -111,11 +111,13 @@ private fun AppInfoSheetContent(
         modifier =
             modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
+        Spacer(modifier = Modifier.height(24.dp))
+
         // App Header: Icon Glyph + Title + Version Badge
         Surface(
             shape = CircleShape,
@@ -282,7 +284,7 @@ private fun AppInfoSheetContent(
             )
             LinkCard(
                 iconRes = R.drawable.github_logo,
-                title = "Open Source Repository (GitHub)",
+                title = "Open Source Repository",
                 url = "https://github.com/hossain-khan/android-code-with-ai",
                 onClick = { uriHandler.openUri("https://github.com/hossain-khan/android-code-with-ai") },
             )
@@ -296,6 +298,8 @@ private fun AppInfoSheetContent(
         ) {
             Text("Close")
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
