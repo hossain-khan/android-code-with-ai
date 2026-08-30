@@ -70,6 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
+import dev.hossain.codematex.ui.component.AnimatedGlowButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -474,15 +475,22 @@ private fun OnboardingBottomBar(
                     )
                 }
             } else {
-                Button(
+                AnimatedGlowButton(
                     onClick = onGetStarted,
                     shape = MaterialTheme.shapes.large,
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = accentColor,
-                            contentColor = Color.White,
+                    isGlowing = true,
+                    glowColors =
+                        listOf(
+                            Color.Transparent,
+                            Color.Transparent,
+                            accentColor.copy(alpha = 0.85f),
+                            Color(0xFF4285F4),
+                            Color(0xFF9B72CB),
+                            Color(0xFFD96570),
+                            Color.Transparent,
                         ),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ) {
                     Text(
                         text = "Get Started",
@@ -494,6 +502,7 @@ private fun OnboardingBottomBar(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
+                        tint = accentColor,
                     )
                 }
             }
