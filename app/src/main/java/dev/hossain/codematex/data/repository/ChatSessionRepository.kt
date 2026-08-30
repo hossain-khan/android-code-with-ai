@@ -40,4 +40,9 @@ interface ChatSessionRepository {
      * Permanently deletes the session identified by [sessionId] and all its messages.
      */
     suspend fun deleteSession(sessionId: String)
+
+    /**
+     * Permanently deletes all chat sessions and messages from storage.
+     */
+    suspend fun clearAllSessions()
 }

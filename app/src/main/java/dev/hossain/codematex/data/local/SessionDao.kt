@@ -67,4 +67,25 @@ interface SessionDao {
         upsertSession(session)
         insertMessages(messages)
     }
+
+    /**
+     * Deletes all sessions.
+     */
+    @Query("DELETE FROM sessions")
+    suspend fun deleteAllSessions()
+
+    /**
+     * Deletes all messages.
+     */
+    @Query("DELETE FROM messages")
+    suspend fun deleteAllMessages()
+
+    /**
+     * Atomically clears all sessions and messages.
+     */
+    @Transaction
+    suspend fun clearAll() {
+        deleteAllMessages()
+        deleteAllSessions()
+    }
 }

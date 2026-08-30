@@ -22,6 +22,7 @@ import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
 import dev.hossain.codematex.ui.screens.lessons.LessonCatalogScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
+import dev.hossain.codematex.ui.screens.settings.SettingsScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -90,6 +91,10 @@ class HomePresenter(
 
                 HomeScreen.Event.AppTour -> {
                     navigator.goTo(OnboardingScreen)
+                }
+
+                HomeScreen.Event.OpenSettings -> {
+                    navigator.goTo(SettingsScreen)
                 }
 
                 HomeScreen.Event.DismissIneligibilityWarning -> {

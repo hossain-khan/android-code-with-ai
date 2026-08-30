@@ -14,6 +14,7 @@ import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
+import dev.hossain.codematex.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -187,6 +188,27 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.AppTour)
                 assertThat(navigator.awaitNextScreen()).isEqualTo(OnboardingScreen)
+            }
+        }
+
+    @Test
+    fun `given open settings event - navigates to settings screen`() =
+        runTest {
+            val navigator = FakeNavigator(HomeScreen)
+            val presenter =
+                HomePresenter(
+                    navigator = navigator,
+                    screen = HomeScreen,
+                    sessionRepository = fakeSessionRepo,
+                    modelRepository = fakeModelRepo,
+                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                state.eventSink(HomeScreen.Event.OpenSettings)
+                assertThat(navigator.awaitNextScreen()).isEqualTo(SettingsScreen)
             }
         }
 }

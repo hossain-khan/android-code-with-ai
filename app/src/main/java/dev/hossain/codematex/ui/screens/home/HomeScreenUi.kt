@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -169,6 +170,9 @@ private fun HomeLayout(
                     }
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
+                    }
+                    IconButton(onClick = { state.eventSink(HomeScreen.Event.OpenSettings) }) {
+                        Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 },
             )

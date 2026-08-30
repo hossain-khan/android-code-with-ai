@@ -51,6 +51,8 @@ data object HomeScreen : ParcelableScreen {
 
         data object AppTour : Event
 
+        data object OpenSettings : Event
+
         data object DismissIneligibilityWarning : Event
     }
 }

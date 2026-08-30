@@ -17,6 +17,7 @@ class FakeChatSessionRepository(
 ) : ChatSessionRepository {
     var savedSessions = mutableListOf<Triple<CodingTopic, List<ChatMessage>, String?>>()
     var deletedSessionIds = mutableListOf<String>()
+    var clearAllSessionsCalled = false
 
     override fun getAllSessions(): Flow<List<ChatSession>> = getException?.let { ex -> flow { throw ex } } ?: flowOf(sessions)
 
@@ -41,6 +42,10 @@ class FakeChatSessionRepository(
 
     override suspend fun deleteSession(sessionId: String) {
         deletedSessionIds.add(sessionId)
+    }
+
+    override suspend fun clearAllSessions() {
+        clearAllSessionsCalled = true
     }
 }
 
