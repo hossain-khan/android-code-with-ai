@@ -7,6 +7,7 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
+import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.runtime.FakeLlmEngine
@@ -23,10 +24,12 @@ class ChatInferenceOrchestratorTest {
     private val fakeEngine = FakeLlmEngine()
     private val topicPromptProvider = DefaultTopicPromptProvider()
     private val fakeMemoryManager = FakeSystemMemoryManager()
+    private val fakeUserPreferencesStore = FakeUserPreferencesStore()
 
     private fun createOrchestrator(
         messages: List<ChatMessage> = emptyList(),
         memoryManager: FakeSystemMemoryManager = fakeMemoryManager,
+        userPreferencesStore: FakeUserPreferencesStore = fakeUserPreferencesStore,
     ): ChatInferenceOrchestrator =
         DefaultChatInferenceOrchestrator(
             llmEngine = fakeEngine,
@@ -34,6 +37,7 @@ class ChatInferenceOrchestratorTest {
             configStore = configStore,
             topicPromptProvider = topicPromptProvider,
             systemMemoryManager = memoryManager,
+            userPreferencesStore = userPreferencesStore,
         )
 
     private fun testModel() =

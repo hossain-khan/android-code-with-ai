@@ -6,6 +6,7 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
+import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.runtime.BackendFailureException
 import dev.hossain.codematex.runtime.DEV_STUB_MODEL_PATH
 import dev.hossain.codematex.runtime.LlmEngine
@@ -125,6 +126,7 @@ class DefaultChatInferenceOrchestrator
         private val configStore: ModelConfigStore,
         private val topicPromptProvider: TopicPromptProvider,
         private val systemMemoryManager: SystemMemoryManager,
+        private val userPreferencesStore: UserPreferencesStore,
     ) : ChatInferenceOrchestrator {
         override suspend fun initialize(
             model: AiModel,
@@ -159,10 +161,11 @@ class DefaultChatInferenceOrchestrator
                     "ChatInferenceOrchestrator [INIT_START]: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}",
                 )
                 val modelConfig = configStore.getConfig(model.id)
+                val devProfile = userPreferencesStore.getDeveloperProfile()
                 llmEngine.initialize(
                     modelPath = model.localPath ?: "",
                     backend = model.preferredBackend,
-                    systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona),
+                    systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
                     config = modelConfig,
                 )
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
@@ -197,8 +200,9 @@ class DefaultChatInferenceOrchestrator
             persona: TutorPersona,
         ) {
             Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
+            val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
-                topicPromptProvider.buildSystemPrompt(topic, persona),
+                topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
                 configStore.config,
             )
         }
@@ -209,8 +213,9 @@ class DefaultChatInferenceOrchestrator
             messages: List<ChatMessage>,
         ) {
             Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
+            val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
-                topicPromptProvider.buildSystemPrompt(topic, persona),
+                topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
                 configStore.config,
             )
             if (messages.isNotEmpty()) {

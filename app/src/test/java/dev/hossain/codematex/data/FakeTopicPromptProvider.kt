@@ -1,7 +1,7 @@
 package dev.hossain.codematex.data
 
-import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.TutorPersona
 
 /**
@@ -12,13 +12,17 @@ class FakeTopicPromptProvider(
 ) : TopicPromptProvider {
     val requestedTopics = mutableListOf<CodingTopic>()
     val requestedPersonas = mutableListOf<TutorPersona>()
+    val requestedProfiles = mutableListOf<DeveloperProfile?>()
 
     override fun buildSystemPrompt(
         topic: CodingTopic,
         persona: TutorPersona,
+        developerProfile: DeveloperProfile?,
     ): String {
         requestedTopics += topic
         requestedPersonas += persona
-        return "[$topic][$persona] $prompt"
+        requestedProfiles += developerProfile
+        val profileTag = developerProfile?.formatPromptDirectives()?.let { "[$it]" }.orEmpty()
+        return "[$topic][$persona]$profileTag $prompt"
     }
 }

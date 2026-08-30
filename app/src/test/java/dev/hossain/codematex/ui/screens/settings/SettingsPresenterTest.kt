@@ -146,6 +146,21 @@ class SettingsPresenterTest {
         }
 
     @Test
+    fun `given DeveloperProfileClicked event then navigates to DeveloperProfileSettingsScreen`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as SettingsScreen.State.Content
+                state.eventSink(SettingsScreen.Event.DeveloperProfileClicked)
+
+                assertThat(
+                    fakeNavigator.awaitNextScreen(),
+                ).isEqualTo(dev.hossain.codematex.ui.screens.settings.profile.DeveloperProfileSettingsScreen)
+            }
+        }
+
+    @Test
     fun `given CodeBlockSettingsClicked event then navigates to CodeBlockSettingsScreen`() =
         runTest {
             val presenter = createPresenter()

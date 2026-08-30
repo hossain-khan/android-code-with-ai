@@ -2,6 +2,8 @@ package dev.hossain.codematex.data
 
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DeveloperExperienceLevel
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.TutorPersona
 import org.junit.Test
 
@@ -56,5 +58,38 @@ class TopicPromptProviderTest {
             assertThat(prompt).contains("Do NOT generate or output any internal thoughts")
             assertThat(prompt).contains("Output ONLY the final direct response")
         }
+    }
+
+    @Test
+    fun `given enabled developer profile then buildSystemPrompt includes formatted profile directives`() {
+        val profile =
+            DeveloperProfile(
+                enabled = true,
+                experienceLevel = DeveloperExperienceLevel.STAFF_LEAD,
+                primaryStack = "Kotlin, Rust, Compose Multiplatform",
+                customDirectives = "Skip beginner fluff. Focus on concurrency and zero-cost abstractions.",
+            )
+
+        val prompt = provider.buildSystemPrompt(CodingTopic.KOTLIN, TutorPersona.SENIOR_ENGINEER, profile)
+
+        assertThat(prompt).contains("=== USER DEVELOPER PROFILE ===")
+        assertThat(prompt).contains("Experience Level: Staff / Principal")
+        assertThat(prompt).contains("Primary Tech Stack: Kotlin, Rust, Compose Multiplatform")
+        assertThat(prompt).contains("Custom Directives & Preferences: Skip beginner fluff.")
+    }
+
+    @Test
+    fun `given disabled developer profile then buildSystemPrompt omits profile block`() {
+        val profile =
+            DeveloperProfile(
+                enabled = false,
+                experienceLevel = DeveloperExperienceLevel.STAFF_LEAD,
+                primaryStack = "Kotlin, Rust",
+                customDirectives = "Skip beginner fluff.",
+            )
+
+        val prompt = provider.buildSystemPrompt(CodingTopic.KOTLIN, TutorPersona.SENIOR_ENGINEER, profile)
+
+        assertThat(prompt).doesNotContain("=== USER DEVELOPER PROFILE ===")
     }
 }

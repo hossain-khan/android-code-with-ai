@@ -14,13 +14,14 @@ import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.model.CodeFontSize
 import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DeveloperExperienceLevel
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -95,6 +96,11 @@ interface UserPreferencesStore {
      * Observable flow of the unified [CodeBlockSettings] snapshot.
      */
     val codeBlockSettingsFlow: Flow<CodeBlockSettings>
+
+    /**
+     * Observable flow of the user's custom [DeveloperProfile] and context.
+     */
+    val developerProfileFlow: Flow<DeveloperProfile>
 
     /**
      * Returns the currently selected tutor persona, or [TutorPersona.SENIOR_ENGINEER] if none is stored.
@@ -210,6 +216,16 @@ interface UserPreferencesStore {
      * Persists the code font size preset.
      */
     suspend fun setCodeFontSize(fontSize: CodeFontSize)
+
+    /**
+     * Returns the user's custom developer profile context snapshot.
+     */
+    suspend fun getDeveloperProfile(): DeveloperProfile
+
+    /**
+     * Persists the user's custom developer profile context.
+     */
+    suspend fun setDeveloperProfile(profile: DeveloperProfile)
 }
 
 @SingleIn(AppScope::class)
@@ -444,6 +460,36 @@ class UserPreferencesStoreImpl
                     )
                 }.distinctUntilChanged()
 
+        override val developerProfileFlow: Flow<DeveloperProfile> =
+            dataStore.data
+                .catch { exception ->
+                    if (exception is IOException) {
+                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                        emit(emptyPreferences())
+                    } else {
+                        throw exception
+                    }
+                }.map { prefs ->
+                    val enabled = prefs[KEY_DEV_PROFILE_ENABLED] ?: false
+                    val experienceLevel =
+                        prefs[KEY_DEV_PROFILE_EXPERIENCE]?.let {
+                            try {
+                                DeveloperExperienceLevel.valueOf(it)
+                            } catch (e: IllegalArgumentException) {
+                                DeveloperExperienceLevel.INTERMEDIATE
+                            }
+                        } ?: DeveloperExperienceLevel.INTERMEDIATE
+                    val primaryStack = prefs[KEY_DEV_PROFILE_STACK] ?: ""
+                    val customDirectives = prefs[KEY_DEV_PROFILE_DIRECTIVES] ?: ""
+
+                    DeveloperProfile(
+                        enabled = enabled,
+                        experienceLevel = experienceLevel,
+                        primaryStack = primaryStack,
+                        customDirectives = customDirectives,
+                    )
+                }.distinctUntilChanged()
+
         override suspend fun getSelectedPersona(): TutorPersona = selectedPersonaFlow.first()
 
         override suspend fun setSelectedPersona(persona: TutorPersona) {
@@ -539,6 +585,17 @@ class UserPreferencesStoreImpl
             }
         }
 
+        override suspend fun getDeveloperProfile(): DeveloperProfile = developerProfileFlow.first()
+
+        override suspend fun setDeveloperProfile(profile: DeveloperProfile) {
+            dataStore.edit { prefs ->
+                prefs[KEY_DEV_PROFILE_ENABLED] = profile.enabled
+                prefs[KEY_DEV_PROFILE_EXPERIENCE] = profile.experienceLevel.name
+                prefs[KEY_DEV_PROFILE_STACK] = profile.primaryStack
+                prefs[KEY_DEV_PROFILE_DIRECTIVES] = profile.customDirectives
+            }
+        }
+
         companion object {
             private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
             private val KEY_DISMISSED_COURSE_BANNER_TOPICS = stringSetPreferencesKey("dismissed_course_banner_topics")
@@ -552,5 +609,9 @@ class UserPreferencesStoreImpl
             private val KEY_SHOW_COPY_BUTTON = booleanPreferencesKey("code_show_copy_button")
             private val KEY_CODE_BLOCK_PRESET = stringPreferencesKey("code_block_preset")
             private val KEY_CODE_FONT_SIZE = stringPreferencesKey("code_font_size")
+            private val KEY_DEV_PROFILE_ENABLED = booleanPreferencesKey("dev_profile_enabled")
+            private val KEY_DEV_PROFILE_EXPERIENCE = stringPreferencesKey("dev_profile_experience")
+            private val KEY_DEV_PROFILE_STACK = stringPreferencesKey("dev_profile_stack")
+            private val KEY_DEV_PROFILE_DIRECTIVES = stringPreferencesKey("dev_profile_directives")
         }
     }
