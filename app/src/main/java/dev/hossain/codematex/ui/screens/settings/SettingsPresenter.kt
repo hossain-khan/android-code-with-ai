@@ -20,6 +20,7 @@ import dev.hossain.codematex.data.repository.ModelDownloadPreferences
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.debug.DebugScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.code.CodeBlockSettingsScreen
 import dev.hossain.codematex.ui.screens.settings.profile.DeveloperProfileSettingsScreen
@@ -144,6 +145,10 @@ class SettingsPresenter(
 
                 SettingsScreen.Event.CodeBlockSettingsClicked -> {
                     navigator.goTo(CodeBlockSettingsScreen)
+                }
+
+                SettingsScreen.Event.OpenDebugScreen -> {
+                    navigator.goTo(DebugScreen)
                 }
 
                 SettingsScreen.Event.ManageModelsClicked -> {

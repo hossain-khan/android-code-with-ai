@@ -53,6 +53,8 @@ data object SettingsScreen : ParcelableScreen {
 
         data object CodeBlockSettingsClicked : Event
 
+        data object OpenDebugScreen : Event
+
         data class WifiOnlyToggled(
             val enabled: Boolean,
         ) : Event

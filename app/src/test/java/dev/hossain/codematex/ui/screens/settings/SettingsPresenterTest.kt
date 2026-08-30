@@ -174,6 +174,19 @@ class SettingsPresenterTest {
         }
 
     @Test
+    fun `given OpenDebugScreen event then navigates to DebugScreen`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as SettingsScreen.State.Content
+                state.eventSink(SettingsScreen.Event.OpenDebugScreen)
+
+                assertThat(fakeNavigator.awaitNextScreen()).isEqualTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+            }
+        }
+
+    @Test
     fun `given ManageModelsClicked event then navigates to ModelPickerScreen`() =
         runTest {
             val presenter = createPresenter()
