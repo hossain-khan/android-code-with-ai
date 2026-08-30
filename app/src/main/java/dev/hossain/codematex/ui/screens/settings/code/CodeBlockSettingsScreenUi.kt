@@ -164,7 +164,7 @@ private fun CodeBlockSettingsContent(
                     ) {
                         StreamingSyntaxHighlightedCode(
                             code = state.previewCode,
-                            language = "kotlin",
+                            language = "typescript",
                             showLineNumbers = state.settings.showLineNumbers,
                             style = effectiveStyle,
                             languageLabel =

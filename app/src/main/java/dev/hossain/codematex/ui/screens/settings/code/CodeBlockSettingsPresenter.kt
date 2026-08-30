@@ -101,7 +101,7 @@ class CodeBlockSettingsPresenter(
 
         return CodeBlockSettingsScreen.State.Content(
             settings = settings,
-            previewCode = CodeBlockSettingsScreen.SAMPLE_KOTLIN_CODE,
+            previewCode = CodeBlockSettingsScreen.SAMPLE_CODE,
             eventSink = eventSink,
         )
     }

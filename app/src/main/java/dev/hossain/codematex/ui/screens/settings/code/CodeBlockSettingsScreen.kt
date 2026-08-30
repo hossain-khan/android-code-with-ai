@@ -23,7 +23,7 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
 
         data class Content(
             val settings: CodeBlockSettings = CodeBlockSettings(),
-            val previewCode: String = SAMPLE_KOTLIN_CODE,
+            val previewCode: String = SAMPLE_CODE,
             override val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -58,11 +58,15 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
     }
 
     @kotlinx.parcelize.IgnoredOnParcel
-    const val SAMPLE_KOTLIN_CODE: String = """// Coroutine-driven token streaming
-suspend fun streamTokens(prompt: String): Flow<String> = flow {
-    val session = llmEngine.createSession()
-    session.generateResponse(prompt).collect { token ->
-        emit(token.text)
-    }
+    const val SAMPLE_CODE: String = """interface TokenStream<T> {
+  id: string;
+  readonly latencyMs: number;
+  tokens: AsyncIterable<T>;
+}
+
+// Stream on-device LLM completions
+async function generateResponse(prompt: string): Promise<TokenStream<string>> {
+  const session = await createSession({ temperature: 0.7 });
+  return session.streamTokens(`Query: ${"$"}{prompt}`);
 }"""
 }
