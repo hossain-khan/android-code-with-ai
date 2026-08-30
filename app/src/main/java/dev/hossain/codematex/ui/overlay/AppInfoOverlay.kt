@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.overlay
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,9 +42,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.BuildConfig
+import dev.hossain.codematex.R
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -278,7 +281,7 @@ private fun AppInfoSheetContent(
                 onClick = { uriHandler.openUri("https://liquidlabs.ca/android/codematex/terms-of-service.html") },
             )
             LinkCard(
-                icon = Icons.Default.Code,
+                iconRes = R.drawable.github_logo,
                 title = "Open Source Repository (GitHub)",
                 url = "https://github.com/hossain-khan/android-code-with-ai",
                 onClick = { uriHandler.openUri("https://github.com/hossain-khan/android-code-with-ai") },
@@ -339,11 +342,12 @@ private fun PillarRow(
 
 @Composable
 private fun LinkCard(
-    icon: ImageVector,
     title: String,
     url: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    @DrawableRes iconRes: Int? = null,
 ) {
     Surface(
         shape = MaterialTheme.shapes.medium,
@@ -360,12 +364,21 @@ private fun LinkCard(
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp),
-                )
+                if (iconRes != null) {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                } else if (icon != null) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
