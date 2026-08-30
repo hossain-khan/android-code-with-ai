@@ -6,12 +6,12 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
-import dev.hossain.codematex.data.repository.FakeModelDownloadPreferences
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.system.ModelCompatibilityChecker
+import dev.hossain.codematex.ui.screens.debug.DebugScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -32,43 +32,29 @@ class ModelPickerPresenterTest {
                 DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB")
         }
 
+    private fun createPresenter(
+        navigator: FakeNavigator = FakeNavigator(ModelPickerScreen),
+        modelRepository: FakeModelRepository = FakeModelRepository(),
+        modelConfigStore: FakeModelConfigStore = FakeModelConfigStore(),
+    ): ModelPickerPresenter =
+        ModelPickerPresenter(
+            navigator = navigator,
+            screen = ModelPickerScreen,
+            modelRepository = modelRepository,
+            modelCompatibilityChecker = fakeCompatibilityChecker,
+            modelConfigStore = modelConfigStore,
+        )
+
     @Test
-    fun `given models load - emits success with model list and wifi only state`() =
+    fun `given models load - emits success with model list`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel, remoteModel))
-            val fakePrefs = FakeModelDownloadPreferences(downloadOverWifiOnly = true)
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 assertThat(state.models).containsExactly(downloadedModel, remoteModel).inOrder()
-                assertThat(state.downloadOverWifiOnly).isTrue()
                 assertThat(state.modelCompatibility.values.all { it == ModelCompatibility.Compatible }).isTrue()
-            }
-        }
-
-    @Test
-    fun `given toggle wifi only event - updates preferences and state`() =
-        runTest {
-            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences(downloadOverWifiOnly = true)
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
-
-            presenter.test {
-                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertThat(state.downloadOverWifiOnly).isTrue()
-
-                state.eventSink(ModelPickerScreen.Event.ToggleWifiOnly(false))
-
-                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertThat(updatedState.downloadOverWifiOnly).isFalse()
-                assertThat(fakePrefs.getDownloadOverWifiOnly()).isFalse()
             }
         }
 
@@ -80,11 +66,7 @@ class ModelPickerPresenterTest {
                     availableModels = listOf(downloadedModel),
                     getException = IllegalStateException("Storage error"),
                 )
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val errorState = expectMostRecentItem() as ModelPickerScreen.State.Error
@@ -103,66 +85,56 @@ class ModelPickerPresenterTest {
     fun `given back event - pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(navigator = navigator, modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Back)
+
                 navigator.awaitPop()
             }
         }
 
     @Test
-    fun `given download event - starts model download`() =
+    fun `given download event - delegates to repository`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Download(remoteModel))
+
                 assertThat(fakeRepo.downloadCalls).containsExactly(remoteModel)
             }
         }
 
     @Test
-    fun `given cancel download event - cancels model download`() =
+    fun `given cancel download event - delegates to repository`() =
         runTest {
-            val fakeRepo = FakeModelRepository(availableModels = listOf(remoteModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val downloadingModel = remoteModel.copy(downloadStatus = DownloadStatus.DOWNLOADING)
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadingModel))
+            val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                state.eventSink(ModelPickerScreen.Event.CancelDownload(remoteModel))
-                assertThat(fakeRepo.cancelDownloadCalls).containsExactly(remoteModel)
+                state.eventSink(ModelPickerScreen.Event.CancelDownload(downloadingModel))
+
+                assertThat(fakeRepo.cancelDownloadCalls).containsExactly(downloadingModel)
             }
         }
 
     @Test
-    fun `given delete event - deletes model`() =
+    fun `given delete event - delegates to repository`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Delete(downloadedModel))
+
                 assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
             }
         }
@@ -171,35 +143,31 @@ class ModelPickerPresenterTest {
     fun `given select event - selects model and pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(navigator = navigator, modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.Select(downloadedModel))
-                navigator.awaitPop()
+
                 assertThat(fakeRepo.getSelectedModel()).isEqualTo(downloadedModel)
+                navigator.awaitPop()
             }
         }
 
     @Test
-    fun `given open model config event - sets configured model and loads config`() =
+    fun `given open model config event - loads config and sets configured model`() =
         runTest {
-            val customConfig = ModelConfig(temperature = 1.2f, topK = 60, topP = 0.9f, maxTokens = 4096)
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
+            val customConfig = ModelConfig(temperature = 0.5f, topK = 30, topP = 0.85f, maxTokens = 1024)
             val fakeConfigStore = FakeModelConfigStore()
             fakeConfigStore.setConfig(downloadedModel.id, customConfig)
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo, modelConfigStore = fakeConfigStore)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 assertThat(state.configuredModel).isNull()
+                assertThat(state.configuredModelConfig).isNull()
 
                 state.eventSink(ModelPickerScreen.Event.OpenModelConfig(downloadedModel))
 
@@ -210,74 +178,69 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun `given save model config event - persists config to store and dismisses sheet`() =
+    fun `given dismiss model config event - clears configured model and config`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
             val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo, modelConfigStore = fakeConfigStore)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.OpenModelConfig(downloadedModel))
-                expectMostRecentItem()
 
-                val newConfig = ModelConfig(temperature = 0.3f, topK = 15, topP = 0.8f, maxTokens = 1024)
-                state.eventSink(ModelPickerScreen.Event.SaveModelConfig(downloadedModel, newConfig))
+                val openState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(openState.configuredModel).isEqualTo(downloadedModel)
 
-                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertThat(updatedState.configuredModel).isNull()
+                openState.eventSink(ModelPickerScreen.Event.DismissModelConfig)
+
+                val dismissedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(dismissedState.configuredModel).isNull()
+                assertThat(dismissedState.configuredModelConfig).isNull()
+            }
+        }
+
+    @Test
+    fun `given save model config event - saves config and dismisses sheet`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeConfigStore = FakeModelConfigStore()
+            val newConfig = ModelConfig(temperature = 0.9f, topK = 50, topP = 0.95f, maxTokens = 4096)
+            val presenter = createPresenter(modelRepository = fakeRepo, modelConfigStore = fakeConfigStore)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
+                state.eventSink(ModelPickerScreen.Event.OpenModelConfig(downloadedModel))
+
+                val openState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                openState.eventSink(ModelPickerScreen.Event.SaveModelConfig(downloadedModel, newConfig))
+
+                val savedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(savedState.configuredModel).isNull()
+                assertThat(savedState.configuredModelConfig).isNull()
                 assertThat(fakeConfigStore.getConfig(downloadedModel.id)).isEqualTo(newConfig)
             }
         }
 
     @Test
-    fun `given reset model config event - resets config in store and dismisses sheet`() =
+    fun `given reset model config event - resets config and dismisses sheet`() =
         runTest {
-            val customConfig = ModelConfig(temperature = 1.8f, topK = 90, topP = 0.5f, maxTokens = 512)
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
+            val customConfig = ModelConfig(temperature = 0.3f, topK = 10, topP = 0.5f, maxTokens = 512)
             val fakeConfigStore = FakeModelConfigStore()
             fakeConfigStore.setConfig(downloadedModel.id, customConfig)
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(modelRepository = fakeRepo, modelConfigStore = fakeConfigStore)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.OpenModelConfig(downloadedModel))
-                expectMostRecentItem()
 
-                state.eventSink(ModelPickerScreen.Event.ResetModelConfig(downloadedModel))
+                val openState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                openState.eventSink(ModelPickerScreen.Event.ResetModelConfig(downloadedModel))
 
-                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertThat(updatedState.configuredModel).isNull()
+                val resetState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(resetState.configuredModel).isNull()
+                assertThat(resetState.configuredModelConfig).isNull()
                 assertThat(fakeConfigStore.getConfig(downloadedModel.id)).isEqualTo(ModelConfig())
-            }
-        }
-
-    @Test
-    fun `given dismiss model config event - clears configured model state`() =
-        runTest {
-            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
-            val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
-
-            presenter.test {
-                val state = expectMostRecentItem() as ModelPickerScreen.State.Success
-                state.eventSink(ModelPickerScreen.Event.OpenModelConfig(downloadedModel))
-                expectMostRecentItem()
-
-                state.eventSink(ModelPickerScreen.Event.DismissModelConfig)
-
-                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
-                assertThat(updatedState.configuredModel).isNull()
-                assertThat(updatedState.configuredModelConfig).isNull()
             }
         }
 
@@ -285,17 +248,14 @@ class ModelPickerPresenterTest {
     fun `given open debug screen event - navigates to DebugScreen`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
-            val fakePrefs = FakeModelDownloadPreferences()
-            val fakeConfigStore = FakeModelConfigStore()
             val navigator = FakeNavigator(ModelPickerScreen)
-            val presenter =
-                ModelPickerPresenter(navigator, ModelPickerScreen, fakeRepo, fakePrefs, fakeCompatibilityChecker, fakeConfigStore)
+            val presenter = createPresenter(navigator = navigator, modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
                 state.eventSink(ModelPickerScreen.Event.OpenDebugScreen)
 
-                assertThat(navigator.awaitNextScreen()).isEqualTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+                assertThat(navigator.awaitNextScreen()).isEqualTo(DebugScreen)
             }
         }
 }
