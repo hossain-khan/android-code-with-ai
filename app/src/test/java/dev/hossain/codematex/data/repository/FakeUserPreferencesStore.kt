@@ -13,6 +13,10 @@ class FakeUserPreferencesStore(
     initialSelectedPersona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     initialDismissedTopics: Set<String> = emptySet(),
     initialOnboardingCompleted: Boolean = false,
+    initialWifiOnlyDownload: Boolean = true,
+    initialShowLineNumbers: Boolean = true,
+    initialHapticFeedback: Boolean = true,
+    initialRamEvictionMinutes: Int = 3,
 ) : UserPreferencesStore {
     override val selectedPersonaFlow: Flow<TutorPersona>
         field = MutableStateFlow(initialSelectedPersona)
@@ -22,6 +26,18 @@ class FakeUserPreferencesStore(
 
     override val isOnboardingCompletedFlow: Flow<Boolean>
         field = MutableStateFlow(initialOnboardingCompleted)
+
+    override val isWifiOnlyDownloadEnabledFlow: Flow<Boolean>
+        field = MutableStateFlow(initialWifiOnlyDownload)
+
+    override val showLineNumbersFlow: Flow<Boolean>
+        field = MutableStateFlow(initialShowLineNumbers)
+
+    override val hapticFeedbackEnabledFlow: Flow<Boolean>
+        field = MutableStateFlow(initialHapticFeedback)
+
+    override val ramEvictionMinutesFlow: Flow<Int>
+        field = MutableStateFlow(initialRamEvictionMinutes)
 
     var shouldThrowOnWrite: Boolean = false
 
@@ -48,5 +64,41 @@ class FakeUserPreferencesStore(
             throw IOException("Fake disk write failure")
         }
         isOnboardingCompletedFlow.value = completed
+    }
+
+    override suspend fun isWifiOnlyDownloadEnabled(): Boolean = isWifiOnlyDownloadEnabledFlow.value
+
+    override suspend fun setWifiOnlyDownloadEnabled(enabled: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        isWifiOnlyDownloadEnabledFlow.value = enabled
+    }
+
+    override suspend fun isShowLineNumbersEnabled(): Boolean = showLineNumbersFlow.value
+
+    override suspend fun setShowLineNumbers(show: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        showLineNumbersFlow.value = show
+    }
+
+    override suspend fun isHapticFeedbackEnabled(): Boolean = hapticFeedbackEnabledFlow.value
+
+    override suspend fun setHapticFeedbackEnabled(enabled: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        hapticFeedbackEnabledFlow.value = enabled
+    }
+
+    override suspend fun getRamEvictionMinutes(): Int = ramEvictionMinutesFlow.value
+
+    override suspend fun setRamEvictionMinutes(minutes: Int) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        ramEvictionMinutesFlow.value = minutes
     }
 }

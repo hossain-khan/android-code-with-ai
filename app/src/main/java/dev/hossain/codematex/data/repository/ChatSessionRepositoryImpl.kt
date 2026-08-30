@@ -77,6 +77,10 @@ class ChatSessionRepositoryImpl
             sessionDao.deleteSession(sessionId)
         }
 
+        override suspend fun clearAllSessions() {
+            sessionDao.clearAll()
+        }
+
         private fun SessionEntity.toChatSession(): ChatSession =
             ChatSession(
                 id = id,

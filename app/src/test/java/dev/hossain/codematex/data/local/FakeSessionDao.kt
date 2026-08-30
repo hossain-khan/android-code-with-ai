@@ -41,6 +41,15 @@ class FakeSessionDao(
         calls += "deleteMessages:$sessionId"
     }
 
+    override suspend fun deleteAllSessions() {
+        calls += "deleteAllSessions"
+        sessionsFlow.value = emptyList()
+    }
+
+    override suspend fun deleteAllMessages() {
+        calls += "deleteAllMessages"
+    }
+
     override suspend fun replaceSession(
         session: SessionEntity,
         messages: List<MessageEntity>,
