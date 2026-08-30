@@ -27,6 +27,7 @@ import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Psychology
@@ -53,6 +54,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,6 +73,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -93,6 +99,17 @@ private fun SettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
+    var showAppInfo by remember { mutableStateOf(false) }
+
+    if (showAppInfo) {
+        AppInfoBottomSheet(
+            onDismiss = { showAppInfo = false },
+            onOpenDebugScreen = {
+                showAppInfo = false
+                state.eventSink(SettingsScreen.Event.OpenDebugScreen)
+            },
+        )
+    }
 
     Scaffold(
         modifier =
@@ -112,6 +129,14 @@ private fun SettingsContent(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showAppInfo = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "About CodeMateX",
                         )
                     }
                 },

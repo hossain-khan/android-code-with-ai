@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
@@ -88,7 +87,6 @@ import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.ui.component.radialGradientScrim
-import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -232,7 +230,6 @@ private fun ModelPickerLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
-    var showAppInfo by remember { mutableStateOf(false) }
 
     val notificationPermissionState =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -240,16 +237,6 @@ private fun ModelPickerLayout(
         } else {
             null
         }
-
-    if (showAppInfo) {
-        AppInfoBottomSheet(
-            onDismiss = { showAppInfo = false },
-            onOpenDebugScreen = {
-                showAppInfo = false
-                state.eventSink(ModelPickerScreen.Event.OpenDebugScreen)
-            },
-        )
-    }
 
     state.configuredModel?.let { configuredModel ->
         ModelConfigBottomSheet(
@@ -295,14 +282,6 @@ private fun ModelPickerLayout(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { showAppInfo = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = "About CodeMateX",
                         )
                     }
                 },
