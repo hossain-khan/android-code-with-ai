@@ -13,6 +13,7 @@ import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
+import dev.hossain.codematex.ui.screens.settings.code.CodeBlockSettingsScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -141,6 +142,19 @@ class SettingsPresenterTest {
                 assertThat(updatedState.ramEvictionMinutes).isEqualTo(5)
                 assertThat(fakeUserPreferencesStore.getRamEvictionMinutes()).isEqualTo(5)
                 assertThat(updatedState.showRamEvictionDialog).isFalse()
+            }
+        }
+
+    @Test
+    fun `given CodeBlockSettingsClicked event then navigates to CodeBlockSettingsScreen`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as SettingsScreen.State.Content
+                state.eventSink(SettingsScreen.Event.CodeBlockSettingsClicked)
+
+                assertThat(fakeNavigator.awaitNextScreen()).isEqualTo(CodeBlockSettingsScreen)
             }
         }
 

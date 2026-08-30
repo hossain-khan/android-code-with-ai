@@ -1,9 +1,14 @@
 package dev.hossain.codematex.data.repository
 
+import dev.hossain.codematex.data.model.CodeBlockPreset
+import dev.hossain.codematex.data.model.CodeBlockSettings
+import dev.hossain.codematex.data.model.CodeFontSize
+import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import java.io.IOException
 
 /**
@@ -17,6 +22,11 @@ class FakeUserPreferencesStore(
     initialShowLineNumbers: Boolean = true,
     initialHapticFeedback: Boolean = true,
     initialRamEvictionMinutes: Int = 3,
+    initialCodeTheme: CodeTheme = CodeTheme.TOMORROW,
+    initialShowLanguageLabel: Boolean = true,
+    initialShowCopyButton: Boolean = true,
+    initialCodeBlockPreset: CodeBlockPreset = CodeBlockPreset.COMFORTABLE,
+    initialCodeFontSize: CodeFontSize = CodeFontSize.MEDIUM,
 ) : UserPreferencesStore {
     override val selectedPersonaFlow: Flow<TutorPersona>
         field = MutableStateFlow(initialSelectedPersona)
@@ -38,6 +48,42 @@ class FakeUserPreferencesStore(
 
     override val ramEvictionMinutesFlow: Flow<Int>
         field = MutableStateFlow(initialRamEvictionMinutes)
+
+    override val codeThemeFlow: Flow<CodeTheme>
+        field = MutableStateFlow(initialCodeTheme)
+
+    override val showLanguageLabelFlow: Flow<Boolean>
+        field = MutableStateFlow(initialShowLanguageLabel)
+
+    override val showCopyButtonFlow: Flow<Boolean>
+        field = MutableStateFlow(initialShowCopyButton)
+
+    override val codeBlockPresetFlow: Flow<CodeBlockPreset>
+        field = MutableStateFlow(initialCodeBlockPreset)
+
+    override val codeFontSizeFlow: Flow<CodeFontSize>
+        field = MutableStateFlow(initialCodeFontSize)
+
+    override val codeBlockSettingsFlow: Flow<CodeBlockSettings>
+        get() =
+            combine(
+                codeThemeFlow,
+                combine(showLineNumbersFlow, showLanguageLabelFlow, showCopyButtonFlow) { lines, lang, copy ->
+                    Triple(lines, lang, copy)
+                },
+                combine(codeBlockPresetFlow, codeFontSizeFlow) { preset, font ->
+                    preset to font
+                },
+            ) { theme, (lines, lang, copy), (preset, font) ->
+                CodeBlockSettings(
+                    theme = theme,
+                    showLineNumbers = lines,
+                    showLanguageLabel = lang,
+                    showCopyButton = copy,
+                    preset = preset,
+                    fontSize = font,
+                )
+            }
 
     var shouldThrowOnWrite: Boolean = false
 
@@ -100,5 +146,50 @@ class FakeUserPreferencesStore(
             throw IOException("Fake disk write failure")
         }
         ramEvictionMinutesFlow.value = minutes
+    }
+
+    override suspend fun getCodeTheme(): CodeTheme = codeThemeFlow.value
+
+    override suspend fun setCodeTheme(theme: CodeTheme) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        codeThemeFlow.value = theme
+    }
+
+    override suspend fun isShowLanguageLabelEnabled(): Boolean = showLanguageLabelFlow.value
+
+    override suspend fun setShowLanguageLabel(show: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        showLanguageLabelFlow.value = show
+    }
+
+    override suspend fun isShowCopyButtonEnabled(): Boolean = showCopyButtonFlow.value
+
+    override suspend fun setShowCopyButton(show: Boolean) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        showCopyButtonFlow.value = show
+    }
+
+    override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.value
+
+    override suspend fun setCodeBlockPreset(preset: CodeBlockPreset) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        codeBlockPresetFlow.value = preset
+    }
+
+    override suspend fun getCodeFontSize(): CodeFontSize = codeFontSizeFlow.value
+
+    override suspend fun setCodeFontSize(fontSize: CodeFontSize) {
+        if (shouldThrowOnWrite) {
+            throw IOException("Fake disk write failure")
+        }
+        codeFontSizeFlow.value = fontSize
     }
 }

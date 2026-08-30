@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
+import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -22,6 +23,7 @@ data object SettingsScreen : ParcelableScreen {
             val selectedPersona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
             val isWifiOnlyDownload: Boolean = true,
             val showLineNumbers: Boolean = true,
+            val codeTheme: CodeTheme = CodeTheme.TOMORROW,
             val hapticFeedbackEnabled: Boolean = true,
             val ramEvictionMinutes: Int = 3,
             val storageUsedBytes: Long = 0L,
@@ -44,6 +46,8 @@ data object SettingsScreen : ParcelableScreen {
         data class ShowPersonaDialog(
             val show: Boolean,
         ) : Event
+
+        data object CodeBlockSettingsClicked : Event
 
         data class WifiOnlyToggled(
             val enabled: Boolean,
