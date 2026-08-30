@@ -165,9 +165,12 @@ private fun HomeLayout(
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) }) {
                         Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Guided Lessons")
                     }
+                    /*
+                    // DISABLED - Not enough space to fit more than 3 items.
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ManageModels) }) {
                         Icon(Icons.Default.Memory, contentDescription = "Manage Models")
                     }
+                     */
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
                     }
