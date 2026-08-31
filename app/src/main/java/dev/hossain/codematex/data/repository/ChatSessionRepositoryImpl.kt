@@ -14,6 +14,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
+import timber.log.Timber
 import java.util.UUID
 import javax.inject.Inject
 
@@ -42,6 +43,7 @@ class ChatSessionRepositoryImpl
             sessionId: String?,
             modelUsed: String?,
         ): String {
+            val startTime = System.currentTimeMillis()
             val effectiveSessionId = sessionId ?: UUID.randomUUID().toString()
             val title =
                 messages
@@ -50,8 +52,6 @@ class ChatSessionRepositoryImpl
                     ?.content
                     ?.take(TITLE_MAX_LENGTH) ?: "Untitled"
 
-            // Summary generation performs inference and must not run inside the database
-            // transaction.
             val summary = summaryGenerator.generateSummary(messages)
 
             sessionDao.replaceSession(
@@ -67,6 +67,17 @@ class ChatSessionRepositoryImpl
                 messages.mapIndexed { index, msg ->
                     msg.toMessageEntity(effectiveSessionId, index)
                 },
+            )
+
+            val elapsedMs = System.currentTimeMillis() - startTime
+            Timber.d(
+                "ChatSessionRepository: Saved session '%s' in %d ms (topic=%s, messages=%d, title='%s', summary='%s')",
+                effectiveSessionId,
+                elapsedMs,
+                topic.name,
+                messages.size,
+                title,
+                summary,
             )
 
             return effectiveSessionId
