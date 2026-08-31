@@ -138,10 +138,20 @@ class DefaultChatInferenceOrchestrator
             try {
                 // Pre-flight memory headroom check:
                 // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
+                // If the model is ALREADY resident in memory, skip this check because LlmEngine reuses the compiled
+                // in-memory engine (requiring 0 MB of additional RAM). Running the check when already resident would
+                // result in a false-positive OOM error since the loaded model already occupies RAM (fixes #285).
                 // On-device LLMs allocate 1.5GB–3.5GB of physical RAM across native C++ and GPU buffers.
-                // Failing to validate available RAM before loading can trigger kernel Low Memory Killer (LMK) kills.
+                // Failing to validate available RAM before fresh loading can trigger kernel Low Memory Killer (LMK) kills.
                 // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
-                if (model.localPath != null && model.localPath != DEV_STUB_MODEL_PATH) {
+                val modelPath = model.localPath
+                val isAlreadyLoaded = modelPath != null && llmEngine.isModelLoaded(modelPath)
+                if (isAlreadyLoaded) {
+                    Timber.d(
+                        "ChatInferenceOrchestrator [IN_MEMORY_REUSE]: Model at '%s' is already loaded in RAM. Bypassing pre-flight headroom check.",
+                        modelPath,
+                    )
+                } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
                     val headroomResult = systemMemoryManager.checkMemoryHeadroom()
                     if (headroomResult is MemoryHeadroomResult.Constrained) {
                         Timber.w(

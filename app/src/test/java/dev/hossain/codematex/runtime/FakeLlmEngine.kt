@@ -78,11 +78,15 @@ class FakeLlmEngine : LlmEngine {
     override fun getActiveBackend(): LlmEngine.Backend? = LlmEngine.Backend.CPU
 
     var isInitializedValue: Boolean = true
+    var loadedModelPath: String? = null
 
     override fun isInitialized(): Boolean = isInitializedValue
+
+    override fun isModelLoaded(modelPath: String): Boolean = isInitializedValue && (loadedModelPath == modelPath)
 
     override fun cleanup() {
         cleanupCalls++
         isInitializedValue = false
+        loadedModelPath = null
     }
 }

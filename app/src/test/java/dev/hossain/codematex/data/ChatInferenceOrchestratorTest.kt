@@ -246,4 +246,34 @@ class ChatInferenceOrchestratorTest {
             assertThat(result.exceptionOrNull()).isInstanceOf(LowMemoryException::class.java)
             assertThat(fakeEngine.initializeCalls).isEqualTo(0)
         }
+
+    @Test
+    fun `initialize succeeds when model is already loaded in memory even if available memory is low`() =
+        runTest {
+            val constrainedMemoryManager =
+                FakeSystemMemoryManager(
+                    headroomResult =
+                        MemoryHeadroomResult.Constrained(
+                            availMemBytes = 250_000_000L,
+                            requiredBytes = 1_200_000_000L,
+                            isLowMemory = false,
+                        ),
+                )
+
+            // Mark model as already loaded in memory
+            fakeEngine.loadedModelPath = "/models/gemma.task"
+
+            val result =
+                createOrchestrator(
+                    memoryManager = constrainedMemoryManager,
+                ).initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = emptyList(),
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            assertThat(fakeEngine.initializeCalls).isEqualTo(1)
+        }
 }
