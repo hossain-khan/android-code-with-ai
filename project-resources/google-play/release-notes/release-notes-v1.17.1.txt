@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.17.1:
+• Code Block Customization: Fixed language badge and copy button visibility toggles in settings and chat.
+• Chat Starters: Made starter prompts and guided courses vertically scrollable on smaller screens.
+• Safe Persona Switching: Locked tutor persona selector while AI model is initializing or streaming tokens.
+• Engine & Library Upgrades: Updated on-device LiteRT-LM runtime and syntax highlighter libraries.
