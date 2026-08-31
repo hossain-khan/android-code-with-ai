@@ -61,6 +61,8 @@ class LlmEngineImpl(
 
     override fun isInitialized(): Boolean = engine != null
 
+    override fun isModelLoaded(modelPath: String): Boolean = engine != null && currentModelPath == modelPath
+
     /**
      * Initializes the LiteRT LLM engine.
      *

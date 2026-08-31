@@ -69,6 +69,13 @@ interface LlmEngine {
     fun isInitialized(): Boolean = getActiveBackend() != null
 
     /**
+     * Returns `true` if the specific model at [modelPath] is currently loaded in memory.
+     * When `true`, subsequent initializations can reuse the compiled in-memory engine without
+     * allocating additional device RAM.
+     */
+    fun isModelLoaded(modelPath: String): Boolean = isInitialized()
+
+    /**
      * Closes active conversations and releases native C++ memory allocations and engine handles.
      */
     fun cleanup()

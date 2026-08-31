@@ -105,6 +105,33 @@ class LlmEngineImplTest {
             assertThat(systemContent?.text).isEqualTo("Second prompt")
         }
 
+    @Test
+    fun `isModelLoaded returns true only when initialized with matching model path`() =
+        runEngineTest {
+            assertThat(engine.isModelLoaded("/data/model.bin")).isFalse()
+
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            assertThat(engine.isModelLoaded("/data/model.bin")).isTrue()
+            assertThat(engine.isModelLoaded("/data/other.bin")).isFalse()
+
+            engine.cleanup()
+            assertThat(engine.isModelLoaded("/data/model.bin")).isFalse()
+        }
+
     @Test(expected = IllegalStateException::class)
     fun `runInference throws IllegalStateException when engine is not initialized`() =
         runEngineTest {

@@ -68,7 +68,7 @@ class ChatPresenter(
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
-        var activeModel by rememberRetained { mutableStateOf<AiModel?>(null) }
+        var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var dismissedCourseBannerTopics by rememberRetained { mutableStateOf<Set<String>>(emptySet()) }
@@ -84,10 +84,6 @@ class ChatPresenter(
         }
 
         LaunchedEffect(Unit) {
-            val initial = modelRepository.getSelectedModel()
-            if (initial != null) {
-                activeModel = initial
-            }
             launch {
                 modelRepository.getAvailableModels().collect { models ->
                     availableModels = models
