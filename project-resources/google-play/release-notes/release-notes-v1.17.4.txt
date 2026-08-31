@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.17.4:
+• Blazing Fast Multi-Turn Chat: Instant conversation persistence (< 20ms) completely eliminates background inference stalls and mutex contention during active chat.
+• Improved Lesson Navigation: Advancing through sequential course lessons now maintains a clean backstack so Up/Back returns directly to the course catalog.
+• Native Lifecycle Observability: Proactive model unloading when switching LLMs and enhanced runtime diagnostics.
