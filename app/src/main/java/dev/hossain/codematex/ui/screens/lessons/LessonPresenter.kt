@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
+import com.slack.circuit.runtime.popUntil
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
@@ -75,7 +76,10 @@ class LessonPresenter(
                 }
 
                 LessonScreen.Event.NextLesson -> {
-                    nextLessonId(course, lesson?.id)?.let { navigator.goTo(LessonScreen(it)) }
+                    nextLessonId(course, lesson?.id)?.let { nextId ->
+                        navigator.popUntil { it !is LessonScreen }
+                        navigator.goTo(LessonScreen(nextId))
+                    }
                 }
 
                 LessonScreen.Event.AskAi -> {

@@ -77,6 +77,31 @@ class LessonPresenterTest {
         }
 
     @Test
+    fun `given next lesson event with catalog backstack - pops current lesson before advancing`() =
+        runTest {
+            val navigator =
+                FakeNavigator(
+                    LessonCatalogScreen,
+                    LessonScreen("kotlin-hello-world"),
+                )
+
+            val presenter =
+                LessonPresenter(
+                    navigator = navigator,
+                    screen = LessonScreen("kotlin-hello-world"),
+                    learningRepository = fakeLearningRepository,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                state.eventSink(LessonScreen.Event.NextLesson)
+
+                navigator.awaitPop()
+                assertThat(navigator.awaitNextScreen()).isEqualTo(LessonScreen("kotlin-variables"))
+            }
+        }
+
+    @Test
     fun `given ask ai event - navigates to ChatScreen with saveToHistory false and initialPrompt`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
