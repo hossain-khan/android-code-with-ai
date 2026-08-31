@@ -68,6 +68,7 @@ import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCode
 import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCodeDefaults
+import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -169,15 +170,15 @@ private fun CodeBlockSettingsContent(
                             style = effectiveStyle,
                             languageLabel =
                                 if (state.settings.showLanguageLabel) {
-                                    null // Uses Default Language Label
+                                    { SyntaxHighlightedCodeDefaults.LanguageLabel("typescript") }
                                 } else {
-                                    { }
+                                    null
                                 },
                             copyButton =
                                 if (state.settings.showCopyButton) {
-                                    null // Uses Default Copy Button
+                                    { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
                                 } else {
-                                    { }
+                                    null
                                 },
                             modifier = Modifier.fillMaxWidth(),
                         )

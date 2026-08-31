@@ -23,6 +23,7 @@ import dev.hossain.highlight.ui.CodeBlockStyle
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.hossain.highlight.ui.StreamingSyntaxHighlightedCode
+import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.hossain.highlight.ui.rememberTomorrowLightTheme
 import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import org.intellij.markdown.MarkdownTokenTypes
@@ -152,22 +153,24 @@ private fun ChatMarkdownCodeFence(
             )
         }
 
+    val resolvedLanguage = language.ifEmpty { "text" }
+
     StreamingSyntaxHighlightedCode(
         code = code,
-        language = language.ifEmpty { "text" },
+        language = resolvedLanguage,
         showLineNumbers = settings.showLineNumbers,
         style = effectiveStyle,
         languageLabel =
-            if (settings.showLanguageLabel) {
-                null
+            if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
+                { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
             } else {
-                { }
+                null
             },
         copyButton =
             if (settings.showCopyButton) {
-                null
+                { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
             } else {
-                { }
+                null
             },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     )
