@@ -1,6 +1,7 @@
 package dev.hossain.codematex.ui.screens.aimodels
 
 import android.Manifest
+import android.content.Context
 import android.os.Build
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Tune
@@ -68,11 +70,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.window.core.layout.WindowSizeClass
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -93,6 +97,7 @@ import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
+import timber.log.Timber
 import java.text.DecimalFormat
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -231,12 +236,95 @@ private fun ModelPickerLayout(
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE) }
+    var pendingDownloadModel by remember { mutableStateOf<AiModel?>(null) }
+    var showPermissionRationale by remember { mutableStateOf(false) }
+
     val notificationPermissionState =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
         } else {
             null
         }
+
+    val triggerDownload: (AiModel) -> Unit = { model ->
+        state.eventSink(ModelPickerScreen.Event.Download(model))
+    }
+
+    if (showPermissionRationale && pendingDownloadModel != null) {
+        val modelToDownload = pendingDownloadModel!!
+        AlertDialog(
+            onDismissRequest = {
+                Timber.d("ModelPicker: Notification rationale dismissed, proceeding with download of ${modelToDownload.displayName}")
+                showPermissionRationale = false
+                pendingDownloadModel = null
+                prefs.edit { putBoolean("has_prompted_notifications", true) }
+                triggerDownload(modelToDownload)
+            },
+            icon = {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(48.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.NotificationsActive,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
+                    }
+                }
+            },
+            title = {
+                Text(
+                    text = "Stay Updated on Downloads",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            text = {
+                Text(
+                    text =
+                        "CodeMateX downloads multi-gigabyte on-device AI models " +
+                            "(${modelToDownload.formattedSize}) to run locally on your phone.\n\n" +
+                            "Enable notifications to track real-time download progress and get alerted when your offline AI tutor is ready.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        Timber.d("ModelPicker: User agreed to enable notifications for ${modelToDownload.displayName}")
+                        showPermissionRationale = false
+                        pendingDownloadModel = null
+                        prefs.edit { putBoolean("has_prompted_notifications", true) }
+                        notificationPermissionState?.launchPermissionRequest()
+                        triggerDownload(modelToDownload)
+                    },
+                ) {
+                    Text("Enable Notifications")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        Timber.d("ModelPicker: User opted out of notifications for ${modelToDownload.displayName}")
+                        showPermissionRationale = false
+                        pendingDownloadModel = null
+                        prefs.edit { putBoolean("has_prompted_notifications", true) }
+                        triggerDownload(modelToDownload)
+                    },
+                ) {
+                    Text("Not Now")
+                }
+            },
+        )
+    }
 
     state.configuredModel?.let { configuredModel ->
         ModelConfigBottomSheet(
@@ -322,12 +410,24 @@ private fun ModelPickerLayout(
                         compatibility = compatibility,
                         onDownload = {
                             if (isCompatible) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                                    notificationPermissionState?.status?.isGranted == false
-                                ) {
-                                    notificationPermissionState.launchPermissionRequest()
+                                val hasPrompted = prefs.getBoolean("has_prompted_notifications", false)
+                                val needsRationale =
+                                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                        notificationPermissionState?.status?.isGranted == false &&
+                                        !hasPrompted
+
+                                if (needsRationale) {
+                                    Timber.d("ModelPicker: Showing in-context notification permission rationale for ${model.displayName}")
+                                    pendingDownloadModel = model
+                                    showPermissionRationale = true
+                                } else {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                                        notificationPermissionState?.status?.isGranted == false
+                                    ) {
+                                        notificationPermissionState.launchPermissionRequest()
+                                    }
+                                    triggerDownload(model)
                                 }
-                                state.eventSink(ModelPickerScreen.Event.Download(model))
                             }
                         },
                         onCancel = {
