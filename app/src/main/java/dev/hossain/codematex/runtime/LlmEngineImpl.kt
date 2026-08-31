@@ -83,11 +83,25 @@ class LlmEngineImpl(
         // If the model is already loaded in memory, reuse the compiled engine and only reset the conversation.
         // This avoids reloading multi-gigabyte model weights from disk and recompiling delegates (~5ms vs ~5000ms).
         if (engine != null && currentModelPath == modelPath) {
-            Timber.d("LlmEngineImpl: Reusing already loaded in-memory engine for modelPath=$modelPath")
+            Timber.d("LlmEngineImpl [IN_MEMORY_REUSE]: Reusing already loaded in-memory engine for modelPath=$modelPath")
             currentSystemInstruction = systemInstruction
             currentConfig = config
             resetConversationLocked(systemInstruction, config)
             return@withLock
+        }
+
+        if (engine != null) {
+            Timber.d(
+                "LlmEngineImpl [MODEL_SWITCH]: Switching model from '%s' to '%s'. Cleaning up previous native engine from RAM...",
+                currentModelPath,
+                modelPath,
+            )
+        } else {
+            Timber.d(
+                "LlmEngineImpl [INIT]: Initializing model at '%s' with preferredBackend=%s",
+                modelPath,
+                backend,
+            )
         }
 
         cleanup()
@@ -106,6 +120,11 @@ class LlmEngineImpl(
         engine = session.engine
         conversation = session.conversation
         activeBackend = session.backend
+        Timber.d(
+            "LlmEngineImpl [INIT_COMPLETE]: Successfully initialized model '%s' with activeBackend=%s",
+            modelPath,
+            activeBackend,
+        )
     }
 
     override suspend fun runInference(
@@ -371,10 +390,23 @@ class LlmEngineImpl(
     }
 
     override fun cleanup() {
+        val hadEngine = engine != null
+        val hadConversation = conversation != null
+        val previousPath = currentModelPath
+        val previousBackend = activeBackend
+
+        if (hadEngine || hadConversation) {
+            Timber.d(
+                "LlmEngineImpl [CLEANUP]: Freeing native engine & conversation resources from RAM (previousModel='%s', backend=%s)",
+                previousPath,
+                previousBackend,
+            )
+        }
         closeQuietly(conversation)
         closeQuietly(engine)
         conversation = null
         engine = null
+        currentModelPath = ""
         activeBackend = null
         activeCallback = null
     }
@@ -384,8 +416,10 @@ class LlmEngineImpl(
      * mask the original failure that triggered it.
      */
     private fun closeQuietly(conversation: InferenceConversation?) {
+        if (conversation == null) return
         try {
-            conversation?.close()
+            Timber.d("LlmEngineImpl [NATIVE_FREE]: Closing native InferenceConversation and freeing context/KV-cache")
+            conversation.close()
         } catch (e: Exception) {
             Timber.w(e, "LlmEngineImpl: Error closing conversation")
         }
@@ -396,8 +430,10 @@ class LlmEngineImpl(
      * mask the original failure that triggered it.
      */
     private fun closeQuietly(engine: InferenceEngine?) {
+        if (engine == null) return
         try {
-            engine?.close()
+            Timber.d("LlmEngineImpl [NATIVE_FREE]: Closing native InferenceEngine and unmapping model weights")
+            engine.close()
         } catch (e: Exception) {
             Timber.w(e, "LlmEngineImpl: Error closing engine")
         }

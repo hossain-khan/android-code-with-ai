@@ -152,6 +152,15 @@ class DefaultChatInferenceOrchestrator
                         modelPath,
                     )
                 } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
+                    // If a different model was currently loaded in RAM, clean it up before checking headroom
+                    // so its memory is returned to the OS before evaluating headroom for the new model.
+                    if (llmEngine.isInitialized()) {
+                        Timber.d(
+                            "ChatInferenceOrchestrator [MODEL_SWITCH]: Releasing previously loaded model from RAM before memory headroom check for '%s'",
+                            model.name,
+                        )
+                        llmEngine.cleanup()
+                    }
                     val headroomResult = systemMemoryManager.checkMemoryHeadroom()
                     if (headroomResult is MemoryHeadroomResult.Constrained) {
                         Timber.w(

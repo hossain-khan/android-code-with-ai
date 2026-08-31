@@ -276,4 +276,23 @@ class ChatInferenceOrchestratorTest {
             assertThat(result.isSuccess).isTrue()
             assertThat(fakeEngine.initializeCalls).isEqualTo(1)
         }
+
+    @Test
+    fun `initialize releases previously loaded model from memory before checking headroom when switching models`() =
+        runTest {
+            fakeEngine.isInitializedValue = true
+            fakeEngine.loadedModelPath = "/models/old_model.litertlm"
+
+            val result =
+                createOrchestrator().initialize(
+                    model = testModel(localPath = "/models/new_model.litertlm"),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = emptyList(),
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+            assertThat(fakeEngine.initializeCalls).isEqualTo(1)
+        }
 }
