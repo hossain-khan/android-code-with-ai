@@ -53,13 +53,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -67,8 +70,10 @@ import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
 import dev.hossain.codematex.ui.theme.visualInfo
+import dev.hossain.highlight.ui.CodeBlockStyle
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.SyntaxHighlightedCode
+import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -369,23 +374,50 @@ private fun LessonBlockContent(
     block: LessonBlock,
     visualInfo: TopicVisualInfo,
 ) {
+    val settings = LocalCodeBlockSettings.current
+    val baseStyle =
+        if (settings.preset == CodeBlockPreset.COMPACT) {
+            CodeBlockStyle.Compact
+        } else {
+            CodeBlockStyle.Default
+        }
+    val effectiveStyle =
+        remember(baseStyle, settings.fontSize) {
+            baseStyle.copy(
+                textStyle =
+                    baseStyle.textStyle.copy(
+                        fontSize = settings.fontSize.sizeSp.sp,
+                        lineHeight = (settings.fontSize.sizeSp * 1.35f).sp,
+                    ),
+            )
+        }
+
     when (block) {
         is LessonBlock.Markdown -> {
             MarkdownMessage(block.content)
         }
 
         is LessonBlock.Code -> {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-            ) {
-                SyntaxHighlightedCode(
-                    code = block.code,
-                    language = block.language,
-                    showLineNumbers = true,
-                    modifier = Modifier.padding(12.dp),
-                )
-            }
+            val resolvedLanguage = block.language.ifEmpty { "text" }
+            SyntaxHighlightedCode(
+                code = block.code,
+                language = resolvedLanguage,
+                showLineNumbers = settings.showLineNumbers,
+                style = effectiveStyle,
+                languageLabel =
+                    if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
+                        { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
+                    } else {
+                        null
+                    },
+                copyButton =
+                    if (settings.showCopyButton) {
+                        { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
+                    } else {
+                        null
+                    },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            )
         }
 
         is LessonBlock.Quiz -> {
