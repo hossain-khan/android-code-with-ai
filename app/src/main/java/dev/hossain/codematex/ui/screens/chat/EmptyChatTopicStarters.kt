@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
@@ -48,11 +50,14 @@ internal fun EmptyChatTopicStarters(
     course: LearningCourse? = null,
     onStartCourse: ((String) -> Unit)? = null,
 ) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
