@@ -48,6 +48,7 @@ fun TutorPersonaBottomSheet(
     onPersonaSelected: (TutorPersona) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     @Suppress("DEPRECATION")
     val sheetState =
@@ -71,6 +72,7 @@ fun TutorPersonaBottomSheet(
                     onDismiss()
                 }
             },
+            enabled = enabled,
         )
     }
 }
@@ -80,6 +82,7 @@ private fun TutorPersonaSheetContent(
     selectedPersona: TutorPersona,
     onPersonaSelected: (TutorPersona) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     Column(
         modifier =
@@ -132,7 +135,7 @@ private fun TutorPersonaSheetContent(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable {
+                            .clickable(enabled = enabled) {
                                 onPersonaSelected(persona)
                             },
                     shape = MaterialTheme.shapes.large,
