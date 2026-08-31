@@ -23,7 +23,7 @@ This document contains the exact declaration details and policy justifications r
 | **Why can't WorkManager standard background jobs be used?** | *See Justification Statement below* |
 
 ### Policy Justification Statement (Copy & Paste to Play Console):
-> *"CodeMateX downloads large on-device LLM model weights (2.6GB–3.7GB) upon explicit user request. A foreground service with a persistent, perceptible progress notification is required to prevent the OS from terminating multi-minute downloads when the app is backgrounded or in Doze mode, while providing the user with real-time download progress and cancellation controls in the notification shade."*
+> *"CodeMateX downloads large on-device LLM model weights (1.0GB–3.7GB) upon explicit user request. A foreground service with a persistent, perceptible progress notification is required to prevent the OS from terminating multi-minute downloads when the app is backgrounded or in Doze mode, while providing the user with real-time download progress and cancellation controls in the notification shade."*
 
 ---
 
