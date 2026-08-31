@@ -259,6 +259,11 @@ class ChatPresenter(
                                                             sessionId = currentSessionId,
                                                             modelUsed = modelName,
                                                         )
+                                                    Timber.d(
+                                                        "ChatPresenter: Message history saved for session '%s' (%d messages)",
+                                                        currentSessionId,
+                                                        messages.size,
+                                                    )
                                                     saveErrorMessage = null
                                                 } catch (e: CancellationException) {
                                                     throw e

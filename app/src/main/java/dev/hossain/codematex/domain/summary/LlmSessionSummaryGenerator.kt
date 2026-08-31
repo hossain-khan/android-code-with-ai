@@ -9,13 +9,13 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @SingleIn(AppScope::class)
-@ContributesBinding(AppScope::class)
 class LlmSessionSummaryGenerator
     @Inject
     constructor(
         private val llmEngine: LlmEngine,
     ) : SessionSummaryGenerator {
         override suspend fun generateSummary(messages: List<ChatMessage>): String {
+            val startTime = System.currentTimeMillis()
             val conversationText =
                 messages
                     .joinToString("\n") { msg ->
@@ -27,8 +27,15 @@ class LlmSessionSummaryGenerator
                     }.take(MAX_CONVERSATION_LENGTH)
 
             if (conversationText.isBlank()) {
+                Timber.d("LlmSessionSummaryGenerator: Empty or non-text messages list, returning fallback summary")
                 return "Empty session"
             }
+
+            Timber.d(
+                "LlmSessionSummaryGenerator: Starting on-device LLM summary inference for %d messages (transcript length=%d)",
+                messages.size,
+                conversationText.length,
+            )
 
             var summary = ""
             try {
@@ -39,8 +46,19 @@ class LlmSessionSummaryGenerator
                         summary += token
                     }
                 }
+                val durationMs = System.currentTimeMillis() - startTime
+                Timber.d(
+                    "LlmSessionSummaryGenerator: LLM summary generated in %d ms: '%s'",
+                    durationMs,
+                    summary.trim(),
+                )
             } catch (e: Exception) {
-                Timber.w(e, "LlmSessionSummaryGenerator: Summary generation failed, using fallback")
+                val durationMs = System.currentTimeMillis() - startTime
+                Timber.w(
+                    e,
+                    "LlmSessionSummaryGenerator: LLM summary generation failed after %d ms, using fallback",
+                    durationMs,
+                )
             }
 
             return summary.ifBlank { "Coding session about ${messages.size} messages" }
