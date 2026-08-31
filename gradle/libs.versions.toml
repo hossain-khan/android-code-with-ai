@@ -11,7 +11,7 @@ activityCompose = "1.13.0"
 agp = "9.3.2"
 circuit = "0.36.1"
 composeBom = "2026.08.00"
-material3 = "1.5.0-alpha26"
+material3 = "1.5.0-alpha27"
 material3Adaptive = "1.3.0"
 androidxDatastore = "1.2.1"
 coreKtx = "1.19.0"
@@ -19,7 +19,7 @@ coreKtx = "1.19.0"
 kotlinxCoroutines = "1.11.0"
 espressoCore = "3.7.0"
 googleFonts = "1.12.0"
-accompanist = "0.37.0"
+accompanist = "0.37.3"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 truth = "1.4.5"
@@ -49,10 +49,14 @@ metro = "1.4.2"
 androidxWork = "2.11.2"
 
 # On-device AI
-litertlm = "0.15.0"
-markdownRenderer = "0.44.0"
-composeHighlight = "0.34.0"
-room = "2.7.2"
+litertlm = "0.16.1"
+
+# https://github.com/mikepenz/multiplatform-markdown-renderer
+markdownRenderer = "0.45.0"
+
+# https://hossain-khan.github.io/android-compose-highlight/
+composeHighlight = "0.35.0"
+room = "2.8.4"
 timber = "5.0.1"
 
 # Kover - Kotlin code coverage
