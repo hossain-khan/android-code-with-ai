@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.17.3:
+• Seamless Chat Navigation: Fixed memory false-positive checks so switching between chat and course lessons instantly reuses your loaded AI model.
+• In-Context Permissions: Notification permission rationale now appears directly when downloading a model instead of home screen entry.
+• Performance & Stability: Enhanced on-device runtime lifecycle management and download reliability.
