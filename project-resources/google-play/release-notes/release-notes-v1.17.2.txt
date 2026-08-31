@@ -1,0 +1,3 @@
+What's New in CodeMateX 1.17.2:
+• Lesson Code Display: Course lesson code blocks now fully respect your custom Code Block Display settings (syntax themes, font size, density preset, line numbers, and language/copy toggles).
+• Performance & Stability: General UI rendering improvements and optimizations across guided lessons and chat.
