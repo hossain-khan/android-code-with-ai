@@ -68,6 +68,8 @@ class ChatPresenter(
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
+        // Initialize activeModel directly on frame 0 to prevent the asynchronous null -> initial -> selected
+        // mutation cycle that triggers unnecessary LaunchedEffect cancellations and in-flight restarts (fixes #285).
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
