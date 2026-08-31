@@ -120,6 +120,8 @@ private fun ChatLayout(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    val isPersonaSelectionEnabled = !state.isPreparing && !state.isGenerating
+
     if (showPersonaPicker) {
         TutorPersonaBottomSheet(
             selectedPersona = state.persona,
@@ -127,6 +129,7 @@ private fun ChatLayout(
                 state.eventSink(ChatScreen.Event.SelectPersona(persona))
             },
             onDismiss = { showPersonaPicker = false },
+            enabled = isPersonaSelectionEnabled,
         )
     }
 
@@ -163,12 +166,25 @@ private fun ChatLayout(
                 actions = {
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                        color =
+                            if (isPersonaSelectionEnabled) {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                            },
+                        border =
+                            BorderStroke(
+                                1.dp,
+                                if (isPersonaSelectionEnabled) {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                                },
+                            ),
                         modifier =
                             Modifier
                                 .padding(end = 8.dp)
-                                .clickable { showPersonaPicker = true },
+                                .clickable(enabled = isPersonaSelectionEnabled) { showPersonaPicker = true },
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -183,7 +199,12 @@ private fun ChatLayout(
                                 text = state.persona.shortName,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color =
+                                    if (isPersonaSelectionEnabled) {
+                                        MaterialTheme.colorScheme.onSurface
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    },
                             )
                         }
                     }
