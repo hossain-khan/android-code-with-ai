@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.17.5:
+• Fix Follow-Up Messages After Stopping: Fixed an on-device runtime issue where interrupting an active AI response prevented follow-up questions from generating output.
+• Multi-Turn Chat Performance: Streamlined native conversation lifecycle management for ultra-fast response times.
+• Stability Improvements: Enhanced error handling across on-device inference sessions.
