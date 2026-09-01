@@ -1143,6 +1143,110 @@ class LlmEngineImplTest {
             assertThat(fakeConversation.closed).isFalse()
         }
 
+    @Test
+    fun `stop marks conversation cancelled and recreates conversation on next runInference`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            // User stops generation mid-flight
+            engine.stop()
+            assertThat(fakeConversation.cancelled).isTrue()
+
+            // Subsequent inference should create a fresh conversation from the loaded engine
+            val emittedTokens = mutableListOf<String>()
+            val job =
+                launch {
+                    engine.runInference("Follow-up prompt") { token, done ->
+                        if (token.isNotEmpty()) emittedTokens.add(token)
+                    }
+                }
+
+            // A new conversation should have been created from the loaded engine
+            assertThat(fakeEngine.createdConversations).hasSize(1)
+            val newConversation = fakeEngine.createdConversations.single()
+            assertThat(newConversation.sentMessages).hasSize(1)
+            assertThat(newConversation.sentMessages.single().input).isEqualTo("Follow-up prompt")
+
+            newConversation.sentMessages
+                .single()
+                .callback
+                .onMessage(textMessage("Response"))
+            newConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            job.join()
+
+            assertThat(emittedTokens).containsExactly("Response")
+            assertThat(fakeConversation.closed).isTrue()
+        }
+
+    @Test
+    fun `cancelled inference callback recreates conversation on next runInference`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job1 =
+                launch {
+                    engine.runInference("First prompt") { _, _ -> }
+                }
+
+            fakeConversation.sentMessages.single().callback.onError(
+                java.util.concurrent.CancellationException("Task cancelled"),
+            )
+            job1.join()
+
+            // Subsequent inference should create a fresh conversation
+            val emittedTokens = mutableListOf<String>()
+            val job2 =
+                launch {
+                    engine.runInference("Second prompt") { token, done ->
+                        if (token.isNotEmpty()) emittedTokens.add(token)
+                    }
+                }
+
+            assertThat(fakeEngine.createdConversations).hasSize(1)
+            val newConversation = fakeEngine.createdConversations.single()
+            assertThat(newConversation.sentMessages.single().input).isEqualTo("Second prompt")
+
+            newConversation.sentMessages
+                .single()
+                .callback
+                .onMessage(textMessage("Success"))
+            newConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            job2.join()
+
+            assertThat(emittedTokens).containsExactly("Success")
+            assertThat(fakeConversation.closed).isTrue()
+        }
+
     private fun textMessage(text: String): com.google.ai.edge.litertlm.Message {
         val content =
             com.google.ai.edge.litertlm.Content

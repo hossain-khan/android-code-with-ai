@@ -49,6 +49,9 @@ class LlmEngineImpl(
     private var activeBackend: LlmEngine.Backend? = null
     private var activeCallback: MessageCallback? = null
 
+    @Volatile
+    private var isConversationCancelled = false
+
     /**
      * Serializes all engine operations. LiteRT-LM does not support concurrent
      * [sendMessageAsync] calls on the same [com.google.ai.edge.litertlm.Conversation];
@@ -135,12 +138,20 @@ class LlmEngineImpl(
             throw IllegalStateException("LLM engine is not initialized. Please wait for model initialization to complete.")
         }
 
+        if (isConversationCancelled || conversation == null) {
+            Timber.d("LlmEngineImpl [RECREATE_CONVERSATION]: Recreating native conversation handle following cancellation")
+            resetConversationLocked(currentSystemInstruction, currentConfig)
+            isConversationCancelled = false
+        }
+
         try {
             executeInference(input, onToken)
         } catch (e: kotlinx.coroutines.CancellationException) {
+            isConversationCancelled = true
             Timber.d("LlmEngineImpl: Inference was cancelled by user")
             throw e
         } catch (e: java.util.concurrent.CancellationException) {
+            isConversationCancelled = true
             Timber.d("LlmEngineImpl: Inference was cancelled by user (Java CancellationException)")
             throw e
         } catch (e: BackendFailureException) {
@@ -251,7 +262,12 @@ class LlmEngineImpl(
     }
 
     override fun stop() {
-        conversation?.cancelProcess()
+        isConversationCancelled = true
+        try {
+            conversation?.cancelProcess()
+        } catch (throwable: Throwable) {
+            logCallbackFailure(throwable, "LlmEngineImpl: Error cancelling process on conversation")
+        }
     }
 
     override suspend fun resetConversation(
@@ -310,6 +326,14 @@ class LlmEngineImpl(
     override suspend fun restoreHistory(messages: List<ChatMessage>) =
         engineMutex.withLock {
             if (engine == null) return@withLock
+
+            if (isConversationCancelled || conversation == null) {
+                Timber.d(
+                    "LlmEngineImpl [RECREATE_CONVERSATION]: Recreating native conversation handle following cancellation before history restore",
+                )
+                resetConversationLocked(currentSystemInstruction, currentConfig)
+                isConversationCancelled = false
+            }
 
             val priorMessages = messages.filter { it is ChatMessage.User || it is ChatMessage.Agent }
             if (priorMessages.isEmpty()) return@withLock
@@ -382,6 +406,7 @@ class LlmEngineImpl(
     }
 
     private fun cancelNativeProcess(conversation: InferenceConversation) {
+        isConversationCancelled = true
         try {
             conversation.cancelProcess()
         } catch (throwable: Throwable) {
@@ -409,6 +434,7 @@ class LlmEngineImpl(
         currentModelPath = ""
         activeBackend = null
         activeCallback = null
+        isConversationCancelled = false
     }
 
     /**
@@ -443,7 +469,7 @@ class LlmEngineImpl(
      * Combines an idempotent continuation with a terminal guard so that the entire callback
      * (including token dispatch) is ignored after the first terminal signal.
      */
-    private class SafeCallback(
+    private inner class SafeCallback(
         private val cont: CancellableContinuation<Unit>,
         private val backend: LlmEngine.Backend,
         private val onContent: (String) -> Unit,
@@ -483,6 +509,7 @@ class LlmEngineImpl(
             }
 
             if (isCancellation(throwable)) {
+                isConversationCancelled = true
                 runNoThrow("LlmEngineImpl: Error logging native cancellation") {
                     Timber.d("LlmEngineImpl: LiteRT-LM reported task cancellation")
                 }
