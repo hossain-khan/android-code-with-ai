@@ -7,6 +7,7 @@ import dev.hossain.codematex.runtime.FakeLlmEngine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -85,6 +86,7 @@ class SystemMemoryManagerTest {
 
             // After delay: cleanup should be triggered
             advanceTimeBy(600L)
+            advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
 
@@ -143,6 +145,7 @@ class SystemMemoryManagerTest {
                 )
 
             manager.onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL)
+            advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
 
@@ -158,6 +161,7 @@ class SystemMemoryManagerTest {
                 )
 
             manager.onTrimMemory(ComponentCallbacks2.TRIM_MEMORY_BACKGROUND)
+            advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
 
@@ -173,6 +177,7 @@ class SystemMemoryManagerTest {
                 )
 
             manager.onLowMemory()
+            advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
 
@@ -196,6 +201,7 @@ class SystemMemoryManagerTest {
             assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
 
             advanceTimeBy(600L)
+            advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
 }

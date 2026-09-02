@@ -838,6 +838,52 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `cleanup cancels in-flight inference before closing native handles`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            // Start an inference that stays in-flight: the fake conversation records the message but
+            // never completes on its own, so runInference holds engineMutex, suspended.
+            val inferenceJob =
+                launch {
+                    engine.runInference("Hello") { _, _ -> }
+                }
+            val message = fakeConversation.sentMessages.single()
+            assertThat(fakeConversation.closed).isFalse()
+
+            // Request cleanup concurrently while the inference still holds the lock.
+            val cleanupJob = launch { engine.cleanup() }
+
+            // cleanup() must first signal cancellation, and must NOT close the native handle while
+            // the in-flight inference is still executing on it (that would be a use-after-free).
+            assertThat(fakeConversation.cancelled).isTrue()
+            assertThat(fakeConversation.closed).isFalse()
+
+            // Simulate the native runtime delivering the terminal cancellation callback, which
+            // unwinds the in-flight inference and releases engineMutex.
+            message.callback.onError(java.util.concurrent.CancellationException("Task cancelled"))
+            inferenceJob.join()
+            cleanupJob.join()
+
+            // Only now, after the lock is free, may cleanup close the native handles.
+            assertThat(fakeConversation.closed).isTrue()
+            assertThat(fakeEngine.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isNull()
+        }
+
+    @Test
     fun `runInference ignores duplicate onDone callbacks`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()

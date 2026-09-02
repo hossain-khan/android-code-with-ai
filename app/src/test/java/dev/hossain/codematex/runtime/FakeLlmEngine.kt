@@ -84,7 +84,7 @@ class FakeLlmEngine : LlmEngine {
 
     override fun isModelLoaded(modelPath: String): Boolean = isInitializedValue && (loadedModelPath == modelPath)
 
-    override fun cleanup() {
+    override suspend fun cleanup() {
         cleanupCalls++
         isInitializedValue = false
         loadedModelPath = null

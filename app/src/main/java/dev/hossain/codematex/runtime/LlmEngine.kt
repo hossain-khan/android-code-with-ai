@@ -77,8 +77,12 @@ interface LlmEngine {
 
     /**
      * Closes active conversations and releases native C++ memory allocations and engine handles.
+     *
+     * Suspends because it first cancels any in-flight inference and then closes the native handles
+     * while holding the engine's serialization lock, so it can never free native memory out from
+     * under a running `sendMessageAsync` call (see issue #307).
      */
-    fun cleanup()
+    suspend fun cleanup()
 
     /**
      * Hardware execution acceleration backends supported by the on-device runtime.
