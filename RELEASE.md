@@ -165,6 +165,12 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
 | `1.18.0` | `37` | 2026-09-02 | Bundled Swift Foundations guided course with 9 chapters, 25 lessons, and interactive Quick Check quizzes; compact code blocks with line numbers off by default; native engine cleanup mutex synchronization preventing cross-thread use-after-free; and automated CI Swift snippet validation. |
+| `1.17.5` | `36` | 2026-09-01 | Fixed on-device conversation cancellation latching so interrupting an AI response cleanly resets the conversation handle, enabling follow-up questions without 0-token stalls; hardened native C++ LiteRT-LM conversation lifecycle. |
+| `1.17.4` | `35` | 2026-08-31 | Instant zero-resource heuristic chat summarization (< 20ms) eliminating engine mutex contention and background stalls during active chat; proactive native model unloading before memory headroom checks; sequential course lesson backstack navigation. |
+| `1.17.3` | `34` | 2026-08-31 | In-memory model reuse when returning to chat from course lessons with 0 MB extra memory allocation; in-context notification permission request for model downloads per Google Play FGS perception policies; Play Console FGS guide. |
+| `1.17.2` | `33` | 2026-08-31 | Applied user Code Block Display settings (syntax themes, font size, density preset, line numbers, and language/copy toggles) across all course lesson code blocks. |
+| `1.17.1` | `32` | 2026-08-31 | Fixed code block language badge and copy button visibility toggle logic; scrollable empty chat starter prompt cards on compact screens; locked tutor persona picker during active inference; updated LiteRT-LM runtime (0.16.1) and compose-highlight (0.35.0). |
+| `1.17.0` | `31` | 2026-08-30 | Centralized Settings screen for AI personas, RAM eviction, Wi-Fi downloads, haptics, and storage; Code Block Customization with live preview (Tomorrow, Atom One, GitHub, Dracula); custom developer profile context injection. |
 | `1.16.3` | `30` | 2026-08-29 | First-time user onboarding walkthrough introducing on-device privacy, interactive guided courses & quizzes, and hardware acceleration; community feedback & GitHub issue reporting integration; full edge-to-edge support with safe navigation bar insets; and home title long-press easter egg. |
 | `1.16.2` | `29` | 2026-08-29 | System low memory handling & 3-minute background eviction grace timer, pre-flight RAM headroom checks preventing device OOM/LMK kills, on-device LLM runtime debug telemetry screen, and course starter card tap auto-dismissal. |
 | `1.16.1` | `28` | 2026-08-28 | Course progress badges (Completed, Current, Upcoming), touch-aware chat auto-scroll pause on drag, and course banner preference persistence. |
@@ -180,7 +186,12 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 | `1.11.0` | `18` | 2026-08-25 | Persistent AI Tutor personas, Jetpack Preferences DataStore, multiplatform-markdown-renderer v0.44.0 with Monospace code blocks, session history animations. |
 | `1.10.0` | `17` | 2026-08-25 | Live CPU/RAM telemetry bars during init, UI & test package reorganization, Codecov Test Analytics. |
 | `1.9.3` | `16` | 2026-08-25 | Smart auto-scroll with Jump-to-Bottom pill, download complete notifications, R8 size optimization. |
+| `1.9.2` | `15` | 2026-08-24 | Room database v2 schema migration (messageId) for stable chat scrolling, Mutex synchronization in LlmEngineImpl preventing native thread races, compose @ThemePreviews/@DevicePreviews across all screens, and asymmetric chat bubbles. |
+| `1.9.1` | `14` | 2026-08-23 | Streamlined AI Tutor Personas (Senior Architect, Beginner Tutor, Interview Coach), friendly model display names, real-time throughput metrics (TTFT, decode speed) in technical benchmarking panel, and tuned default prompting. |
 | `1.9.0` | `10` | 2026-08-24 | Hardware benchmark scorecard, model config sheet, download cancel/delete management. |
+| `1.8.3` | `12` | 2026-08-23 | Initialization safety preventing sending messages while models are preparing, clean single-line ModelCard headers, and model deletion confirmation dialog polish. |
+| `1.8.2` | `11` | 2026-08-23 | Model deletion and device storage recovery with confirmation dialogs, active model highlight badges, model-named download notifications with deep linking (codematex://models), and reactive repository flows. |
+| `1.8.1` | `10` | 2026-08-23 | Chat initialization coroutine lifecycle fix, zero memory buffering for multi-gigabyte downloads, manual stop preserving hardware acceleration without CPU fallback, and M3 retry error container. |
 | `1.8.0` | `9` | 2026-08-23 | Background download service with WorkManager, sticky notifications, foreground download progress. |
 | `1.7.0` | `8` | 2026-08-22 | SOLID architecture refactor (P1-P6), HTTP range downloader, JNI safety, M3 input dock. |
 | `1.6.0` | `7` | 2026-08-21 | Production release keystore enforcement, initial Google Play release notes, Markdown chat typography. |
