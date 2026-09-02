@@ -618,6 +618,8 @@ object GoCourseContent {
                                             }
                                         }
                                         """.trimIndent(),
+                                    // Test-only snippet (no func main); validated as test code, not a standalone program.
+                                    codeRunnable = false,
                                 ),
                             ),
                     ),
@@ -962,6 +964,8 @@ object GoCourseContent {
                                             }
                                         }
                                         """.trimIndent(),
+                                    // Test-only snippet (no func main); validated as test code, not a standalone program.
+                                    codeRunnable = false,
                                     quiz =
                                         quiz(
                                             question = "Why use t.Run in a table-driven test?",
@@ -1039,6 +1043,7 @@ object GoCourseContent {
         markdown: String,
         code: String,
         quiz: LessonBlock.Quiz? = null,
+        codeRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -1049,7 +1054,7 @@ object GoCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("go", code))
+                add(LessonBlock.Code("go", code, runnable = codeRunnable))
                 quiz?.let(::add)
             },
     )
