@@ -10,7 +10,7 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 
 - 🧠 **100% On-Device AI** - Run Large Language Models locally on your device with complete privacy, zero cloud dependency, and no subscription fees.
 - 🤖 **Curated Model Catalog** - Download and run optimized coding models (Gemma, Qwen Coder, Phi-4 Mini) with automatic hardware acceleration.
-- 🎓 **Interactive Guided Courses** - 5 bundled curricula (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**) with chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and progress tracking.
+- 🎓 **Interactive Guided Courses** - 6 bundled curricula (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**, **Swift**) with chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and progress tracking.
 - 🧭 **Topic Discovery & Starters** - Explore programming topics with prompt starters and course recommendations to kickstart learning.
 - 🎭 **Tutor Personas** - Tailor AI explanations with switchable teaching styles (**Senior Architect**, **Beginner Tutor**, **Interview Coach**).
 - 💬 **Rich Markdown & Code Highlighting** - Formatted responses with fast syntax highlighting, line numbers, and copy-to-clipboard actions.
@@ -82,7 +82,7 @@ app/src/main/java/dev/hossain/codematex/
 │   ├── model/                      # Domain models (AiModel, ChatMessage, CodingTopic, LearningCourse)
 │   ├── network/                    # OkHttpClient and Retrofit network configuration
 │   ├── repository/                 # Model and Session repository implementations
-│   │   └── course/                 # Bundled course content (Kotlin, Python, TS, Go, Rust) & LearningRepository
+│   │   └── course/                 # Bundled course content (Kotlin, Python, TS, Go, Rust, Swift) & LearningRepository
 │   ├── ChatInferenceOrchestrator.kt # Inference lifecycle & token streaming orchestration
 │   └── TopicPromptProvider.kt      # System prompts & tutor persona definitions
 ├── domain/
