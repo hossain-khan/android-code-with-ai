@@ -51,11 +51,39 @@ Course
 Supported lesson blocks currently are:
 
 - `LessonBlock.Markdown`
-- `LessonBlock.Code`
+- `LessonBlock.Code` — carries a `runnable` flag (default `true`)
 - `LessonBlock.Quiz`
 
 Keep lessons focused. A good lesson should teach one concept, show a small example,
 and end with a useful check or practice prompt.
+
+### Marking non-runnable code blocks
+
+`LessonBlock.Code(language, code, runnable = true)` includes a `runnable` flag that controls
+whether the [automated content validation](#automated-content-validation-ci) compiles or lints the
+snippet in CI. Leave it `true` for a normal, self-contained example. Set it to `false` for a
+deliberate fragment that cannot stand alone, so the validator skips it instead of reporting a false
+failure. Typical fragments:
+
+- A multi-file illustration concatenated into one block (for example `// format.ts` + `// app.ts`,
+  or `# greetings.py` + `# app.py`).
+- A configuration file shown as code (for example a `tsconfig.json`).
+- A test-only snippet with no entry point (for example a Go file with only `TestXxx` functions).
+
+Course content builders expose this through a `codeRunnable` parameter on their `lesson(...)` helper:
+
+```kotlin
+lesson(
+    id = "typescript-modules",
+    // ...
+    code = "...",
+    codeRunnable = false, // multi-file illustration; not a standalone compilable unit
+)
+```
+
+When you set `codeRunnable = false`, add a matching assertion to the course's exporter test (see
+[Automated content validation](#automated-content-validation-ci)) so the skip is intentional and
+documented.
 
 ## Workflow for adding a course
 
@@ -236,8 +264,10 @@ repository file.
 ## Suggested local verification
 
 Before bundling new course materials, validate every code example with the
-language's local compiler and formatter when available. This is a one-off content
-verification step and does not need to be part of CI.
+language's local compiler and formatter when available. For Go, Rust, TypeScript,
+and Python this is now also enforced automatically in CI (see
+[Automated content validation](#automated-content-validation-ci)), so running these
+locally first is the fastest way to catch problems before opening a pull request.
 
 For Go examples, run:
 
@@ -372,9 +402,10 @@ Compiler verification does not prove the correctness of conceptual or stylistic
 answers, such as whether `val` should be preferred over `var`. Those questions still
 require source cross-reference and human review of the explanation.
 
-This verification is intentionally a suggested local authoring step, not a required
-CI or Gradle build task. Do not execute arbitrary learner-provided code; only run
-trusted course snippets during authoring.
+Unlike the Go, Rust, TypeScript, and Python courses, the Kotlin course is not yet wired into
+the [automated content validation](#automated-content-validation-ci), so this Kotlin snippet
+verification remains a local authoring step for now. Do not execute arbitrary learner-provided
+code; only run trusted course snippets during authoring.
 
 ## Testing checklist
 
@@ -420,6 +451,70 @@ Before handing off a course change, run:
 
 If Room files changed, also verify the migration tests and generated schemas.
 
+## Automated content validation (CI)
+
+Code snippets in the bundled courses are validated automatically by the
+`.github/workflows/course-content-validation.yml` workflow. It runs on pushes and pull requests to
+`main`, but only when course content, the learning models, or the validation tooling changes (it is
+path-filtered to `**/course/**`, `**/LearningModels.kt`, and
+`app/src/test/java/dev/hossain/codematex/tools/**`). A failure is blocking.
+
+The workflow runs one job per language, and the jobs run in parallel:
+
+| Job | Toolchain | Per-snippet check |
+|---|---|---|
+| `validate-go` | Go (`stable`) | `go build ./...` + `go vet ./...` |
+| `validate-rust` | Rust (`stable` + clippy) | `cargo build` + `cargo clippy -- -D warnings` |
+| `validate-typescript` | Node + TypeScript 5 | `tsc --noEmit --strict --moduleDetection force` |
+| `validate-python` | Python + `ruff` | `ruff check --select E9,F` (syntax + pyflakes) |
+
+### How it works
+
+Each job:
+
+1. Runs the language's exporter test (for example `GoSnippetExporterTest`), which reads the real
+   course objects and writes every `runnable` snippet to
+   `app/build/course-snippets/<language>/<lessonId>/` as a self-contained compilable unit. The
+   export is triggered by setting the `CODEMATEX_SNIPPET_OUTPUT_DIR` environment variable, so it is
+   a no-op during normal local test runs and has no filesystem side effects.
+2. Compiles or lints each exported unit and fails the job if any snippet does not pass.
+
+The exporters live in `app/src/test/java/dev/hossain/codematex/tools/`. They filter on the
+`LessonBlock.Code.runnable` flag, so snippets marked `codeRunnable = false` are skipped (see
+[Marking non-runnable code blocks](#marking-non-runnable-code-blocks)).
+
+### Notes on the checks
+
+- **TypeScript** uses `--moduleDetection force` so each snippet is treated as a module. This
+  isolates top-level names and prevents false collisions with DOM globals such as `status` or
+  `Report`. It runs `--strict` but not `noUnusedLocals`, so teaching snippets may declare values
+  they do not use.
+- **Python** is linted, not executed, so no snippet makes real network calls or needs third-party
+  packages at validation time. `--select E9,F` catches syntax errors and pyflakes defects
+  (undefined names, bad imports, redefinitions) without stylistic noise. It does not catch type or
+  logic errors.
+- **Go** and **Rust** snippets are compiled as complete programs, so they must include an entry
+  point (`func main` / `fn main`) unless flagged non-runnable.
+
+### Adding a new language to CI
+
+When you bundle a new language course, extend the validation to cover it:
+
+1. Add a `codeRunnable` parameter to the course's `lesson(...)` helper and mark any fragments
+   `false`.
+2. Create `<Language>SnippetExporter.kt` and `<Language>SnippetExporterTest.kt` in
+   `app/src/test/java/dev/hossain/codematex/tools/`, following an existing pair (for example the Go
+   or Rust exporter). The exporter writes one isolated, compilable unit per runnable snippet; the
+   test verifies the export and asserts that intentional fragments are skipped, and gates the
+   filesystem write behind `CODEMATEX_SNIPPET_OUTPUT_DIR`.
+3. Add a `validate-<language>` job to `course-content-validation.yml` that sets up the toolchain,
+   runs the exporter test with `CODEMATEX_SNIPPET_OUTPUT_DIR` set, and runs the language's
+   compiler or linter over each exported unit.
+
+Verify the checks pass on the real snippets before wiring the job into CI. Choose the compiler or
+linter flags empirically: prefer the strictest configuration that produces no false failures on
+existing, correct course content.
+
 ## Definition of done
 
 A new course is ready when:
@@ -433,3 +528,6 @@ A new course is ready when:
 - Previews cover normal, empty, loading, error, and completed states.
 - Unit tests cover content integrity and progress behavior.
 - `formatKotlin`, `test`, and `check` pass.
+- For a supported language (Go, Rust, TypeScript, Python), the
+  [automated content validation](#automated-content-validation-ci) passes, and any non-runnable
+  snippet is flagged `codeRunnable = false` with a matching exporter-test assertion.
