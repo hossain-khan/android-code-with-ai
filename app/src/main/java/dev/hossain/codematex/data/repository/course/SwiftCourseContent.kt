@@ -6,8 +6,12 @@ import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 
 /**
- * Bundled Swift Foundations course based on official Swift documentation ("The Swift Programming
- * Language" - A Swift Tour and Language Reference).
+ * Bundled Swift Foundations course based on official Swift open-source documentation:
+ * - Primary Source: "The Swift Programming Language" (TSPL) — "A Swift Tour" and "Language Guide"
+ *   (https://docs.swift.org/swift-book/documentation/the-swift-programming-language/)
+ * - Repository: https://github.com/swiftlang/swift-book
+ * - License: Apache License 2.0 with Runtime Library Exception
+ *   (https://github.com/swiftlang/swift-book/blob/main/LICENSE.txt)
  *
  * Content is structured into 9 chapters and 25 lessons, covering Swift fundamentals, type safety,
  * optionals, value vs reference types, closures, protocols, generics, and error handling.
