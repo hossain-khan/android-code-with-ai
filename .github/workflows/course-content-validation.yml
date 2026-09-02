@@ -340,3 +340,58 @@ jobs:
             exit 1
           fi
           echo "All runnable Kotlin course snippets compiled with kotlinc."
+
+  validate-swift:
+    name: Validate Swift course snippets
+    runs-on: macos-14
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Verify swift compiler
+        run: swift --version
+
+      # Runs SwiftSnippetExporterTest, which writes each runnable Swift snippet to
+      # app/build/course-snippets/swift/<lessonId>/main.swift
+      - name: Export Swift course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/swift
+        run: ./gradlew testDebugUnitTest --tests "*SwiftSnippetExporterTest*"
+
+      - name: Compile each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/swift"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No Swift snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            if swift -parse "$dir/main.swift"; then
+              echo "✅ $name"
+            else
+              echo "::error::Swift snippet '$name' failed to compile."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All runnable Swift course snippets compiled successfully with swift."

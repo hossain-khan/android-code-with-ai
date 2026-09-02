@@ -31,6 +31,7 @@ class LearningRepositoryImpl
                 TypeScriptCourseContent.course,
                 GoCourseContent.course,
                 RustCourseContent.course,
+                SwiftCourseContent.course,
             )
 
         override fun getCourses(): Flow<List<LearningCourse>> = flowOf(bundledCourses)
