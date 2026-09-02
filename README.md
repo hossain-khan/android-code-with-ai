@@ -4,6 +4,8 @@
 
 An **on-device AI coding tutor** for Android. Chat privately with locally-executed Large Language Models (LLMs) about programming languages, algorithms, architecture, and system design, or learn via guided interactive courses — **100% offline, private, and with zero subscription fees**.
 
+<a href="https://play.google.com/store/apps/details?id=dev.hossain.codematex&pcampaignid=web_share" target="_blank"><img src="https://liquidlabs.ca/img/google-play.svg" height="45"></a>
+
 ---
 
 ## ✨ Features
