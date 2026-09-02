@@ -87,7 +87,9 @@ object RustCourseContent {
                                                     "The binding to skip type checking",
                                                 ),
                                             answer = 0,
-                                            explanation = "Bindings are immutable by default; mut explicitly permits reassignment.",
+                                            explanation =
+                                                "Bindings are immutable by default; mut permits both reassignment " +
+                                                    "and in-place mutation of the value.",
                                         ),
                                 ),
                                 lesson(
@@ -287,7 +289,7 @@ object RustCourseContent {
 
                                         A reference lets a function use a value without owning it. Immutable references can coexist, while a mutable reference requires exclusive access for its lifetime.
 
-                                        These rules prevent data races and invalid pointers at compile time.
+                                        These rules prevent data races and invalid pointers at compile time. Passing `&message` (a `&String`) where a `&str` is expected works because Rust automatically applies deref coercion.
                                         """.trimIndent(),
                                     code =
                                         """

@@ -518,7 +518,7 @@ object PythonCourseContent {
                                     id = "python-classes",
                                     order = 1,
                                     title = "Classes and Objects",
-                                    summary = "Define types with attributes, methods, and constructors.",
+                                    summary = "Define types with attributes, methods, and initializers.",
                                     minutes = 20,
                                     markdown =
                                         """
@@ -526,7 +526,7 @@ object PythonCourseContent {
 
                                         A class defines a blueprint for objects. `__init__` initializes an instance, and the first method parameter conventionally named `self` refers to that instance.
 
-                                        Keep object invariants in one place. Validate constructor inputs when an invalid object would make later code harder to reason about.
+                                        Keep object invariants in one place. Validate initializer inputs when an invalid object would make later code harder to reason about.
                                         """.trimIndent(),
                                     code =
                                         """

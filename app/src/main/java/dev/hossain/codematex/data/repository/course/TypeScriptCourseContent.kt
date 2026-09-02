@@ -83,7 +83,7 @@ object TypeScriptCourseContent {
                                             question = "What does TypeScript usually infer for const lessons = 24?",
                                             options = listOf("string", "number", "boolean", "unknown"),
                                             answer = 1,
-                                            explanation = "The numeric initializer gives lessons the inferred type number.",
+                                            explanation = "With const, lessons infers the literal type 24, which is itself a number.",
                                         ),
                                 ),
                                 lesson(

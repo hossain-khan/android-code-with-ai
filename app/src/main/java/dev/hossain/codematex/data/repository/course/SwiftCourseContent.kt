@@ -92,13 +92,13 @@ object SwiftCourseContent {
                                     id = "swift-types-and-interpolation",
                                     order = 3,
                                     title = "Types and String Interpolation",
-                                    summary = "Work with standard scalar types and format strings using string interpolation.",
+                                    summary = "Work with standard basic types and format strings using string interpolation.",
                                     minutes = 12,
                                     markdown =
                                         """
                                         # Types and String Interpolation
 
-                                        Swift provides standard scalar types: `Int` for integers, `Double` and `Float` for floating-point numbers, `Bool` for booleans, and `String` for text.
+                                        Swift provides standard basic types: `Int` for integers, `Double` and `Float` for floating-point numbers, and `Bool` for booleans. `String` represents text and is a structure — a collection of `Character` values — rather than a scalar.
 
                                         Swift is a type-safe language. The compiler uses type inference to deduce the type of an expression automatically when you provide an initial value.
 

@@ -146,7 +146,7 @@ object KotlinCourseContent {
                                         """
                                         # Collections
 
-                                        Use a `List` for ordered values, a `Set` for unique values, and a `Map` for key-value lookup. Factory functions such as `listOf`, `setOf`, and `mapOf` create read-only views.
+                                        Use a `List` for ordered values, a `Set` for unique values, and a `Map` for key-value lookup. Factory functions such as `listOf`, `setOf`, and `mapOf` create read-only collections.
 
                                         Mutable variants—`mutableListOf`, `mutableSetOf`, and `mutableMapOf`—expose operations that change the collection. Prefer read-only types at API boundaries when mutation is not part of the contract.
                                         """.trimIndent(),
@@ -295,7 +295,7 @@ object KotlinCourseContent {
                                         """
                                         # Functions
 
-                                        Function declarations name inputs and the result type. Kotlin can infer the result of a block body in some contexts, but public functions benefit from explicit return types.
+                                        Function declarations name inputs and the result type. Kotlin infers the return type of an expression-body function (`fun square(x: Int) = x * x`); a block-body function (`fun f() { ... }`) returns `Unit` unless you declare a return type. Public functions still benefit from explicit return types.
 
                                         A single-expression function uses `=` and is a good fit for a small calculation.
                                         """.trimIndent(),
