@@ -81,3 +81,63 @@ jobs:
             exit 1
           fi
           echo "All runnable Go course snippets compiled and passed go vet."
+
+  validate-rust:
+    name: Validate Rust course snippets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Metro 0.12.0+ requires JDK 21+ (see android.yml).
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # rustup is pre-installed on ubuntu-latest; ensure clippy is available.
+      - name: Setup Rust
+        run: |
+          rustup toolchain install stable --profile minimal --component clippy --no-self-update
+          rustup default stable
+          rustc --version && cargo clippy --version
+
+      # Runs RustSnippetExporterTest, which writes each runnable Rust snippet to
+      # app/build/course-snippets/rust/<lessonId>/ as a self-contained Cargo package.
+      - name: Export Rust course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/rust
+        run: ./gradlew testDebugUnitTest --tests "*RustSnippetExporterTest*"
+
+      - name: Build and lint each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/rust"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No Rust snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            if ( cd "$dir" && cargo build --quiet && cargo clippy --quiet -- -D warnings ); then
+              echo "✅ $name"
+            else
+              echo "::error::Rust snippet '$name' failed to build or clippy."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All runnable Rust course snippets built and passed cargo clippy."
