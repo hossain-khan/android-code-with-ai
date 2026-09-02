@@ -6,6 +6,7 @@ import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.SwiftCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import org.junit.Test
 
@@ -17,6 +18,7 @@ class CourseContentTest {
             TypeScriptCourseContent.course,
             GoCourseContent.course,
             RustCourseContent.course,
+            SwiftCourseContent.course,
         )
 
     @Test
@@ -256,6 +258,63 @@ class CourseContentTest {
                 "What does a Rust trait primarily define?" to 0,
                 "When does a typical iterator adapter such as map run?" to 0,
                 "What does a channel send between threads?" to 0,
+            ).inOrder()
+    }
+
+    @Test
+    fun `swift course has expected foundation coverage`() {
+        val swift = SwiftCourseContent.course
+
+        assertThat(swift.language).isEqualTo("Swift")
+        assertThat(swift.chapters).hasSize(9)
+        assertThat(swift.lessonCount).isEqualTo(25)
+        assertThat(swift.chapters.flatMap { it.lessons }.map { it.id })
+            .containsExactly(
+                "swift-hello-world",
+                "swift-variables-and-constants",
+                "swift-types-and-interpolation",
+                "swift-conditionals",
+                "swift-switch-pattern-matching",
+                "swift-loops-and-ranges",
+                "swift-optionals-intro",
+                "swift-nil-coalescing",
+                "swift-guard-and-optional-chaining",
+                "swift-arrays",
+                "swift-sets",
+                "swift-dictionaries",
+                "swift-functions",
+                "swift-closures",
+                "swift-higher-order-functions",
+                "swift-structures",
+                "swift-classes",
+                "swift-value-vs-reference",
+                "swift-computed-properties",
+                "swift-static-members",
+                "swift-protocols",
+                "swift-extensions",
+                "swift-generics",
+                "swift-error-handling",
+                "swift-async-await",
+            ).inOrder()
+    }
+
+    @Test
+    fun `swift quiz answers match the language concepts`() {
+        val quizzes =
+            SwiftCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { lesson -> lesson.blocks.filterIsInstance<LessonBlock.Quiz>() }
+
+        assertThat(quizzes.map { it.question to it.answerIndex })
+            .containsExactly(
+                "Which keyword declares an immutable constant in Swift?" to 0,
+                "Do Swift switch cases require a 'break' statement to prevent fallthrough?" to 0,
+                "What does an optional variable in Swift represent?" to 0,
+                "What protocol must an element conform to in order to be stored in a Swift Set?" to 0,
+                "What shorthand argument name represents the first parameter of a closure in Swift?" to 0,
+                "What modifier is required on a struct method that modifies its own properties?" to 0,
+                "Can a Swift struct conform to more than one protocol?" to 0,
+                "Which keyword must precede an expression calling a throwing function in Swift?" to 0,
             ).inOrder()
     }
 
