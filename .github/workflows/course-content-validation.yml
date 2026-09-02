@@ -1,0 +1,83 @@
+name: Course Content Validation
+
+# Validates that runnable code snippets bundled in the guided courses actually compile.
+# This is intentionally separate from the main Android CI so language toolchains (Go today,
+# more later) are only installed when course content changes.
+#
+# To add another language: add a sibling job (e.g. validate-rust) that sets up that toolchain,
+# exports the snippets, and runs the language's compiler/linter over each exported module.
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - '**/course/**'
+      - '**/LearningModels.kt'
+      - 'app/src/test/java/dev/hossain/codematex/tools/**'
+      - '.github/workflows/course-content-validation.yml'
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - '**/course/**'
+      - '**/LearningModels.kt'
+      - 'app/src/test/java/dev/hossain/codematex/tools/**'
+      - '.github/workflows/course-content-validation.yml'
+
+jobs:
+  validate-go:
+    name: Validate Go course snippets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Metro 0.12.0+ requires JDK 21+ (see android.yml).
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+
+      # Runs GoSnippetExporterTest, which writes each runnable Go snippet to
+      # app/build/course-snippets/go/<lessonId>/ as a self-contained module.
+      - name: Export Go course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/go
+        run: ./gradlew testDebugUnitTest --tests "*GoSnippetExporterTest*"
+
+      - name: Compile and vet each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/go"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No Go snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            if ( cd "$dir" && go build ./... && go vet ./... ); then
+              echo "✅ $name"
+            else
+              echo "::error::Go snippet '$name' failed to compile or vet."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All runnable Go course snippets compiled and passed go vet."

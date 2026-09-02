@@ -52,6 +52,13 @@ sealed interface LessonBlock {
     data class Code(
         val language: String,
         val code: String,
+        /**
+         * Whether [code] is a complete, self-contained program that can be compiled and
+         * validated in isolation by the course-content CI checks. Set to `false` for
+         * deliberate fragments (for example a `_test.go`-style snippet with no `main`
+         * function) so the validator skips them instead of reporting a false failure.
+         */
+        val runnable: Boolean = true,
     ) : LessonBlock
 
     data class Quiz(
