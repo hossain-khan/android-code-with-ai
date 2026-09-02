@@ -303,7 +303,7 @@ class UserPreferencesStoreImpl
                         throw exception
                     }
                 }.map { prefs ->
-                    prefs[KEY_SHOW_LINE_NUMBERS] ?: true
+                    prefs[KEY_SHOW_LINE_NUMBERS] ?: false
                 }.distinctUntilChanged()
 
         override val hapticFeedbackEnabledFlow: Flow<Boolean> =
@@ -386,11 +386,11 @@ class UserPreferencesStoreImpl
                         throw exception
                     }
                 }.map { prefs ->
-                    val stored = prefs[KEY_CODE_BLOCK_PRESET] ?: return@map CodeBlockPreset.COMFORTABLE
+                    val stored = prefs[KEY_CODE_BLOCK_PRESET] ?: return@map CodeBlockPreset.COMPACT
                     try {
                         CodeBlockPreset.valueOf(stored)
                     } catch (e: IllegalArgumentException) {
-                        CodeBlockPreset.COMFORTABLE
+                        CodeBlockPreset.COMPACT
                     }
                 }.distinctUntilChanged()
 
@@ -430,7 +430,7 @@ class UserPreferencesStoreImpl
                                 CodeTheme.TOMORROW
                             }
                         } ?: CodeTheme.TOMORROW
-                    val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: true
+                    val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: false
                     val showLang = prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
                     val showCopy = prefs[KEY_SHOW_COPY_BUTTON] ?: true
                     val preset =
@@ -438,9 +438,9 @@ class UserPreferencesStoreImpl
                             try {
                                 CodeBlockPreset.valueOf(it)
                             } catch (e: IllegalArgumentException) {
-                                CodeBlockPreset.COMFORTABLE
+                                CodeBlockPreset.COMPACT
                             }
-                        } ?: CodeBlockPreset.COMFORTABLE
+                        } ?: CodeBlockPreset.COMPACT
                     val fontSize =
                         prefs[KEY_CODE_FONT_SIZE]?.let {
                             try {

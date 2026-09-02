@@ -37,10 +37,10 @@ class CodeBlockSettingsPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
                 assertThat(state.settings.theme).isEqualTo(CodeTheme.TOMORROW)
-                assertThat(state.settings.showLineNumbers).isTrue()
+                assertThat(state.settings.showLineNumbers).isFalse()
                 assertThat(state.settings.showLanguageLabel).isTrue()
                 assertThat(state.settings.showCopyButton).isTrue()
-                assertThat(state.settings.preset).isEqualTo(CodeBlockPreset.COMFORTABLE)
+                assertThat(state.settings.preset).isEqualTo(CodeBlockPreset.COMPACT)
                 assertThat(state.settings.fontSize).isEqualTo(CodeFontSize.MEDIUM)
                 assertThat(state.previewCode).isNotEmpty()
             }
@@ -68,11 +68,11 @@ class CodeBlockSettingsPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                state.eventSink(CodeBlockSettingsScreen.Event.LineNumbersToggled(false))
+                state.eventSink(CodeBlockSettingsScreen.Event.LineNumbersToggled(true))
 
                 val updatedState = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                assertThat(updatedState.settings.showLineNumbers).isFalse()
-                assertThat(fakeUserPreferencesStore.isShowLineNumbersEnabled()).isFalse()
+                assertThat(updatedState.settings.showLineNumbers).isTrue()
+                assertThat(fakeUserPreferencesStore.isShowLineNumbersEnabled()).isTrue()
             }
         }
 
@@ -113,11 +113,11 @@ class CodeBlockSettingsPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                state.eventSink(CodeBlockSettingsScreen.Event.PresetSelected(CodeBlockPreset.COMPACT))
+                state.eventSink(CodeBlockSettingsScreen.Event.PresetSelected(CodeBlockPreset.COMFORTABLE))
 
                 val updatedState = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                assertThat(updatedState.settings.preset).isEqualTo(CodeBlockPreset.COMPACT)
-                assertThat(fakeUserPreferencesStore.getCodeBlockPreset()).isEqualTo(CodeBlockPreset.COMPACT)
+                assertThat(updatedState.settings.preset).isEqualTo(CodeBlockPreset.COMFORTABLE)
+                assertThat(fakeUserPreferencesStore.getCodeBlockPreset()).isEqualTo(CodeBlockPreset.COMFORTABLE)
             }
         }
 

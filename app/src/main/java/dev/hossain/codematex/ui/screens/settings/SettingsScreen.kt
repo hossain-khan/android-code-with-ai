@@ -24,7 +24,7 @@ data object SettingsScreen : ParcelableScreen {
             val selectedPersona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
             val developerProfile: DeveloperProfile = DeveloperProfile(),
             val isWifiOnlyDownload: Boolean = true,
-            val showLineNumbers: Boolean = true,
+            val showLineNumbers: Boolean = false,
             val codeTheme: CodeTheme = CodeTheme.TOMORROW,
             val hapticFeedbackEnabled: Boolean = true,
             val ramEvictionMinutes: Int = 3,
