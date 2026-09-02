@@ -268,3 +268,75 @@ jobs:
             exit 1
           fi
           echo "All Python course snippets passed ruff check (E9,F)."
+
+  validate-kotlin:
+    name: Validate Kotlin course snippets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Metro 0.12.0+ requires JDK 21+ (see android.yml). kotlinc also needs a JDK.
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # kotlinc is not pre-installed on the runner; download the official command-line compiler.
+      - name: Install Kotlin compiler
+        run: |
+          set -euo pipefail
+          KOTLIN_VERSION=2.2.0
+          curl -sSL -o "$RUNNER_TEMP/kotlin.zip" \
+            "https://github.com/JetBrains/kotlin/releases/download/v${KOTLIN_VERSION}/kotlin-compiler-${KOTLIN_VERSION}.zip"
+          unzip -q "$RUNNER_TEMP/kotlin.zip" -d "$RUNNER_TEMP/kotlinc-dist"
+          echo "$RUNNER_TEMP/kotlinc-dist/kotlinc/bin" >> "$GITHUB_PATH"
+
+      - name: Verify kotlinc
+        run: kotlinc -version
+
+      # Runs KotlinSnippetExporterTest, which writes each runnable snippet to
+      # app/build/course-snippets/kotlin/<lessonId>/ as snippet.kt (raw) and wrapped.kt (in fun main).
+      - name: Export Kotlin course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/kotlin
+        run: ./gradlew testDebugUnitTest --tests "*KotlinSnippetExporterTest*"
+
+      - name: Compile each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/kotlin"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No Kotlin snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            # Compile the snippet as-is (valid for top-level declarations); if that fails, fall back
+            # to the fun main-wrapped variant (valid for top-level statements). A snippet passes if
+            # either form compiles.
+            if kotlinc "$dir/snippet.kt" -d "$dir/classes" >/dev/null 2>&1; then
+              echo "✅ $name"
+            elif kotlinc "$dir/wrapped.kt" -d "$dir/classes" >/dev/null 2>&1; then
+              echo "✅ $name (wrapped in fun main)"
+            else
+              echo "::error::Kotlin snippet '$name' failed to compile. Raw compiler output:"
+              kotlinc "$dir/snippet.kt" -d "$dir/classes" || true
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All runnable Kotlin course snippets compiled with kotlinc."

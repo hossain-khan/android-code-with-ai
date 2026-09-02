@@ -669,6 +669,8 @@ object KotlinCourseContent {
                                             listOf(first.await(), second.await())
                                         }
                                         """.trimIndent(),
+                                    // References loadLesson from a sibling lesson and needs kotlinx.coroutines; not self-contained.
+                                    codeRunnable = false,
                                     quiz =
                                         quiz(
                                             question = "What does async return?",
@@ -703,6 +705,8 @@ object KotlinCourseContent {
                                             lessonIds().collect { id -> println("Lesson ${'$'}id") }
                                         }
                                         """.trimIndent(),
+                                    // Requires kotlinx.coroutines (Flow) on the classpath; not validated by the stdlib-only CI check.
+                                    codeRunnable = false,
                                 ),
                             ),
                     ),
@@ -733,6 +737,7 @@ object KotlinCourseContent {
         markdown: String,
         code: String,
         quiz: LessonBlock.Quiz? = null,
+        codeRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -743,7 +748,7 @@ object KotlinCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("kotlin", code))
+                add(LessonBlock.Code("kotlin", code, runnable = codeRunnable))
                 quiz?.let(::add)
             },
     )
