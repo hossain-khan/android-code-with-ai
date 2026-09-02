@@ -205,3 +205,66 @@ jobs:
             exit 1
           fi
           echo "All type-checkable TypeScript course snippets passed tsc --strict."
+
+  validate-python:
+    name: Validate Python course snippets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Metro 0.12.0+ requires JDK 21+ (see android.yml).
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install ruff
+        run: pipx install ruff
+
+      # Runs PythonSnippetExporterTest, which writes each lintable snippet to
+      # app/build/course-snippets/python/<lessonId>/snippet.py.
+      - name: Export Python course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/python
+        run: ./gradlew testDebugUnitTest --tests "*PythonSnippetExporterTest*"
+
+      - name: Lint each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/python"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No Python snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            # --select E9,F limits to syntax errors and pyflakes defects (undefined names, bad
+            # imports, redefinitions) — real correctness issues, without stylistic lint noise.
+            if ruff check --select E9,F --no-cache "$dir/snippet.py"; then
+              echo "✅ $name"
+            else
+              echo "::error::Python snippet '$name' failed ruff check."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All Python course snippets passed ruff check (E9,F)."

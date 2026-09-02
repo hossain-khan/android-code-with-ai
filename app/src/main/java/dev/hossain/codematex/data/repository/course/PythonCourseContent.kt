@@ -408,6 +408,8 @@ object PythonCourseContent {
                                         if __name__ == "__main__":
                                             print(greet("Ada"))
                                         """.trimIndent(),
+                                    // Multi-file illustration (greetings.py + app.py); cannot lint as one standalone file.
+                                    codeRunnable = false,
                                 ),
                             ),
                     ),
@@ -838,6 +840,7 @@ object PythonCourseContent {
         markdown: String,
         code: String,
         quiz: LessonBlock.Quiz? = null,
+        codeRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -848,7 +851,7 @@ object PythonCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("python", code))
+                add(LessonBlock.Code("python", code, runnable = codeRunnable))
                 quiz?.let(::add)
             },
     )
