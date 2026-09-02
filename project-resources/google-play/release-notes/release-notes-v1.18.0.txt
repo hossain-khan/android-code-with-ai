@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.18.0:
+• Swift Foundations Course: Interactive guided course with 9 chapters, 25 lessons, and Quick Check quizzes.
+• Compact Code Blocks: Cleaner mobile reading with compact density and line numbers disabled by default.
+• Native Concurrency Hardening: Thread-safe engine cleanup preventing native crashes during system memory pressure.
+• Continuous Quality: Automated CI snippet validation for Swift code examples.
