@@ -265,7 +265,7 @@ repository file.
 
 Before bundling new course materials, validate every code example with the
 language's local compiler and formatter when available. For Go, Rust, TypeScript,
-and Python this is now also enforced automatically in CI (see
+Python, and Kotlin this is now also enforced automatically in CI (see
 [Automated content validation](#automated-content-validation-ci)), so running these
 locally first is the fastest way to catch problems before opening a pull request.
 
@@ -402,10 +402,12 @@ Compiler verification does not prove the correctness of conceptual or stylistic
 answers, such as whether `val` should be preferred over `var`. Those questions still
 require source cross-reference and human review of the explanation.
 
-Unlike the Go, Rust, TypeScript, and Python courses, the Kotlin course is not yet wired into
-the [automated content validation](#automated-content-validation-ci), so this Kotlin snippet
-verification remains a local authoring step for now. Do not execute arbitrary learner-provided
-code; only run trusted course snippets during authoring.
+The Kotlin course is now covered by the [automated content validation](#automated-content-validation-ci),
+which compiles each runnable snippet with `kotlinc`. That CI check confirms snippets *compile*; this
+local audit is still worthwhile for verifying runtime *behavior* (expected output, collection results,
+null-safety) and for the coroutine snippets that CI skips because they need `kotlinx.coroutines` on the
+classpath. Do not execute arbitrary learner-provided code; only run trusted course snippets during
+authoring.
 
 ## Testing checklist
 
@@ -467,6 +469,7 @@ The workflow runs one job per language, and the jobs run in parallel:
 | `validate-rust` | Rust (`stable` + clippy) | `cargo build` + `cargo clippy -- -D warnings` |
 | `validate-typescript` | Node + TypeScript 5 | `tsc --noEmit --strict --moduleDetection force` |
 | `validate-python` | Python + `ruff` | `ruff check --select E9,F` (syntax + pyflakes) |
+| `validate-kotlin` | `kotlinc` (downloaded) | `kotlinc` — compile raw, else wrapped in `fun main` |
 
 ### How it works
 
@@ -495,6 +498,12 @@ The exporters live in `app/src/test/java/dev/hossain/codematex/tools/`. They fil
   logic errors.
 - **Go** and **Rust** snippets are compiled as complete programs, so they must include an entry
   point (`func main` / `fn main`) unless flagged non-runnable.
+- **Kotlin** snippets come in two shapes: valid top-level declarations, and REPL-style top-level
+  statements that a plain `.kt` file rejects. The exporter emits both a raw `snippet.kt` and a
+  `wrapped.kt` (the snippet inside `fun main`); CI compiles the raw form first and falls back to the
+  wrapped form, so a snippet passes if either compiles. `kotlinc` is not pre-installed on the runner,
+  so the job downloads the official compiler. The check is stdlib-only, so snippets that need
+  `kotlinx.coroutines` are flagged `codeRunnable = false`.
 
 ### Adding a new language to CI
 
@@ -528,6 +537,6 @@ A new course is ready when:
 - Previews cover normal, empty, loading, error, and completed states.
 - Unit tests cover content integrity and progress behavior.
 - `formatKotlin`, `test`, and `check` pass.
-- For a supported language (Go, Rust, TypeScript, Python), the
+- For a supported language (Go, Rust, TypeScript, Python, Kotlin), the
   [automated content validation](#automated-content-validation-ci) passes, and any non-runnable
   snippet is flagged `codeRunnable = false` with a matching exporter-test assertion.
