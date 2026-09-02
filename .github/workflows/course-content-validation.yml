@@ -381,10 +381,13 @@ jobs:
           for dir in "$snippets_dir"/*/; do
             name="$(basename "$dir")"
             echo "::group::$name"
-            if swift -parse "$dir/main.swift"; then
+            # swiftc -typecheck runs full type-checking (not just syntax parsing), matching the
+            # compile/type-check guarantee the other language jobs provide. `swift -parse` is
+            # invalid (that flag belongs to swiftc), and parse-only would miss real type errors.
+            if swiftc -typecheck "$dir/main.swift"; then
               echo "✅ $name"
             else
-              echo "::error::Swift snippet '$name' failed to compile."
+              echo "::error::Swift snippet '$name' failed to type-check."
               failed=1
             fi
             echo "::endgroup::"
@@ -394,4 +397,4 @@ jobs:
             echo "::error::One or more course code snippets failed validation."
             exit 1
           fi
-          echo "All runnable Swift course snippets compiled successfully with swift."
+          echo "All runnable Swift course snippets passed swiftc -typecheck."

@@ -653,8 +653,17 @@ object SwiftCourseContent {
                                     code =
                                         """
                                         struct Temperature {
-                                            var celsius: Double
+                                            // Stored property with observers.
+                                            var celsius: Double {
+                                                willSet {
+                                                    print("About to change to \(newValue)°C")
+                                                }
+                                                didSet {
+                                                    print("Changed from \(oldValue)°C to \(celsius)°C")
+                                                }
+                                            }
 
+                                            // Computed property: derived from celsius, no stored value.
                                             var fahrenheit: Double {
                                                 return (celsius * 9 / 5) + 32
                                             }
@@ -662,6 +671,7 @@ object SwiftCourseContent {
 
                                         var temp = Temperature(celsius: 25.0)
                                         print("\(temp.celsius)°C is \(temp.fahrenheit)°F")
+                                        temp.celsius = 30.0 // Triggers willSet then didSet
                                         """.trimIndent(),
                                 ),
                                 lesson(
@@ -885,10 +895,10 @@ object SwiftCourseContent {
                                             return "Hello, \(name)! Welcome to Swift concurrency."
                                         }
 
-                                        Task {
-                                            let greeting = await fetchUserGreeting(name: "Swift Learner")
-                                            print(greeting)
-                                        }
+                                        // Top-level await suspends until the async call completes,
+                                        // so the greeting is always printed before the program exits.
+                                        let greeting = await fetchUserGreeting(name: "Swift Learner")
+                                        print(greeting)
                                         """.trimIndent(),
                                 ),
                             ),
