@@ -26,9 +26,9 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 | **UI & Layout** | **Jetpack Compose + Material 3 Expressive** | Modern declarative UI with adaptive multi-pane window sizing |
 | **Architecture** | **Slack Circuit** | MVI-based Presenter/UI pattern with unidirectional data flow |
 | **Dependency Injection** | **Metro** | KSP-based compile-time dependency injection |
-| **Inference Runtime** | **Google LiteRT-LM (0.11.0)** | High-performance edge AI model runtime |
-| **Syntax Highlighting** | **compose-highlight (0.34.0)** | Native Compose Highlight.js engine for streaming & static code blocks |
-| **Markdown Rendering** | **multiplatform-markdown-renderer (0.44.0)** | Material 3 Markdown parsing with custom component interception |
+| **Inference Runtime** | **Google LiteRT-LM (0.16.1)** | High-performance edge AI model runtime |
+| **Syntax Highlighting** | **compose-highlight (0.35.0)** | Native Compose Highlight.js engine for streaming & static code blocks |
+| **Markdown Rendering** | **multiplatform-markdown-renderer (0.45.0)** | Material 3 Markdown parsing with custom component interception |
 | **Persistence** | **Room Database** | Type-safe SQLite persistence for sessions, messages, and course progress |
 | **Background Processing** | **AndroidX WorkManager** | Foreground downloads with progress notifications |
 | **Permissions** | **Accompanist Permissions** | Contextual runtime permissions for notification alerts |
