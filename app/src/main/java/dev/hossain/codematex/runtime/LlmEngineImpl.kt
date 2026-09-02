@@ -107,7 +107,7 @@ class LlmEngineImpl(
             )
         }
 
-        cleanup()
+        cleanupLocked()
         currentModelPath = modelPath
         currentSystemInstruction = systemInstruction
         currentConfig = config
@@ -414,7 +414,26 @@ class LlmEngineImpl(
         }
     }
 
-    override fun cleanup() {
+    /**
+     * Cancels any in-flight inference, then closes native handles while holding [engineMutex].
+     *
+     * Closing the native conversation/engine without the lock could free them while [runInference]
+     * is still executing `sendMessageAsync` on another thread (this is reachable from
+     * `onTrimMemory` on the main thread), causing a native use-after-free. Cancelling first lets the
+     * in-flight inference unwind and release the mutex so the close happens safely. See issue #307.
+     */
+    override suspend fun cleanup() {
+        stop()
+        engineMutex.withLock {
+            cleanupLocked()
+        }
+    }
+
+    /**
+     * Closes and clears native handles. Must be called while holding [engineMutex] (either via
+     * [cleanup] or from another already-locked engine operation such as [initialize]).
+     */
+    private fun cleanupLocked() {
         val hadEngine = engine != null
         val hadConversation = conversation != null
         val previousPath = currentModelPath

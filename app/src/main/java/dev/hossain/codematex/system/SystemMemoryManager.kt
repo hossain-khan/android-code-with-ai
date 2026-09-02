@@ -416,11 +416,16 @@ class SystemMemoryManagerImpl
          * Invokes [LlmEngine.cleanup] to deallocate native C++ tensors and unified GPU OpenCL buffers.
          */
         private fun evictModelMemory(triggerReason: String) {
-            if (llmEngine.isInitialized()) {
-                Timber.i(
-                    "SystemMemoryManager [EVICT_START]: Releasing native model buffers and accelerator sessions (trigger=%s)",
-                    triggerReason,
-                )
+            if (!llmEngine.isInitialized()) return
+
+            Timber.i(
+                "SystemMemoryManager [EVICT_START]: Releasing native model buffers and accelerator sessions (trigger=%s)",
+                triggerReason,
+            )
+            // cleanup() suspends: it cancels any in-flight inference and closes native handles under
+            // the engine lock. Launch it on the manager's background scope so this callback (which
+            // may run on the main thread via onTrimMemory) does not block. See issue #307.
+            scope.launch {
                 try {
                     llmEngine.cleanup()
                     Timber.i(
