@@ -1,0 +1,25 @@
+name: Gradle Wrapper Validation
+
+# Verifies that gradle/wrapper/gradle-wrapper.jar matches the known-good SHA-256 checksum of an
+# official Gradle release, guarding against a tampered wrapper jar (a supply-chain attack vector
+# that is especially important for a repo that builds signed release artifacts).
+# Runs on every push/PR (no path filter) because a malicious wrapper can be introduced by any change.
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Gradle wrapper
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
