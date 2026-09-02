@@ -89,9 +89,9 @@ enum class CodeFontSize(
 @Serializable
 data class CodeBlockSettings(
     val theme: CodeTheme = CodeTheme.TOMORROW,
-    val showLineNumbers: Boolean = true,
+    val showLineNumbers: Boolean = false,
     val showLanguageLabel: Boolean = true,
     val showCopyButton: Boolean = true,
-    val preset: CodeBlockPreset = CodeBlockPreset.COMFORTABLE,
+    val preset: CodeBlockPreset = CodeBlockPreset.COMPACT,
     val fontSize: CodeFontSize = CodeFontSize.MEDIUM,
 )
