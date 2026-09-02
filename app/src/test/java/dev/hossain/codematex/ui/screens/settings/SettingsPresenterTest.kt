@@ -58,7 +58,7 @@ class SettingsPresenterTest {
                 val state = expectMostRecentItem() as SettingsScreen.State.Content
                 assertThat(state.selectedPersona).isEqualTo(TutorPersona.SENIOR_ENGINEER)
                 assertThat(state.isWifiOnlyDownload).isTrue()
-                assertThat(state.showLineNumbers).isTrue()
+                assertThat(state.showLineNumbers).isFalse()
                 assertThat(state.hapticFeedbackEnabled).isTrue()
                 assertThat(state.ramEvictionMinutes).isEqualTo(3)
                 assertThat(state.storageUsedBytes).isEqualTo(0L)
@@ -106,11 +106,11 @@ class SettingsPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SettingsScreen.State.Content
-                state.eventSink(SettingsScreen.Event.LineNumbersToggled(false))
+                state.eventSink(SettingsScreen.Event.LineNumbersToggled(true))
 
                 val updatedState = expectMostRecentItem() as SettingsScreen.State.Content
-                assertThat(updatedState.showLineNumbers).isFalse()
-                assertThat(fakeUserPreferencesStore.isShowLineNumbersEnabled()).isFalse()
+                assertThat(updatedState.showLineNumbers).isTrue()
+                assertThat(fakeUserPreferencesStore.isShowLineNumbersEnabled()).isTrue()
             }
         }
 
