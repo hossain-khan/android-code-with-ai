@@ -606,6 +606,8 @@ object TypeScriptCourseContent {
                                         import { title } from "./format"
                                         console.log(title("TypeScript"))
                                         """.trimIndent(),
+                                    // Multi-file illustration (format.ts + app.ts); cannot type-check as one standalone file.
+                                    codeRunnable = false,
                                 ),
                             ),
                     ),
@@ -814,6 +816,8 @@ object TypeScriptCourseContent {
                                             "include": ["src"]
                                         }
                                         """.trimIndent(),
+                                    // JSON tsconfig.json example, not TypeScript source; cannot be type-checked as a .ts file.
+                                    codeRunnable = false,
                                 ),
                             ),
                     ),
@@ -844,6 +848,7 @@ object TypeScriptCourseContent {
         markdown: String,
         code: String,
         quiz: LessonBlock.Quiz? = null,
+        codeRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -854,7 +859,7 @@ object TypeScriptCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("typescript", code))
+                add(LessonBlock.Code("typescript", code, runnable = codeRunnable))
                 quiz?.let(::add)
             },
     )

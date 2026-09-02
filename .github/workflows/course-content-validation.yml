@@ -141,3 +141,67 @@ jobs:
             exit 1
           fi
           echo "All runnable Rust course snippets built and passed cargo clippy."
+
+  validate-typescript:
+    name: Validate TypeScript course snippets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      # Metro 0.12.0+ requires JDK 21+ (see android.yml).
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install TypeScript
+        run: npm install --no-save typescript@5
+
+      # Runs TypeScriptSnippetExporterTest, which writes each type-checkable snippet to
+      # app/build/course-snippets/typescript/<lessonId>/snippet.ts.
+      - name: Export TypeScript course snippets
+        env:
+          CODEMATEX_SNIPPET_OUTPUT_DIR: ${{ github.workspace }}/app/build/course-snippets/typescript
+        run: ./gradlew testDebugUnitTest --tests "*TypeScriptSnippetExporterTest*"
+
+      - name: Type-check each snippet
+        run: |
+          set -euo pipefail
+          snippets_dir="${{ github.workspace }}/app/build/course-snippets/typescript"
+          tsc="${{ github.workspace }}/node_modules/.bin/tsc"
+
+          if [ ! -d "$snippets_dir" ] || [ -z "$(ls -A "$snippets_dir" 2>/dev/null)" ]; then
+            echo "::error::No TypeScript snippets were exported to $snippets_dir. Did the exporter run?"
+            exit 1
+          fi
+
+          failed=0
+          for dir in "$snippets_dir"/*/; do
+            name="$(basename "$dir")"
+            echo "::group::$name"
+            # --moduleDetection force isolates each snippet's top-level names so identifiers like
+            # `status` or `Report` do not collide with DOM globals (each file is treated as a module).
+            if "$tsc" --noEmit --strict --skipLibCheck --target es2020 --lib es2020,dom --moduleDetection force "$dir/snippet.ts"; then
+              echo "✅ $name"
+            else
+              echo "::error::TypeScript snippet '$name' failed to type-check."
+              failed=1
+            fi
+            echo "::endgroup::"
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::One or more course code snippets failed validation."
+            exit 1
+          fi
+          echo "All type-checkable TypeScript course snippets passed tsc --strict."
