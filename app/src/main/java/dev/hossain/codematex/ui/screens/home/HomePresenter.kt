@@ -12,6 +12,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.course.LearningRepository
@@ -20,6 +21,7 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
+import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import dev.hossain.codematex.ui.screens.lessons.LessonCatalogScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.SettingsScreen
@@ -28,6 +30,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @AssistedInject
@@ -43,6 +46,7 @@ class HomePresenter(
     override fun present(): HomeScreen.State {
         var recentSessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var topicsWithCourses by rememberRetained { mutableStateOf<Set<CodingTopic>>(emptySet()) }
+        var availableCourses by rememberRetained { mutableStateOf<List<LearningCourse>>(emptyList()) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         var isWarningDismissed by rememberRetained { mutableStateOf(false) }
 
@@ -51,6 +55,11 @@ class HomePresenter(
 
         LaunchedEffect(Unit) {
             topicsWithCourses = learningRepository.getTopicsWithCourses()
+            launch {
+                learningRepository.getCourses().collect { courses ->
+                    availableCourses = courses
+                }
+            }
             Timber.d("HomePresenter: Loading sessions")
             sessionRepository
                 .getAllSessions()
@@ -75,6 +84,10 @@ class HomePresenter(
                     if (session != null) {
                         navigator.goTo(ChatScreen(topic = session.topic, sessionId = session.id))
                     }
+                }
+
+                is HomeScreen.Event.CourseClicked -> {
+                    navigator.goTo(ChapterScreen(event.courseId))
                 }
 
                 HomeScreen.Event.ManageModels -> {
@@ -121,6 +134,7 @@ class HomePresenter(
                 topics = CodingTopic.selectableEntries,
                 hasDownloadedModel = hasDownloadedModel,
                 topicsWithCourses = topicsWithCourses,
+                availableCourses = availableCourses,
                 eventSink = eventSink,
             )
         }
