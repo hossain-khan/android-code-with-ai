@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.19.0:
+• Home Guided Courses: Dedicated interactive course carousel right on the home screen with one-tap access.
+• Clarified Chat Hub: Redesigned "Chat with AI Tutor" topic section with clean top app bar navigation.
+• Topic Reordering: Prioritized System Design and Web Development at the top of the tutoring topics.
+• Performance & Stability: Updated syntax highlighting engine and Android build toolchain.
