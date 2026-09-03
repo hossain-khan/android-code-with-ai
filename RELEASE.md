@@ -164,6 +164,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.19.0` | `38` | 2026-09-03 | Dedicated Guided Courses carousel on Home Screen with one-tap course access; renamed topic section to 'Chat with AI Tutor'; prioritized System Design and Web Development topics; decluttered TopAppBar; upgraded AGP 9.4.0, Gradle 9.6.0, and compose-highlight 0.36.0. |
 | `1.18.0` | `37` | 2026-09-02 | Bundled Swift Foundations guided course with 9 chapters, 25 lessons, and interactive Quick Check quizzes; compact code blocks with line numbers off by default; native engine cleanup mutex synchronization preventing cross-thread use-after-free; and automated CI Swift snippet validation. |
 | `1.17.5` | `36` | 2026-09-01 | Fixed on-device conversation cancellation latching so interrupting an AI response cleanly resets the conversation handle, enabling follow-up questions without 0-token stalls; hardened native C++ LiteRT-LM conversation lifecycle. |
 | `1.17.4` | `35` | 2026-08-31 | Instant zero-resource heuristic chat summarization (< 20ms) eliminating engine mutex contention and background stalls during active chat; proactive native model unloading before memory headroom checks; sequential course lesson backstack navigation. |
