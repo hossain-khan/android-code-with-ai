@@ -239,7 +239,7 @@ private fun HomeLayout(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            "Explore Topics",
+                            "Chat with AI Tutor",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -248,7 +248,7 @@ private fun HomeLayout(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         ) {
                             Text(
-                                text = "${state.topics.size} available",
+                                text = "${state.topics.size} topics",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -388,7 +388,7 @@ private fun HomeLayout(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            "Choose a Topic",
+                            "Chat with AI Tutor",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -397,7 +397,7 @@ private fun HomeLayout(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         ) {
                             Text(
-                                text = "${state.topics.size} available",
+                                text = "${state.topics.size} topics",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
