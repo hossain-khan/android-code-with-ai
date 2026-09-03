@@ -13,6 +13,8 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
+import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
+import dev.hossain.codematex.ui.screens.lessons.LessonCatalogScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.test.runTest
@@ -71,6 +73,8 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 assertThat(state.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
                 assertThat(state.topicsWithCourses).containsExactly(CodingTopic.KOTLIN, CodingTopic.RUST)
+                assertThat(state.availableCourses).hasSize(2)
+                assertThat(state.availableCourses.map { it.id }).containsExactly("kotlin-foundations", "rust-foundations")
             }
         }
 
@@ -209,6 +213,48 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.OpenSettings)
                 assertThat(navigator.awaitNextScreen()).isEqualTo(SettingsScreen)
+            }
+        }
+
+    @Test
+    fun `given course clicked event - navigates to chapter screen`() =
+        runTest {
+            val navigator = FakeNavigator(HomeScreen)
+            val presenter =
+                HomePresenter(
+                    navigator = navigator,
+                    screen = HomeScreen,
+                    sessionRepository = fakeSessionRepo,
+                    modelRepository = fakeModelRepo,
+                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                state.eventSink(HomeScreen.Event.CourseClicked("kotlin-foundations"))
+                assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
+            }
+        }
+
+    @Test
+    fun `given guided lessons event - navigates to lesson catalog screen`() =
+        runTest {
+            val navigator = FakeNavigator(HomeScreen)
+            val presenter =
+                HomePresenter(
+                    navigator = navigator,
+                    screen = HomeScreen,
+                    sessionRepository = fakeSessionRepo,
+                    modelRepository = fakeModelRepo,
+                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
+                    learningRepository = fakeLearningRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                state.eventSink(HomeScreen.Event.GuidedLessons)
+                assertThat(navigator.awaitNextScreen()).isEqualTo(LessonCatalogScreen)
             }
         }
 }

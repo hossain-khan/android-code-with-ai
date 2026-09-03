@@ -6,6 +6,7 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningCourse
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -29,6 +30,7 @@ data object HomeScreen : ParcelableScreen {
             val topics: List<CodingTopic>,
             val hasDownloadedModel: Boolean,
             val topicsWithCourses: Set<CodingTopic> = emptySet(),
+            val availableCourses: List<LearningCourse> = emptyList(),
             val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -41,6 +43,10 @@ data object HomeScreen : ParcelableScreen {
 
         data class SessionClicked(
             val sessionId: String,
+        ) : Event
+
+        data class CourseClicked(
+            val courseId: String,
         ) : Event
 
         data object ManageModels : Event

@@ -74,6 +74,9 @@ import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.LearningChapter
+import dev.hossain.codematex.data.model.LearningCourse
+import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -150,15 +153,6 @@ private fun HomeLayout(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) }) {
-                        Icon(Icons.AutoMirrored.Filled.MenuBook, contentDescription = "Guided Lessons")
-                    }
-                    /*
-                    // DISABLED - Not enough space to fit more than 3 items.
-                    IconButton(onClick = { state.eventSink(HomeScreen.Event.ManageModels) }) {
-                        Icon(Icons.Default.Memory, contentDescription = "Manage Models")
-                    }
-                     */
                     IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
                     }
@@ -192,12 +186,60 @@ private fun HomeLayout(
                         onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
                     )
 
+                    if (state.availableCourses.isNotEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    "Guided Courses",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                ) {
+                                    Text(
+                                        text = "${state.availableCourses.size} available",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    )
+                                }
+                            }
+                            FilledTonalButton(
+                                onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            ) {
+                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                        ) {
+                            items(state.availableCourses) { course ->
+                                CourseHomeCard(
+                                    course = course,
+                                    onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
+                                )
+                            }
+                        }
+                    }
+
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            "Explore Topics",
+                            "Chat with AI Tutor",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -206,7 +248,7 @@ private fun HomeLayout(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         ) {
                             Text(
-                                text = "${state.topics.size} available",
+                                text = "${state.topics.size} topics",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -288,13 +330,65 @@ private fun HomeLayout(
                     )
                 }
 
+                if (state.availableCourses.isNotEmpty()) {
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                Text(
+                                    "Guided Courses",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                ) {
+                                    Text(
+                                        text = "${state.availableCourses.size} available",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    )
+                                }
+                            }
+                            FilledTonalButton(
+                                onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                            ) {
+                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(vertical = 4.dp),
+                        ) {
+                            items(state.availableCourses) { course ->
+                                CourseHomeCard(
+                                    course = course,
+                                    onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
+                                )
+                            }
+                        }
+                    }
+                }
+
                 item {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(
-                            "Choose a Topic",
+                            "Chat with AI Tutor",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                         )
@@ -303,7 +397,7 @@ private fun HomeLayout(
                             color = MaterialTheme.colorScheme.surfaceContainerHighest,
                         ) {
                             Text(
-                                text = "${state.topics.size} available",
+                                text = "${state.topics.size} topics",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
@@ -557,6 +651,107 @@ private fun TopicCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+        }
+    }
+}
+
+@Composable
+private fun CourseHomeCard(
+    course: LearningCourse,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val visualInfo = course.topic.visualInfo
+    Card(
+        modifier =
+            modifier
+                .width(260.dp)
+                .clickable(onClick = onClick),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Surface(
+                        shape = MaterialTheme.shapes.extraSmall,
+                        color = visualInfo.accentColor.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                    ) {
+                        Text(
+                            text = visualInfo.iconGlyph,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            color = visualInfo.accentColor,
+                        )
+                    }
+                    Text(
+                        text = course.language,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = visualInfo.accentColor,
+                    )
+                }
+
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = visualInfo.accentColor,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
+
+            Text(
+                text = course.title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Text(
+                text = course.description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.MenuBook,
+                    contentDescription = null,
+                    modifier = Modifier.size(14.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "${course.chapters.size} chapters • ${course.lessonCount} lessons",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -1010,6 +1205,39 @@ private fun HomeScreenPreview() {
                         ),
                     topics = CodingTopic.selectableEntries,
                     hasDownloadedModel = true,
+                    topicsWithCourses = setOf(CodingTopic.KOTLIN, CodingTopic.RUST),
+                    availableCourses =
+                        listOf(
+                            LearningCourse(
+                                id = "kotlin-foundations",
+                                language = "Kotlin",
+                                title = "Kotlin Foundations",
+                                description = "Master idiomatic Kotlin programming with real-world exercises.",
+                                version = 1,
+                                chapters =
+                                    listOf(
+                                        LearningChapter(
+                                            id = "ch-1",
+                                            courseId = "kotlin-foundations",
+                                            order = 1,
+                                            title = "Basics",
+                                            description = "Basics",
+                                            lessons =
+                                                listOf(
+                                                    LearningLesson(
+                                                        id = "l-1",
+                                                        chapterId = "ch-1",
+                                                        order = 1,
+                                                        title = "Variables",
+                                                        summary = "Variables summary",
+                                                        estimatedMinutes = 5,
+                                                        blocks = emptyList(),
+                                                    ),
+                                                ),
+                                        ),
+                                    ),
+                            ),
+                        ),
                     eventSink = {},
                 ),
         )
@@ -1041,6 +1269,51 @@ private fun HeroBannerPreview() {
             onManageModels = {},
             modifier = Modifier.padding(16.dp),
         )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun CourseHomeCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            CourseHomeCard(
+                course =
+                    LearningCourse(
+                        id = "kotlin-foundations",
+                        language = "Kotlin",
+                        title = "Kotlin Foundations",
+                        description = "Master idiomatic Kotlin programming with real-world exercises and patterns.",
+                        version = 1,
+                        chapters =
+                            listOf(
+                                LearningChapter(
+                                    id = "ch-1",
+                                    courseId = "kotlin-foundations",
+                                    order = 1,
+                                    title = "Kotlin Basics",
+                                    description = "Core language concepts",
+                                    lessons =
+                                        listOf(
+                                            LearningLesson(
+                                                id = "l-1",
+                                                chapterId = "ch-1",
+                                                order = 1,
+                                                title = "Variables & Types",
+                                                summary = "Basics of variables",
+                                                estimatedMinutes = 5,
+                                                blocks = emptyList(),
+                                            ),
+                                        ),
+                                ),
+                            ),
+                    ),
+                onClick = {},
+            )
+        }
     }
 }
 
