@@ -8,6 +8,8 @@ enum class CodingTopic(
     val displayName: String,
     val stableId: String,
 ) {
+    SYSTEM_DESIGN("System Design", "system-design"),
+    WEB("Web Development", "web"),
     KOTLIN("Kotlin", "kotlin"),
     PYTHON("Python", "python"),
     JAVASCRIPT("JavaScript", "javascript"),
@@ -16,9 +18,7 @@ enum class CodingTopic(
     GO("Go", "go"),
     SWIFT("Swift", "swift"),
     ALGORITHMS("Algorithms & Data Structures", "algorithms"),
-    SYSTEM_DESIGN("System Design", "system-design"),
     ANDROID("Android Development", "android"),
-    WEB("Web Development", "web"),
     UNKNOWN("Unknown", "unknown"),
     ;
 
