@@ -27,6 +27,9 @@ jobs:
               - 'build.gradle.kts'
               - 'settings.gradle.kts'
               - 'gradle.properties'
+              - 'gradlew'
+              - 'gradlew.bat'
+              - 'keystore/**'
               - '.github/workflows/kover.yml'
 
       - name: Set up JDK
