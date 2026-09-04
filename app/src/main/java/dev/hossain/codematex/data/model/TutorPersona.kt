@@ -13,7 +13,7 @@ enum class TutorPersona(
 ) {
     SENIOR_ENGINEER(
         id = "senior_engineer",
-        displayName = "Senior Architect",
+        displayName = "Senior Engineer",
         shortName = "Senior",
         iconGlyph = "⚡",
         tagline = "Code-first, minimal fluff & production patterns",
