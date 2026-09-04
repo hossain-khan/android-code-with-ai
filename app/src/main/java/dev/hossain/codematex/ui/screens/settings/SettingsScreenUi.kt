@@ -437,6 +437,8 @@ private fun SettingsClickableRow(
             )
         }
 
+        Spacer(modifier = Modifier.width(16.dp))
+
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = null,
@@ -494,6 +496,8 @@ private fun SettingsClickableRowWithCustomIcon(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+
+        Spacer(modifier = Modifier.width(16.dp))
 
         Icon(
             imageVector = Icons.AutoMirrored.Filled.OpenInNew,
@@ -553,6 +557,8 @@ private fun SettingsSwitchRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+
+        Spacer(modifier = Modifier.width(16.dp))
 
         Switch(
             checked = checked,
