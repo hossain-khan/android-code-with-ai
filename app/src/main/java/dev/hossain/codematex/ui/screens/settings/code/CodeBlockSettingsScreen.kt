@@ -24,6 +24,7 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
         data class Content(
             val settings: CodeBlockSettings = CodeBlockSettings(),
             val previewCode: String = SAMPLE_CODE,
+            val expandedPreviewCode: String = EXPANDED_SAMPLE_CODE,
             override val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -67,6 +68,37 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
 // Stream on-device LLM completions
 async function generateResponse(prompt: string): Promise<TokenStream<string>> {
   const session = await createSession({ temperature: 0.7 });
+  return session.streamTokens(`Query: ${"$"}{prompt}`);
+}"""
+
+    @kotlinx.parcelize.IgnoredOnParcel
+    const val EXPANDED_SAMPLE_CODE: String = """interface TokenStream<T> {
+  id: string;
+  readonly latencyMs: number;
+  tokens: AsyncIterable<T>;
+}
+
+interface GenerationOptions {
+  temperature?: number;
+  topK?: number;
+  maxTokens?: number;
+  stopSequences?: string[];
+}
+
+/**
+ * Streams on-device LLM completions using LiteRT-LM runtime.
+ * Provides real-time token yield with zero cloud telemetry.
+ */
+async function generateResponse(
+  prompt: string,
+  options: GenerationOptions = { temperature: 0.7 }
+): Promise<TokenStream<string>> {
+  const session = await createSession({
+    temperature: options.temperature ?? 0.7,
+    topK: options.topK ?? 40,
+  });
+
+  console.log(`[LiteRT] Initialized conversation for prompt: ${"$"}{prompt}`);
   return session.streamTokens(`Query: ${"$"}{prompt}`);
 }"""
 }
