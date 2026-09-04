@@ -14,7 +14,7 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 - 🤖 **Curated Model Catalog** - Download and run optimized coding models (Gemma, Qwen Coder, Phi-4 Mini) with automatic hardware acceleration.
 - 🎓 **Interactive Guided Courses** - 6 bundled curricula (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**, **Swift**) with chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and progress tracking.
 - 🧭 **Topic Discovery & Starters** - Explore programming topics with prompt starters and course recommendations to kickstart learning.
-- 🎭 **Tutor Personas** - Tailor AI explanations with switchable teaching styles (**Senior Architect**, **Beginner Tutor**, **Interview Coach**).
+- 🎭 **Tutor Personas** - Tailor AI explanations with switchable teaching styles (**Senior Engineer**, **Beginner Tutor**, **Interview Coach**).
 - 💬 **Rich Markdown & Code Highlighting** - Formatted responses with fast syntax highlighting, line numbers, and copy-to-clipboard actions.
 - 💾 **Chat History & Summaries** - Multi-turn conversation persistence with automatic AI-generated session summaries.
 - 🎨 **Material 3 Expressive & Adaptive** - Modern Material You theming with dynamic topic accents and responsive layouts for phones, foldables, and tablets.

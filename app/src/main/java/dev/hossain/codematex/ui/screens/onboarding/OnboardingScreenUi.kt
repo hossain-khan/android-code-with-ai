@@ -31,7 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.Lock
@@ -576,27 +576,32 @@ private fun getOnboardingPages(): List<OnboardingPageData> =
                 ),
         ),
         OnboardingPageData(
-            title = "A New Frontier — Join Us!",
-            subtitle = "On-device mobile AI is brand new technology. Help us shape the future of coding.",
-            heroIcon = Icons.Default.BugReport,
+            title = "An Open Experiment",
+            subtitle = "CodeMateX explores what’s possible with on-device AI. We're actively refining the experience with every update.",
+            heroIcon = Icons.Default.AutoAwesome,
             accentColor = Color(0xFF7B1FA2), // Purple
             showFeedbackAction = true,
             features =
                 listOf(
                     FeatureItem(
                         icon = Icons.Default.Code,
-                        title = "Bleeding-Edge Concept",
-                        description = "Running multi-gigabyte neural networks locally is cutting-edge. Performance varies by device.",
+                        title = "Work in Progress",
+                        description =
+                            "Running multi-gigabyte models directly on mobile chips is brand new. " +
+                                "You might encounter occasional hiccups or rough edges.",
                     ),
                     FeatureItem(
-                        icon = Icons.Default.BugReport,
-                        title = "Open to Feedback & Issues",
-                        description = "Notice quirks or have ideas? We actively welcome issue reports and feature requests.",
+                        icon = Icons.Default.Memory,
+                        title = "Device Dependent",
+                        description =
+                            "Inference speed and memory stability vary depending on your phone's processor and RAM headroom.",
                     ),
                     FeatureItem(
                         iconRes = R.drawable.github_logo,
-                        title = "Community Driven",
-                        description = "Join discussions on GitHub to request new model weights, languages, and features.",
+                        title = "Help Us Improve",
+                        description =
+                            "Notice something off or have suggestions? " +
+                                "Your bug reports and feedback directly help make this better for everyone.",
                     ),
                 ),
         ),
