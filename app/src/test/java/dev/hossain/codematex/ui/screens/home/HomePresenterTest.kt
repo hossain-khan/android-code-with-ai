@@ -8,6 +8,7 @@ import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
+import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -32,6 +33,7 @@ class FakeHardwareEligibilityChecker(
 class HomePresenterTest {
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeModelRepo = FakeModelRepository()
+    private val fakeLlmEngine = FakeLlmEngine()
     private val fakeLearningRepo =
         FakeLearningRepository(
             courses =
@@ -55,19 +57,26 @@ class HomePresenterTest {
                 ),
         )
 
+    private fun createPresenter(
+        navigator: FakeNavigator = FakeNavigator(HomeScreen),
+        hardwareEligibility: HardwareEligibility = HardwareEligibility.Eligible,
+        modelRepository: FakeModelRepository = fakeModelRepo,
+        llmEngine: FakeLlmEngine = fakeLlmEngine,
+    ): HomePresenter =
+        HomePresenter(
+            navigator = navigator,
+            screen = HomeScreen,
+            sessionRepository = fakeSessionRepo,
+            modelRepository = modelRepository,
+            hardwareEligibilityChecker = FakeHardwareEligibilityChecker(hardwareEligibility),
+            learningRepository = fakeLearningRepo,
+            llmEngine = llmEngine,
+        )
+
     @Test
     fun `given device is eligible - emits success state with topics and available courses`() =
         runTest {
-            val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter()
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -81,7 +90,6 @@ class HomePresenterTest {
     @Test
     fun `given device is ineligible - emits ineligible device state and dismiss transitions to success`() =
         runTest {
-            val navigator = FakeNavigator(HomeScreen)
             val ineligible =
                 HardwareEligibility.Ineligible(
                     reason = "Low RAM",
@@ -89,15 +97,7 @@ class HomePresenterTest {
                     minRequiredRamGb = 8.0,
                     is64BitSupported = true,
                 )
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(ineligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(hardwareEligibility = ineligible)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.IneligibleDevice
@@ -115,15 +115,7 @@ class HomePresenterTest {
     fun `given topic selected event - navigates to chat screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -136,15 +128,7 @@ class HomePresenterTest {
     fun `given manage models event - navigates to model picker screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -157,15 +141,7 @@ class HomePresenterTest {
     fun `given view all sessions event - navigates to session history screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -178,15 +154,7 @@ class HomePresenterTest {
     fun `given app tour event - navigates to onboarding screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -199,15 +167,7 @@ class HomePresenterTest {
     fun `given open settings event - navigates to settings screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -220,15 +180,7 @@ class HomePresenterTest {
     fun `given course clicked event - navigates to chapter screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
@@ -241,20 +193,25 @@ class HomePresenterTest {
     fun `given guided lessons event - navigates to lesson catalog screen`() =
         runTest {
             val navigator = FakeNavigator(HomeScreen)
-            val presenter =
-                HomePresenter(
-                    navigator = navigator,
-                    screen = HomeScreen,
-                    sessionRepository = fakeSessionRepo,
-                    modelRepository = fakeModelRepo,
-                    hardwareEligibilityChecker = FakeHardwareEligibilityChecker(HardwareEligibility.Eligible),
-                    learningRepository = fakeLearningRepo,
-                )
+            val presenter = createPresenter(navigator = navigator)
 
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.GuidedLessons)
                 assertThat(navigator.awaitNextScreen()).isEqualTo(LessonCatalogScreen)
+            }
+        }
+
+    @Test
+    fun `given model and memory state - populates model status fields correctly`() =
+        runTest {
+            fakeLlmEngine.isInitializedValue = true
+            val presenter = createPresenter(llmEngine = fakeLlmEngine)
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                assertThat(state.isModelInMemory).isTrue()
+                assertThat(state.memoryBackend).isEqualTo("CPU")
             }
         }
 }

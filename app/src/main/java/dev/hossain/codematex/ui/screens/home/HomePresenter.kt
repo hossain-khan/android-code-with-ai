@@ -16,6 +16,7 @@ import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.course.LearningRepository
+import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -41,6 +42,7 @@ class HomePresenter(
     private val modelRepository: ModelRepository,
     private val hardwareEligibilityChecker: HardwareEligibilityChecker,
     private val learningRepository: LearningRepository,
+    private val llmEngine: LlmEngine,
 ) : Presenter<HomeScreen.State> {
     @Composable
     override fun present(): HomeScreen.State {
@@ -51,7 +53,11 @@ class HomePresenter(
         var isWarningDismissed by rememberRetained { mutableStateOf(false) }
 
         val hardwareEligibility = remember { hardwareEligibilityChecker.checkEligibility() }
-        val hasDownloadedModel = modelRepository.getSelectedModel() != null
+        val selectedModel = modelRepository.getSelectedModel()
+        val hasDownloadedModel = selectedModel != null
+        val selectedModelName = selectedModel?.displayName
+        val isModelInMemory = llmEngine.isInitialized()
+        val memoryBackend = llmEngine.getActiveBackend()?.name
 
         LaunchedEffect(Unit) {
             topicsWithCourses = learningRepository.getTopicsWithCourses()
@@ -133,6 +139,9 @@ class HomePresenter(
                 recentSessions = recentSessions,
                 topics = CodingTopic.selectableEntries,
                 hasDownloadedModel = hasDownloadedModel,
+                selectedModelName = selectedModelName,
+                isModelInMemory = isModelInMemory,
+                memoryBackend = memoryBackend,
                 topicsWithCourses = topicsWithCourses,
                 availableCourses = availableCourses,
                 eventSink = eventSink,

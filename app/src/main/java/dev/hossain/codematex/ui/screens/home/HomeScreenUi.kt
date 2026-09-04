@@ -31,7 +31,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Memory
@@ -64,6 +63,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -183,6 +183,9 @@ private fun HomeLayout(
                 ) {
                     HeroBanner(
                         hasDownloadedModel = state.hasDownloadedModel,
+                        selectedModelName = state.selectedModelName,
+                        isModelInMemory = state.isModelInMemory,
+                        memoryBackend = state.memoryBackend,
                         onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
                     )
 
@@ -326,6 +329,9 @@ private fun HomeLayout(
                 item {
                     HeroBanner(
                         hasDownloadedModel = state.hasDownloadedModel,
+                        selectedModelName = state.selectedModelName,
+                        isModelInMemory = state.isModelInMemory,
+                        memoryBackend = state.memoryBackend,
                         onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
                     )
                 }
@@ -460,6 +466,9 @@ private fun HomeLayout(
 @Composable
 private fun HeroBanner(
     hasDownloadedModel: Boolean,
+    selectedModelName: String?,
+    isModelInMemory: Boolean,
+    memoryBackend: String?,
     onManageModels: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -479,49 +488,18 @@ private fun HeroBanner(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        "On-Device AI Tutor",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Text(
-                        "Ask & Learn Locally",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                    )
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color =
-                        if (hasDownloadedModel) {
-                            MaterialTheme.colorScheme.primaryContainer
-                        } else {
-                            MaterialTheme.colorScheme.errorContainer
-                        },
-                    modifier = Modifier.size(40.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            if (hasDownloadedModel) Icons.Default.CheckCircle else Icons.Default.Download,
-                            contentDescription = null,
-                            tint =
-                                if (hasDownloadedModel) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onErrorContainer
-                                },
-                            modifier = Modifier.size(22.dp),
-                        )
-                    }
-                }
+            Column {
+                Text(
+                    "On-Device AI Tutor",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    "Ask & Learn Locally",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                )
             }
 
             Text(
@@ -529,6 +507,134 @@ private fun HeroBanner(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            // Dedicated Model & Memory Status Bar
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+            ) {
+                Row(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f, fill = false),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Memory,
+                            contentDescription = null,
+                            tint =
+                                if (hasDownloadedModel) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outline
+                                },
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text =
+                                if (hasDownloadedModel) {
+                                    selectedModelName ?: "AI Model Ready"
+                                } else {
+                                    "No Model Selected"
+                                },
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    if (hasDownloadedModel) {
+                        Surface(
+                            shape = CircleShape,
+                            color =
+                                if (isModelInMemory) {
+                                    Color(0xFF2E7D32).copy(alpha = 0.15f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f)
+                                },
+                            border =
+                                BorderStroke(
+                                    1.dp,
+                                    if (isModelInMemory) {
+                                        Color(0xFF2E7D32).copy(alpha = 0.4f)
+                                    } else {
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    },
+                                ),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            ) {
+                                Box(
+                                    modifier =
+                                        Modifier
+                                            .size(6.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (isModelInMemory) {
+                                                    Color(0xFF2E7D32)
+                                                } else {
+                                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                                },
+                                            ),
+                                )
+                                Text(
+                                    text =
+                                        if (isModelInMemory) {
+                                            "In RAM • ${memoryBackend ?: "GPU"}"
+                                        } else {
+                                            "Ready (On Storage)"
+                                        },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color =
+                                        if (isModelInMemory) {
+                                            Color(0xFF2E7D32)
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                        },
+                                )
+                            }
+                        }
+                    } else {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(12.dp),
+                                    tint = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                                Text(
+                                    text = "Setup required",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
 
             FilledTonalButton(
                 onClick = onManageModels,
@@ -1266,6 +1372,9 @@ private fun HeroBannerPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         HeroBanner(
             hasDownloadedModel = true,
+            selectedModelName = "Gemma 2B IT",
+            isModelInMemory = true,
+            memoryBackend = "GPU",
             onManageModels = {},
             modifier = Modifier.padding(16.dp),
         )
