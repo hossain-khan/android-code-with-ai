@@ -10,8 +10,10 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelRepository
@@ -53,7 +55,7 @@ class HomePresenter(
         var isWarningDismissed by rememberRetained { mutableStateOf(false) }
 
         val hardwareEligibility = remember { hardwareEligibilityChecker.checkEligibility() }
-        val selectedModel = modelRepository.getSelectedModel()
+        var selectedModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         val hasDownloadedModel = selectedModel != null
         val selectedModelName = selectedModel?.displayName
         val isModelInMemory = llmEngine.isInitialized()
@@ -64,6 +66,13 @@ class HomePresenter(
             launch {
                 learningRepository.getCourses().collect { courses ->
                     availableCourses = courses
+                }
+            }
+            launch {
+                modelRepository.getAvailableModels().collect { models ->
+                    selectedModel = modelRepository.getSelectedModel()
+                        ?: models.firstOrNull { it.isSelected }
+                        ?: models.firstOrNull { it.downloadStatus == DownloadStatus.DOWNLOADED }
                 }
             }
             Timber.d("HomePresenter: Loading sessions")

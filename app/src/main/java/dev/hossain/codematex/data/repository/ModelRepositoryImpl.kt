@@ -134,7 +134,18 @@ class ModelRepositoryImpl
 
             // Fallback: auto-select the first available downloaded model
             val firstDownloaded = cachedModels.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
-            return firstDownloaded?.copy(isSelected = true)
+            if (firstDownloaded != null) return firstDownloaded.copy(isSelected = true)
+
+            // Fallback: if cachedModels has no downloaded model, re-scan disk in case a download finished
+            // while getAvailableModels() was not actively observed.
+            val freshScan = initialModelScan()
+            val freshDownloaded = freshScan.find { it.downloadStatus == DownloadStatus.DOWNLOADED }
+            if (freshDownloaded != null) {
+                cachedModels = freshScan
+                return freshDownloaded.copy(isSelected = true)
+            }
+
+            return null
         }
 
         override suspend fun selectModel(model: AiModel) {

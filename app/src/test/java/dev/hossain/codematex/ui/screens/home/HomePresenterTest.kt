@@ -4,10 +4,12 @@ import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
+import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
@@ -212,6 +214,27 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 assertThat(state.isModelInMemory).isTrue()
                 assertThat(state.memoryBackend).isEqualTo("CPU")
+            }
+        }
+
+    @Test
+    fun `when model download completes - updates selectedModel and hasDownloadedModel reactively`() =
+        runTest {
+            val modelRepo = FakeModelRepository()
+            val presenter = createPresenter(modelRepository = modelRepo)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as HomeScreen.State.Success
+                assertThat(initialState.hasDownloadedModel).isFalse()
+                assertThat(initialState.selectedModelName).isNull()
+
+                val downloadedModel = testModel(id = "google/gemma-2-2b-it", downloadStatus = DownloadStatus.DOWNLOADED)
+                modelRepo.selectModel(downloadedModel)
+                modelRepo.emitModels(listOf(downloadedModel.copy(isSelected = true)))
+
+                val updatedState = awaitItem() as HomeScreen.State.Success
+                assertThat(updatedState.hasDownloadedModel).isTrue()
+                assertThat(updatedState.selectedModelName).isEqualTo("gemma-2-2b-it")
             }
         }
 }
