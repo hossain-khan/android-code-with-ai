@@ -1,0 +1,6 @@
+What's New in CodeMateX 1.20.0:
+• Sticky Code Preview: Live syntax preview stays pinned while scrolling settings in portrait.
+• Tablet 2-Pane Display: Adaptive split-screen layout for tablets with expanded preview snippet.
+• Interactive Hero Status: One-tap model and memory status bar on home screen.
+• Instant Model Reactivity: Immediate hero updates as models finish downloading.
+• UI Polish: Solid course progress indicators and refined spacing.
