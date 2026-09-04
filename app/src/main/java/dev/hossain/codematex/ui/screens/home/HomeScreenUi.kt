@@ -488,18 +488,31 @@ private fun HeroBanner(
             modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Column {
-                Text(
-                    "On-Device AI Tutor",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "Ask & Learn Locally",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f, fill = false)) {
+                    Text(
+                        "On-Device AI Tutor",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        "Ask & Learn Locally",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                }
+
+                FilledTonalButton(
+                    onClick = onManageModels,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                ) {
+                    Text("Manage", style = MaterialTheme.typography.labelMedium)
+                }
             }
 
             Text(
@@ -510,7 +523,11 @@ private fun HeroBanner(
 
             // Dedicated Model & Memory Status Bar
             Surface(
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.medium)
+                        .clickable(onClick = onManageModels),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
@@ -634,25 +651,6 @@ private fun HeroBanner(
                         }
                     }
                 }
-            }
-
-            FilledTonalButton(
-                onClick = onManageModels,
-                colors =
-                    ButtonDefaults.filledTonalButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                    ),
-            ) {
-                Icon(
-                    Icons.Default.Memory,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Text(
-                    if (hasDownloadedModel) "Manage AI Models" else "Download AI Model",
-                    style = MaterialTheme.typography.labelMedium,
-                )
             }
         }
     }
