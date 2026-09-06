@@ -188,7 +188,7 @@ kover {
             // verification only for 'release' build variant
             verify {
                 rule {
-                    minBound(50)
+                    minBound(80)
                 }
             }
         }
