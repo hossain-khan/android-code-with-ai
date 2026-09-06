@@ -149,7 +149,8 @@ kover {
                 androidGeneratedClasses()
                 // Exclude generated code and UI boilerplate to focus coverage on business logic
                 classes(
-                    // Metro / DI generated factories and binders
+                    // Metro / DI dependency injection graph and generated factories
+                    "*.di.*",
                     "*$$$*",
                     "*_Factory*",
                     "*Factory$*",
@@ -162,16 +163,28 @@ kover {
                     "*Circuit*",
                     // Compose UI Composables, screens, themes, and views
                     "*.ui.theme.*",
+                    "*.ui.component.*",
+                    "*.ui.overlay.*",
                     "*ScreenKt*",
+                    "*ScreenUi*",
+                    "*ScreenUiKt*",
                     "*ViewKt*",
+                    "*ViewsKt*",
                     "*ContentKt*",
                     "*ComponentsKt*",
+                    "*BottomSheet*",
                     "*BottomSheetKt*",
+                    "*DockKt*",
+                    "*LayoutKt*",
+                    "*PanelKt*",
+                    "*StartersKt*",
                     "*PreviewKt*",
                     "*ComposableSingletons*",
-                    // Android UI entry points
+                    // Android UI and framework entry points
                     "*Activity*",
                     "*Application*",
+                    "*CodeWithAIApp*",
+                    "*AppComponentFactory*",
                 )
                 annotatedBy(
                     "androidx.compose.runtime.Composable",
