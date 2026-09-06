@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -51,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -254,8 +256,9 @@ private fun LessonBody(
             }
         } else {
             val visualInfo = state.course.topic.visualInfo
+            val isRustByExample = state.course.id == "rust-by-example"
             items(state.lesson.blocks.toList()) { block ->
-                LessonBlockContent(block, visualInfo)
+                LessonBlockContent(block, visualInfo, isRustByExample)
             }
         }
         item {
@@ -373,8 +376,10 @@ private fun LessonBody(
 private fun LessonBlockContent(
     block: LessonBlock,
     visualInfo: TopicVisualInfo,
+    isRustByExample: Boolean = false,
 ) {
     val settings = LocalCodeBlockSettings.current
+    val uriHandler = LocalUriHandler.current
     val baseStyle =
         if (settings.preset == CodeBlockPreset.COMPACT) {
             CodeBlockStyle.Compact
@@ -399,25 +404,54 @@ private fun LessonBlockContent(
 
         is LessonBlock.Code -> {
             val resolvedLanguage = block.language.ifEmpty { "text" }
-            SyntaxHighlightedCode(
-                code = block.code,
-                language = resolvedLanguage,
-                showLineNumbers = settings.showLineNumbers,
-                style = effectiveStyle,
-                languageLabel =
-                    if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
-                        { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
-                    } else {
-                        null
-                    },
-                copyButton =
-                    if (settings.showCopyButton) {
-                        { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
-                    } else {
-                        null
-                    },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            )
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                SyntaxHighlightedCode(
+                    code = block.code,
+                    language = resolvedLanguage,
+                    showLineNumbers = settings.showLineNumbers,
+                    style = effectiveStyle,
+                    languageLabel =
+                        if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
+                            { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
+                        } else {
+                            null
+                        },
+                    copyButton =
+                        if (settings.showCopyButton) {
+                            { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
+                        } else {
+                            null
+                        },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+
+                if (isRustByExample &&
+                    (resolvedLanguage.equals("rust", ignoreCase = true) || resolvedLanguage.equals("rs", ignoreCase = true))
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                uriHandler.openUri("https://play.rust-lang.org/")
+                            },
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                "Run in Playground",
+                                style = MaterialTheme.typography.labelMedium,
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         is LessonBlock.Quiz -> {
