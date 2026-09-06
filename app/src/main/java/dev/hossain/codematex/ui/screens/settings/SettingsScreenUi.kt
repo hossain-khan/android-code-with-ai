@@ -713,7 +713,7 @@ private fun SettingsScreenUiPreview() {
                         storageUsedBytes = 2_700_000_000L,
                         downloadedModelCount = 1,
                         sessionCount = 3,
-                        appVersion = "v1.16.3",
+                        appVersion = "v1.22.0",
                         eventSink = {},
                     ),
             )
