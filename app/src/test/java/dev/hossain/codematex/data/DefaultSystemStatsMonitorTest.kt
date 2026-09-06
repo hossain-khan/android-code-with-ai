@@ -6,6 +6,7 @@ import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.util.DeviceMemory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -58,6 +59,44 @@ class DefaultSystemStatsMonitorTest {
 
             assertThat(emitted).isNotEmpty()
             assertThat(emitted.first()).isEqualTo("CPU: 0% • RAM: 4.0 GB / 8.0 GB")
+        }
+
+    @Test
+    fun `monitorMetricsWhileActive periodically emits updated stats during active loop`() =
+        runTest {
+            fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 3.5f, totalGb = 8.0f)
+            fakeMemoryProvider.returnedProcessCpuTicks = 1000L
+            val emitted = mutableListOf<SystemResourceStats>()
+
+            var active = true
+            val job =
+                launch {
+                    monitor.monitorMetricsWhileActive(
+                        isActive = { active },
+                        onMetrics = { emitted.add(it) },
+                    )
+                }
+
+            runCurrent()
+            assertThat(emitted).hasSize(1)
+
+            // Allow at least 150ms wall-clock to pass so elapsedSec > 0.1f
+            Thread.sleep(150)
+            fakeMemoryProvider.returnedProcessCpuTicks = 1200L
+            fakeMemoryProvider.returnedMemoryStats = DeviceMemory.MemoryStats(usedGb = 4.0f, totalGb = 8.0f)
+
+            advanceTimeBy(800)
+            runCurrent()
+
+            active = false
+            advanceTimeBy(800)
+            runCurrent()
+            job.cancel()
+
+            assertThat(emitted.size).isAtLeast(2)
+            val latest = emitted.last()
+            assertThat(latest.ramUsedGb).isWithin(0.01f).of(4.0f)
+            assertThat(latest.cpuPercent).isGreaterThan(0f)
         }
 
     @Test

@@ -1293,6 +1293,86 @@ class LlmEngineImplTest {
             assertThat(fakeConversation.closed).isTrue()
         }
 
+    @Test
+    fun `initialize switches model and cleans up previous engine when new model path is provided`() =
+        runEngineTest {
+            val engine1 = FakeInferenceEngine()
+            val conv1 = FakeInferenceConversation()
+            val engine2 = FakeInferenceEngine()
+            val conv2 = FakeInferenceConversation()
+
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = engine1,
+                    conversation = conv1,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = engine2,
+                    conversation = conv2,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+
+            engine.initialize(modelPath = "/models/model1.bin", backend = LlmEngine.Backend.CPU)
+            assertThat(engine.isModelLoaded("/models/model1.bin")).isTrue()
+
+            engine.initialize(modelPath = "/models/model2.bin", backend = LlmEngine.Backend.CPU)
+            assertThat(engine1.closed).isTrue()
+            assertThat(conv1.closed).isTrue()
+            assertThat(engine.isModelLoaded("/models/model2.bin")).isTrue()
+        }
+
+    @Test
+    fun `restoreHistory recreates conversation when previously cancelled`() =
+        runEngineTest {
+            val fakeConversation1 = FakeInferenceConversation()
+            val fakeConversation2 = FakeInferenceConversation()
+            val fakeEngine = FakeInferenceEngine()
+
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation1,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation2,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+
+            engine.initialize(modelPath = "/models/model.bin", backend = LlmEngine.Backend.CPU)
+
+            val job1 =
+                launch {
+                    engine.runInference("prompt") { _, _ -> }
+                }
+            testScheduler.runCurrent()
+            job1.cancel()
+            testScheduler.runCurrent()
+
+            val restoreJob =
+                launch {
+                    engine.restoreHistory(listOf(ChatMessage.User("User message")))
+                }
+            testScheduler.runCurrent()
+            val newConversation = fakeEngine.createdConversations.last()
+            newConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            restoreJob.join()
+
+            assertThat(fakeConversation1.closed).isTrue()
+            assertThat(newConversation.sentMessages).hasSize(1)
+        }
+
     private fun textMessage(text: String): com.google.ai.edge.litertlm.Message {
         val content =
             com.google.ai.edge.litertlm.Content

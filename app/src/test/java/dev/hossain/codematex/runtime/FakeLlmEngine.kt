@@ -75,7 +75,9 @@ class FakeLlmEngine : LlmEngine {
         restoreHistoryCalls++
     }
 
-    override fun getActiveBackend(): LlmEngine.Backend? = LlmEngine.Backend.CPU
+    var activeBackendValue: LlmEngine.Backend? = LlmEngine.Backend.CPU
+
+    override fun getActiveBackend(): LlmEngine.Backend? = activeBackendValue
 
     var isInitializedValue: Boolean = true
     var loadedModelPath: String? = null
@@ -84,7 +86,10 @@ class FakeLlmEngine : LlmEngine {
 
     override fun isModelLoaded(modelPath: String): Boolean = isInitializedValue && (loadedModelPath == modelPath)
 
+    var cleanupThrows: Exception? = null
+
     override suspend fun cleanup() {
+        if (cleanupThrows != null) throw cleanupThrows!!
         cleanupCalls++
         isInitializedValue = false
         loadedModelPath = null

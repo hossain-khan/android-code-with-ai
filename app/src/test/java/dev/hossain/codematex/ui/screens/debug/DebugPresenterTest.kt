@@ -219,6 +219,279 @@ class DebugPresenterTest {
         }
 
     @Test
+    fun `select model and select backend update state`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel, notDownloadedModel))
+            val fakeLlmEngine = FakeLlmEngine()
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.SelectModel(notDownloadedModel))
+
+                val updatedModel = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updatedModel.selectedModel).isEqualTo(notDownloadedModel)
+                assertThat(updatedModel.statusMessage).contains("Selected model: ${notDownloadedModel.name}")
+
+                updatedModel.eventSink(DebugScreen.Event.SelectBackend(LlmEngine.Backend.CPU))
+                val updatedBackend = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updatedBackend.selectedBackend).isEqualTo(LlmEngine.Backend.CPU)
+                assertThat(updatedBackend.statusMessage).contains("Set test backend to: CPU")
+            }
+        }
+
+    @Test
+    fun `update benchmark prompt updates state`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine = FakeLlmEngine()
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.UpdateBenchmarkPrompt("Write a fibonacci function in Kotlin"))
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.benchmarkPrompt).isEqualTo("Write a fibonacci function in Kotlin")
+            }
+        }
+
+    @Test
+    fun `load model when weights not downloaded updates status message`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(notDownloadedModel))
+            val fakeLlmEngine = FakeLlmEngine()
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.LoadModel)
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.statusMessage).contains("not downloaded")
+                assertThat(fakeLlmEngine.initializeCalls).isEqualTo(0)
+            }
+        }
+
+    @Test
+    fun `load model failure updates status message and resets loading state`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine =
+                FakeLlmEngine().apply {
+                    activeBackendValue = null
+                    shouldThrow = RuntimeException("Init failed")
+                }
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.LoadModel)
+                testScheduler.runCurrent()
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.statusMessage).contains("Load failed: Init failed")
+                assertThat(updated.isLoadingModel).isFalse()
+                assertThat(updated.isModelLoaded).isFalse()
+            }
+        }
+
+    @Test
+    fun `unload model failure updates status message and resets unloading state`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine = FakeLlmEngine().apply { cleanupThrows = RuntimeException("Cleanup native failed") }
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.UnloadModel)
+                testScheduler.runCurrent()
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.statusMessage).contains("Unload error: Cleanup native failed")
+                assertThat(updated.isUnloadingModel).isFalse()
+            }
+        }
+
+    @Test
+    fun `run benchmark when model not loaded and no local path sets status message`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(notDownloadedModel))
+            val fakeLlmEngine = FakeLlmEngine().apply { activeBackendValue = null }
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.RunBenchmark)
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.statusMessage).contains("Load a model first")
+                assertThat(fakeLlmEngine.isolatedInferenceCalls).isEqualTo(0)
+            }
+        }
+
+    @Test
+    fun `run benchmark failure sets error status message`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine = FakeLlmEngine().apply { shouldThrow = RuntimeException("Inference crashed") }
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.RunBenchmark)
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updated.statusMessage).contains("Benchmark error: Inference crashed")
+                assertThat(updated.isBenchmarking).isFalse()
+            }
+        }
+
+    @Test
+    fun `stop benchmark calls engine stop and updates status`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine = FakeLlmEngine()
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.StopBenchmark)
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(fakeLlmEngine.stopCalls).isEqualTo(1)
+                assertThat(updated.isBenchmarking).isFalse()
+                assertThat(updated.statusMessage).contains("Benchmark stopped by user")
+            }
+        }
+
+    @Test
+    fun `delete model invokes repository delete`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeLlmEngine = FakeLlmEngine()
+            val fakeConfigStore = FakeModelConfigStore()
+            val fakeMemoryProvider = FakeDebugMemoryProvider()
+            val navigator = FakeNavigator(DebugScreen)
+
+            val presenter =
+                DebugPresenter(
+                    navigator = navigator,
+                    screen = DebugScreen,
+                    modelRepository = fakeRepo,
+                    llmEngine = fakeLlmEngine,
+                    configStore = fakeConfigStore,
+                    debugMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                state.eventSink(DebugScreen.Event.DeleteModel(downloadedModel))
+
+                val updated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
+                assertThat(updated.statusMessage).contains("Deleted weights for ${downloadedModel.name}")
+            }
+        }
+
+    @Test
     fun `back event pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
