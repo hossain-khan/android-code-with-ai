@@ -296,4 +296,69 @@ class ModelDownloadWorkerTest {
         assertThat(ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_PROGRESS).isEqualTo("model_download")
         assertThat(ModelDownloadWorker.CHANNEL_ID_DOWNLOAD_COMPLETE).isEqualTo("model_download_complete")
     }
+
+    @Test
+    fun `isRetryable returns false for CancellationException`() {
+        assertThat(ModelDownloadWorker.isRetryable(CancellationException())).isFalse()
+    }
+
+    @Test
+    fun `isRetryable returns false for MalformedInput`() {
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.MalformedInput("bad url"))).isFalse()
+    }
+
+    @Test
+    fun `isRetryable returns true for NetworkFailure`() {
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.NetworkFailure(IOException()))).isTrue()
+    }
+
+    @Test
+    fun `isRetryable returns true for HTTP 408 and 429`() {
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(408))).isTrue()
+        assertThat(ModelDownloadWorker.isRetryable(ModelDownloadException.HttpError(429))).isTrue()
+    }
+
+    @Test
+    fun `isRetryable returns false for random RuntimeException`() {
+        assertThat(ModelDownloadWorker.isRetryable(RuntimeException("Random error"))).isFalse()
+    }
+
+    @Test
+    fun `given empty urls list - execute download returns failure`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    urls = emptyList(),
+                    outputPath = "/models/model.bin",
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = {},
+                )
+
+            assertThat(result).isInstanceOf(WorkResult.Failure::class.java)
+        }
+
+    @Test
+    fun `given expectedSha256 provided via single-URL overload - execute download forwards checksum to downloader`() =
+        runTest {
+            val fakeDownloader = FakeModelDownloader()
+            val url = "https://r2.example.com/model.bin"
+            val expectedSha256 = "181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c"
+
+            val result =
+                ModelDownloadWorker.executeDownload(
+                    url = url,
+                    outputPath = "/models/model.bin",
+                    expectedSha256 = expectedSha256,
+                    modelDownloader = fakeDownloader,
+                    isStopped = { false },
+                    onProgress = { _, _, _ -> },
+                )
+
+            assertThat(result).isEqualTo(WorkResult.success())
+            assertThat(fakeDownloader.downloads).hasSize(1)
+            assertThat(fakeDownloader.downloads.single().expectedSha256).isEqualTo(expectedSha256)
+        }
 }
