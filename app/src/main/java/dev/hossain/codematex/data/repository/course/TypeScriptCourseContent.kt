@@ -6,8 +6,10 @@ import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 
 /**
- * Bundled TypeScript Foundations course based only on the official TypeScript Handbook,
- * TypeScript Language Reference material, and TSConfig Reference.
+ * Bundled TypeScript Foundations course based on official TypeScript documentation.
+ *
+ * Source: The TypeScript Handbook and Language Reference (https://www.typescriptlang.org/docs/handbook/)
+ * License: Apache License, Version 2.0 (https://github.com/microsoft/TypeScript-Website/blob/v2/LICENSE)
  *
  * Examples focus on the type system and its relationship to JavaScript. Framework-specific
  * material is intentionally excluded so the lessons remain useful across runtimes.

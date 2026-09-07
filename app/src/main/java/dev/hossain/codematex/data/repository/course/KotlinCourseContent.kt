@@ -6,9 +6,12 @@ import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 
 /**
- * Bundled Kotlin Foundations course derived from the Kotlin 1.9.20 documentation tour and
- * language-reference chapters. Content is intentionally concise and lesson-oriented rather than
- * mirroring the reference documentation page-for-page.
+ * Bundled Kotlin Foundations course derived from the Kotlin documentation tour and language-reference chapters.
+ *
+ * Source: Kotlin official documentation (https://kotlinlang.org/docs/home.html)
+ * License: Apache License, Version 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
+ *
+ * Content is intentionally concise and lesson-oriented rather than mirroring the reference documentation page-for-page.
  */
 object KotlinCourseContent {
     const val COURSE_ID = "kotlin-foundations"

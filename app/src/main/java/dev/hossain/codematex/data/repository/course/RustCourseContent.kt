@@ -9,6 +9,9 @@ import dev.hossain.codematex.data.model.LessonBlock
  * Bundled Rust Foundations course based on the official Rust Book, Rust By Example,
  * Cargo documentation, and the standard library documentation.
  *
+ * Source: "The Rust Programming Language" book and standard library documentation (https://doc.rust-lang.org/book/)
+ * License: MIT License or Apache License, Version 2.0 (dual-licensed) (https://github.com/rust-lang/book/blob/main/LICENSE-APACHE)
+ *
  * The course introduces Rust's ownership model progressively, then builds toward
  * traits, error handling, testing, iterators, and safe concurrency.
  */
