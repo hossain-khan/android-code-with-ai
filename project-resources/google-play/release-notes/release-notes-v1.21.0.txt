@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.21.0:
+• Rust by Example: Bundled comprehensive 24-chapter, 196-lesson course with syntax-highlighted snippets.
+• In-App Code Execution: Run Rust lesson code directly on device with compiling indicators and terminal output.
+• Cloudflare Edge Proxy: High-speed edge execution (<50ms cached) with global caching and secure Bearer authorization.
+• Offline-First Design: All course lessons, guides, and AI tutoring continue to work 100% offline.
