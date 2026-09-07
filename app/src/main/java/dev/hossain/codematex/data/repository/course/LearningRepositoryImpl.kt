@@ -31,6 +31,7 @@ class LearningRepositoryImpl
                 TypeScriptCourseContent.course,
                 GoCourseContent.course,
                 RustCourseContent.course,
+                RustByExampleCourseContent.course,
                 SwiftCourseContent.course,
             )
 

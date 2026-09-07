@@ -29,11 +29,12 @@ class NetworkingGraphTest {
     }
 
     @Test
-    fun `provideJson is configured to be lenient and ignore unknown keys`() {
+    fun `provideJson is configured to be lenient, ignore unknown keys, and encode defaults`() {
         val json = networkingGraph.provideJson()
 
         assertThat(json.configuration.ignoreUnknownKeys).isTrue()
         assertThat(json.configuration.isLenient).isTrue()
+        assertThat(json.configuration.encodeDefaults).isTrue()
     }
 
     @Test
@@ -46,5 +47,15 @@ class NetworkingGraphTest {
         assertThat(retrofit.baseUrl().toString()).isEqualTo("https://example.com/")
         assertThat(retrofit.callFactory()).isEqualTo(client)
         assertThat(retrofit.converterFactories()).isNotEmpty()
+    }
+
+    @Test
+    fun `provideRustPlaygroundApi creates API instance with Rust playground baseUrl`() {
+        val client = networkingGraph.provideOkHttpClient()
+        val json = networkingGraph.provideJson()
+
+        val api = networkingGraph.provideRustPlaygroundApi(client, json)
+
+        assertThat(api).isNotNull()
     }
 }

@@ -9,6 +9,26 @@ import dev.hossain.codematex.data.model.LearningLesson
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
+@Immutable
+@Serializable
+sealed interface SnippetExecutionState {
+    data object Idle : SnippetExecutionState
+
+    data object Compiling : SnippetExecutionState
+
+    data class Success(
+        val output: String,
+    ) : SnippetExecutionState
+
+    data class CompilationError(
+        val diagnostic: String,
+    ) : SnippetExecutionState
+
+    data class Error(
+        val message: String,
+    ) : SnippetExecutionState
+}
+
 @Parcelize
 data class LessonScreen(
     val lessonId: String,
@@ -23,6 +43,7 @@ data class LessonScreen(
             val course: LearningCourse,
             val isCompleted: Boolean,
             val nextLessonId: String?,
+            val snippetExecutionStates: Map<Int, SnippetExecutionState> = emptyMap(),
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -41,5 +62,15 @@ data class LessonScreen(
         data object AskAi : Event
 
         data object Back : Event
+
+        data class RunSnippet(
+            val blockIndex: Int,
+            val code: String,
+            val language: String,
+        ) : Event
+
+        data class DismissSnippetOutput(
+            val blockIndex: Int,
+        ) : Event
     }
 }

@@ -10,23 +10,32 @@ import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
+import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class LessonPresenterTest {
     private val fakeLearningRepository = FakeLearningRepository()
+    private val fakePlaygroundRunner = FakePlaygroundCodeRunner()
+
+    private fun createPresenter(
+        navigator: FakeNavigator,
+        screen: LessonScreen,
+    ): LessonPresenter =
+        LessonPresenter(
+            navigator = navigator,
+            screen = screen,
+            learningRepository = fakeLearningRepository,
+            playgroundCodeRunner = fakePlaygroundRunner,
+        )
 
     @Test
     fun `given valid lesson - emits success state with lesson and course`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -41,12 +50,7 @@ class LessonPresenterTest {
     fun `given mark completed event - updates lesson completion`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -61,12 +65,7 @@ class LessonPresenterTest {
     fun `given next lesson event - navigates to next lesson screen`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -85,12 +84,7 @@ class LessonPresenterTest {
                     LessonScreen("kotlin-hello-world"),
                 )
 
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -105,12 +99,7 @@ class LessonPresenterTest {
     fun `given ask ai event - navigates to ChatScreen with saveToHistory false and initialPrompt`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -129,12 +118,7 @@ class LessonPresenterTest {
     fun `given python lesson - resolves python course and tutor topic`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("python-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("python-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("python-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -153,12 +137,7 @@ class LessonPresenterTest {
     fun `given typescript lesson - resolves typescript course and tutor topic`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("typescript-first-program"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("typescript-first-program"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("typescript-first-program"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -177,12 +156,7 @@ class LessonPresenterTest {
     fun `given go lesson - resolves go course and tutor topic`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("go-first-program"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("go-first-program"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("go-first-program"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -201,12 +175,7 @@ class LessonPresenterTest {
     fun `given rust lesson - resolves rust course and tutor topic`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("rust-first-program"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("rust-first-program"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("rust-first-program"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -225,12 +194,7 @@ class LessonPresenterTest {
     fun `given back event - pops navigator`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("kotlin-hello-world"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonScreen.State.Success
@@ -244,16 +208,93 @@ class LessonPresenterTest {
     fun `given unknown lesson ID - emits not found state`() =
         runTest {
             val navigator = FakeNavigator(LessonScreen("unknown-lesson"))
-            val presenter =
-                LessonPresenter(
-                    navigator = navigator,
-                    screen = LessonScreen("unknown-lesson"),
-                    learningRepository = fakeLearningRepository,
-                )
+            val presenter = createPresenter(navigator, LessonScreen("unknown-lesson"))
 
             presenter.test {
                 val state = expectMostRecentItem()
                 assertThat(state).isInstanceOf(LessonScreen.State.NotFound::class.java)
+            }
+        }
+
+    @Test
+    fun `given run snippet event with success - updates snippet execution state to success`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("Hello from playground!\n")
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.snippetExecutionStates).isEmpty()
+
+                state.eventSink(LessonScreen.Event.RunSnippet(0, "println!(\"hi\")", "rust"))
+
+                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
+                val snippetState = updatedState.snippetExecutionStates[0]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Success::class.java)
+                val success = snippetState as SnippetExecutionState.Success
+                assertThat(success.output).isEqualTo("Hello from playground!\n")
+            }
+        }
+
+    @Test
+    fun `given run snippet event with compilation error - updates state to compilation error`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn =
+                PlaygroundExecutionResult.CompilationError("error[E0308]: mismatched types")
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                state.eventSink(LessonScreen.Event.RunSnippet(1, "bad code", "rust"))
+
+                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
+                val snippetState = updatedState.snippetExecutionStates[1]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.CompilationError::class.java)
+                val compError = snippetState as SnippetExecutionState.CompilationError
+                assertThat(compError.diagnostic).contains("error[E0308]")
+            }
+        }
+
+    @Test
+    fun `given run snippet event with network error - updates state to error`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn =
+                PlaygroundExecutionResult.NetworkError("Internet connection required")
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                state.eventSink(LessonScreen.Event.RunSnippet(0, "code", "rust"))
+
+                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
+                val snippetState = updatedState.snippetExecutionStates[0]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Error::class.java)
+                val error = snippetState as SnippetExecutionState.Error
+                assertThat(error.message).contains("Internet connection required")
+            }
+        }
+
+    @Test
+    fun `given dismiss snippet output event - clears snippet execution state`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("Output")
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                state.eventSink(LessonScreen.Event.RunSnippet(0, "code", "rust"))
+
+                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(updatedState.snippetExecutionStates[0]).isNotNull()
+
+                updatedState.eventSink(LessonScreen.Event.DismissSnippetOutput(0))
+
+                val finalState = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(finalState.snippetExecutionStates[0]).isNull()
             }
         }
 }

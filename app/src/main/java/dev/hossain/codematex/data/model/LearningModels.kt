@@ -59,6 +59,11 @@ sealed interface LessonBlock {
          * function) so the validator skips them instead of reporting a false failure.
          */
         val runnable: Boolean = true,
+        /**
+         * Optional URL to an external playground (e.g. https://play.rust-lang.org/) where
+         * learners can experiment with or run this code snippet interactively online.
+         */
+        val playgroundUrl: String? = null,
     ) : LessonBlock
 
     data class Quiz(

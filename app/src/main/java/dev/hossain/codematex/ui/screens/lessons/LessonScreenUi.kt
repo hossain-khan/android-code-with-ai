@@ -1,7 +1,9 @@
 package dev.hossain.codematex.ui.screens.lessons
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,13 +12,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -26,13 +32,19 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -51,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -254,8 +267,19 @@ private fun LessonBody(
             }
         } else {
             val visualInfo = state.course.topic.visualInfo
-            items(state.lesson.blocks.toList()) { block ->
-                LessonBlockContent(block, visualInfo)
+            itemsIndexed(state.lesson.blocks.toList()) { index, block ->
+                LessonBlockContent(
+                    blockIndex = index,
+                    block = block,
+                    visualInfo = visualInfo,
+                    snippetState = state.snippetExecutionStates[index],
+                    onRunSnippet = { blockIndex, code, language ->
+                        state.eventSink(LessonScreen.Event.RunSnippet(blockIndex, code, language))
+                    },
+                    onDismissSnippet = { blockIndex ->
+                        state.eventSink(LessonScreen.Event.DismissSnippetOutput(blockIndex))
+                    },
+                )
             }
         }
         item {
@@ -371,8 +395,12 @@ private fun LessonBody(
 @OptIn(ExperimentalHighlightApi::class)
 @Composable
 private fun LessonBlockContent(
+    blockIndex: Int,
     block: LessonBlock,
     visualInfo: TopicVisualInfo,
+    snippetState: SnippetExecutionState? = null,
+    onRunSnippet: ((blockIndex: Int, code: String, language: String) -> Unit)? = null,
+    onDismissSnippet: ((blockIndex: Int) -> Unit)? = null,
 ) {
     val settings = LocalCodeBlockSettings.current
     val baseStyle =
@@ -399,25 +427,69 @@ private fun LessonBlockContent(
 
         is LessonBlock.Code -> {
             val resolvedLanguage = block.language.ifEmpty { "text" }
-            SyntaxHighlightedCode(
-                code = block.code,
-                language = resolvedLanguage,
-                showLineNumbers = settings.showLineNumbers,
-                style = effectiveStyle,
-                languageLabel =
-                    if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
-                        { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
-                    } else {
-                        null
-                    },
-                copyButton =
-                    if (settings.showCopyButton) {
-                        { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
-                    } else {
-                        null
-                    },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            )
+            val isPlaygroundSupported =
+                block.runnable &&
+                    (resolvedLanguage.equals("rust", ignoreCase = true) || resolvedLanguage.equals("rs", ignoreCase = true))
+
+            if (isPlaygroundSupported) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        SyntaxHighlightedCode(
+                            code = block.code,
+                            language = resolvedLanguage,
+                            showLineNumbers = settings.showLineNumbers,
+                            style = effectiveStyle,
+                            languageLabel =
+                                if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
+                                    { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
+                                } else {
+                                    null
+                                },
+                            copyButton =
+                                if (settings.showCopyButton) {
+                                    { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
+                                } else {
+                                    null
+                                },
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        PlaygroundSnippetControls(
+                            code = block.code,
+                            language = resolvedLanguage,
+                            executionState = snippetState ?: SnippetExecutionState.Idle,
+                            visualInfo = visualInfo,
+                            onRun = { onRunSnippet?.invoke(blockIndex, block.code, resolvedLanguage) },
+                            onDismiss = { onDismissSnippet?.invoke(blockIndex) },
+                        )
+                    }
+                }
+            } else {
+                SyntaxHighlightedCode(
+                    code = block.code,
+                    language = resolvedLanguage,
+                    showLineNumbers = settings.showLineNumbers,
+                    style = effectiveStyle,
+                    languageLabel =
+                        if (settings.showLanguageLabel && resolvedLanguage.isNotBlank()) {
+                            { SyntaxHighlightedCodeDefaults.LanguageLabel(resolvedLanguage) }
+                        } else {
+                            null
+                        },
+                    copyButton =
+                        if (settings.showCopyButton) {
+                            { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
+                        } else {
+                            null
+                        },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                )
+            }
         }
 
         is LessonBlock.Quiz -> {
@@ -605,6 +677,293 @@ private fun QuizContent(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun PlaygroundSnippetControls(
+    code: String,
+    language: String,
+    executionState: SnippetExecutionState,
+    visualInfo: TopicVisualInfo,
+    onRun: () -> Unit,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.extraSmall,
+                color = visualInfo.accentColor.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Terminal,
+                        contentDescription = null,
+                        tint = visualInfo.accentColor,
+                        modifier = Modifier.size(14.dp),
+                    )
+                    Text(
+                        text = "Rust Playground",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = visualInfo.accentColor,
+                        fontWeight = FontWeight.Medium,
+                    )
+                }
+            }
+
+            if (executionState is SnippetExecutionState.Compiling) {
+                FilledTonalButton(
+                    onClick = {},
+                    enabled = false,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                ) {
+                    Text(text = "Running...", style = MaterialTheme.typography.labelMedium)
+                }
+            } else {
+                FilledTonalButton(
+                    onClick = onRun,
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                    colors =
+                        ButtonDefaults.filledTonalButtonColors(
+                            containerColor = visualInfo.accentColor.copy(alpha = 0.15f),
+                            contentColor = visualInfo.accentColor,
+                        ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = "Run code on playground",
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (executionState !is SnippetExecutionState.Idle) "Re-run" else "Run Code",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+        }
+
+        when (executionState) {
+            is SnippetExecutionState.Idle -> {
+            }
+
+            is SnippetExecutionState.Compiling -> {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    LinearWavyProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = visualInfo.accentColor,
+                    )
+                    Text(
+                        text = "Compiling & executing on Rust Playground...",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            is SnippetExecutionState.Success -> {
+                TerminalOutputCard(
+                    title = "OUTPUT",
+                    isError = false,
+                    text = executionState.output,
+                    visualInfo = visualInfo,
+                    onDismiss = onDismiss,
+                )
+            }
+
+            is SnippetExecutionState.CompilationError -> {
+                TerminalOutputCard(
+                    title = "COMPILER DIAGNOSTIC",
+                    isError = true,
+                    text = executionState.diagnostic,
+                    visualInfo = visualInfo,
+                    onDismiss = onDismiss,
+                )
+            }
+
+            is SnippetExecutionState.Error -> {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = executionState.message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            modifier = Modifier.weight(1f),
+                        )
+                        IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Dismiss error",
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TerminalOutputCard(
+    title: String,
+    isError: Boolean,
+    text: String,
+    visualInfo: TopicVisualInfo,
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+    ) {
+        Column(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .size(8.dp)
+                                .background(
+                                    color = if (isError) MaterialTheme.colorScheme.error else visualInfo.accentColor,
+                                    shape = CircleShape,
+                                ),
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isError) MaterialTheme.colorScheme.error else visualInfo.accentColor,
+                    )
+                }
+
+                IconButton(
+                    onClick = onDismiss,
+                    modifier = Modifier.size(24.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Dismiss output",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            SelectionContainer {
+                Text(
+                    text = text,
+                    fontFamily = FontFamily.Monospace,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun PlaygroundSnippetControlsIdlePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                PlaygroundSnippetControls(
+                    code = "fn main() { println!(\"Hello!\"); }",
+                    language = "rust",
+                    executionState = SnippetExecutionState.Idle,
+                    visualInfo = CodingTopic.RUST.visualInfo,
+                    onRun = {},
+                    onDismiss = {},
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun PlaygroundSnippetControlsSuccessPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                PlaygroundSnippetControls(
+                    code = "fn main() { println!(\"Hello, world!\"); }",
+                    language = "rust",
+                    executionState = SnippetExecutionState.Success("Hello, world!\n"),
+                    visualInfo = CodingTopic.RUST.visualInfo,
+                    onRun = {},
+                    onDismiss = {},
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun PlaygroundSnippetControlsErrorPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Box(Modifier.padding(16.dp)) {
+                PlaygroundSnippetControls(
+                    code = "fn main() {}",
+                    language = "rust",
+                    executionState =
+                        SnippetExecutionState.Error(
+                            "Internet connection required to run code on the Rust Playground.",
+                        ),
+                    visualInfo = CodingTopic.RUST.visualInfo,
+                    onRun = {},
+                    onDismiss = {},
+                )
             }
         }
     }
