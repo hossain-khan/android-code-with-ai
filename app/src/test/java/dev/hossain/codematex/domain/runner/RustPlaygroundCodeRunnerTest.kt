@@ -68,6 +68,7 @@ class RustPlaygroundCodeRunnerTest {
             val success = result as PlaygroundExecutionResult.Success
             assertThat(success.output).isEqualTo("Hello, world!\n")
             assertThat(fakeApi.lastRequest?.code).isEqualTo("fn main() { println!(\"Hello, world!\"); }")
+            assertThat(fakeApi.lastRequest?.edition).isEqualTo("2021")
         }
 
     @Test
@@ -96,6 +97,26 @@ class RustPlaygroundCodeRunnerTest {
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.NetworkError::class.java)
             val error = result as PlaygroundExecutionResult.NetworkError
             assertThat(error.message).contains("timed out")
+        }
+
+    @Test
+    fun `given http exception - returns formatted playground error with code and body`() =
+        runTest {
+            val errorResponseBody =
+                okhttp3.ResponseBody.Companion.run {
+                    "{\"error\":\"missing field `edition`\"}".toResponseBody(
+                        okhttp3.MediaType.Companion.run { "application/json".toMediaType() },
+                    )
+                }
+            fakeApi.exceptionToThrow =
+                retrofit2.HttpException(retrofit2.Response.error<RustPlaygroundResponse>(400, errorResponseBody))
+
+            val result = runner.runSnippet("fn main() {}", "rust")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.NetworkError::class.java)
+            val error = result as PlaygroundExecutionResult.NetworkError
+            assertThat(error.message).contains("400")
+            assertThat(error.message).contains("missing field `edition`")
         }
 
     @Test

@@ -52,6 +52,20 @@ class RustPlaygroundCodeRunner(
             PlaygroundExecutionResult.NetworkError(
                 "Execution timed out. The playground took too long to respond.",
             )
+        } catch (e: retrofit2.HttpException) {
+            val errorBody =
+                e
+                    .response()
+                    ?.errorBody()
+                    ?.string()
+                    ?.trim()
+            val errorMessage =
+                if (!errorBody.isNullOrEmpty()) {
+                    "Playground error (${e.code()}): $errorBody"
+                } else {
+                    "HTTP ${e.code()}: Unable to execute snippet on the playground."
+                }
+            PlaygroundExecutionResult.NetworkError(errorMessage)
         } catch (_: IOException) {
             PlaygroundExecutionResult.NetworkError(
                 "Network error: Unable to reach the Rust playground. Please check your connection.",
