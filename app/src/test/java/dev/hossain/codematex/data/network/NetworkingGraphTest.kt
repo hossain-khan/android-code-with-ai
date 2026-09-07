@@ -50,11 +50,11 @@ class NetworkingGraphTest {
     }
 
     @Test
-    fun `provideRustPlaygroundApi creates API instance with Rust playground baseUrl`() {
+    fun `providePlaygroundProxyApi creates API instance with Cloudflare edge proxy baseUrl`() {
         val client = networkingGraph.provideOkHttpClient()
         val json = networkingGraph.provideJson()
 
-        val api = networkingGraph.provideRustPlaygroundApi(client, json)
+        val api = networkingGraph.providePlaygroundProxyApi(client, json)
 
         assertThat(api).isNotNull()
     }

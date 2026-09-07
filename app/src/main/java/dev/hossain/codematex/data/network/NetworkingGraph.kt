@@ -2,7 +2,7 @@ package dev.hossain.codematex.data.network
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dev.hossain.codematex.BuildConfig
-import dev.hossain.codematex.data.remote.RustPlaygroundApi
+import dev.hossain.codematex.data.remote.PlaygroundProxyApi
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -85,19 +85,41 @@ interface NetworkingGraph {
             .build()
 
     /**
-     * Provides a [RustPlaygroundApi] configured with the official Rust Playground base URL.
+     * Provides a [PlaygroundProxyApi] configured with the Cloudflare Workers edge-code-playground microservice.
+     *
+     * Injects the Bearer [BuildConfig.PLAYGROUND_AUTH_TOKEN] (if configured in `local.properties`)
+     * and client tracking headers.
      */
     @Provides
     @SingleIn(AppScope::class)
-    fun provideRustPlaygroundApi(
+    fun providePlaygroundProxyApi(
         okHttpClient: OkHttpClient,
         json: Json,
-    ): RustPlaygroundApi =
-        Retrofit
+    ): PlaygroundProxyApi {
+        val proxyClient =
+            okHttpClient
+                .newBuilder()
+                .addInterceptor { chain ->
+                    val original = chain.request()
+                    val requestBuilder =
+                        original
+                            .newBuilder()
+                            .header("X-Client-Id", "CodeMateX-Android")
+
+                    val authToken = BuildConfig.PLAYGROUND_AUTH_TOKEN.trim()
+                    if (authToken.isNotEmpty()) {
+                        requestBuilder.header("Authorization", "Bearer $authToken")
+                    }
+
+                    chain.proceed(requestBuilder.build())
+                }.build()
+
+        return Retrofit
             .Builder()
-            .baseUrl("https://play.rust-lang.org/")
-            .client(okHttpClient)
+            .baseUrl("https://code-playground.gohk.xyz/")
+            .client(proxyClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
-            .create(RustPlaygroundApi::class.java)
+            .create(PlaygroundProxyApi::class.java)
+    }
 }
