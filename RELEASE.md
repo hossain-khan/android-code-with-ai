@@ -143,19 +143,22 @@ gh release create X.Y.Z \
 
 When a GitHub Release is published, [`.github/workflows/android-release.yml`](.github/workflows/android-release.yml) automatically executes:
 
-1. **Builds Release Binaries**:
+1. **Validates Secrets**:
+   - Asserts `PLAYGROUND_AUTH_TOKEN` secret is configured (fails build immediately if missing, ensuring production binaries authenticate with the Cloudflare Workers playground proxy).
+   - Decodes base64-encoded release keystore from repository secrets (`KEYSTORE_BASE64`).
+2. **Builds Release Binaries**:
    - Compiles `assembleRelease` (producing `app-vX.Y.Z.apk`).
    - Compiles `bundleRelease` (producing `app-vX.Y.Z.aab`).
-2. **Signs with Production Keystore**:
-   - Decodes base64-encoded release keystore from repository secrets (`RELEASE_KEYSTORE_BASE64`).
-3. **Cryptographic Validation**:
+3. **Signs with Production Keystore**:
+   - Signs release artifacts with the production key and credentials from repository secrets (`KEYSTORE_PASSWORD`, `KEY_ALIAS`).
+4. **Cryptographic Validation**:
    - Runs `apksigner verify --verbose --print-certs` on the generated release APK.
    - Extracts the SHA-256 certificate fingerprint and asserts it strictly matches the production key:
      ```text
      c0547bb27a85df762bf6a96e2f1837c76891eb294efb70f05f778fef1db441e8
      ```
    - Automatically fails the build if signed with a debug certificate or mismatched key.
-4. **Artifact Publishing**:
+5. **Artifact Publishing**:
    - Uploads `app-vX.Y.Z.apk` and `app-vX.Y.Z.aab` directly to the GitHub Release.
 
 ---
