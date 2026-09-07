@@ -34,6 +34,9 @@ android {
         val devMode = localProperties?.getProperty("DEV_MODE")?.toBoolean() ?: false
         buildConfigField("boolean", "DEV_MODE", devMode.toString())
 
+        val playgroundAuthToken = localProperties?.getProperty("PLAYGROUND_AUTH_TOKEN") ?: ""
+        buildConfigField("String", "PLAYGROUND_AUTH_TOKEN", "\"$playgroundAuthToken\"")
+
         // Target modern 64-bit ARM architecture (and x86_64 for modern emulators/development)
         // Reference: https://developer.android.com/ndk/guides/abis
         ndk {
