@@ -10,7 +10,9 @@ import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.SwiftCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,8 @@ class FakeLearningRepository(
             TypeScriptCourseContent.course,
             GoCourseContent.course,
             RustCourseContent.course,
+            RustByExampleCourseContent.course,
+            SwiftCourseContent.course,
         ),
 ) : LearningRepository {
     private val lessonStatusMap = MutableStateFlow<Map<String, LessonStatus>>(emptyMap())

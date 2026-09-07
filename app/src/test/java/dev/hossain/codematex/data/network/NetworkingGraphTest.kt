@@ -47,4 +47,14 @@ class NetworkingGraphTest {
         assertThat(retrofit.callFactory()).isEqualTo(client)
         assertThat(retrofit.converterFactories()).isNotEmpty()
     }
+
+    @Test
+    fun `provideRustPlaygroundApi creates API instance with Rust playground baseUrl`() {
+        val client = networkingGraph.provideOkHttpClient()
+        val json = networkingGraph.provideJson()
+
+        val api = networkingGraph.provideRustPlaygroundApi(client, json)
+
+        assertThat(api).isNotNull()
+    }
 }

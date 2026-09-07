@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
 import dev.hossain.codematex.data.repository.course.SwiftCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
@@ -18,6 +19,7 @@ class CourseContentTest {
             TypeScriptCourseContent.course,
             GoCourseContent.course,
             RustCourseContent.course,
+            RustByExampleCourseContent.course,
             SwiftCourseContent.course,
         )
 
@@ -316,6 +318,17 @@ class CourseContentTest {
                 "Can a Swift struct conform to more than one protocol?" to 0,
                 "Which keyword must precede an expression calling a throwing function in Swift?" to 0,
             ).inOrder()
+    }
+
+    @Test
+    fun `rust by example course has expected 24 chapters and 196 lessons`() {
+        val rbe = RustByExampleCourseContent.course
+
+        assertThat(rbe.language).isEqualTo("Rust")
+        assertThat(rbe.chapters).hasSize(24)
+        assertThat(rbe.lessonCount).isEqualTo(196)
+        assertThat(rbe.chapters.first().id).isEqualTo("rbe-hello-world")
+        assertThat(rbe.chapters.last().id).isEqualTo("rbe-meta")
     }
 
     private fun <T : Comparable<T>> isStrictlyIncreasing(values: List<T>): Boolean =

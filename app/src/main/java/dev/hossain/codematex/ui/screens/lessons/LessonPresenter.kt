@@ -16,6 +16,8 @@ import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.course.LearningRepository
+import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -30,6 +32,7 @@ class LessonPresenter(
     @Assisted private val navigator: Navigator,
     @Assisted private val screen: LessonScreen,
     private val learningRepository: LearningRepository,
+    private val playgroundCodeRunner: PlaygroundCodeRunner,
 ) : Presenter<LessonScreen.State> {
     @Composable
     override fun present(): LessonScreen.State {
@@ -37,6 +40,7 @@ class LessonPresenter(
         var course by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var isCompleted by rememberRetained { mutableStateOf(false) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var snippetExecutionStates by rememberRetained { mutableStateOf<Map<Int, SnippetExecutionState>>(emptyMap()) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.lessonId) {
@@ -111,14 +115,55 @@ class LessonPresenter(
                 LessonScreen.Event.Back -> {
                     navigator.pop()
                 }
+
+                is LessonScreen.Event.RunSnippet -> {
+                    snippetExecutionStates = snippetExecutionStates + (event.blockIndex to SnippetExecutionState.Compiling)
+                    scope.launch {
+                        val result = playgroundCodeRunner.runSnippet(event.code, event.language)
+                        val state =
+                            when (result) {
+                                is PlaygroundExecutionResult.Success -> {
+                                    SnippetExecutionState.Success(result.output)
+                                }
+
+                                is PlaygroundExecutionResult.CompilationError -> {
+                                    SnippetExecutionState.CompilationError(result.diagnostic)
+                                }
+
+                                is PlaygroundExecutionResult.NetworkError -> {
+                                    SnippetExecutionState.Error(result.message)
+                                }
+                            }
+                        snippetExecutionStates = snippetExecutionStates + (event.blockIndex to state)
+                    }
+                }
+
+                is LessonScreen.Event.DismissSnippetOutput -> {
+                    snippetExecutionStates = snippetExecutionStates - event.blockIndex
+                }
             }
         }
 
         val nextLesson = nextLessonId(course, lesson?.id)
         return when {
-            lesson != null && course != null -> LessonScreen.State.Success(lesson!!, course!!, isCompleted, nextLesson, eventSink)
-            errorMessage != null -> LessonScreen.State.NotFound(errorMessage!!, eventSink)
-            else -> LessonScreen.State.Loading
+            lesson != null && course != null -> {
+                LessonScreen.State.Success(
+                    lesson = lesson!!,
+                    course = course!!,
+                    isCompleted = isCompleted,
+                    nextLessonId = nextLesson,
+                    snippetExecutionStates = snippetExecutionStates,
+                    eventSink = eventSink,
+                )
+            }
+
+            errorMessage != null -> {
+                LessonScreen.State.NotFound(errorMessage!!, eventSink)
+            }
+
+            else -> {
+                LessonScreen.State.Loading
+            }
         }
     }
 

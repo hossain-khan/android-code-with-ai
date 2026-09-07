@@ -2,6 +2,7 @@ package dev.hossain.codematex.data.network
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dev.hossain.codematex.BuildConfig
+import dev.hossain.codematex.data.remote.RustPlaygroundApi
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
@@ -79,4 +80,21 @@ interface NetworkingGraph {
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
+
+    /**
+     * Provides a [RustPlaygroundApi] configured with the official Rust Playground base URL.
+     */
+    @Provides
+    @SingleIn(AppScope::class)
+    fun provideRustPlaygroundApi(
+        okHttpClient: OkHttpClient,
+        json: Json,
+    ): RustPlaygroundApi =
+        Retrofit
+            .Builder()
+            .baseUrl("https://play.rust-lang.org/")
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(RustPlaygroundApi::class.java)
 }

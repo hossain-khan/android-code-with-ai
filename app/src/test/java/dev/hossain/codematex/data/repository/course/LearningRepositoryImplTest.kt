@@ -28,10 +28,10 @@ class LearningRepositoryImplTest {
     }
 
     @Test
-    fun `given no progress - getCourses returns 6 bundled courses`() =
+    fun `given no progress - getCourses returns 7 bundled courses`() =
         runTest(UnconfinedTestDispatcher()) {
             val courses = repository.getCourses().first()
-            assertThat(courses).hasSize(6)
+            assertThat(courses).hasSize(7)
         }
 
     @Test

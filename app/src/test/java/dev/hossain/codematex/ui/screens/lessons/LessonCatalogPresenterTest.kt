@@ -7,7 +7,9 @@ import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.data.repository.course.RustByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.SwiftCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -28,12 +30,14 @@ class LessonCatalogPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as LessonCatalogScreen.State.Success
-                assertThat(state.courses).hasSize(5)
+                assertThat(state.courses).hasSize(7)
                 assertThat(state.courses.first().id).isEqualTo(KotlinCourseContent.COURSE_ID)
                 assertThat(state.courses[1].id).isEqualTo(PythonCourseContent.COURSE_ID)
                 assertThat(state.courses[2].id).isEqualTo(TypeScriptCourseContent.COURSE_ID)
                 assertThat(state.courses[3].id).isEqualTo(GoCourseContent.COURSE_ID)
                 assertThat(state.courses[4].id).isEqualTo(RustCourseContent.COURSE_ID)
+                assertThat(state.courses[5].id).isEqualTo(RustByExampleCourseContent.COURSE_ID)
+                assertThat(state.courses[6].id).isEqualTo(SwiftCourseContent.COURSE_ID)
             }
         }
 

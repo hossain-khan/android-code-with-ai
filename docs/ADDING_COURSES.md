@@ -29,6 +29,7 @@ Important existing files:
 - `data/repository/course/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
 - `data/repository/course/GoCourseContent.kt` — Bundled Go Foundations course.
 - `data/repository/course/RustCourseContent.kt` — Bundled Rust Foundations course.
+- `data/repository/course/RustByExampleCourseContent.kt` — Bundled Rust by Example course.
 - `data/repository/course/SwiftCourseContent.kt` — Bundled Swift Foundations course.
 - `data/repository/course/LearningRepository.kt` — Course/progress repository contract.
 - `data/repository/course/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
