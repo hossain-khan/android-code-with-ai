@@ -10,6 +10,12 @@ import retrofit2.http.POST
 /**
  * Request payload for the official Rust Playground evaluation endpoint:
  * `POST https://play.rust-lang.org/evaluate.json`
+ *
+ * NOTE on Serialization:
+ * The Rust Playground backend deserializer strictly expects [version], [optimize], and [edition] keys
+ * to be present in the JSON request body. By default in kotlinx.serialization, properties matching their
+ * default values are omitted (`encodeDefaults = false`). We annotate them with [@EncodeDefault] to guarantee
+ * they are always serialized over the wire, preventing HTTP 400 Bad Request deserialization errors.
  */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
@@ -34,6 +40,9 @@ data class RustPlaygroundResponse(
 
 /**
  * Retrofit interface for interacting with the official Rust Playground API.
+ *
+ * The headers match requests dispatched by official documentation sites (e.g. `doc.rust-lang.org` / mdBook),
+ * ensuring CloudFront / nginx CORS policies and bot filters allow evaluate API requests.
  */
 interface RustPlaygroundApi {
     @Headers(
