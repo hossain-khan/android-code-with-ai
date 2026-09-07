@@ -131,6 +131,22 @@ class RustPlaygroundCodeRunnerTest {
             assertThat(error.message).contains("Unable to reach the Rust playground")
         }
 
+    @Test
+    fun `RustPlaygroundRequest serializes version, optimize, code, and edition even when defaults are used`() {
+        val json =
+            kotlinx.serialization.json.Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
+        val request = RustPlaygroundRequest(code = "fn main() {}")
+        val jsonString = json.encodeToString(RustPlaygroundRequest.serializer(), request)
+
+        assertThat(jsonString).contains("\"version\":\"stable\"")
+        assertThat(jsonString).contains("\"optimize\":\"0\"")
+        assertThat(jsonString).contains("\"edition\":\"2021\"")
+        assertThat(jsonString).contains("\"code\":\"fn main() {}\"")
+    }
+
     private class FakeRustPlaygroundApi : RustPlaygroundApi {
         var responseToReturn: RustPlaygroundResponse = RustPlaygroundResponse()
         var exceptionToThrow: Exception? = null

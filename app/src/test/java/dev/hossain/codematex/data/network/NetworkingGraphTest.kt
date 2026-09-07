@@ -29,11 +29,12 @@ class NetworkingGraphTest {
     }
 
     @Test
-    fun `provideJson is configured to be lenient and ignore unknown keys`() {
+    fun `provideJson is configured to be lenient, ignore unknown keys, and encode defaults`() {
         val json = networkingGraph.provideJson()
 
         assertThat(json.configuration.ignoreUnknownKeys).isTrue()
         assertThat(json.configuration.isLenient).isTrue()
+        assertThat(json.configuration.encodeDefaults).isTrue()
     }
 
     @Test

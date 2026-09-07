@@ -62,6 +62,7 @@ interface NetworkingGraph {
         Json {
             ignoreUnknownKeys = true
             isLenient = true
+            encodeDefaults = true
         }
 
     /**

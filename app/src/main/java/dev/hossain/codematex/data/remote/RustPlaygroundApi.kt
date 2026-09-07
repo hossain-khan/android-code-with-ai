@@ -1,5 +1,7 @@
 package dev.hossain.codematex.data.remote
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.Headers
@@ -9,12 +11,13 @@ import retrofit2.http.POST
  * Request payload for the official Rust Playground evaluation endpoint:
  * `POST https://play.rust-lang.org/evaluate.json`
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class RustPlaygroundRequest(
-    val version: String = "stable",
-    val optimize: String = "0",
+    @EncodeDefault val version: String = "stable",
+    @EncodeDefault val optimize: String = "0",
     val code: String,
-    val edition: String = "2021",
+    @EncodeDefault val edition: String = "2021",
 )
 
 /**

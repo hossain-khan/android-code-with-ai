@@ -65,6 +65,7 @@ class RustPlaygroundCodeRunner(
                 } else {
                     "HTTP ${e.code()}: Unable to execute snippet on the playground."
                 }
+            timber.log.Timber.w(e, "Rust playground evaluation failed: %s", errorMessage)
             PlaygroundExecutionResult.NetworkError(errorMessage)
         } catch (_: IOException) {
             PlaygroundExecutionResult.NetworkError(
