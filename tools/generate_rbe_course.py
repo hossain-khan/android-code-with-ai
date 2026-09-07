@@ -326,6 +326,8 @@ def generate_course_content(repo_path, output_path):
                     code_lang = b[1]
                     code_text = escape_kotlin_multiline(b[2])
                     code_runnable = "true" if b[3] else "false"
+                    is_rust = code_lang.lower() in ('rust', 'rs')
+                    playground_prop = ',\n                                                playgroundUrl = "https://play.rust-lang.org/"' if is_rust else ''
                     lines.append(f'                                            LessonBlock.Code(')
                     lines.append(f'                                                language = "{code_lang}",')
                     lines.append('                                                code =')
@@ -333,7 +335,7 @@ def generate_course_content(repo_path, output_path):
                     for line in code_text.splitlines():
                         lines.append(f'                                                    {line}')
                     lines.append('                                                    """.trimIndent(),')
-                    lines.append(f'                                                runnable = {code_runnable},')
+                    lines.append(f'                                                runnable = {code_runnable}{playground_prop},')
                     lines.append('                                            ),')
 
             lines.append('                                        ),')

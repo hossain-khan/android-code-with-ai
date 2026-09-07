@@ -256,9 +256,8 @@ private fun LessonBody(
             }
         } else {
             val visualInfo = state.course.topic.visualInfo
-            val isRustByExample = state.course.id == "rust-by-example"
             items(state.lesson.blocks.toList()) { block ->
-                LessonBlockContent(block, visualInfo, isRustByExample)
+                LessonBlockContent(block, visualInfo)
             }
         }
         item {
@@ -376,7 +375,6 @@ private fun LessonBody(
 private fun LessonBlockContent(
     block: LessonBlock,
     visualInfo: TopicVisualInfo,
-    isRustByExample: Boolean = false,
 ) {
     val settings = LocalCodeBlockSettings.current
     val uriHandler = LocalUriHandler.current
@@ -425,17 +423,13 @@ private fun LessonBlockContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
 
-                if (isRustByExample &&
-                    (resolvedLanguage.equals("rust", ignoreCase = true) || resolvedLanguage.equals("rs", ignoreCase = true))
-                ) {
+                block.playgroundUrl?.let { url ->
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 8.dp),
                         horizontalArrangement = Arrangement.End,
                     ) {
                         OutlinedButton(
-                            onClick = {
-                                uriHandler.openUri("https://play.rust-lang.org/")
-                            },
+                            onClick = { uriHandler.openUri(url) },
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         ) {
                             Icon(

@@ -53,7 +53,7 @@ Course
 Supported lesson blocks currently are:
 
 - `LessonBlock.Markdown`
-- `LessonBlock.Code` — carries a `runnable` flag (default `true`)
+- `LessonBlock.Code` — carries a `runnable` flag (default `true`) and an optional `playgroundUrl` (e.g. online playground CTA)
 - `LessonBlock.Quiz`
 
 Keep lessons focused. A good lesson should teach one concept, show a small example,
