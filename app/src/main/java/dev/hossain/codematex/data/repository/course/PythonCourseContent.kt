@@ -6,8 +6,10 @@ import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 
 /**
- * Bundled Python Foundations course based on the official Python Tutorial, Language Reference,
- * Built-in Functions, and Standard Library documentation.
+ * Bundled Python Foundations course based on official Python documentation.
+ *
+ * Source: Python 3 Documentation and Tutorial (https://docs.python.org/3/tutorial/)
+ * License: Python Software Foundation (PSF) License Agreement (https://docs.python.org/3/license.html)
  *
  * The material targets Python 3.10+ and focuses on transferable language fundamentals rather than
  * a particular framework or operating-system workflow.

@@ -6,8 +6,11 @@ import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 
 /**
- * Bundled Go Foundations course based only on the official Tour of Go, language specification,
+ * Bundled Go Foundations course based on the official Tour of Go, language specification,
  * standard library documentation, and Go command documentation.
+ *
+ * Source: The Tour of Go and official Go documentation (https://go.dev/doc/ and https://go.dev/tour/)
+ * License: BSD 3-Clause License (https://go.dev/LICENSE)
  *
  * Examples use the standard library and focus on the language's core model: simple types,
  * explicit errors, composition, and concurrency.

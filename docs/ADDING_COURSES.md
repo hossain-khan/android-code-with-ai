@@ -146,11 +146,18 @@ data/repository/course/RustCourseContent.kt
 data/repository/course/JavaScriptCourseContent.kt
 ```
 
-Each content object should expose one stable course:
+Each content object must expose one stable course and include a file-level or object-level
+KDoc header documenting both the **source of content** and the applicable **license**:
 
 ```kotlin
 package dev.hossain.codematex.data.repository.course
 
+/**
+ * Bundled Python Foundations course.
+ *
+ * Source: Derived from the official Python documentation (https://docs.python.org/3/tutorial/).
+ * License: Python Software Foundation (PSF) License Agreement (https://docs.python.org/3/license.html).
+ */
 object PythonCourseContent {
     const val COURSE_ID = "python-foundations"
 
@@ -531,6 +538,7 @@ existing, correct course content.
 A new course is ready when:
 
 - Its content is distilled into stable bundled models.
+- The course file header includes explicit source attribution and license information in its KDoc.
 - All IDs are stable and unique.
 - The repository discovers every course.
 - Progress is independent and persistent.
