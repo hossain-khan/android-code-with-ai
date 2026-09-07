@@ -69,10 +69,22 @@ jobs:
             # Don't set KEYSTORE_FILE - let build.gradle.kts fall back to debug keystore
           fi
 
+      - name: Validate and configure playground auth token
+        run: |
+          if [ -z "${{ secrets.PLAYGROUND_AUTH_TOKEN }}" ]; then
+            echo "❌ ERROR: PLAYGROUND_AUTH_TOKEN secret is missing or empty!"
+            echo "A valid bearer token secret is required for release builds to authenticate with the Cloudflare Workers playground proxy (https://code-playground.gohk.xyz)."
+            exit 1
+          fi
+          echo "✅ PLAYGROUND_AUTH_TOKEN secret is configured"
+          echo "PLAYGROUND_AUTH_TOKEN=${{ secrets.PLAYGROUND_AUTH_TOKEN }}" >> $GITHUB_ENV
+
       - name: Ensure gradlew is executable
         run: chmod +x gradlew
 
       - name: Build Release APK and AAB
+        env:
+          PLAYGROUND_AUTH_TOKEN: ${{ secrets.PLAYGROUND_AUTH_TOKEN }}
         run: ./gradlew assembleRelease bundleRelease --parallel --daemon
 
       - name: Verify APK cryptographic signature
