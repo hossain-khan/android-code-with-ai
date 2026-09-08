@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.22.3:
+• Clean Playground Output: Trimmed trailing newlines and stdout flushes for a more compact, polished terminal card in guided lessons.
+• Compose Stability Topic: Updated Android AI Tutor with modern starter prompts on Compose Compiler Stability (@Stable, @Immutable, Strong Skipping).
+• Quality & Coverage: Expanded unit test suites for edge code execution and topic styling.
