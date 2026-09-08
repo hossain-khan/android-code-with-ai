@@ -64,6 +64,11 @@ sealed interface LessonBlock {
          * learners can experiment with or run this code snippet interactively online.
          */
         val playgroundUrl: String? = null,
+        /**
+         * Whether this snippet is verified to be runnable on the edge playground proxy.
+         * When true, the playground "Run Code" button is shown to the user.
+         */
+        val isPlaygroundRunnable: Boolean = false,
     ) : LessonBlock
 
     data class Quiz(

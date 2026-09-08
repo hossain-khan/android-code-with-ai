@@ -12,10 +12,10 @@ import org.junit.Test
 import java.io.IOException
 import java.net.SocketTimeoutException
 
-class RustPlaygroundCodeRunnerTest {
+class EdgePlaygroundCodeRunnerTest {
     private val fakeApi = FakePlaygroundProxyApi()
     private val runner =
-        RustPlaygroundCodeRunner(
+        EdgePlaygroundCodeRunner(
             api = fakeApi,
             context = FakeTestContext(),
         ).apply {
@@ -23,20 +23,44 @@ class RustPlaygroundCodeRunnerTest {
         }
 
     @Test
-    fun `supports returns true for rust and rs regardless of case`() {
+    fun `supports returns true for all supported languages regardless of case`() {
+        // Rust
         assertThat(runner.supports("rust")).isTrue()
         assertThat(runner.supports("Rust")).isTrue()
         assertThat(runner.supports("RUST")).isTrue()
         assertThat(runner.supports("rs")).isTrue()
         assertThat(runner.supports("RS")).isTrue()
-        assertThat(runner.supports("go")).isFalse()
-        assertThat(runner.supports("python")).isFalse()
+
+        // Kotlin
+        assertThat(runner.supports("kotlin")).isTrue()
+        assertThat(runner.supports("Kotlin")).isTrue()
+        assertThat(runner.supports("kt")).isTrue()
+        assertThat(runner.supports("KT")).isTrue()
+
+        // Go
+        assertThat(runner.supports("go")).isTrue()
+        assertThat(runner.supports("Go")).isTrue()
+        assertThat(runner.supports("golang")).isTrue()
+        assertThat(runner.supports("GOLANG")).isTrue()
+
+        // Python
+        assertThat(runner.supports("python")).isTrue()
+        assertThat(runner.supports("Python")).isTrue()
+        assertThat(runner.supports("py")).isTrue()
+        assertThat(runner.supports("python3")).isTrue()
+        assertThat(runner.supports("cpython")).isTrue()
+
+        // Unsupported
+        assertThat(runner.supports("swift")).isFalse()
+        assertThat(runner.supports("typescript")).isFalse()
+        assertThat(runner.supports("java")).isFalse()
+        assertThat(runner.supports("csharp")).isFalse()
     }
 
     @Test
     fun `given unsupported language - returns network error`() =
         runTest {
-            val result = runner.runSnippet("package main", "go")
+            val result = runner.runSnippet("print(\"Hello\")", "swift")
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.NetworkError::class.java)
             val error = result as PlaygroundExecutionResult.NetworkError
@@ -48,7 +72,7 @@ class RustPlaygroundCodeRunnerTest {
         runTest {
             runner.isOnlineChecker = { false }
 
-            val result = runner.runSnippet("fn main() {}", "rust")
+            val result = runner.runSnippet("fun main() {}", "kotlin")
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.NetworkError::class.java)
             val error = result as PlaygroundExecutionResult.NetworkError
@@ -56,24 +80,84 @@ class RustPlaygroundCodeRunnerTest {
         }
 
     @Test
-    fun `given successful execution - returns success result`() =
+    fun `given successful execution for rust - passes edition 2021 and returns success`() =
         runTest {
             fakeApi.responseToReturn =
                 PlaygroundExecuteResponse(
                     status = "success",
-                    output = "Hello, world!\n",
+                    output = "Hello, Rust!\n",
                     cached = true,
                     executionTimeMs = 32,
                 )
 
-            val result = runner.runSnippet("fn main() { println!(\"Hello, world!\"); }", "rust")
+            val result = runner.runSnippet("fn main() { println!(\"Hello, Rust!\"); }", "rust")
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, world!\n")
-            assertThat(fakeApi.lastRequest?.code).isEqualTo("fn main() { println!(\"Hello, world!\"); }")
+            assertThat(success.output).isEqualTo("Hello, Rust!\n")
+            assertThat(fakeApi.lastRequest?.code).isEqualTo("fn main() { println!(\"Hello, Rust!\"); }")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("rust")
             assertThat(fakeApi.lastRequest?.edition).isEqualTo("2021")
+        }
+
+    @Test
+    fun `given successful execution for kotlin - passes language and returns success`() =
+        runTest {
+            fakeApi.responseToReturn =
+                PlaygroundExecuteResponse(
+                    status = "success",
+                    output = "Hello, Kotlin!\n",
+                    cached = true,
+                    executionTimeMs = 45,
+                )
+
+            val result = runner.runSnippet("fun main() { println(\"Hello, Kotlin!\") }", "kotlin")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
+            val success = result as PlaygroundExecutionResult.Success
+            assertThat(success.output).isEqualTo("Hello, Kotlin!\n")
+            assertThat(fakeApi.lastRequest?.language).isEqualTo("kotlin")
+            assertThat(fakeApi.lastRequest?.edition).isNull()
+        }
+
+    @Test
+    fun `given successful execution for go - passes language and returns success`() =
+        runTest {
+            fakeApi.responseToReturn =
+                PlaygroundExecuteResponse(
+                    status = "success",
+                    output = "Hello, Go!\n",
+                    cached = true,
+                    executionTimeMs = 50,
+                )
+
+            val result = runner.runSnippet("package main\nfunc main() {}", "go")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
+            val success = result as PlaygroundExecutionResult.Success
+            assertThat(success.output).isEqualTo("Hello, Go!\n")
+            assertThat(fakeApi.lastRequest?.language).isEqualTo("go")
+            assertThat(fakeApi.lastRequest?.edition).isNull()
+        }
+
+    @Test
+    fun `given successful execution for python - passes language and returns success`() =
+        runTest {
+            fakeApi.responseToReturn =
+                PlaygroundExecuteResponse(
+                    status = "success",
+                    output = "Hello, Python!\n",
+                    cached = true,
+                    executionTimeMs = 20,
+                )
+
+            val result = runner.runSnippet("print(\"Hello, Python!\")", "python")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
+            val success = result as PlaygroundExecutionResult.Success
+            assertThat(success.output).isEqualTo("Hello, Python!\n")
+            assertThat(fakeApi.lastRequest?.language).isEqualTo("python")
+            assertThat(fakeApi.lastRequest?.edition).isNull()
         }
 
     @Test
@@ -187,6 +271,7 @@ class RustPlaygroundCodeRunnerTest {
                 ignoreUnknownKeys = true
                 isLenient = true
                 encodeDefaults = true
+                explicitNulls = false
             }
         val request = PlaygroundExecuteRequest(language = "rust", code = "fn main() {}")
         val jsonString = json.encodeToString(PlaygroundExecuteRequest.serializer(), request)
@@ -196,6 +281,7 @@ class RustPlaygroundCodeRunnerTest {
         assertThat(jsonString).contains("\"version\":\"stable\"")
         assertThat(jsonString).contains("\"optimize\":\"0\"")
         assertThat(jsonString).contains("\"bypassCache\":false")
+        assertThat(jsonString).doesNotContain("\"edition\"")
     }
 
     private class FakePlaygroundProxyApi : PlaygroundProxyApi {

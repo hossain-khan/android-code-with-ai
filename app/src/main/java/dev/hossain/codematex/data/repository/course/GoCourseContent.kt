@@ -844,6 +844,7 @@ object GoCourseContent {
                                             answer = 1,
                                             explanation = "Closing the response body releases resources associated with the HTTP response.",
                                         ),
+                                    isPlaygroundRunnable = false,
                                 ),
                                 lesson(
                                     id = "go-file-paths",
@@ -1047,6 +1048,7 @@ object GoCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -1057,7 +1059,14 @@ object GoCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("go", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "go",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )

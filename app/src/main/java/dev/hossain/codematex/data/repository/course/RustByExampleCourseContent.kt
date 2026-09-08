@@ -73,6 +73,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -199,6 +200,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -301,6 +303,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -383,6 +386,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -421,6 +425,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -449,6 +454,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -510,6 +516,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -592,6 +599,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -674,6 +682,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -718,6 +727,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -735,6 +745,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -833,6 +844,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -971,6 +983,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1051,6 +1064,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1138,6 +1152,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1264,6 +1279,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -1399,6 +1415,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1490,6 +1507,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1520,6 +1538,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1546,6 +1565,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1625,6 +1645,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1684,6 +1705,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1787,6 +1809,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1848,6 +1871,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -1917,6 +1941,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -1956,6 +1981,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2005,6 +2031,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2035,6 +2062,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2091,6 +2119,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -2133,6 +2162,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -2277,6 +2307,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -2323,6 +2354,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2381,6 +2413,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2430,6 +2463,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2513,6 +2547,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2543,6 +2578,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2580,6 +2616,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2618,6 +2655,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2687,6 +2725,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -2732,6 +2771,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2762,6 +2802,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2799,6 +2840,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2846,6 +2888,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2869,6 +2912,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -2905,6 +2949,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -2986,6 +3031,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -3040,6 +3086,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -3087,6 +3134,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -3127,6 +3175,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -3173,6 +3222,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3223,6 +3273,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3251,6 +3302,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3268,6 +3320,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3284,6 +3337,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3322,6 +3376,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3351,6 +3406,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3377,6 +3433,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3445,6 +3502,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -3518,6 +3576,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3587,6 +3646,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3658,6 +3718,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3748,6 +3809,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3816,6 +3878,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3866,6 +3929,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3890,6 +3954,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3950,6 +4015,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -3985,6 +4051,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4029,6 +4096,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4077,6 +4145,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4125,6 +4194,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4153,6 +4223,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4211,6 +4282,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4243,6 +4315,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4302,6 +4375,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4335,6 +4409,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4424,6 +4499,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -4560,6 +4636,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -4586,6 +4663,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4636,6 +4714,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -4738,6 +4817,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4770,6 +4850,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4880,6 +4961,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4926,6 +5008,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -4965,6 +5048,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5024,6 +5108,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5103,6 +5188,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5170,6 +5256,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "rust",
@@ -5203,6 +5290,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5250,6 +5338,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "rust",
@@ -5288,6 +5377,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5315,6 +5405,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5392,6 +5483,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5430,6 +5522,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5456,6 +5549,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5475,6 +5569,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5511,6 +5606,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5693,6 +5789,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -5762,6 +5859,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5806,6 +5904,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5853,6 +5952,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -5882,6 +5982,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -5956,6 +6057,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -6017,6 +6119,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6049,6 +6152,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6070,6 +6174,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6087,6 +6192,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6183,6 +6289,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "shell",
@@ -6239,6 +6346,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "txt",
@@ -6655,6 +6763,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6857,6 +6966,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6904,6 +7014,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -6962,6 +7073,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7033,6 +7145,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7077,6 +7190,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7141,6 +7255,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7185,6 +7300,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7265,6 +7381,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7308,6 +7425,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "rust",
@@ -7344,6 +7462,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7411,6 +7530,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7454,6 +7574,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7472,6 +7593,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7524,6 +7646,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7593,6 +7716,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7652,6 +7776,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7699,6 +7824,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7735,6 +7861,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7801,6 +7928,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7823,6 +7951,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7938,6 +8067,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -7984,6 +8114,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8004,6 +8135,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8067,6 +8199,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -8139,6 +8272,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8188,6 +8322,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8249,6 +8384,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8352,6 +8488,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8419,6 +8556,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8507,6 +8645,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8554,6 +8693,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -8619,6 +8759,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8705,6 +8846,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -8777,6 +8919,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -8862,6 +9005,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -8937,6 +9081,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -8994,6 +9139,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9030,6 +9176,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9050,6 +9197,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9098,6 +9246,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9186,6 +9335,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9237,6 +9387,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9303,6 +9454,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9356,6 +9508,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9427,6 +9580,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9488,6 +9642,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -9518,6 +9673,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9577,6 +9733,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9610,6 +9767,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9646,6 +9804,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9732,6 +9891,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -9848,6 +10008,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -9929,6 +10090,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10020,6 +10182,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -10091,6 +10254,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10175,6 +10339,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10239,6 +10404,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10348,6 +10514,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10400,6 +10567,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10427,6 +10595,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10477,6 +10646,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10503,6 +10673,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10531,6 +10702,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -10622,6 +10794,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10725,6 +10898,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10810,6 +10984,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10873,6 +11048,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -10981,6 +11157,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11051,6 +11228,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -11097,6 +11275,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -11180,6 +11359,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "shell",
@@ -11242,6 +11422,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11317,6 +11498,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11423,6 +11605,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11471,6 +11654,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11506,6 +11690,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11600,6 +11785,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11639,6 +11825,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11691,6 +11878,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -11786,6 +11974,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11887,6 +12076,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11948,6 +12138,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -11984,6 +12175,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12013,6 +12205,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12054,6 +12247,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12125,6 +12319,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12151,6 +12346,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12178,6 +12374,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12254,6 +12451,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12295,6 +12493,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12361,6 +12560,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12428,6 +12628,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12493,6 +12694,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12534,6 +12736,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12593,6 +12796,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12644,6 +12848,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12677,6 +12882,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12768,6 +12974,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -12841,6 +13048,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12881,6 +13089,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -12946,6 +13155,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13064,6 +13274,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13113,6 +13324,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13138,6 +13350,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13165,6 +13378,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13190,6 +13404,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13214,6 +13429,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13239,6 +13455,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -13373,6 +13590,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -13457,6 +13675,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13536,6 +13755,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13585,6 +13805,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13612,6 +13833,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13663,6 +13885,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13744,6 +13967,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -13836,6 +14060,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -13927,6 +14152,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -13986,6 +14212,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14098,6 +14325,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14211,6 +14439,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14306,6 +14535,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14385,6 +14615,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14446,6 +14677,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -14531,6 +14763,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14672,6 +14905,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14776,6 +15010,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -14842,6 +15077,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -14929,6 +15165,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15007,6 +15244,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15077,6 +15315,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15101,6 +15340,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15145,6 +15385,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15214,6 +15455,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15291,6 +15533,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -15324,6 +15567,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "bash",
@@ -15458,6 +15702,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15521,6 +15766,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15570,6 +15816,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "shell",
@@ -15680,6 +15927,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15797,6 +16045,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -15910,6 +16159,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -15977,6 +16227,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16037,6 +16288,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16156,6 +16408,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "shell",
@@ -16266,6 +16519,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16333,6 +16587,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16381,6 +16636,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16398,6 +16654,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16448,6 +16705,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16470,6 +16728,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16539,6 +16798,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16605,6 +16865,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16637,6 +16898,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16695,6 +16957,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16725,6 +16988,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16766,6 +17030,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16806,6 +17071,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16832,6 +17098,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16872,6 +17139,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16907,6 +17175,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16934,6 +17203,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -16972,6 +17242,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17036,6 +17307,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17075,6 +17347,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17119,6 +17392,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17149,6 +17423,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17182,6 +17457,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17224,6 +17500,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17265,6 +17542,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17347,6 +17625,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17382,6 +17661,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                         ),
                                 ),
@@ -17534,6 +17814,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17552,6 +17833,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17570,6 +17852,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17625,6 +17908,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
@@ -17665,6 +17949,7 @@ object RustByExampleCourseContent {
                                                     """.trimIndent(),
                                                 runnable = false,
                                                 playgroundUrl = "https://play.rust-lang.org/",
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Code(
                                                 language = "`",

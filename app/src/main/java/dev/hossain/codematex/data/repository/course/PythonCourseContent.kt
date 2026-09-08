@@ -743,6 +743,7 @@ object PythonCourseContent {
                                         args = parser.parse_args()
                                         print(f"Hello, {args.name}!")
                                         """.trimIndent(),
+                                    isPlaygroundRunnable = false,
                                 ),
                                 lesson(
                                     id = "python-http-basics",
@@ -767,6 +768,7 @@ object PythonCourseContent {
                                             print(response.status)
                                             print(len(body))
                                         """.trimIndent(),
+                                    isPlaygroundRunnable = false,
                                 ),
                                 lesson(
                                     id = "python-asyncio",
@@ -843,6 +845,7 @@ object PythonCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = codeRunnable,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -853,7 +856,14 @@ object PythonCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("python", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "python",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )

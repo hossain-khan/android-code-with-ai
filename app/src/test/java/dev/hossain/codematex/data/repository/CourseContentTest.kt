@@ -331,6 +331,70 @@ class CourseContentTest {
         assertThat(rbe.chapters.last().id).isEqualTo("rbe-meta")
     }
 
+    @Test
+    fun `courses have expected playground runnable snippets count`() {
+        val rustBlocks =
+            RustCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(rustBlocks).hasSize(24)
+        assertThat(rustBlocks.count { it.isPlaygroundRunnable }).isEqualTo(24)
+
+        val goBlocks =
+            GoCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(goBlocks).hasSize(24)
+        assertThat(goBlocks.count { it.isPlaygroundRunnable }).isEqualTo(23)
+        val goNonRunnable =
+            GoCourseContent.course.chapters.flatMap { it.lessons }.first { lesson ->
+                lesson.blocks.filterIsInstance<LessonBlock.Code>().any { !it.isPlaygroundRunnable }
+            }
+        assertThat(goNonRunnable.id).isEqualTo("go-http-client")
+
+        val pythonBlocks =
+            PythonCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(pythonBlocks).hasSize(24)
+        assertThat(pythonBlocks.count { it.isPlaygroundRunnable }).isEqualTo(21)
+        val pythonNonRunnable =
+            PythonCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .filter { lesson ->
+                    lesson.blocks.filterIsInstance<LessonBlock.Code>().any { !it.isPlaygroundRunnable }
+                }.map { it.id }
+        assertThat(pythonNonRunnable).containsExactly(
+            "python-modules-and-packages",
+            "python-command-line",
+            "python-http-basics",
+        )
+
+        val kotlinBlocks =
+            KotlinCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(kotlinBlocks).hasSize(24)
+        val kotlinRunnable =
+            KotlinCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .filter { lesson ->
+                    lesson.blocks.filterIsInstance<LessonBlock.Code>().any { it.isPlaygroundRunnable }
+                }.map { it.id }
+        assertThat(kotlinRunnable).containsExactly("kotlin-hello-world")
+
+        val rbeBlocks =
+            RustByExampleCourseContent.course.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(rbeBlocks.count { it.isPlaygroundRunnable }).isGreaterThan(280)
+    }
+
     private fun <T : Comparable<T>> isStrictlyIncreasing(values: List<T>): Boolean =
         values.zipWithNext().all { (first, second) -> first < second }
 }

@@ -52,6 +52,7 @@ object KotlinCourseContent {
                                             println("Hello, Kotlin!")
                                         }
                                         """.trimIndent(),
+                                    isPlaygroundRunnable = true,
                                 ),
                                 lesson(
                                     id = "kotlin-variables",
@@ -741,6 +742,7 @@ object KotlinCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = false,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -751,7 +753,14 @@ object KotlinCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("kotlin", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "kotlin",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )
