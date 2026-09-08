@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.22.1:
+• TypeScript Playground: Run code directly in TypeScript lessons powered by Node.js runtime.
+• Interactive TypeScript Lessons: 22 foundation lessons enabled with instant code execution & output.
+• Edge Playground Expansion: Live execution for Kotlin, Go, Python, Rust, and TypeScript.
+• Stability & Verification: Automated live snippet verification ensuring reliable code execution.
