@@ -80,6 +80,9 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
+import dev.hossain.codematex.ui.animation.CourseCardSharedKey
+import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
 import dev.hossain.codematex.ui.animation.TopicCardSharedKey
 import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
@@ -256,6 +259,7 @@ private fun HomeLayout(
                                 CourseHomeCard(
                                     course = course,
                                     onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
+                                    transitionScope = transitionScope,
                                 )
                             }
                         }
@@ -407,6 +411,7 @@ private fun HomeLayout(
                                 CourseHomeCard(
                                     course = course,
                                     onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
+                                    transitionScope = transitionScope,
                                 )
                             }
                         }
@@ -781,12 +786,14 @@ private fun CourseHomeCard(
     course: LearningCourse,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = course.topic.visualInfo
     Card(
         modifier =
             modifier
                 .width(260.dp)
+                .sharedBoundsNav(transitionScope, CourseCardSharedKey(course.id))
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         colors =
@@ -815,6 +822,7 @@ private fun CourseHomeCard(
                         shape = MaterialTheme.shapes.extraSmall,
                         color = visualInfo.accentColor.copy(alpha = 0.2f),
                         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                        modifier = Modifier.sharedElementNav(transitionScope, CourseBadgeSharedKey(course.id)),
                     ) {
                         Text(
                             text = visualInfo.iconGlyph,
@@ -847,6 +855,7 @@ private fun CourseHomeCard(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.sharedBoundsNav(transitionScope, CourseTitleSharedKey(course.id)),
             )
 
             Text(
@@ -1400,47 +1409,53 @@ private fun HeroBannerPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun CourseHomeCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            CourseHomeCard(
-                course =
-                    LearningCourse(
-                        id = "kotlin-foundations",
-                        language = "Kotlin",
-                        title = "Kotlin Foundations",
-                        description = "Master idiomatic Kotlin programming with real-world exercises and patterns.",
-                        version = 1,
-                        chapters =
-                            listOf(
-                                LearningChapter(
-                                    id = "ch-1",
-                                    courseId = "kotlin-foundations",
-                                    order = 1,
-                                    title = "Kotlin Basics",
-                                    description = "Core language concepts",
-                                    lessons =
-                                        listOf(
-                                            LearningLesson(
-                                                id = "l-1",
-                                                chapterId = "ch-1",
-                                                order = 1,
-                                                title = "Variables & Types",
-                                                summary = "Basics of variables",
-                                                estimatedMinutes = 5,
-                                                blocks = emptyList(),
-                                            ),
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    CourseHomeCard(
+                        course =
+                            LearningCourse(
+                                id = "kotlin-foundations",
+                                language = "Kotlin",
+                                title = "Kotlin Foundations",
+                                description = "Master idiomatic Kotlin programming with real-world exercises and patterns.",
+                                version = 1,
+                                chapters =
+                                    listOf(
+                                        LearningChapter(
+                                            id = "ch-1",
+                                            courseId = "kotlin-foundations",
+                                            order = 1,
+                                            title = "Kotlin Basics",
+                                            description = "Core language concepts",
+                                            lessons =
+                                                listOf(
+                                                    LearningLesson(
+                                                        id = "l-1",
+                                                        chapterId = "ch-1",
+                                                        order = 1,
+                                                        title = "Variables & Types",
+                                                        summary = "Basics of variables",
+                                                        estimatedMinutes = 5,
+                                                        blocks = emptyList(),
+                                                    ),
+                                                ),
                                         ),
-                                ),
+                                    ),
                             ),
-                    ),
-                onClick = {},
-            )
+                        onClick = {},
+                        transitionScope = this@SharedElementTransitionScope,
+                    )
+                }
+            }
         }
     }
 }

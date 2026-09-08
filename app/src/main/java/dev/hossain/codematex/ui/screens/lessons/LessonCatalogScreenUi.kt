@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningCourse
@@ -48,6 +51,12 @@ import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
+import dev.hossain.codematex.ui.animation.CourseCardSharedKey
+import dev.hossain.codematex.ui.animation.CourseProgressSharedKey
+import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -55,12 +64,32 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 @CircuitInject(screen = LessonCatalogScreen::class, scope = AppScope::class)
 @Composable
 fun LessonCatalogScreenContent(
     state: LessonCatalogScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            LessonCatalogInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        LessonCatalogInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun LessonCatalogInnerContent(
+    state: LessonCatalogScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val visualInfo = CodingTopic.KOTLIN.visualInfo
@@ -114,7 +143,11 @@ fun LessonCatalogScreenContent(
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         items(state.courses) { course ->
-                            CourseCard(course, state.progress[course.id]) {
+                            CourseCard(
+                                course = course,
+                                progress = state.progress[course.id],
+                                transitionScope = transitionScope,
+                            ) {
                                 state.eventSink(LessonCatalogScreen.Event.OpenCourse(course.id))
                             }
                         }
@@ -129,12 +162,18 @@ fun LessonCatalogScreenContent(
 private fun CourseCard(
     course: LearningCourse,
     progress: CourseProgress?,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
     onClick: () -> Unit,
 ) {
     val percent = progress?.completionPercent ?: 0
     val visualInfo = course.topic.visualInfo
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .sharedBoundsNav(transitionScope, CourseCardSharedKey(course.id))
+                .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
@@ -153,6 +192,7 @@ private fun CourseCard(
                     shape = MaterialTheme.shapes.extraSmall,
                     color = visualInfo.accentColor.copy(alpha = 0.2f),
                     border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                    modifier = Modifier.sharedElementNav(transitionScope, CourseBadgeSharedKey(course.id)),
                 ) {
                     Text(
                         text = visualInfo.iconGlyph,
@@ -169,7 +209,12 @@ private fun CourseCard(
                     color = visualInfo.accentColor,
                 )
             }
-            Text(course.title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                text = course.title,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.sharedBoundsNav(transitionScope, CourseTitleSharedKey(course.id)),
+            )
             Text(
                 course.description,
                 style = MaterialTheme.typography.bodyMedium,
@@ -185,7 +230,10 @@ private fun CourseCard(
             LinearProgressIndicator(
                 progress = { (percent / 100f).coerceIn(0f, 1f) },
                 color = visualInfo.accentColor,
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .sharedBoundsNav(transitionScope, CourseProgressSharedKey(course.id)),
             )
             Button(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
                 Text(if (percent > 0) "Continue course" else "Start course")

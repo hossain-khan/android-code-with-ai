@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,9 +46,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
@@ -55,6 +59,14 @@ import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
+import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
+import dev.hossain.codematex.ui.animation.CourseCardSharedKey
+import dev.hossain.codematex.ui.animation.CourseProgressSharedKey
+import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
+import dev.hossain.codematex.ui.animation.LessonCardSharedKey
+import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -64,12 +76,32 @@ import dev.zacsweers.metro.AppScope
 import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items as lazyItems
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 @CircuitInject(screen = ChapterScreen::class, scope = AppScope::class)
 @Composable
 fun ChapterScreenContent(
     state: ChapterScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            ChapterScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        ChapterScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+internal fun ChapterScreenInnerContent(
+    state: ChapterScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val visualInfo =
@@ -90,11 +122,46 @@ fun ChapterScreenContent(
                 .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
+                modifier =
+                    if (state is ChapterScreen.State.Success) {
+                        Modifier.sharedBoundsNav(transitionScope, CourseCardSharedKey(state.course.id))
+                    } else {
+                        Modifier
+                    },
                 title = {
-                    Text(
-                        if (state is ChapterScreen.State.Success) state.course.title else "Guided Lessons",
-                        fontWeight = FontWeight.Bold,
-                    )
+                    if (state is ChapterScreen.State.Success) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Surface(
+                                shape = MaterialTheme.shapes.extraSmall,
+                                color = visualInfo.accentColor.copy(alpha = 0.2f),
+                                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                                modifier = Modifier.sharedElementNav(transitionScope, CourseBadgeSharedKey(state.course.id)),
+                            ) {
+                                Text(
+                                    text = visualInfo.iconGlyph,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = visualInfo.accentColor,
+                                )
+                            }
+                            Text(
+                                text = state.course.title,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.sharedBoundsNav(transitionScope, CourseTitleSharedKey(state.course.id)),
+                            )
+                        }
+                    } else {
+                        Text(
+                            "Guided Lessons",
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = {
@@ -148,7 +215,7 @@ fun ChapterScreenContent(
                             androidx.compose.foundation.lazy.grid
                                 .GridItemSpan(maxLineSpan)
                         }) {
-                            CourseProgressHeader(course, state)
+                            CourseProgressHeader(course, state, transitionScope)
                         }
                         if (course.chapters.isEmpty()) {
                             item(span = {
@@ -159,7 +226,12 @@ fun ChapterScreenContent(
                             }
                         } else {
                             gridItems(course.chapters) { chapter ->
-                                ChapterCard(chapter, state.progress, visualAccent = visualInfo.accentColor) { lesson ->
+                                ChapterCard(
+                                    chapter = chapter,
+                                    progress = state.progress,
+                                    visualAccent = visualInfo.accentColor,
+                                    transitionScope = transitionScope,
+                                ) { lesson ->
                                     state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
                                 }
                             }
@@ -172,7 +244,7 @@ fun ChapterScreenContent(
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
                         item {
-                            CourseProgressHeader(course, state)
+                            CourseProgressHeader(course, state, transitionScope)
                         }
                         if (course.chapters.isEmpty()) {
                             item {
@@ -180,7 +252,12 @@ fun ChapterScreenContent(
                             }
                         } else {
                             lazyItems(course.chapters) { chapter ->
-                                ChapterCard(chapter, state.progress, visualAccent = visualInfo.accentColor) { lesson ->
+                                ChapterCard(
+                                    chapter = chapter,
+                                    progress = state.progress,
+                                    visualAccent = visualInfo.accentColor,
+                                    transitionScope = transitionScope,
+                                ) { lesson ->
                                     state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
                                 }
                             }
@@ -196,6 +273,7 @@ fun ChapterScreenContent(
 private fun CourseProgressHeader(
     course: LearningCourse,
     state: ChapterScreen.State.Success,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = course.topic.visualInfo
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -208,7 +286,10 @@ private fun CourseProgressHeader(
         LinearProgressIndicator(
             progress = { (state.progress.completionPercent / 100f).coerceIn(0f, 1f) },
             color = visualInfo.accentColor,
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .sharedBoundsNav(transitionScope, CourseProgressSharedKey(course.id)),
         )
         OutlinedButton(onClick = { state.eventSink(ChapterScreen.Event.ResetProgress) }) {
             Icon(Icons.Default.RestartAlt, contentDescription = null)
@@ -249,6 +330,7 @@ private fun ChapterCard(
     progress: CourseProgress,
     visualAccent: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
     onLessonClick: (LearningLesson) -> Unit,
 ) {
     Card(
@@ -300,6 +382,7 @@ private fun ChapterCard(
                         Modifier
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.medium)
+                            .sharedBoundsNav(transitionScope, LessonCardSharedKey(lesson.id))
                             .clickable { onLessonClick(lesson) },
                     shape = MaterialTheme.shapes.medium,
                     color =
@@ -374,7 +457,10 @@ private fun ChapterCard(
                             ) {
                                 Text(
                                     text = "${chapter.order}.${lesson.order} ${lesson.title}",
-                                    modifier = Modifier.weight(1f, fill = false),
+                                    modifier =
+                                        Modifier
+                                            .weight(1f, fill = false)
+                                            .sharedBoundsNav(transitionScope, LessonTitleSharedKey(lesson.id)),
                                     fontWeight = if (isCurrent || isCompleted) FontWeight.Bold else FontWeight.SemiBold,
                                     color =
                                         when {
@@ -428,73 +514,88 @@ private fun ChapterCard(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun ChapterCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Surface {
-            Box(Modifier.padding(16.dp)) {
-                ChapterCard(
-                    chapter = KotlinCourseContent.course.chapters.first(),
-                    progress =
-                        CourseProgress(
-                            courseId = "kotlin-foundations",
-                            completedLessons = 1,
-                            totalLessons = 24,
-                            currentLessonId = "kotlin-variables",
-                            completedLessonIds = setOf("kotlin-intro"),
-                        ),
-                    visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
-                    onLessonClick = {},
-                )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Surface {
+                    Box(Modifier.padding(16.dp)) {
+                        ChapterCard(
+                            chapter = KotlinCourseContent.course.chapters.first(),
+                            progress =
+                                CourseProgress(
+                                    courseId = "kotlin-foundations",
+                                    completedLessons = 1,
+                                    totalLessons = 24,
+                                    currentLessonId = "kotlin-variables",
+                                    completedLessonIds = setOf("kotlin-intro"),
+                                ),
+                            visualAccent = CodingTopic.KOTLIN.visualInfo.accentColor,
+                            transitionScope = this@SharedElementTransitionScope,
+                            onLessonClick = {},
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun ChapterCardPythonPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Surface {
-            Box(Modifier.padding(16.dp)) {
-                ChapterCard(
-                    chapter = PythonCourseContent.course.chapters.first(),
-                    progress =
-                        CourseProgress(
-                            courseId = "python-foundations",
-                            completedLessons = 3,
-                            totalLessons = 24,
-                            currentLessonId = "python-control-flow",
-                            completedLessonIds = setOf("python-intro", "python-variables", "python-data-types"),
-                        ),
-                    visualAccent = CodingTopic.PYTHON.visualInfo.accentColor,
-                    onLessonClick = {},
-                )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Surface {
+                    Box(Modifier.padding(16.dp)) {
+                        ChapterCard(
+                            chapter = PythonCourseContent.course.chapters.first(),
+                            progress =
+                                CourseProgress(
+                                    courseId = "python-foundations",
+                                    completedLessons = 3,
+                                    totalLessons = 24,
+                                    currentLessonId = "python-control-flow",
+                                    completedLessonIds = setOf("python-intro", "python-variables", "python-data-types"),
+                                ),
+                            visualAccent = CodingTopic.PYTHON.visualInfo.accentColor,
+                            transitionScope = this@SharedElementTransitionScope,
+                            onLessonClick = {},
+                        )
+                    }
+                }
             }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @DevicePreviews
 @Composable
 private fun ChapterPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Surface {
-            ChapterScreenContent(
-                ChapterScreen.State.Success(
-                    KotlinCourseContent.course,
-                    CourseProgress(
-                        courseId = "kotlin-foundations",
-                        completedLessons = 2,
-                        totalLessons = 24,
-                        currentLessonId = "kotlin-functions",
-                        completedLessonIds = setOf("kotlin-intro", "kotlin-variables"),
+        PreviewSharedElementTransitionLayout {
+            Surface {
+                ChapterScreenContent(
+                    ChapterScreen.State.Success(
+                        KotlinCourseContent.course,
+                        CourseProgress(
+                            courseId = "kotlin-foundations",
+                            completedLessons = 2,
+                            totalLessons = 24,
+                            currentLessonId = "kotlin-functions",
+                            completedLessonIds = setOf("kotlin-intro", "kotlin-variables"),
+                        ),
+                        {},
                     ),
-                    {},
-                ),
-            )
+                )
+            }
         }
     }
 }

@@ -29,6 +29,48 @@ data class TopicCardSharedKey(
 ) : SharedTransitionKey
 
 /**
+ * Shared transition key for a learning course card container bounds.
+ */
+data class CourseCardSharedKey(
+    val courseId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a learning course's language badge / glyph.
+ */
+data class CourseBadgeSharedKey(
+    val courseId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a learning course's title text.
+ */
+data class CourseTitleSharedKey(
+    val courseId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a learning course's progress indicator bar.
+ */
+data class CourseProgressSharedKey(
+    val courseId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a lesson item container bounds.
+ */
+data class LessonCardSharedKey(
+    val lessonId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a lesson title text.
+ */
+data class LessonTitleSharedKey(
+    val lessonId: String,
+) : SharedTransitionKey
+
+/**
  * Applies a shared element transition using the [SharedElementTransitionScope.AnimatedScope.Navigation]
  * scope if [scope] is provided and has an active navigation animated scope.
  */
