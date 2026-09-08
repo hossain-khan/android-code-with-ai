@@ -95,6 +95,7 @@ kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 # via enableCircuitCodegen. The circuit-codegen-annotations artifact is also added automatically.
 circuit-foundation = { group = "com.slack.circuit", name = "circuit-foundation", version.ref = "circuit" }
 circuit-overlay = { group = "com.slack.circuit", name = "circuit-overlay", version.ref = "circuit" }
+circuit-sharedelements = { group = "com.slack.circuit", name = "circuit-sharedelements", version.ref = "circuit" }
 circuit-test = { group = "com.slack.circuit", name = "circuit-test", version.ref = "circuit" }
 circuitx-android = { group = "com.slack.circuit", name = "circuitx-android", version.ref = "circuit" }
 circuitx-effects = { group = "com.slack.circuit", name = "circuitx-effects", version.ref = "circuit" }

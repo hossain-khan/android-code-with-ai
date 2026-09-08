@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chat
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,9 +46,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.animation.TopicCardSharedKey
+import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
+import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -55,13 +63,20 @@ import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @CircuitInject(ChatScreen::class, AppScope::class)
 @Composable
 fun ChatScreenUi(
     state: ChatScreen.State,
     modifier: Modifier = Modifier,
 ) {
-    ChatScreenContent(state = state, modifier = modifier)
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            ChatScreenContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        ChatScreenContent(state = state, modifier = modifier, transitionScope = null)
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -69,6 +84,7 @@ fun ChatScreenUi(
 internal fun ChatScreenContent(
     state: ChatScreen.State,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     when (state) {
         is ChatScreen.State.Loading -> {
@@ -78,15 +94,15 @@ internal fun ChatScreenContent(
         }
 
         is ChatScreen.State.NoModelSelected -> {
-            NoModelSelectedLayout(state = state, modifier = modifier)
+            NoModelSelectedLayout(state = state, modifier = modifier, transitionScope = transitionScope)
         }
 
         is ChatScreen.State.Error -> {
-            ChatErrorLayout(state = state, modifier = modifier)
+            ChatErrorLayout(state = state, modifier = modifier, transitionScope = transitionScope)
         }
 
         is ChatScreen.State.Active -> {
-            ChatLayout(state = state, modifier = modifier)
+            ChatLayout(state = state, modifier = modifier, transitionScope = transitionScope)
         }
     }
 }
@@ -100,6 +116,7 @@ internal fun ChatScreenContent(
 private fun ChatLayout(
     state: ChatScreen.State.Active,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     // Keep the screen awake while the model is actively streaming tokens
     val currentView = LocalView.current
@@ -141,6 +158,7 @@ private fun ChatLayout(
                 .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
+                modifier = Modifier.sharedBoundsNav(transitionScope, TopicCardSharedKey(state.topic.stableId)),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -150,6 +168,7 @@ private fun ChatLayout(
                             shape = MaterialTheme.shapes.extraSmall,
                             color = visualInfo.accentColor.copy(alpha = 0.2f),
                             border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
+                            modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(state.topic.stableId)),
                         ) {
                             Text(
                                 text = visualInfo.iconGlyph,
@@ -160,7 +179,11 @@ private fun ChatLayout(
                                 color = visualInfo.accentColor,
                             )
                         }
-                        Text(state.topic.displayName, fontWeight = FontWeight.Bold)
+                        Text(
+                            text = state.topic.displayName,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(state.topic.stableId)),
+                        )
                     }
                 },
                 actions = {
@@ -405,19 +428,24 @@ private val sampleActiveChatState =
         eventSink = {},
     )
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @DevicePreviews
 @Composable
 private fun ChatScreenActivePreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        dev.hossain.highlight.ui.HighlightThemeProvider(
-            lightHighlightTheme =
-                dev.hossain.highlight.ui
-                    .rememberTomorrowLightTheme(),
-            darkHighlightTheme =
-                dev.hossain.highlight.ui
-                    .rememberTomorrowNightTheme(),
-        ) {
-            ChatLayout(state = sampleActiveChatState)
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                dev.hossain.highlight.ui.HighlightThemeProvider(
+                    lightHighlightTheme =
+                        dev.hossain.highlight.ui
+                            .rememberTomorrowLightTheme(),
+                    darkHighlightTheme =
+                        dev.hossain.highlight.ui
+                            .rememberTomorrowNightTheme(),
+                ) {
+                    ChatLayout(state = sampleActiveChatState, transitionScope = this@SharedElementTransitionScope)
+                }
+            }
         }
     }
 }
