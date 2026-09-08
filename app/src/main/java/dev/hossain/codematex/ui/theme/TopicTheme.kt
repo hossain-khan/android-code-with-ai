@@ -181,7 +181,7 @@ val CodingTopic.visualInfo: TopicVisualInfo
                         listOf(
                             "Explain Jetpack Compose Recomposition lifecycle & derivedStateOf",
                             "How to architect offline-first apps with Room and WorkManager?",
-                            "What are the benefits of Circuit UDF architecture over MVI/MVVM?",
+                            "Explain Compose Compiler Stability: @Stable, @Immutable, and Strong Skipping",
                             "How to properly handle Edge-to-Edge and IME WindowInsets in Compose?",
                         ),
                 )
