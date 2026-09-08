@@ -11,7 +11,6 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
-import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.home.HomeScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -45,12 +44,7 @@ class OnboardingPresenter(
                     Timber.e(e, "OnboardingPresenter: Failed to save onboarding completed state")
                 }
 
-                if (hasDownloadedModel) {
-                    navigator.resetRoot(HomeScreen)
-                } else {
-                    navigator.resetRoot(HomeScreen)
-                    navigator.goTo(ModelPickerScreen)
-                }
+                navigator.resetRoot(HomeScreen)
             }
         }
 
