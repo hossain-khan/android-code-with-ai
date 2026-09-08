@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -69,12 +70,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.ui.animation.LessonCardSharedKey
+import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -89,12 +95,32 @@ import dev.hossain.highlight.ui.SyntaxHighlightedCode
 import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.zacsweers.metro.AppScope
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 @CircuitInject(screen = LessonScreen::class, scope = AppScope::class)
 @Composable
 fun LessonScreenContent(
     state: LessonScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            LessonScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        LessonScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+internal fun LessonScreenInnerContent(
+    state: LessonScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val visualInfo =
@@ -115,6 +141,12 @@ fun LessonScreenContent(
                 .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
+                modifier =
+                    if (state is LessonScreen.State.Success) {
+                        Modifier.sharedBoundsNav(transitionScope, LessonCardSharedKey(state.lesson.id))
+                    } else {
+                        Modifier
+                    },
                 title = {
                     Text(
                         when (state) {
@@ -122,6 +154,12 @@ fun LessonScreenContent(
                             else -> "Lesson"
                         },
                         fontWeight = FontWeight.Bold,
+                        modifier =
+                            if (state is LessonScreen.State.Success) {
+                                Modifier.sharedBoundsNav(transitionScope, LessonTitleSharedKey(state.lesson.id))
+                            } else {
+                                Modifier
+                            },
                     )
                 },
                 navigationIcon = {
@@ -999,25 +1037,28 @@ private fun QuizContentPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @DevicePreviews
 @Composable
 private fun LessonPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Surface {
-            LessonScreenContent(
-                LessonScreen.State.Success(
-                    lesson =
-                        KotlinCourseContent.course.chapters
-                            .first()
-                            .lessons
-                            .first(),
-                    course = KotlinCourseContent.course,
-                    isCompleted = false,
-                    nextLessonId = "kotlin-variables",
-                    eventSink = {},
-                ),
-            )
+        PreviewSharedElementTransitionLayout {
+            Surface {
+                LessonScreenContent(
+                    LessonScreen.State.Success(
+                        lesson =
+                            KotlinCourseContent.course.chapters
+                                .first()
+                                .lessons
+                                .first(),
+                        course = KotlinCourseContent.course,
+                        isCompleted = false,
+                        nextLessonId = "kotlin-variables",
+                        eventSink = {},
+                    ),
+                )
+            }
         }
     }
 }
