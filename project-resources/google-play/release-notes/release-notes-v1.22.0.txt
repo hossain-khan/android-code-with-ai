@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.22.0:
+• Multi-Language Playground: Run code directly in Kotlin, Go, Python, and Rust lessons via edge runner.
+• Interactive Course Snippets: 90 foundation lessons enabled with instant code execution & terminal output.
+• Smart Kotlin Wrapping: Script-style Kotlin snippets automatically wrapped and run seamlessly.
+• Global Edge Caching: High-speed proxy caching delivers near-instant code execution results.
