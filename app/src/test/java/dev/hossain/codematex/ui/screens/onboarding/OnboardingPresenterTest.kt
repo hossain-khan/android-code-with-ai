@@ -7,7 +7,6 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
-import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.home.HomeScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -84,7 +83,7 @@ class OnboardingPresenterTest {
         }
 
     @Test
-    fun `given SkipClicked event when no model downloaded then sets completed and navigates to ModelPicker`() =
+    fun `given SkipClicked event when no model downloaded then sets completed and resets to HomeScreen`() =
         runTest {
             val presenter = createPresenter()
 
@@ -93,8 +92,8 @@ class OnboardingPresenterTest {
                 state.eventSink(OnboardingScreen.Event.SkipClicked)
 
                 assertThat(fakeUserPreferencesStore.isOnboardingCompleted()).isTrue()
-                val nextScreen = fakeNavigator.awaitNextScreen()
-                assertThat(nextScreen).isEqualTo(ModelPickerScreen)
+                val resetRootEvent = fakeNavigator.awaitResetRoot()
+                assertThat(resetRootEvent.newRoot).isEqualTo(HomeScreen)
             }
         }
 
@@ -110,6 +109,25 @@ class OnboardingPresenterTest {
                 assertThat(state.hasDownloadedModel).isTrue()
 
                 state.eventSink(OnboardingScreen.Event.GetStartedClicked)
+
+                assertThat(fakeUserPreferencesStore.isOnboardingCompleted()).isTrue()
+                val resetRootEvent = fakeNavigator.awaitResetRoot()
+                assertThat(resetRootEvent.newRoot).isEqualTo(HomeScreen)
+            }
+        }
+
+    @Test
+    fun `given NextClicked event on last page when no model downloaded then sets completed and resets to HomeScreen`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = awaitItem() as OnboardingScreen.State.Content
+                state.eventSink(OnboardingScreen.Event.PageChanged(3))
+                val page3State = awaitItem() as OnboardingScreen.State.Content
+                assertThat(page3State.currentPage).isEqualTo(3)
+
+                page3State.eventSink(OnboardingScreen.Event.NextClicked)
 
                 assertThat(fakeUserPreferencesStore.isOnboardingCompleted()).isTrue()
                 val resetRootEvent = fakeNavigator.awaitResetRoot()
