@@ -13,7 +13,7 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 
 /**
- * Executes multi-language code snippets (Kotlin, Go, Python, Rust) via the Cloudflare Workers
+ * Executes multi-language code snippets (Kotlin, Go, Python, Rust, TypeScript) via the Cloudflare Workers
  * edge playground proxy microservice (`https://code-playground.gohk.xyz`).
  */
 @ContributesBinding(AppScope::class)
@@ -29,6 +29,7 @@ class EdgePlaygroundCodeRunner(
             "kotlin", "kt",
             "go", "golang",
             "python", "py", "python3", "cpython",
+            "typescript", "ts",
             -> true
 
             else -> false
