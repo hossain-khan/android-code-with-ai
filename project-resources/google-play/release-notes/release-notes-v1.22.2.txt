@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.22.2:
+• Shared Element Transitions: Fluid, cinematic screen transitions across the app powered by Circuit.
+• Topic & Chat Transitions: Topic cards seamlessly morph into the Chat screen header and glyph.
+• Course & Lesson Transitions: Smooth visual transitions between courses, chapters, and lessons.
+• Model & Session Transitions: Polished transitions for active AI models and restored chat history sessions.
