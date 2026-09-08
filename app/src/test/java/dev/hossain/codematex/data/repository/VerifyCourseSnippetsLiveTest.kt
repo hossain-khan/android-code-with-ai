@@ -40,6 +40,10 @@ class VerifyCourseSnippetsLiveTest {
     )
     @Test
     fun `verify all foundation course snippets on live edge playground`() {
+        Assume.assumeTrue(
+            "Skipping live snippet verification: set VERIFY_SNIPPETS_ONLINE=true to run live tests",
+            System.getenv("VERIFY_SNIPPETS_ONLINE") == "true",
+        )
         val token = loadToken()
         Assume.assumeTrue("Skipping live snippet verification: no auth token found", token != null)
 
