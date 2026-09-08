@@ -13,23 +13,33 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 
 /**
- * Executes code snippets via the Cloudflare Workers edge playground proxy microservice (`https://code-playground.gohk.xyz`).
+ * Executes multi-language code snippets (Kotlin, Go, Python, Rust) via the Cloudflare Workers
+ * edge playground proxy microservice (`https://code-playground.gohk.xyz`).
  */
 @ContributesBinding(AppScope::class)
-class RustPlaygroundCodeRunner(
+class EdgePlaygroundCodeRunner(
     private val api: PlaygroundProxyApi,
     @ApplicationContext private val context: Context,
 ) : PlaygroundCodeRunner {
     internal var isOnlineChecker: () -> Boolean = { checkNetworkOnline() }
 
     override fun supports(language: String): Boolean =
-        language.equals("rust", ignoreCase = true) || language.equals("rs", ignoreCase = true)
+        when (language.trim().lowercase()) {
+            "rust", "rs",
+            "kotlin", "kt",
+            "go", "golang",
+            "python", "py", "python3", "cpython",
+            -> true
+
+            else -> false
+        }
 
     override suspend fun runSnippet(
         code: String,
         language: String,
     ): PlaygroundExecutionResult {
-        if (!supports(language)) {
+        val normalizedLang = language.trim().lowercase()
+        if (!supports(normalizedLang)) {
             return PlaygroundExecutionResult.NetworkError("Language '$language' is not supported by the playground runner.")
         }
 
@@ -40,12 +50,13 @@ class RustPlaygroundCodeRunner(
         }
 
         return try {
+            val edition = if (normalizedLang == "rust" || normalizedLang == "rs") "2021" else null
             val response =
                 api.execute(
                     PlaygroundExecuteRequest(
-                        language = language.lowercase(),
+                        language = normalizedLang,
                         code = code,
-                        edition = "2021",
+                        edition = edition,
                     ),
                 )
 

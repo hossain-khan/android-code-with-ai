@@ -741,6 +741,7 @@ object KotlinCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = codeRunnable,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -751,7 +752,14 @@ object KotlinCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("kotlin", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "kotlin",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )

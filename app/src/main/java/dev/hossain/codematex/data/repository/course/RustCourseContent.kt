@@ -921,6 +921,7 @@ object RustCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = true,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -931,7 +932,14 @@ object RustCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("rust", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "rust",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )

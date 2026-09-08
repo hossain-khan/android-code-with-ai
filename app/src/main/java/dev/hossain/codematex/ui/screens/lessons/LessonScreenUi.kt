@@ -427,9 +427,7 @@ private fun LessonBlockContent(
 
         is LessonBlock.Code -> {
             val resolvedLanguage = block.language.ifEmpty { "text" }
-            val isPlaygroundSupported =
-                block.runnable &&
-                    (resolvedLanguage.equals("rust", ignoreCase = true) || resolvedLanguage.equals("rs", ignoreCase = true))
+            val isPlaygroundSupported = block.isPlaygroundRunnable
 
             if (isPlaygroundSupported) {
                 Card(
@@ -693,6 +691,8 @@ private fun PlaygroundSnippetControls(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val playgroundTitle = getPlaygroundTitle(language)
+
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -719,7 +719,7 @@ private fun PlaygroundSnippetControls(
                         modifier = Modifier.size(14.dp),
                     )
                     Text(
-                        text = "Rust Playground",
+                        text = playgroundTitle,
                         style = MaterialTheme.typography.labelSmall,
                         color = visualInfo.accentColor,
                         fontWeight = FontWeight.Medium,
@@ -774,7 +774,7 @@ private fun PlaygroundSnippetControls(
                         color = visualInfo.accentColor,
                     )
                     Text(
-                        text = "Compiling & executing on Rust Playground...",
+                        text = "Compiling & executing on $playgroundTitle...",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -909,6 +909,15 @@ private fun TerminalOutputCard(
     }
 }
 
+private fun getPlaygroundTitle(language: String): String =
+    when (language.trim().lowercase()) {
+        "rust", "rs" -> "Rust Playground"
+        "kotlin", "kt" -> "Kotlin Playground"
+        "go", "golang" -> "Go Playground"
+        "python", "py", "python3", "cpython" -> "Python Playground"
+        else -> "${language.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }} Playground"
+    }
+
 @ThemePreviews
 @Composable
 private fun PlaygroundSnippetControlsIdlePreview() {
@@ -916,10 +925,10 @@ private fun PlaygroundSnippetControlsIdlePreview() {
         Surface {
             Box(Modifier.padding(16.dp)) {
                 PlaygroundSnippetControls(
-                    code = "fn main() { println!(\"Hello!\"); }",
-                    language = "rust",
+                    code = "fun main() {\n    println(\"Hello, Kotlin!\")\n}",
+                    language = "kotlin",
                     executionState = SnippetExecutionState.Idle,
-                    visualInfo = CodingTopic.RUST.visualInfo,
+                    visualInfo = CodingTopic.KOTLIN.visualInfo,
                     onRun = {},
                     onDismiss = {},
                 )
@@ -954,13 +963,13 @@ private fun PlaygroundSnippetControlsErrorPreview() {
         Surface {
             Box(Modifier.padding(16.dp)) {
                 PlaygroundSnippetControls(
-                    code = "fn main() {}",
-                    language = "rust",
+                    code = "package main\n\nfunc main() {}",
+                    language = "go",
                     executionState =
                         SnippetExecutionState.Error(
-                            "Internet connection required to run code on the Rust Playground.",
+                            "Internet connection required to run code on the Go Playground.",
                         ),
-                    visualInfo = CodingTopic.RUST.visualInfo,
+                    visualInfo = CodingTopic.GO.visualInfo,
                     onRun = {},
                     onDismiss = {},
                 )
