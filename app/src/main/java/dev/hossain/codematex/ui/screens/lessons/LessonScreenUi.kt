@@ -1,6 +1,16 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -731,6 +741,16 @@ private fun PlaygroundSnippetControls(
 ) {
     val playgroundTitle = getPlaygroundTitle(language)
 
+    val isOutputVisible =
+        executionState is SnippetExecutionState.Success ||
+            executionState is SnippetExecutionState.CompilationError ||
+            executionState is SnippetExecutionState.Error
+
+    var lastOutputState by remember { mutableStateOf<SnippetExecutionState?>(null) }
+    if (isOutputVisible) {
+        lastOutputState = executionState
+    }
+
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -798,79 +818,108 @@ private fun PlaygroundSnippetControls(
             }
         }
 
-        when (executionState) {
-            is SnippetExecutionState.Idle -> {
+        AnimatedVisibility(
+            visible = executionState is SnippetExecutionState.Compiling,
+            enter = fadeIn(animationSpec = tween(150)) + expandVertically(expandFrom = Alignment.Top),
+            exit = fadeOut(animationSpec = tween(150)) + shrinkVertically(shrinkTowards = Alignment.Top),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                LinearWavyProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = visualInfo.accentColor,
+                )
+                Text(
+                    text = "Compiling & executing on $playgroundTitle...",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
+        }
 
-            is SnippetExecutionState.Compiling -> {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    LinearWavyProgressIndicator(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = visualInfo.accentColor,
-                    )
-                    Text(
-                        text = "Compiling & executing on $playgroundTitle...",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        AnimatedVisibility(
+            visible = isOutputVisible,
+            enter =
+                slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                ) +
+                    expandVertically(
+                        expandFrom = Alignment.Top,
+                        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+                    ) +
+                    fadeIn(animationSpec = tween(durationMillis = 250)),
+            exit =
+                slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing),
+                ) +
+                    shrinkVertically(
+                        shrinkTowards = Alignment.Top,
+                        animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing),
+                    ) +
+                    fadeOut(animationSpec = tween(durationMillis = 200)),
+        ) {
+            val stateToRender = if (isOutputVisible) executionState else lastOutputState
+            when (stateToRender) {
+                is SnippetExecutionState.Success -> {
+                    TerminalOutputCard(
+                        title = "OUTPUT",
+                        isError = false,
+                        text = stateToRender.output,
+                        visualInfo = visualInfo,
+                        onDismiss = onDismiss,
                     )
                 }
-            }
 
-            is SnippetExecutionState.Success -> {
-                TerminalOutputCard(
-                    title = "OUTPUT",
-                    isError = false,
-                    text = executionState.output,
-                    visualInfo = visualInfo,
-                    onDismiss = onDismiss,
-                )
-            }
+                is SnippetExecutionState.CompilationError -> {
+                    TerminalOutputCard(
+                        title = "COMPILER DIAGNOSTIC",
+                        isError = true,
+                        text = stateToRender.diagnostic,
+                        visualInfo = visualInfo,
+                        onDismiss = onDismiss,
+                    )
+                }
 
-            is SnippetExecutionState.CompilationError -> {
-                TerminalOutputCard(
-                    title = "COMPILER DIAGNOSTIC",
-                    isError = true,
-                    text = executionState.diagnostic,
-                    visualInfo = visualInfo,
-                    onDismiss = onDismiss,
-                )
-            }
-
-            is SnippetExecutionState.Error -> {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                is SnippetExecutionState.Error -> {
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = executionState.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Dismiss error",
-                                modifier = Modifier.size(16.dp),
+                                imageVector = Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp),
                             )
+                            Text(
+                                text = stateToRender.message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                modifier = Modifier.weight(1f),
+                            )
+                            IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Dismiss error",
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
                         }
                     }
+                }
+
+                else -> {
                 }
             }
         }
