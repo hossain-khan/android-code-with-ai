@@ -71,6 +71,42 @@ data class LessonTitleSharedKey(
 ) : SharedTransitionKey
 
 /**
+ * Shared transition key for the active model card container bounds.
+ */
+data object ActiveModelCardSharedKey : SharedTransitionKey
+
+/**
+ * Shared transition key for the active model display name text.
+ */
+data object ActiveModelTitleSharedKey : SharedTransitionKey
+
+/**
+ * Shared transition key for the active model's memory/accelerator status badge.
+ */
+data object ActiveModelBadgeSharedKey : SharedTransitionKey
+
+/**
+ * Shared transition key for a chat session card container bounds.
+ */
+data class SessionCardSharedKey(
+    val sessionId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a chat session's topic glyph badge.
+ */
+data class SessionGlyphSharedKey(
+    val sessionId: String,
+) : SharedTransitionKey
+
+/**
+ * Shared transition key for a chat session's title text.
+ */
+data class SessionTitleSharedKey(
+    val sessionId: String,
+) : SharedTransitionKey
+
+/**
  * Applies a shared element transition using the [SharedElementTransitionScope.AnimatedScope.Navigation]
  * scope if [scope] is provided and has an active navigation animated scope.
  */

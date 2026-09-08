@@ -49,6 +49,7 @@ data class ChatScreen(
             val saveErrorMessage: String? = null,
             val topic: CodingTopic,
             val saveToHistory: Boolean = true,
+            val sessionId: String? = null,
             val availableCourse: LearningCourse? = null,
             val eventSink: (Event) -> Unit,
         ) : State

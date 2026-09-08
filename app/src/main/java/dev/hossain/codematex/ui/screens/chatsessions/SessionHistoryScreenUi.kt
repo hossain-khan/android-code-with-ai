@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +57,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.animation.SessionCardSharedKey
+import dev.hossain.codematex.ui.animation.SessionGlyphSharedKey
+import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -65,12 +73,32 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 @CircuitInject(screen = SessionHistoryScreen::class, scope = AppScope::class)
 @Composable
 fun SessionHistoryScreenContent(
     state: SessionHistoryScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            SessionHistoryScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        SessionHistoryScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun SessionHistoryScreenInnerContent(
+    state: SessionHistoryScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     when (state) {
         is SessionHistoryScreen.State.Loading -> {
@@ -84,7 +112,7 @@ fun SessionHistoryScreenContent(
         }
 
         is SessionHistoryScreen.State.Success -> {
-            SessionHistoryLayout(state, modifier)
+            SessionHistoryLayout(state, modifier, transitionScope)
         }
     }
 }
@@ -192,6 +220,7 @@ private fun SessionHistoryErrorLayout(
 private fun SessionHistoryLayout(
     state: SessionHistoryScreen.State.Success,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -317,6 +346,7 @@ private fun SessionHistoryLayout(
                             onDelete = {
                                 state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
                             },
+                            transitionScope = transitionScope,
                             modifier = Modifier.animateItem(),
                         )
                     }
@@ -416,12 +446,14 @@ private fun SessionCard(
     onClick: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = session.topic.visualInfo
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
+                .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         colors =
@@ -445,6 +477,7 @@ private fun SessionCard(
                         shape = MaterialTheme.shapes.extraSmall,
                         color = visualInfo.accentColor.copy(alpha = 0.15f),
                         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                        modifier = Modifier.sharedElementNav(transitionScope, SessionGlyphSharedKey(session.id)),
                     ) {
                         Text(
                             text = visualInfo.iconGlyph,
@@ -457,11 +490,12 @@ private fun SessionCard(
                     }
 
                     Text(
-                        session.title,
+                        text = session.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(session.id)),
                     )
                 }
 
@@ -557,20 +591,26 @@ private val sampleHistorySessions =
         ),
     )
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @DevicePreviews
 @Composable
 private fun SessionHistoryScreenPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        SessionHistoryLayout(
-            state =
-                SessionHistoryScreen.State.Success(
-                    allSessions = sampleHistorySessions,
-                    sessions = sampleHistorySessions,
-                    selectedTopic = null,
-                    availableTopics = listOf(CodingTopic.KOTLIN, CodingTopic.PYTHON, CodingTopic.RUST),
-                    eventSink = {},
-                ),
-        )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                SessionHistoryLayout(
+                    state =
+                        SessionHistoryScreen.State.Success(
+                            allSessions = sampleHistorySessions,
+                            sessions = sampleHistorySessions,
+                            selectedTopic = null,
+                            availableTopics = listOf(CodingTopic.KOTLIN, CodingTopic.PYTHON, CodingTopic.RUST),
+                            eventSink = {},
+                        ),
+                    transitionScope = this@SharedElementTransitionScope,
+                )
+            }
+        }
     }
 }
 
@@ -588,15 +628,21 @@ private fun EmptySessionsViewPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun SessionHistoryCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        SessionCard(
-            session = sampleHistorySessions.first(),
-            onClick = {},
-            onDelete = {},
-        )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                SessionCard(
+                    session = sampleHistorySessions.first(),
+                    onClick = {},
+                    onDelete = {},
+                    transitionScope = this@SharedElementTransitionScope,
+                )
+            }
+        }
     }
 }
 

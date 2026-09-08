@@ -51,6 +51,9 @@ import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.animation.SessionCardSharedKey
+import dev.hossain.codematex.ui.animation.SessionGlyphSharedKey
+import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.TopicCardSharedKey
 import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
@@ -158,7 +161,12 @@ private fun ChatLayout(
                 .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f)),
         topBar = {
             TopAppBar(
-                modifier = Modifier.sharedBoundsNav(transitionScope, TopicCardSharedKey(state.topic.stableId)),
+                modifier =
+                    if (state.sessionId != null) {
+                        Modifier.sharedBoundsNav(transitionScope, SessionCardSharedKey(state.sessionId))
+                    } else {
+                        Modifier.sharedBoundsNav(transitionScope, TopicCardSharedKey(state.topic.stableId))
+                    },
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -168,7 +176,12 @@ private fun ChatLayout(
                             shape = MaterialTheme.shapes.extraSmall,
                             color = visualInfo.accentColor.copy(alpha = 0.2f),
                             border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
-                            modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(state.topic.stableId)),
+                            modifier =
+                                if (state.sessionId != null) {
+                                    Modifier.sharedElementNav(transitionScope, SessionGlyphSharedKey(state.sessionId))
+                                } else {
+                                    Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(state.topic.stableId))
+                                },
                         ) {
                             Text(
                                 text = visualInfo.iconGlyph,
@@ -182,7 +195,12 @@ private fun ChatLayout(
                         Text(
                             text = state.topic.displayName,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(state.topic.stableId)),
+                            modifier =
+                                if (state.sessionId != null) {
+                                    Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(state.sessionId))
+                                } else {
+                                    Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(state.topic.stableId))
+                                },
                         )
                     }
                 },

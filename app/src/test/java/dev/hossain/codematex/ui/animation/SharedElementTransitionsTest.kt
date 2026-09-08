@@ -94,4 +94,45 @@ class SharedElementTransitionsTest {
         assertThat(LessonCardSharedKey(lesson1)).isNotEqualTo(LessonCardSharedKey(lesson2))
         assertThat(LessonTitleSharedKey(lesson1)).isNotEqualTo(LessonTitleSharedKey(lesson2))
     }
+
+    @Test
+    fun `active model shared keys are distinct data objects`() {
+        val cardKey = ActiveModelCardSharedKey
+        val titleKey = ActiveModelTitleSharedKey
+        val badgeKey = ActiveModelBadgeSharedKey
+
+        assertThat(cardKey).isEqualTo(ActiveModelCardSharedKey)
+        assertThat(titleKey).isEqualTo(ActiveModelTitleSharedKey)
+        assertThat(badgeKey).isEqualTo(ActiveModelBadgeSharedKey)
+
+        assertThat(cardKey).isNotEqualTo(titleKey)
+        assertThat(cardKey).isNotEqualTo(badgeKey)
+        assertThat(titleKey).isNotEqualTo(badgeKey)
+    }
+
+    @Test
+    fun `session shared keys have stable equality for same session id`() {
+        val sessionId = "session-123"
+
+        val cardKey1 = SessionCardSharedKey(sessionId)
+        val cardKey2 = SessionCardSharedKey(sessionId)
+        val glyphKey1 = SessionGlyphSharedKey(sessionId)
+        val glyphKey2 = SessionGlyphSharedKey(sessionId)
+        val titleKey1 = SessionTitleSharedKey(sessionId)
+        val titleKey2 = SessionTitleSharedKey(sessionId)
+
+        assertThat(cardKey1).isEqualTo(cardKey2)
+        assertThat(glyphKey1).isEqualTo(glyphKey2)
+        assertThat(titleKey1).isEqualTo(titleKey2)
+    }
+
+    @Test
+    fun `different sessions have distinct shared keys`() {
+        val session1 = "session-1"
+        val session2 = "session-2"
+
+        assertThat(SessionCardSharedKey(session1)).isNotEqualTo(SessionCardSharedKey(session2))
+        assertThat(SessionGlyphSharedKey(session1)).isNotEqualTo(SessionGlyphSharedKey(session2))
+        assertThat(SessionTitleSharedKey(session1)).isNotEqualTo(SessionTitleSharedKey(session2))
+    }
 }

@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.aimodels
 import android.Manifest
 import android.content.Context
 import android.os.Build
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -82,6 +83,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
@@ -90,6 +93,11 @@ import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
+import dev.hossain.codematex.ui.animation.ActiveModelBadgeSharedKey
+import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
+import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -100,12 +108,32 @@ import dev.zacsweers.metro.AppScope
 import timber.log.Timber
 import java.text.DecimalFormat
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3ExpressiveApi::class,
+    ExperimentalSharedTransitionApi::class,
+)
 @CircuitInject(screen = ModelPickerScreen::class, scope = AppScope::class)
 @Composable
 fun ModelPickerScreenContent(
     state: ModelPickerScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            ModelPickerScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        ModelPickerScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+internal fun ModelPickerScreenInnerContent(
+    state: ModelPickerScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     when (state) {
         is ModelPickerScreen.State.Loading -> {
@@ -119,7 +147,7 @@ fun ModelPickerScreenContent(
         }
 
         is ModelPickerScreen.State.Success -> {
-            ModelPickerLayout(state, modifier)
+            ModelPickerLayout(state, modifier, transitionScope)
         }
     }
 }
@@ -231,6 +259,7 @@ private fun ModelPickerErrorLayout(
 private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -408,6 +437,7 @@ private fun ModelPickerLayout(
                     ModelCard(
                         model = model,
                         compatibility = compatibility,
+                        transitionScope = transitionScope,
                         onDownload = {
                             if (isCompatible) {
                                 val hasPrompted = prefs.getBoolean("has_prompted_notifications", false)
@@ -516,11 +546,13 @@ private fun DeviceMemoryBanner(
 private fun ModelCard(
     model: AiModel,
     compatibility: ModelCompatibility,
+    transitionScope: SharedElementTransitionScope? = null,
     onDownload: () -> Unit,
     onCancel: () -> Unit,
     onSelect: () -> Unit,
     onDelete: () -> Unit,
     onConfigure: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val isCompatible = compatibility is ModelCompatibility.Compatible
     val uriHandler = LocalUriHandler.current
@@ -576,7 +608,16 @@ private fun ModelCard(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .then(
+                    if (model.isSelected) {
+                        Modifier.sharedBoundsNav(transitionScope, ActiveModelCardSharedKey)
+                    } else {
+                        Modifier
+                    },
+                ),
         colors =
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -603,7 +644,16 @@ private fun ModelCard(
                     text = model.displayName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f, fill = false),
+                    modifier =
+                        Modifier
+                            .weight(1f, fill = false)
+                            .then(
+                                if (model.isSelected) {
+                                    Modifier.sharedBoundsNav(transitionScope, ActiveModelTitleSharedKey)
+                                } else {
+                                    Modifier
+                                },
+                            ),
                 )
 
                 Surface(
@@ -852,7 +902,10 @@ private fun ModelCard(
                             FilledTonalButton(
                                 onClick = onSelect,
                                 enabled = false,
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .sharedElementNav(transitionScope, ActiveModelBadgeSharedKey),
                             ) {
                                 Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -1015,19 +1068,25 @@ private val sampleModels =
         ),
     )
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @DevicePreviews
 @Composable
 private fun ModelPickerScreenPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        ModelPickerLayout(
-            state =
-                ModelPickerScreen.State.Success(
-                    models = sampleModels,
-                    deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
-                    modelCompatibility = sampleModels.associate { it.id to ModelCompatibility.Compatible },
-                    eventSink = {},
-                ),
-        )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                ModelPickerLayout(
+                    state =
+                        ModelPickerScreen.State.Success(
+                            models = sampleModels,
+                            deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
+                            modelCompatibility = sampleModels.associate { it.id to ModelCompatibility.Compatible },
+                            eventSink = {},
+                        ),
+                    transitionScope = this,
+                )
+            }
+        }
     }
 }
 
@@ -1042,32 +1101,39 @@ private fun DeviceMemoryBannerPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun ModelCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            ModelCard(
-                model = sampleModels[0],
-                compatibility = ModelCompatibility.Compatible,
-                onDownload = {},
-                onCancel = {},
-                onSelect = {},
-                onDelete = {},
-                onConfigure = {},
-            )
-            ModelCard(
-                model = sampleModels[1],
-                compatibility = ModelCompatibility.Incompatible("Requires 3GB RAM (Device has 12GB)"),
-                onDownload = {},
-                onCancel = {},
-                onSelect = {},
-                onDelete = {},
-                onConfigure = {},
-            )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ModelCard(
+                        model = sampleModels[0],
+                        compatibility = ModelCompatibility.Compatible,
+                        transitionScope = this@SharedElementTransitionScope,
+                        onDownload = {},
+                        onCancel = {},
+                        onSelect = {},
+                        onDelete = {},
+                        onConfigure = {},
+                    )
+                    ModelCard(
+                        model = sampleModels[1],
+                        compatibility = ModelCompatibility.Incompatible("Requires 3GB RAM (Device has 12GB)"),
+                        transitionScope = this@SharedElementTransitionScope,
+                        onDownload = {},
+                        onCancel = {},
+                        onSelect = {},
+                        onDelete = {},
+                        onConfigure = {},
+                    )
+                }
+            }
         }
     }
 }

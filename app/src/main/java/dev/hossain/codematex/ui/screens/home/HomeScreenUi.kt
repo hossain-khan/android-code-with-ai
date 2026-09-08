@@ -80,9 +80,15 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.ui.animation.ActiveModelBadgeSharedKey
+import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
+import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
 import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
 import dev.hossain.codematex.ui.animation.CourseCardSharedKey
 import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
+import dev.hossain.codematex.ui.animation.SessionCardSharedKey
+import dev.hossain.codematex.ui.animation.SessionGlyphSharedKey
+import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.TopicCardSharedKey
 import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
@@ -214,6 +220,7 @@ private fun HomeLayout(
                         isModelInMemory = state.isModelInMemory,
                         memoryBackend = state.memoryBackend,
                         onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
+                        transitionScope = transitionScope,
                     )
 
                     if (state.availableCourses.isNotEmpty()) {
@@ -340,7 +347,7 @@ private fun HomeLayout(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(state.recentSessions) { session ->
-                                SessionCard(session) {
+                                SessionCard(session, transitionScope = transitionScope) {
                                     state.eventSink(HomeScreen.Event.SessionClicked(session.id))
                                 }
                             }
@@ -362,6 +369,7 @@ private fun HomeLayout(
                         isModelInMemory = state.isModelInMemory,
                         memoryBackend = state.memoryBackend,
                         onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
+                        transitionScope = transitionScope,
                     )
                 }
 
@@ -480,7 +488,7 @@ private fun HomeLayout(
                     }
 
                     items(state.recentSessions) { session ->
-                        SessionCard(session) {
+                        SessionCard(session, transitionScope = transitionScope) {
                             state.eventSink(HomeScreen.Event.SessionClicked(session.id))
                         }
                     }
@@ -502,6 +510,7 @@ private fun HeroBanner(
     memoryBackend: String?,
     onManageModels: () -> Unit,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     Card(
         modifier =
@@ -545,7 +554,13 @@ private fun HeroBanner(
                     Modifier
                         .fillMaxWidth()
                         .clip(MaterialTheme.shapes.medium)
-                        .clickable(onClick = onManageModels),
+                        .then(
+                            if (hasDownloadedModel) {
+                                Modifier.sharedBoundsNav(transitionScope, ActiveModelCardSharedKey)
+                            } else {
+                                Modifier
+                            },
+                        ).clickable(onClick = onManageModels),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
@@ -585,6 +600,12 @@ private fun HeroBanner(
                             fontWeight = FontWeight.Bold,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
+                            modifier =
+                                if (hasDownloadedModel) {
+                                    Modifier.sharedBoundsNav(transitionScope, ActiveModelTitleSharedKey)
+                                } else {
+                                    Modifier
+                                },
                         )
                     }
 
@@ -606,6 +627,7 @@ private fun HeroBanner(
                                         MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
                                     },
                                 ),
+                            modifier = Modifier.sharedElementNav(transitionScope, ActiveModelBadgeSharedKey),
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -985,13 +1007,16 @@ private fun TopicCompactCard(
 @Composable
 private fun SessionCard(
     session: ChatSession,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
     onClick: () -> Unit,
 ) {
     val visualInfo = session.topic.visualInfo
     Card(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
+                .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
                 .clickable(onClick = onClick),
         colors =
             CardDefaults.cardColors(
@@ -1024,11 +1049,12 @@ private fun SessionCard(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    session.title,
+                    text = session.title,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(session.id)),
                 )
                 Text(
                     session.summary,
@@ -1520,23 +1546,29 @@ private fun TopicCompactCardPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun SessionCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        SessionCard(
-            session =
-                ChatSession(
-                    id = "1",
-                    title = "Kotlin Coroutines & Flow",
-                    summary = "Explaining stateIn vs shareIn operators with practical examples.",
-                    topic = CodingTopic.KOTLIN,
-                    messageCount = 6,
-                    lastActiveAt = 0L,
-                    modelUsed = "Gemma 4-E2B IT",
-                ),
-            onClick = {},
-        )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                SessionCard(
+                    session =
+                        ChatSession(
+                            id = "1",
+                            title = "Kotlin Coroutines & Flow",
+                            summary = "Explaining stateIn vs shareIn operators with practical examples.",
+                            topic = CodingTopic.KOTLIN,
+                            messageCount = 6,
+                            lastActiveAt = 0L,
+                            modelUsed = "Gemma 4-E2B IT",
+                        ),
+                    transitionScope = this@SharedElementTransitionScope,
+                    onClick = {},
+                )
+            }
+        }
     }
 }
 
