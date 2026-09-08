@@ -494,6 +494,7 @@ class ChatPresenter(
                     saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
                     saveToHistory = screen.saveToHistory,
+                    sessionId = screen.sessionId,
                     availableCourse = availableCourse,
                     eventSink = eventSink,
                 )
