@@ -851,6 +851,7 @@ object TypeScriptCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
+        isPlaygroundRunnable: Boolean = codeRunnable,
     ) = LearningLesson(
         id = id,
         chapterId = "",
@@ -861,7 +862,14 @@ object TypeScriptCourseContent {
         blocks =
             buildList {
                 add(LessonBlock.Markdown(markdown))
-                add(LessonBlock.Code("typescript", code, runnable = codeRunnable))
+                add(
+                    LessonBlock.Code(
+                        language = "typescript",
+                        code = code,
+                        runnable = codeRunnable,
+                        isPlaygroundRunnable = isPlaygroundRunnable,
+                    ),
+                )
                 quiz?.let(::add)
             },
     )

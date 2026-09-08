@@ -7,6 +7,7 @@ import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
+import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -53,8 +54,31 @@ class VerifyCourseSnippetsLiveTest {
                 GoCourseContent.course,
                 PythonCourseContent.course,
                 RustCourseContent.course,
+                TypeScriptCourseContent.course,
             )
 
+        verifyCourses(courses, token!!)
+    }
+
+    @org.junit.Ignore(
+        "Run explicitly when verifying TypeScript course snippets: ./gradlew testDebugUnitTest --tests \"dev.hossain.codematex.data.repository.VerifyCourseSnippetsLiveTest.verify typescript course snippets on live edge playground\"",
+    )
+    @Test
+    fun `verify typescript course snippets on live edge playground`() {
+        Assume.assumeTrue(
+            "Skipping live snippet verification: set VERIFY_SNIPPETS_ONLINE=true to run live tests",
+            System.getenv("VERIFY_SNIPPETS_ONLINE") == "true",
+        )
+        val token = loadToken()
+        Assume.assumeTrue("Skipping live snippet verification: no auth token found", token != null)
+
+        verifyCourses(listOf(TypeScriptCourseContent.course), token!!)
+    }
+
+    private fun verifyCourses(
+        courses: List<dev.hossain.codematex.data.model.LearningCourse>,
+        token: String,
+    ) {
         val results = mutableListOf<SnippetVerificationResult>()
 
         for (course in courses) {

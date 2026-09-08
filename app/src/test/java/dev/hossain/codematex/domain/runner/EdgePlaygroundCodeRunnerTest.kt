@@ -50,9 +50,14 @@ class EdgePlaygroundCodeRunnerTest {
         assertThat(runner.supports("python3")).isTrue()
         assertThat(runner.supports("cpython")).isTrue()
 
+        // TypeScript
+        assertThat(runner.supports("typescript")).isTrue()
+        assertThat(runner.supports("TypeScript")).isTrue()
+        assertThat(runner.supports("ts")).isTrue()
+        assertThat(runner.supports("TS")).isTrue()
+
         // Unsupported
         assertThat(runner.supports("swift")).isFalse()
-        assertThat(runner.supports("typescript")).isFalse()
         assertThat(runner.supports("java")).isFalse()
         assertThat(runner.supports("csharp")).isFalse()
     }
@@ -157,6 +162,26 @@ class EdgePlaygroundCodeRunnerTest {
             val success = result as PlaygroundExecutionResult.Success
             assertThat(success.output).isEqualTo("Hello, Python!\n")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("python")
+            assertThat(fakeApi.lastRequest?.edition).isNull()
+        }
+
+    @Test
+    fun `given successful execution for typescript - passes language and returns success`() =
+        runTest {
+            fakeApi.responseToReturn =
+                PlaygroundExecuteResponse(
+                    status = "success",
+                    output = "Hello, TypeScript!\n",
+                    cached = true,
+                    executionTimeMs = 25,
+                )
+
+            val result = runner.runSnippet("console.log(\"Hello, TypeScript!\");", "typescript")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
+            val success = result as PlaygroundExecutionResult.Success
+            assertThat(success.output).isEqualTo("Hello, TypeScript!\n")
+            assertThat(fakeApi.lastRequest?.language).isEqualTo("typescript")
             assertThat(fakeApi.lastRequest?.edition).isNull()
         }
 
