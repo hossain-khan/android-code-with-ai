@@ -379,13 +379,17 @@ class CourseContentTest {
                 .flatMap { it.blocks }
                 .filterIsInstance<LessonBlock.Code>()
         assertThat(kotlinBlocks).hasSize(24)
-        val kotlinRunnable =
+        assertThat(kotlinBlocks.count { it.isPlaygroundRunnable }).isEqualTo(22)
+        val kotlinNonRunnable =
             KotlinCourseContent.course.chapters
                 .flatMap { it.lessons }
                 .filter { lesson ->
-                    lesson.blocks.filterIsInstance<LessonBlock.Code>().any { it.isPlaygroundRunnable }
+                    lesson.blocks.filterIsInstance<LessonBlock.Code>().any { !it.isPlaygroundRunnable }
                 }.map { it.id }
-        assertThat(kotlinRunnable).containsExactly("kotlin-hello-world")
+        assertThat(kotlinNonRunnable).containsExactly(
+            "kotlin-coroutine-builders",
+            "kotlin-flow-basics",
+        )
 
         val rbeBlocks =
             RustByExampleCourseContent.course.chapters

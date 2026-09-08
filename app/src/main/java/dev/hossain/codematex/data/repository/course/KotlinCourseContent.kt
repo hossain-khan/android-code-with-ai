@@ -52,7 +52,6 @@ object KotlinCourseContent {
                                             println("Hello, Kotlin!")
                                         }
                                         """.trimIndent(),
-                                    isPlaygroundRunnable = true,
                                 ),
                                 lesson(
                                     id = "kotlin-variables",
@@ -742,7 +741,7 @@ object KotlinCourseContent {
         code: String,
         quiz: LessonBlock.Quiz? = null,
         codeRunnable: Boolean = true,
-        isPlaygroundRunnable: Boolean = false,
+        isPlaygroundRunnable: Boolean = codeRunnable,
     ) = LearningLesson(
         id = id,
         chapterId = "",
