@@ -99,7 +99,7 @@ class EdgePlaygroundCodeRunnerTest {
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, Rust!\n")
+            assertThat(success.output).isEqualTo("Hello, Rust!")
             assertThat(fakeApi.lastRequest?.code).isEqualTo("fn main() { println!(\"Hello, Rust!\"); }")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("rust")
             assertThat(fakeApi.lastRequest?.edition).isEqualTo("2021")
@@ -120,7 +120,7 @@ class EdgePlaygroundCodeRunnerTest {
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, Kotlin!\n")
+            assertThat(success.output).isEqualTo("Hello, Kotlin!")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("kotlin")
             assertThat(fakeApi.lastRequest?.edition).isNull()
         }
@@ -140,7 +140,7 @@ class EdgePlaygroundCodeRunnerTest {
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, Go!\n")
+            assertThat(success.output).isEqualTo("Hello, Go!")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("go")
             assertThat(fakeApi.lastRequest?.edition).isNull()
         }
@@ -160,7 +160,7 @@ class EdgePlaygroundCodeRunnerTest {
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, Python!\n")
+            assertThat(success.output).isEqualTo("Hello, Python!")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("python")
             assertThat(fakeApi.lastRequest?.edition).isNull()
         }
@@ -180,9 +180,27 @@ class EdgePlaygroundCodeRunnerTest {
 
             assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
             val success = result as PlaygroundExecutionResult.Success
-            assertThat(success.output).isEqualTo("Hello, TypeScript!\n")
+            assertThat(success.output).isEqualTo("Hello, TypeScript!")
             assertThat(fakeApi.lastRequest?.language).isEqualTo("typescript")
             assertThat(fakeApi.lastRequest?.edition).isNull()
+        }
+
+    @Test
+    fun `given output with trailing newlines - trims trailing newlines but preserves internal newlines`() =
+        runTest {
+            fakeApi.responseToReturn =
+                PlaygroundExecuteResponse(
+                    status = "success",
+                    output = "line 1\nline 2\n\n",
+                    cached = false,
+                    executionTimeMs = 20,
+                )
+
+            val result = runner.runSnippet("println(\"line 1\"); println(\"line 2\");", "kotlin")
+
+            assertThat(result).isInstanceOf(PlaygroundExecutionResult.Success::class.java)
+            val success = result as PlaygroundExecutionResult.Success
+            assertThat(success.output).isEqualTo("line 1\nline 2")
         }
 
     @Test

@@ -63,7 +63,7 @@ class EdgePlaygroundCodeRunner(
 
             when (response.status) {
                 "success" -> {
-                    val output = response.output.ifEmpty { "Program executed successfully with no output." }
+                    val output = response.output.trimEnd().ifEmpty { "Program executed successfully with no output." }
                     PlaygroundExecutionResult.Success(output)
                 }
 

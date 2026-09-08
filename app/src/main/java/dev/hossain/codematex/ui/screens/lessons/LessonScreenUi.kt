@@ -985,7 +985,7 @@ private fun TerminalOutputCard(
 
             SelectionContainer {
                 Text(
-                    text = text,
+                    text = text.trimEnd(),
                     fontFamily = FontFamily.Monospace,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -1033,7 +1033,7 @@ private fun PlaygroundSnippetControlsSuccessPreview() {
                 PlaygroundSnippetControls(
                     code = "fn main() { println!(\"Hello, world!\"); }",
                     language = "rust",
-                    executionState = SnippetExecutionState.Success("Hello, world!\n"),
+                    executionState = SnippetExecutionState.Success("Hello, world!"),
                     visualInfo = CodingTopic.RUST.visualInfo,
                     onRun = {},
                     onDismiss = {},
