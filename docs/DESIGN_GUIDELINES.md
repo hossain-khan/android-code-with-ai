@@ -200,6 +200,36 @@ Whenever creating or updating modular composable components, always include comp
 - Always wrap preview calls with `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }`.
 - Provide previews for multiple visual states (nominal/default, preparing/loading, high-load/error, active).
 - Ensure standalone modular components have realistic preview data and padding (`Modifier.padding(16.dp)`).
+- If the composable accepts `SharedElementTransitionScope`, wrap preview content in `PreviewSharedElementTransitionLayout { SharedElementTransitionScope { ... } }` and annotate with `@OptIn(ExperimentalSharedTransitionApi::class)`.
+
+### J. Circuit Shared Element Transitions & Motion Guidelines
+CodeMateX uses Slack Circuit's `SharedElementTransitionScope` (`com.slack.circuit.sharedelements`) alongside Compose's `ExperimentalSharedTransitionApi` to provide fluid visual continuity across screens (e.g. Topic Card ➔ Chat Header, Guided Course ➔ Chapter Syllabus ➔ Lesson Detail, Active Model Bar ➔ Model Picker):
+
+1. **Dual Composable Screen Entry**:
+   Top-level `@CircuitInject` composables should check `SharedElementTransitionScope.isAvailable` and delegate to an internal implementation accepting `transitionScope: SharedElementTransitionScope? = null`:
+   ```kotlin
+   @OptIn(ExperimentalSharedTransitionApi::class)
+   @CircuitInject(screen = MyScreen::class, scope = AppScope::class)
+   @Composable
+   fun MyScreenContent(state: MyScreen.State, modifier: Modifier = Modifier) {
+       if (SharedElementTransitionScope.isAvailable) {
+           SharedElementTransitionScope {
+               MyScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+           }
+       } else {
+           MyScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+       }
+   }
+   ```
+2. **Standardized Extension Modifiers**:
+   Always use the defensive extensions defined in [`SharedElementTransitions.kt`](../app/src/main/java/dev/hossain/codematex/ui/animation/SharedElementTransitions.kt):
+   - `Modifier.sharedBoundsNav(transitionScope, key, boundsTransform)`: For container surfaces, cards, and text layout morphs.
+   - `Modifier.sharedElementNav(transitionScope, key)`: For discrete icons, badges, chips, and glyphs.
+   - If `transitionScope == null`, these modifiers safely no-op (`return this`), ensuring preview and runtime safety.
+3. **Key Centralization & Scoping**:
+   - Centralize all keys in [`SharedElementTransitions.kt`](../app/src/main/java/dev/hossain/codematex/ui/animation/SharedElementTransitions.kt) and test them in [`SharedElementTransitionsTest.kt`](../app/src/test/java/dev/hossain/codematex/ui/animation/SharedElementTransitionsTest.kt).
+   - Use `data object` for screen-unique items (`ActiveModelCardSharedKey`).
+   - Use `data class` with stable item IDs for dynamic lists (`TopicCardSharedKey(topicId)`, `SessionCardSharedKey(sessionId)`, `CourseCardSharedKey(courseId)`) to avoid Compose transition key collisions.
 
 ---
 
@@ -212,6 +242,7 @@ Before finishing any UI task, verify the following checklist:
 - [ ] **Progress Indicators**: Is `LinearWavyProgressIndicator` used for downloads and static `LinearProgressIndicator` used for curriculum headers?
 - [ ] **Adaptive Layout**: Is the screen responsive using `currentWindowAdaptiveInfoV2()`?
 - [ ] **Compose Previews**: Are `@ThemePreviews` added with multiple visual states for new or modified modular UI components?
+- [ ] **Circuit Shared Element Transitions**: Does the screen entry point check `SharedElementTransitionScope.isAvailable` and delegate to `InnerContent(transitionScope)`? Are previews wrapped in `PreviewSharedElementTransitionLayout { SharedElementTransitionScope { ... } }`?
 - [ ] **Curriculum Status Badges**: Are completed vs. current vs. upcoming lessons distinctly marked?
 - [ ] **Empty States**: Are empty lists handled gracefully with informative visuals?
 - [ ] **Formatting & Checks**: Did you run `./gradlew formatKotlin` and `./gradlew check`?
