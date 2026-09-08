@@ -95,6 +95,7 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
   - Wrap preview content in `CodeWithAIAppTheme(dynamicColor = false) { Surface { ... } }` to preview in both Light and Dark modes.
   - Cover multiple critical UI states: nominal/default, preparing/loading, high-load/error, and active states.
   - Ensure standalone modular components (e.g., progress bars, chips, cards) have dedicated previews with realistic sample data and padding.
+  - **Shared Elements**: If a composable accepts or uses `SharedElementTransitionScope`, wrap the preview content in `PreviewSharedElementTransitionLayout { SharedElementTransitionScope { ... } }` and annotate with `@OptIn(ExperimentalSharedTransitionApi::class)`.
 
 ### F. Markdown Rendering for Chat Messages
 - **Library**: Chat/session detail messages are rendered with [multiplatform-markdown-renderer](https://github.com/mikepenz/multiplatform-markdown-renderer) (`v0.45.0`), using the Material 3 (`-m3`) module and syntax highlighting via [compose-highlight](https://github.com/hossain-khan/android-compose-highlight) (`dev.hossain:compose-highlight:0.36.0`).
@@ -102,6 +103,61 @@ To ensure a modern, premium, and user-friendly experience, CodeMateX strictly ad
 - **Custom Code Blocks**: Code blocks are intercepted through the library's `markdownComponents(codeBlock = ..., codeFence = ...)` plugin API and rendered with `StreamingSyntaxHighlightedCode` from `dev.hossain.highlight.ui`, providing Highlight.js syntax highlighting with span-transfer preservation, debounced highlighting, line numbers, and copy action.
 - **Root Provider**: Wrap UI hierarchy in `HighlightThemeProvider(lightHighlightTheme = rememberTomorrowLightTheme(), darkHighlightTheme = rememberTomorrowNightTheme())` to share a single background engine instance across all message bubbles.
 - **Streaming Notes**: The library also provides `StreamingMarkdownState` for append-only token streams. The current presenter emits the full message content on each token, so `rememberMarkdownState` with `retainState = true` is the right fit. If the presenter is refactored to expose raw chunks, migrate to `rememberStreamingMarkdownState()` / `Flow<String>.collectAsStreamingMarkdownState()`.
+
+### G. Circuit Shared Element Transitions & Motion Guidelines
+CodeMateX integrates Slack Circuit's `SharedElementTransitionScope` (`com.slack.circuit.sharedelements`) with Jetpack Compose Shared Transition APIs for fluid screen navigation:
+
+1. **Dual Composable Entry Pattern**:
+   Circuit `@CircuitInject` screen entry functions cannot take `SharedElementTransitionScope` as a parameter. Always split screen entry into an outer injector and an inner implementation:
+   ```kotlin
+   @OptIn(ExperimentalSharedTransitionApi::class)
+   @CircuitInject(screen = MyScreen::class, scope = AppScope::class)
+   @Composable
+   fun MyScreenContent(state: MyScreen.State, modifier: Modifier = Modifier) {
+       if (SharedElementTransitionScope.isAvailable) {
+           SharedElementTransitionScope {
+               MyScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+           }
+       } else {
+           MyScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+       }
+   }
+
+   @Composable
+   internal fun MyScreenInnerContent(
+       state: MyScreen.State,
+       modifier: Modifier = Modifier,
+       transitionScope: SharedElementTransitionScope? = null,
+   ) { ... }
+   ```
+
+2. **Defensive Modifier Extensions**:
+   Always use the helper extensions in [`SharedElementTransitions.kt`](app/src/main/java/dev/hossain/codematex/ui/animation/SharedElementTransitions.kt):
+   - `Modifier.sharedBoundsNav(transitionScope, key, boundsTransform = null)`: For container surfaces, cards, and text layout morphs.
+   - `Modifier.sharedElementNav(transitionScope, key)`: For discrete icons, badges, chips, and glyphs.
+   - These modifiers automatically query `scope.findAnimatedScope(Navigation)` and safely no-op (`return this`) if `transitionScope == null`.
+
+3. **Key Centralization & Scoping**:
+   - Define all shared element keys in [`SharedElementTransitions.kt`](app/src/main/java/dev/hossain/codematex/ui/animation/SharedElementTransitions.kt) and write corresponding unit tests in [`SharedElementTransitionsTest.kt`](app/src/test/java/dev/hossain/codematex/ui/animation/SharedElementTransitionsTest.kt).
+   - Use `data object` for screen-unique elements (e.g. `ActiveModelCardSharedKey`).
+   - Use `data class` parameterized by unique IDs for dynamic list items (e.g. `TopicCardSharedKey(topicId)`, `SessionCardSharedKey(sessionId)`, `CourseCardSharedKey(courseId)`) to avoid Compose transition key collisions.
+
+4. **Preview Wiring**:
+   Whenever a composable accepts or uses `transitionScope`, always wrap previews in:
+   ```kotlin
+   @OptIn(ExperimentalSharedTransitionApi::class)
+   @ThemePreviews
+   @Composable
+   private fun MyComponentPreview() {
+       CodeWithAIAppTheme(dynamicColor = false) {
+           PreviewSharedElementTransitionLayout {
+               SharedElementTransitionScope {
+                   MyComponent(transitionScope = this@SharedElementTransitionScope)
+               }
+           }
+       }
+   }
+   ```
 
 ---
 
