@@ -233,6 +233,7 @@ dependencies {
 
     implementation(libs.circuit.foundation)
     implementation(libs.circuit.overlay)
+    implementation(libs.circuit.sharedelements)
     implementation(libs.circuitx.android)
     implementation(libs.circuitx.effects)
     implementation(libs.circuitx.gestureNav)

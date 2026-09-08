@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.home
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -72,11 +73,18 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.ui.animation.TopicCardSharedKey
+import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
+import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -85,12 +93,27 @@ import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @CircuitInject(screen = HomeScreen::class, scope = AppScope::class)
 @Composable
 fun HomeScreenContent(
     state: HomeScreen.State,
     modifier: Modifier = Modifier,
+) {
+    if (SharedElementTransitionScope.isAvailable) {
+        SharedElementTransitionScope {
+            HomeScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+        }
+    } else {
+        HomeScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+    }
+}
+
+@Composable
+private fun HomeScreenInnerContent(
+    state: HomeScreen.State,
+    modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     when (state) {
         is HomeScreen.State.Loading -> {
@@ -104,7 +127,7 @@ fun HomeScreenContent(
         }
 
         is HomeScreen.State.Success -> {
-            HomeLayout(state, modifier)
+            HomeLayout(state, modifier, transitionScope)
         }
     }
 }
@@ -119,6 +142,7 @@ fun HomeScreenContent(
 private fun HomeLayout(
     state: HomeScreen.State.Success,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -270,6 +294,7 @@ private fun HomeLayout(
                                 topic = topic,
                                 hasCourse = state.topicsWithCourses.contains(topic),
                                 onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
+                                transitionScope = transitionScope,
                             )
                         }
                     }
@@ -422,6 +447,7 @@ private fun HomeLayout(
                                 topic = topic,
                                 hasCourse = state.topicsWithCourses.contains(topic),
                                 onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
+                                transitionScope = transitionScope,
                             )
                         }
                     }
@@ -649,12 +675,14 @@ private fun TopicCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasCourse: Boolean = false,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = topic.visualInfo
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
+                .sharedBoundsNav(transitionScope, TopicCardSharedKey(topic.stableId))
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         colors =
@@ -683,6 +711,7 @@ private fun TopicCard(
                         shape = MaterialTheme.shapes.small,
                         color = visualInfo.accentColor.copy(alpha = 0.15f),
                         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                        modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(topic.stableId)),
                     ) {
                         Text(
                             text = visualInfo.iconGlyph,
@@ -733,6 +762,7 @@ private fun TopicCard(
                 text = topic.displayName,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
+                modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(topic.stableId)),
             )
 
             Text(
@@ -853,12 +883,14 @@ private fun TopicCompactCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     hasCourse: Boolean = false,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = topic.visualInfo
     OutlinedCard(
         modifier =
             modifier
                 .width(180.dp)
+                .sharedBoundsNav(transitionScope, TopicCardSharedKey(topic.stableId))
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.large,
         colors =
@@ -882,6 +914,7 @@ private fun TopicCompactCard(
                 Surface(
                     shape = MaterialTheme.shapes.small,
                     color = visualInfo.accentColor.copy(alpha = 0.15f),
+                    modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(topic.stableId)),
                 ) {
                     Text(
                         text = visualInfo.iconGlyph,
@@ -926,6 +959,7 @@ private fun TopicCompactCard(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(topic.stableId)),
             )
 
             Text(
@@ -1411,48 +1445,62 @@ private fun CourseHomeCardPreview() {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun TopicCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TopicCard(
-                topic = CodingTopic.KOTLIN,
-                hasCourse = true,
-                onClick = {},
-                modifier = Modifier.weight(1f),
-            )
-            TopicCard(
-                topic = CodingTopic.ANDROID,
-                hasCourse = false,
-                onClick = {},
-                modifier = Modifier.weight(1f),
-            )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TopicCard(
+                        topic = CodingTopic.KOTLIN,
+                        hasCourse = true,
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        transitionScope = this@SharedElementTransitionScope,
+                    )
+                    TopicCard(
+                        topic = CodingTopic.ANDROID,
+                        hasCourse = false,
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                        transitionScope = this@SharedElementTransitionScope,
+                    )
+                }
+            }
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @ThemePreviews
 @Composable
 private fun TopicCompactCardPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            TopicCompactCard(
-                topic = CodingTopic.RUST,
-                hasCourse = true,
-                onClick = {},
-            )
-            TopicCompactCard(
-                topic = CodingTopic.SWIFT,
-                hasCourse = false,
-                onClick = {},
-            )
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    TopicCompactCard(
+                        topic = CodingTopic.RUST,
+                        hasCourse = true,
+                        onClick = {},
+                        transitionScope = this@SharedElementTransitionScope,
+                    )
+                    TopicCompactCard(
+                        topic = CodingTopic.SWIFT,
+                        hasCourse = false,
+                        onClick = {},
+                        transitionScope = this@SharedElementTransitionScope,
+                    )
+                }
+            }
         }
     }
 }

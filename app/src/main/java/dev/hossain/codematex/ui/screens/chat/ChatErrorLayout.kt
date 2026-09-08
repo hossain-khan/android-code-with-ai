@@ -38,7 +38,13 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.animation.TopicCardSharedKey
+import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
+import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
+import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -49,6 +55,7 @@ import dev.hossain.codematex.ui.theme.visualInfo
 internal fun ChatErrorLayout(
     state: ChatScreen.State.Error,
     modifier: Modifier = Modifier,
+    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val visualInfo = state.topic.visualInfo
@@ -57,6 +64,7 @@ internal fun ChatErrorLayout(
         modifier = modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
+                modifier = Modifier.sharedBoundsNav(transitionScope, TopicCardSharedKey(state.topic.stableId)),
                 title = {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -66,6 +74,7 @@ internal fun ChatErrorLayout(
                             shape = CircleShape,
                             color = visualInfo.accentColor.copy(alpha = 0.15f),
                             border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+                            modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(state.topic.stableId)),
                         ) {
                             Text(
                                 text = visualInfo.iconGlyph,
@@ -79,6 +88,7 @@ internal fun ChatErrorLayout(
                             text = state.topic.displayName,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(state.topic.stableId)),
                         )
                     }
                 },
