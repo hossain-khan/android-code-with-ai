@@ -477,7 +477,7 @@ private fun LessonBlockContent(
 
         is LessonBlock.Code -> {
             val resolvedLanguage = block.language.ifEmpty { "text" }
-            val isPlaygroundSupported = block.isPlaygroundRunnable && isOnline
+            val isPlaygroundSupported = block.isPlaygroundRunnable && isOnline && settings.showPlaygroundRunner
 
             if (isPlaygroundSupported) {
                 Card(

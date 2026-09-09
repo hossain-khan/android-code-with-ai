@@ -257,6 +257,21 @@ class UserPreferencesStoreImplTest {
         }
 
     @Test
+    fun `given uninitialized store - isShowPlaygroundRunnerEnabled returns default true`() =
+        runTest(testDispatcher) {
+            assertThat(store.isShowPlaygroundRunnerEnabled()).isTrue()
+            assertThat(store.showPlaygroundRunnerFlow.first()).isTrue()
+        }
+
+    @Test
+    fun `given setShowPlaygroundRunner write - state is immediately observable`() =
+        runTest(testDispatcher) {
+            store.setShowPlaygroundRunner(false)
+            assertThat(store.isShowPlaygroundRunnerEnabled()).isFalse()
+            assertThat(store.showPlaygroundRunnerFlow.first()).isFalse()
+        }
+
+    @Test
     fun `given uninitialized store - getCodeBlockPreset returns default COMPACT`() =
         runTest(testDispatcher) {
             assertThat(store.getCodeBlockPreset()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMPACT)
@@ -311,6 +326,7 @@ class UserPreferencesStoreImplTest {
             store.setShowLineNumbers(true)
             store.setShowLanguageLabel(false)
             store.setShowCopyButton(false)
+            store.setShowPlaygroundRunner(false)
             store.setCodeBlockPreset(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
             store.setCodeFontSize(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
 
@@ -319,6 +335,7 @@ class UserPreferencesStoreImplTest {
             assertThat(snapshot.showLineNumbers).isTrue()
             assertThat(snapshot.showLanguageLabel).isFalse()
             assertThat(snapshot.showCopyButton).isFalse()
+            assertThat(snapshot.showPlaygroundRunner).isFalse()
             assertThat(snapshot.preset).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
             assertThat(snapshot.fontSize).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
         }
