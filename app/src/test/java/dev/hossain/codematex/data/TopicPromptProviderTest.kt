@@ -61,6 +61,15 @@ class TopicPromptProviderTest {
     }
 
     @Test
+    fun `buildSystemPrompt encourages runnable code blocks with print statements across all personas`() {
+        for (persona in TutorPersona.entries) {
+            val prompt = provider.buildSystemPrompt(CodingTopic.KOTLIN, persona)
+            assertThat(prompt).contains("runnable")
+            assertThat(prompt).contains("print")
+        }
+    }
+
+    @Test
     fun `given enabled developer profile then buildSystemPrompt includes formatted profile directives`() {
         val profile =
             DeveloperProfile(
