@@ -30,7 +30,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -448,17 +447,6 @@ private fun HeaderActionsCard(
                 subtitle = "One-tap button in code header to copy snippet to clipboard",
                 checked = state.settings.showCopyButton,
                 onCheckedChange = { state.eventSink(CodeBlockSettingsScreen.Event.CopyButtonToggled(it)) },
-            )
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-            )
-            SwitchRow(
-                icon = Icons.Default.Terminal,
-                title = "Interactive Code Runner",
-                subtitle = "Show 'Run Code' button on supported code snippets in chat and lessons",
-                checked = state.settings.showPlaygroundRunner,
-                onCheckedChange = { state.eventSink(CodeBlockSettingsScreen.Event.PlaygroundRunnerToggled(it)) },
             )
         }
     }

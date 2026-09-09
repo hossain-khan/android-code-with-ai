@@ -92,7 +92,6 @@ data class CodeBlockSettings(
     val showLineNumbers: Boolean = false,
     val showLanguageLabel: Boolean = true,
     val showCopyButton: Boolean = true,
-    val showPlaygroundRunner: Boolean = true,
     val preset: CodeBlockPreset = CodeBlockPreset.COMPACT,
     val fontSize: CodeFontSize = CodeFontSize.MEDIUM,
 )

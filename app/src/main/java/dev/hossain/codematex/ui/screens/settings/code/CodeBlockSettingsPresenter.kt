@@ -73,16 +73,6 @@ class CodeBlockSettingsPresenter(
                     }
                 }
 
-                is CodeBlockSettingsScreen.Event.PlaygroundRunnerToggled -> {
-                    coroutineScope.launch {
-                        try {
-                            userPreferencesStore.setShowPlaygroundRunner(event.enabled)
-                        } catch (e: Exception) {
-                            Timber.e(e, "CodeBlockSettingsPresenter: Failed to update playground runner")
-                        }
-                    }
-                }
-
                 is CodeBlockSettingsScreen.Event.PresetSelected -> {
                     coroutineScope.launch {
                         try {
