@@ -9,7 +9,25 @@ import dev.hossain.codematex.data.model.LearningLesson
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
-typealias SnippetExecutionState = dev.hossain.codematex.ui.component.SnippetExecutionState
+@Immutable
+@Serializable
+sealed interface SnippetExecutionState {
+    data object Idle : SnippetExecutionState
+
+    data object Compiling : SnippetExecutionState
+
+    data class Success(
+        val output: String,
+    ) : SnippetExecutionState
+
+    data class CompilationError(
+        val diagnostic: String,
+    ) : SnippetExecutionState
+
+    data class Error(
+        val message: String,
+    ) : SnippetExecutionState
+}
 
 @Parcelize
 data class LessonScreen(

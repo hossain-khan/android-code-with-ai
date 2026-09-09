@@ -26,7 +26,6 @@ class FakeUserPreferencesStore(
     initialCodeTheme: CodeTheme = CodeTheme.TOMORROW,
     initialShowLanguageLabel: Boolean = true,
     initialShowCopyButton: Boolean = true,
-    initialShowPlaygroundRunner: Boolean = true,
     initialCodeBlockPreset: CodeBlockPreset = CodeBlockPreset.COMPACT,
     initialCodeFontSize: CodeFontSize = CodeFontSize.MEDIUM,
     initialDeveloperProfile: DeveloperProfile = DeveloperProfile(),
@@ -61,9 +60,6 @@ class FakeUserPreferencesStore(
     override val showCopyButtonFlow: Flow<Boolean>
         field = MutableStateFlow(initialShowCopyButton)
 
-    override val showPlaygroundRunnerFlow: Flow<Boolean>
-        field = MutableStateFlow(initialShowPlaygroundRunner)
-
     override val codeBlockPresetFlow: Flow<CodeBlockPreset>
         field = MutableStateFlow(initialCodeBlockPreset)
 
@@ -74,24 +70,18 @@ class FakeUserPreferencesStore(
         get() =
             combine(
                 codeThemeFlow,
-                combine(
-                    showLineNumbersFlow,
-                    showLanguageLabelFlow,
-                    showCopyButtonFlow,
-                    showPlaygroundRunnerFlow,
-                ) { lines, lang, copy, runner ->
-                    listOf(lines, lang, copy, runner)
+                combine(showLineNumbersFlow, showLanguageLabelFlow, showCopyButtonFlow) { lines, lang, copy ->
+                    Triple(lines, lang, copy)
                 },
                 combine(codeBlockPresetFlow, codeFontSizeFlow) { preset, font ->
                     preset to font
                 },
-            ) { theme, flags, (preset, font) ->
+            ) { theme, (lines, lang, copy), (preset, font) ->
                 CodeBlockSettings(
                     theme = theme,
-                    showLineNumbers = flags[0],
-                    showLanguageLabel = flags[1],
-                    showCopyButton = flags[2],
-                    showPlaygroundRunner = flags[3],
+                    showLineNumbers = lines,
+                    showLanguageLabel = lang,
+                    showCopyButton = copy,
                     preset = preset,
                     fontSize = font,
                 )
@@ -188,15 +178,6 @@ class FakeUserPreferencesStore(
             throw IOException("Fake disk write failure")
         }
         showCopyButtonFlow.value = show
-    }
-
-    override suspend fun isShowPlaygroundRunnerEnabled(): Boolean = showPlaygroundRunnerFlow.value
-
-    override suspend fun setShowPlaygroundRunner(show: Boolean) {
-        if (shouldThrowOnWrite) {
-            throw IOException("Fake disk write failure")
-        }
-        showPlaygroundRunnerFlow.value = show
     }
 
     override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.value

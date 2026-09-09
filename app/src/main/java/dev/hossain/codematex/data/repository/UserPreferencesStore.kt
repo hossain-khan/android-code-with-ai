@@ -83,11 +83,6 @@ interface UserPreferencesStore {
     val showCopyButtonFlow: Flow<Boolean>
 
     /**
-     * Observable flow of whether the interactive code playground runner is enabled.
-     */
-    val showPlaygroundRunnerFlow: Flow<Boolean>
-
-    /**
      * Observable flow of the code block padding and density preset.
      */
     val codeBlockPresetFlow: Flow<CodeBlockPreset>
@@ -201,16 +196,6 @@ interface UserPreferencesStore {
      * Persists the copy button display preference.
      */
     suspend fun setShowCopyButton(show: Boolean)
-
-    /**
-     * Returns whether the interactive code playground runner is enabled.
-     */
-    suspend fun isShowPlaygroundRunnerEnabled(): Boolean
-
-    /**
-     * Persists the interactive code playground runner preference.
-     */
-    suspend fun setShowPlaygroundRunner(show: Boolean)
 
     /**
      * Returns the active code block layout density preset.
@@ -391,19 +376,6 @@ class UserPreferencesStoreImpl
                     prefs[KEY_SHOW_COPY_BUTTON] ?: true
                 }.distinctUntilChanged()
 
-        override val showPlaygroundRunnerFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_SHOW_PLAYGROUND_RUNNER] ?: true
-                }.distinctUntilChanged()
-
         override val codeBlockPresetFlow: Flow<CodeBlockPreset> =
             dataStore.data
                 .catch { exception ->
@@ -461,7 +433,6 @@ class UserPreferencesStoreImpl
                     val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: false
                     val showLang = prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
                     val showCopy = prefs[KEY_SHOW_COPY_BUTTON] ?: true
-                    val showRunner = prefs[KEY_SHOW_PLAYGROUND_RUNNER] ?: true
                     val preset =
                         prefs[KEY_CODE_BLOCK_PRESET]?.let {
                             try {
@@ -484,7 +455,6 @@ class UserPreferencesStoreImpl
                         showLineNumbers = showLines,
                         showLanguageLabel = showLang,
                         showCopyButton = showCopy,
-                        showPlaygroundRunner = showRunner,
                         preset = preset,
                         fontSize = fontSize,
                     )
@@ -599,14 +569,6 @@ class UserPreferencesStoreImpl
             }
         }
 
-        override suspend fun isShowPlaygroundRunnerEnabled(): Boolean = showPlaygroundRunnerFlow.first()
-
-        override suspend fun setShowPlaygroundRunner(show: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_SHOW_PLAYGROUND_RUNNER] = show
-            }
-        }
-
         override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.first()
 
         override suspend fun setCodeBlockPreset(preset: CodeBlockPreset) {
@@ -645,7 +607,6 @@ class UserPreferencesStoreImpl
             private val KEY_CODE_THEME = stringPreferencesKey("code_block_theme")
             private val KEY_SHOW_LANGUAGE_LABEL = booleanPreferencesKey("code_show_language_label")
             private val KEY_SHOW_COPY_BUTTON = booleanPreferencesKey("code_show_copy_button")
-            private val KEY_SHOW_PLAYGROUND_RUNNER = booleanPreferencesKey("code_show_playground_runner")
             private val KEY_CODE_BLOCK_PRESET = stringPreferencesKey("code_block_preset")
             private val KEY_CODE_FONT_SIZE = stringPreferencesKey("code_font_size")
             private val KEY_DEV_PROFILE_ENABLED = booleanPreferencesKey("dev_profile_enabled")

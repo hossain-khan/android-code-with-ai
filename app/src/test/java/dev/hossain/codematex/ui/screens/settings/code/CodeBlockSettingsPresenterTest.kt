@@ -40,7 +40,6 @@ class CodeBlockSettingsPresenterTest {
                 assertThat(state.settings.showLineNumbers).isFalse()
                 assertThat(state.settings.showLanguageLabel).isTrue()
                 assertThat(state.settings.showCopyButton).isTrue()
-                assertThat(state.settings.showPlaygroundRunner).isTrue()
                 assertThat(state.settings.preset).isEqualTo(CodeBlockPreset.COMPACT)
                 assertThat(state.settings.fontSize).isEqualTo(CodeFontSize.MEDIUM)
                 assertThat(state.previewCode).isNotEmpty()
@@ -104,21 +103,6 @@ class CodeBlockSettingsPresenterTest {
                 val updatedState = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
                 assertThat(updatedState.settings.showCopyButton).isFalse()
                 assertThat(fakeUserPreferencesStore.isShowCopyButtonEnabled()).isFalse()
-            }
-        }
-
-    @Test
-    fun `given PlaygroundRunnerToggled event then updates store and state`() =
-        runTest {
-            val presenter = createPresenter()
-
-            presenter.test {
-                val state = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                state.eventSink(CodeBlockSettingsScreen.Event.PlaygroundRunnerToggled(false))
-
-                val updatedState = expectMostRecentItem() as CodeBlockSettingsScreen.State.Content
-                assertThat(updatedState.settings.showPlaygroundRunner).isFalse()
-                assertThat(fakeUserPreferencesStore.isShowPlaygroundRunnerEnabled()).isFalse()
             }
         }
 

@@ -47,10 +47,6 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
             val enabled: Boolean,
         ) : Event
 
-        data class PlaygroundRunnerToggled(
-            val enabled: Boolean,
-        ) : Event
-
         data class PresetSelected(
             val preset: CodeBlockPreset,
         ) : Event
