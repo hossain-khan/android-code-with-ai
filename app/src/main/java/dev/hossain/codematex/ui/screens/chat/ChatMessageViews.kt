@@ -161,9 +161,14 @@ internal fun ChatMessageList(
                     visualAccent = visualInfo.accentColor,
                     onCopy = onCopyMessage,
                     snippetExecutionStates = state.snippetExecutionStates,
-                    onRunSnippet = { snippetKey, code, language ->
-                        state.eventSink(ChatScreen.Event.RunSnippet(snippetKey, code, language))
-                    },
+                    onRunSnippet =
+                        if (state.isOnline && !state.isGenerating) {
+                            { snippetKey, code, language ->
+                                state.eventSink(ChatScreen.Event.RunSnippet(snippetKey, code, language))
+                            }
+                        } else {
+                            null
+                        },
                     onDismissSnippetOutput = { snippetKey ->
                         state.eventSink(ChatScreen.Event.DismissSnippetOutput(snippetKey))
                     },

@@ -53,6 +53,7 @@ data class ChatScreen(
             val sessionId: String? = null,
             val availableCourse: LearningCourse? = null,
             val snippetExecutionStates: Map<String, SnippetExecutionState> = emptyMap(),
+            val isOnline: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State
 

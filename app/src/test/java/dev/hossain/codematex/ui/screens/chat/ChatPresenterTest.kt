@@ -949,4 +949,54 @@ class ChatPresenterTest {
                 assertThat(resetState.snippetExecutionStates).isEmpty()
             }
         }
+
+    @Test
+    fun `given network connectivity changes - updates isOnline in Active state`() =
+        runTest {
+            fakeNetworkMonitor.setOnline(true)
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(initialState.isOnline).isTrue()
+
+                fakeNetworkMonitor.setOnline(false)
+                val offlineState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(offlineState.isOnline).isFalse()
+
+                fakeNetworkMonitor.setOnline(true)
+                val onlineState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(onlineState.isOnline).isTrue()
+            }
+        }
+
+    @Test
+    fun `given device is offline - RunSnippet immediately returns offline error`() =
+        runTest {
+            fakeNetworkMonitor.setOnline(false)
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(initialState.isOnline).isFalse()
+
+                initialState.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "println(1)",
+                        language = "kotlin",
+                    ),
+                )
+
+                val errorState = expectMostRecentItem() as ChatScreen.State.Active
+                val snippetState = errorState.snippetExecutionStates["msg-123_0"]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Error::class.java)
+                assertThat((snippetState as SnippetExecutionState.Error).message)
+                    .isEqualTo("Device is offline. Connect to the internet to run code.")
+            }
+        }
 }
