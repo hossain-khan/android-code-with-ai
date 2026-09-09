@@ -94,4 +94,73 @@ class MarkdownMessageTest {
 
         assertThat(code).isEqualTo("val x = 10\nval y = 20\nprintln(x + y)")
     }
+
+    @Test
+    fun `findCodeFenceNodes finds all fenced code blocks in document order`() {
+        val markdown =
+            """
+            |Intro text
+            |```kotlin
+            |val a = 1
+            |```
+            |Middle paragraph
+            |```rust
+            |let b = 2;
+            |```
+            |Closing
+            """.trimMargin()
+
+        val rootNode = parser.buildMarkdownTreeFromString(markdown)
+        val fences = findCodeFenceNodes(rootNode)
+
+        assertThat(fences).hasSize(2)
+        assertThat(findCodeFenceIndex(fences[0], fences)).isEqualTo(0)
+        assertThat(findCodeFenceIndex(fences[1], fences)).isEqualTo(1)
+    }
+
+    @Test
+    fun `isPlaygroundLanguageSupported returns true for supported languages`() {
+        val supported = listOf("kotlin", "kt", "rust", "rs", "go", "golang", "python", "py", "python3", "typescript", "ts")
+        for (lang in supported) {
+            assertThat(isPlaygroundLanguageSupported(lang)).isTrue()
+            assertThat(isPlaygroundLanguageSupported(lang.uppercase())).isTrue()
+            assertThat(isPlaygroundLanguageSupported("  $lang  ")).isTrue()
+        }
+
+        val unsupported = listOf("swift", "c", "cpp", "bash", "sh", "text", "", "java")
+        for (lang in unsupported) {
+            assertThat(isPlaygroundLanguageSupported(lang)).isFalse()
+        }
+    }
+
+    @Test
+    fun `isSnippetRunnable requires supported language and non-blank code`() {
+        assertThat(isSnippetRunnable("kotlin", "println(42)")).isTrue()
+        assertThat(isSnippetRunnable("python", "print('hi')")).isTrue()
+        assertThat(isSnippetRunnable("rust", "fn main() {}")).isTrue()
+        assertThat(isSnippetRunnable("go", "func main() {}")).isTrue()
+        assertThat(isSnippetRunnable("typescript", "console.log('hi')")).isTrue()
+
+        // Blank or whitespace code should not be runnable
+        assertThat(isSnippetRunnable("kotlin", "")).isFalse()
+        assertThat(isSnippetRunnable("kotlin", "   \n  \t ")).isFalse()
+
+        // Unsupported languages should not be runnable
+        assertThat(isSnippetRunnable("swift", "print(42)")).isFalse()
+        assertThat(isSnippetRunnable("bash", "echo hi")).isFalse()
+    }
+
+    @Test
+    fun `getPlaygroundTitle formats titles correctly`() {
+        assertThat(getPlaygroundTitle("kotlin")).isEqualTo("Kotlin Playground")
+        assertThat(getPlaygroundTitle("kt")).isEqualTo("Kotlin Playground")
+        assertThat(getPlaygroundTitle("rust")).isEqualTo("Rust Playground")
+        assertThat(getPlaygroundTitle("rs")).isEqualTo("Rust Playground")
+        assertThat(getPlaygroundTitle("go")).isEqualTo("Go Playground")
+        assertThat(getPlaygroundTitle("golang")).isEqualTo("Go Playground")
+        assertThat(getPlaygroundTitle("python")).isEqualTo("Python Playground")
+        assertThat(getPlaygroundTitle("py")).isEqualTo("Python Playground")
+        assertThat(getPlaygroundTitle("typescript")).isEqualTo("TypeScript Playground")
+        assertThat(getPlaygroundTitle("ts")).isEqualTo("TypeScript Playground")
+    }
 }

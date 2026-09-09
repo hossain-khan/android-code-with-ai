@@ -114,6 +114,33 @@ fun getPlaygroundTitle(language: String): String =
     }
 
 /**
+ * Returns whether the specified language identifier is supported by the playground runner.
+ */
+fun isPlaygroundLanguageSupported(language: String): Boolean =
+    when (language.trim().lowercase()) {
+        "rust", "rs",
+        "kotlin", "kt",
+        "go", "golang",
+        "python", "py", "python3", "cpython",
+        "typescript", "ts",
+        -> true
+
+        else -> false
+    }
+
+/**
+ * Checks whether a code snippet is eligible for execution in the interactive playground.
+ * Validates that the language is supported and the snippet contains executable content.
+ */
+fun isSnippetRunnable(
+    language: String,
+    code: String,
+): Boolean {
+    if (!isPlaygroundLanguageSupported(language)) return false
+    return code.trim().isNotEmpty()
+}
+
+/**
  * Self-contained card rendering a syntax-highlighted code block alongside interactive playground runner controls.
  *
  * Used across both guided lesson content and AI chat response bubbles.
@@ -149,7 +176,7 @@ fun PlaygroundCodeBlock(
         }
 
     Card(
-        modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
