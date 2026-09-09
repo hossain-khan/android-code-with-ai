@@ -27,8 +27,12 @@ import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.course.LearningRepository
+import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.system.ContextUsageStats
+import dev.hossain.codematex.system.NetworkMonitor
 import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.component.SnippetExecutionState
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import dev.hossain.codematex.util.TokenEstimator
@@ -52,6 +56,8 @@ class ChatPresenter(
     private val systemStatsMonitor: SystemStatsMonitor,
     private val topicPromptProvider: TopicPromptProvider,
     private val learningRepository: LearningRepository,
+    private val playgroundCodeRunner: PlaygroundCodeRunner,
+    private val networkMonitor: NetworkMonitor,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -68,6 +74,7 @@ class ChatPresenter(
         var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
         var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
+        var snippetExecutionStates by rememberRetained { mutableStateOf<Map<String, SnippetExecutionState>>(emptyMap()) }
         // Initialize activeModel directly on frame 0 to prevent the asynchronous null -> initial -> selected
         // mutation cycle that triggers unnecessary LaunchedEffect cancellations and in-flight restarts (fixes #285).
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
@@ -356,6 +363,7 @@ class ChatPresenter(
                         throughputInfo = null
                         systemStatsInfo = null
                         systemResourceStats = null
+                        snippetExecutionStates = emptyMap()
                         scope.launch {
                             isPreparing = true
                             try {
@@ -369,6 +377,32 @@ class ChatPresenter(
                             }
                         }
                     }
+                }
+
+                is ChatScreen.Event.RunSnippet -> {
+                    snippetExecutionStates = snippetExecutionStates + (event.snippetKey to SnippetExecutionState.Compiling)
+                    scope.launch {
+                        val result = playgroundCodeRunner.runSnippet(event.code, event.language)
+                        val state =
+                            when (result) {
+                                is PlaygroundExecutionResult.Success -> {
+                                    SnippetExecutionState.Success(result.output)
+                                }
+
+                                is PlaygroundExecutionResult.CompilationError -> {
+                                    SnippetExecutionState.CompilationError(result.diagnostic)
+                                }
+
+                                is PlaygroundExecutionResult.NetworkError -> {
+                                    SnippetExecutionState.Error(result.message)
+                                }
+                            }
+                        snippetExecutionStates = snippetExecutionStates + (event.snippetKey to state)
+                    }
+                }
+
+                is ChatScreen.Event.DismissSnippetOutput -> {
+                    snippetExecutionStates = snippetExecutionStates - event.snippetKey
                 }
 
                 ChatScreen.Event.Retry -> {
@@ -496,6 +530,7 @@ class ChatPresenter(
                     saveToHistory = screen.saveToHistory,
                     sessionId = screen.sessionId,
                     availableCourse = availableCourse,
+                    snippetExecutionStates = snippetExecutionStates,
                     eventSink = eventSink,
                 )
             }

@@ -28,7 +28,13 @@ import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.data.repository.testModel
+import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
+import dev.hossain.codematex.system.FakeNetworkMonitor
+import dev.hossain.codematex.system.NetworkMonitor
 import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.component.SnippetExecutionState
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import kotlinx.coroutines.flow.first
@@ -45,6 +51,8 @@ class ChatPresenterTest {
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
     private val fakeUserPreferencesStore = FakeUserPreferencesStore()
     private val fakeTopicPromptProvider = FakeTopicPromptProvider()
+    private val fakePlaygroundRunner = FakePlaygroundCodeRunner()
+    private val fakeNetworkMonitor = FakeNetworkMonitor()
     private val fakeLearningRepo =
         FakeLearningRepository(
             courses =
@@ -71,6 +79,8 @@ class ChatPresenterTest {
         systemStatsMonitor: SystemStatsMonitor = fakeSystemStatsMonitor,
         topicPromptProvider: TopicPromptProvider = fakeTopicPromptProvider,
         learningRepository: LearningRepository = fakeLearningRepo,
+        playgroundCodeRunner: PlaygroundCodeRunner = fakePlaygroundRunner,
+        networkMonitor: NetworkMonitor = fakeNetworkMonitor,
     ): ChatPresenter =
         ChatPresenter(
             navigator = navigator,
@@ -83,6 +93,8 @@ class ChatPresenterTest {
             systemStatsMonitor = systemStatsMonitor,
             topicPromptProvider = topicPromptProvider,
             learningRepository = learningRepository,
+            playgroundCodeRunner = playgroundCodeRunner,
+            networkMonitor = networkMonitor,
         )
 
     @Test
@@ -763,6 +775,178 @@ class ChatPresenterTest {
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(updatedState.availableCourse).isNull()
                 assertThat(fakePrefs.dismissedCourseBannerTopicsFlow.first()).contains("KOTLIN")
+            }
+        }
+
+    @Test
+    fun `given RunSnippet event - updates state to Compiling and then Success`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("Hello from chat runner!")
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.snippetExecutionStates).isEmpty()
+
+                state.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "println(\"Hello\")",
+                        language = "kotlin",
+                    ),
+                )
+
+                val compilingState = expectMostRecentItem() as ChatScreen.State.Active
+                val finalState =
+                    if (compilingState.snippetExecutionStates["msg-123_0"] is SnippetExecutionState.Compiling) {
+                        expectMostRecentItem() as ChatScreen.State.Active
+                    } else {
+                        compilingState
+                    }
+
+                val snippetState = finalState.snippetExecutionStates["msg-123_0"]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Success::class.java)
+                assertThat((snippetState as SnippetExecutionState.Success).output).isEqualTo("Hello from chat runner!")
+            }
+        }
+
+    @Test
+    fun `given RunSnippet event with compilation error - updates state to CompilationError`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.CompilationError("syntax error on line 1")
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+
+                state.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "invalid code",
+                        language = "kotlin",
+                    ),
+                )
+
+                val compilingState = expectMostRecentItem() as ChatScreen.State.Active
+                val finalState =
+                    if (compilingState.snippetExecutionStates["msg-123_0"] is SnippetExecutionState.Compiling) {
+                        expectMostRecentItem() as ChatScreen.State.Active
+                    } else {
+                        compilingState
+                    }
+
+                val snippetState = finalState.snippetExecutionStates["msg-123_0"]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.CompilationError::class.java)
+                assertThat((snippetState as SnippetExecutionState.CompilationError).diagnostic).isEqualTo("syntax error on line 1")
+            }
+        }
+
+    @Test
+    fun `given RunSnippet event with network error - updates state to Error`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.NetworkError("Network timeout")
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+
+                state.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "println(1)",
+                        language = "kotlin",
+                    ),
+                )
+
+                val compilingState = expectMostRecentItem() as ChatScreen.State.Active
+                val finalState =
+                    if (compilingState.snippetExecutionStates["msg-123_0"] is SnippetExecutionState.Compiling) {
+                        expectMostRecentItem() as ChatScreen.State.Active
+                    } else {
+                        compilingState
+                    }
+
+                val snippetState = finalState.snippetExecutionStates["msg-123_0"]
+                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Error::class.java)
+                assertThat((snippetState as SnippetExecutionState.Error).message).isEqualTo("Network timeout")
+            }
+        }
+
+    @Test
+    fun `given DismissSnippetOutput event - removes snippet key from state`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("output")
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+
+                state.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "println(1)",
+                        language = "kotlin",
+                    ),
+                )
+
+                val compilingState = expectMostRecentItem() as ChatScreen.State.Active
+                val finalState =
+                    if (compilingState.snippetExecutionStates["msg-123_0"] is SnippetExecutionState.Compiling) {
+                        expectMostRecentItem() as ChatScreen.State.Active
+                    } else {
+                        compilingState
+                    }
+
+                assertThat(finalState.snippetExecutionStates).containsKey("msg-123_0")
+
+                finalState.eventSink(ChatScreen.Event.DismissSnippetOutput("msg-123_0"))
+
+                val dismissedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(dismissedState.snippetExecutionStates).doesNotContainKey("msg-123_0")
+            }
+        }
+
+    @Test
+    fun `given ResetSession event - clears all snippetExecutionStates`() =
+        runTest {
+            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("output")
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo = FakeModelRepository(availableModels = listOf(model), selectedModel = model)
+            val presenter = createPresenter(modelRepository = fakeModelRepo)
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+
+                state.eventSink(
+                    ChatScreen.Event.RunSnippet(
+                        snippetKey = "msg-123_0",
+                        code = "println(1)",
+                        language = "kotlin",
+                    ),
+                )
+
+                val compilingState = expectMostRecentItem() as ChatScreen.State.Active
+                val finalState =
+                    if (compilingState.snippetExecutionStates["msg-123_0"] is SnippetExecutionState.Compiling) {
+                        expectMostRecentItem() as ChatScreen.State.Active
+                    } else {
+                        compilingState
+                    }
+
+                assertThat(finalState.snippetExecutionStates).containsKey("msg-123_0")
+
+                finalState.eventSink(ChatScreen.Event.ResetSession)
+
+                val resetState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(resetState.snippetExecutionStates).isEmpty()
             }
         }
 }

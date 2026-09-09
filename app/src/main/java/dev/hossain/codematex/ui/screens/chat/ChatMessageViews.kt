@@ -61,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.MarkdownMessage
+import dev.hossain.codematex.ui.component.SnippetExecutionState
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
@@ -159,6 +160,13 @@ internal fun ChatMessageList(
                     message = message,
                     visualAccent = visualInfo.accentColor,
                     onCopy = onCopyMessage,
+                    snippetExecutionStates = state.snippetExecutionStates,
+                    onRunSnippet = { snippetKey, code, language ->
+                        state.eventSink(ChatScreen.Event.RunSnippet(snippetKey, code, language))
+                    },
+                    onDismissSnippetOutput = { snippetKey ->
+                        state.eventSink(ChatScreen.Event.DismissSnippetOutput(snippetKey))
+                    },
                 )
             }
         }
@@ -216,6 +224,10 @@ internal fun MessageBubble(
     message: ChatMessage,
     visualAccent: Color,
     onCopy: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    snippetExecutionStates: Map<String, SnippetExecutionState> = emptyMap(),
+    onRunSnippet: ((snippetKey: String, code: String, language: String) -> Unit)? = null,
+    onDismissSnippetOutput: ((snippetKey: String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -323,9 +335,31 @@ internal fun MessageBubble(
                             is ChatMessage.User -> message.content
                         }
 
+                    val messageSnippetStates =
+                        remember(snippetExecutionStates, message.id) {
+                            snippetExecutionStates
+                                .filterKeys { it.startsWith("${message.id}_") }
+                                .mapKeys { (k, _) -> k.removePrefix("${message.id}_").toIntOrNull() ?: -1 }
+                                .filterKeys { it >= 0 }
+                        }
+
                     MarkdownMessage(
                         content = messageContent,
                         modifier = Modifier.padding(top = 4.dp),
+                        onRunSnippet =
+                            if (onRunSnippet != null) {
+                                { index, code, lang -> onRunSnippet("${message.id}_$index", code, lang) }
+                            } else {
+                                null
+                            },
+                        onDismissSnippetOutput =
+                            if (onDismissSnippetOutput != null) {
+                                { index -> onDismissSnippetOutput("${message.id}_$index") }
+                            } else {
+                                null
+                            },
+                        snippetExecutionStates = messageSnippetStates,
+                        accentColor = visualAccent,
                     )
                 }
             }

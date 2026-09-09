@@ -10,6 +10,7 @@ import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
+import dev.hossain.codematex.ui.component.SnippetExecutionState
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -51,6 +52,7 @@ data class ChatScreen(
             val saveToHistory: Boolean = true,
             val sessionId: String? = null,
             val availableCourse: LearningCourse? = null,
+            val snippetExecutionStates: Map<String, SnippetExecutionState> = emptyMap(),
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -91,6 +93,16 @@ data class ChatScreen(
 
         data class DismissCourseBanner(
             val topic: CodingTopic,
+        ) : Event
+
+        data class RunSnippet(
+            val snippetKey: String,
+            val code: String,
+            val language: String,
+        ) : Event
+
+        data class DismissSnippetOutput(
+            val snippetKey: String,
         ) : Event
 
         data object Back : Event
