@@ -12,6 +12,7 @@ import dev.hossain.codematex.data.repository.course.RustCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
+import dev.hossain.codematex.system.FakeNetworkMonitor
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -19,16 +20,19 @@ import org.junit.Test
 class LessonPresenterTest {
     private val fakeLearningRepository = FakeLearningRepository()
     private val fakePlaygroundRunner = FakePlaygroundCodeRunner()
+    private val fakeNetworkMonitor = FakeNetworkMonitor()
 
     private fun createPresenter(
         navigator: FakeNavigator,
         screen: LessonScreen,
+        networkMonitor: FakeNetworkMonitor = fakeNetworkMonitor,
     ): LessonPresenter =
         LessonPresenter(
             navigator = navigator,
             screen = screen,
             learningRepository = fakeLearningRepository,
             playgroundCodeRunner = fakePlaygroundRunner,
+            networkMonitor = networkMonitor,
         )
 
     @Test
@@ -295,6 +299,37 @@ class LessonPresenterTest {
 
                 val finalState = expectMostRecentItem() as LessonScreen.State.Success
                 assertThat(finalState.snippetExecutionStates[0]).isNull()
+            }
+        }
+
+    @Test
+    fun `given initial state - emits isOnline as true`() =
+        runTest {
+            fakeNetworkMonitor.setOnline(true)
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val state = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(state.isOnline).isTrue()
+            }
+        }
+
+    @Test
+    fun `given network goes offline - emits state with isOnline false`() =
+        runTest {
+            fakeNetworkMonitor.setOnline(true)
+            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
+            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
+
+            presenter.test {
+                val initial = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(initial.isOnline).isTrue()
+
+                fakeNetworkMonitor.setOnline(false)
+
+                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
+                assertThat(updatedState.isOnline).isFalse()
             }
         }
 }
