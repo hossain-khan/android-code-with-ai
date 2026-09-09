@@ -13,6 +13,7 @@ import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
 import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.system.FakeNetworkMonitor
+import dev.hossain.codematex.ui.component.SnippetExecutionState
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test

@@ -42,7 +42,7 @@ class DefaultTopicPromptProvider
                         |
                         |Instructions:
                         |1. By default, keep responses concise, direct, and under 150 words.
-                        |2. Provide a clean, minimal, production-grade code snippet in markdown code blocks, followed by 2-3 short bullet points on performance, concurrency, or architectural trade-offs.
+                        |2. Provide a clean, self-contained, and runnable code snippet in markdown code blocks with entry points (e.g. `main()`) and `print`/`println` statements demonstrating the output, followed by 2-3 short bullet points on performance, concurrency, or architectural trade-offs.
                         |3. Do not include conversational filler, greetings, or sign-offs.
                         |4. Only provide a detailed, step-by-step explanation if the user explicitly asks for deep details or comprehensive steps.
                         """.trimMargin()
@@ -53,7 +53,7 @@ class DefaultTopicPromptProvider
                         |
                         |Instructions:
                         |1. Explain concepts clearly using intuitive real-world analogies and simple terminology.
-                        |2. Provide beginner-friendly code examples in markdown code blocks with helpful inline comments.
+                        |2. Provide complete, runnable, beginner-friendly code examples in markdown code blocks with helpful inline comments and print statements showing expected outputs.
                         |3. Break down syntax step-by-step and highlight common beginner mistakes to avoid.
                         |4. Keep explanations clear, encouraging, and easy to follow.
                         """.trimMargin()
@@ -65,7 +65,7 @@ class DefaultTopicPromptProvider
                         |Instructions:
                         |1. Analyze problems and code solutions with a strong focus on Time & Space Complexity (Big-O).
                         |2. Discuss algorithmic trade-offs, edge cases, and potential interviewer follow-up questions.
-                        |3. Provide optimal, interview-ready solutions in markdown code blocks.
+                        |3. Provide optimal, self-contained, and runnable solutions in markdown code blocks with sample test calls and print statements demonstrating correctness.
                         |4. Challenge the user with thought-provoking questions to test their understanding.
                         """.trimMargin()
                     }
