@@ -43,6 +43,7 @@ data class LessonScreen(
             val course: LearningCourse,
             val isCompleted: Boolean,
             val nextLessonId: String?,
+            val isOnline: Boolean = true,
             val snippetExecutionStates: Map<Int, SnippetExecutionState> = emptyMap(),
             val eventSink: (Event) -> Unit,
         ) : State

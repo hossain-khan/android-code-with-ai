@@ -320,6 +320,7 @@ private fun LessonBody(
                     blockIndex = index,
                     block = block,
                     visualInfo = visualInfo,
+                    isOnline = state.isOnline,
                     snippetState = state.snippetExecutionStates[index],
                     onRunSnippet = { blockIndex, code, language ->
                         state.eventSink(LessonScreen.Event.RunSnippet(blockIndex, code, language))
@@ -446,6 +447,7 @@ private fun LessonBlockContent(
     blockIndex: Int,
     block: LessonBlock,
     visualInfo: TopicVisualInfo,
+    isOnline: Boolean = true,
     snippetState: SnippetExecutionState? = null,
     onRunSnippet: ((blockIndex: Int, code: String, language: String) -> Unit)? = null,
     onDismissSnippet: ((blockIndex: Int) -> Unit)? = null,
@@ -475,7 +477,7 @@ private fun LessonBlockContent(
 
         is LessonBlock.Code -> {
             val resolvedLanguage = block.language.ifEmpty { "text" }
-            val isPlaygroundSupported = block.isPlaygroundRunnable
+            val isPlaygroundSupported = block.isPlaygroundRunnable && isOnline
 
             if (isPlaygroundSupported) {
                 Card(
@@ -1103,6 +1105,33 @@ private fun LessonPreview() {
                                 .first(),
                         course = KotlinCourseContent.course,
                         isCompleted = false,
+                        nextLessonId = "kotlin-variables",
+                        eventSink = {},
+                    ),
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@ThemePreviews
+@DevicePreviews
+@Composable
+private fun LessonOfflinePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        PreviewSharedElementTransitionLayout {
+            Surface {
+                LessonScreenContent(
+                    LessonScreen.State.Success(
+                        lesson =
+                            KotlinCourseContent.course.chapters
+                                .first()
+                                .lessons
+                                .first(),
+                        course = KotlinCourseContent.course,
+                        isCompleted = false,
+                        isOnline = false,
                         nextLessonId = "kotlin-variables",
                         eventSink = {},
                     ),

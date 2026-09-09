@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.lessons
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,6 +19,7 @@ import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
+import dev.hossain.codematex.system.NetworkMonitor
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -33,6 +35,7 @@ class LessonPresenter(
     @Assisted private val screen: LessonScreen,
     private val learningRepository: LearningRepository,
     private val playgroundCodeRunner: PlaygroundCodeRunner,
+    private val networkMonitor: NetworkMonitor,
 ) : Presenter<LessonScreen.State> {
     @Composable
     override fun present(): LessonScreen.State {
@@ -41,6 +44,7 @@ class LessonPresenter(
         var isCompleted by rememberRetained { mutableStateOf(false) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var snippetExecutionStates by rememberRetained { mutableStateOf<Map<Int, SnippetExecutionState>>(emptyMap()) }
+        val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.lessonId) {
@@ -152,6 +156,7 @@ class LessonPresenter(
                     course = course!!,
                     isCompleted = isCompleted,
                     nextLessonId = nextLesson,
+                    isOnline = isOnline,
                     snippetExecutionStates = snippetExecutionStates,
                     eventSink = eventSink,
                 )
