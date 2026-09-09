@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -82,6 +83,7 @@ class ChatPresenter(
         var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var dismissedCourseBannerTopics by rememberRetained { mutableStateOf<Set<String>>(emptySet()) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
+        val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
 
         LaunchedEffect(screen.topic, screen.showCourseBanner, dismissedCourseBannerTopics) {
             val isDismissed = dismissedCourseBannerTopics.contains(screen.topic.name)
@@ -380,24 +382,30 @@ class ChatPresenter(
                 }
 
                 is ChatScreen.Event.RunSnippet -> {
-                    snippetExecutionStates = snippetExecutionStates + (event.snippetKey to SnippetExecutionState.Compiling)
-                    scope.launch {
-                        val result = playgroundCodeRunner.runSnippet(event.code, event.language)
-                        val state =
-                            when (result) {
-                                is PlaygroundExecutionResult.Success -> {
-                                    SnippetExecutionState.Success(result.output)
-                                }
+                    if (!isOnline) {
+                        snippetExecutionStates =
+                            snippetExecutionStates +
+                            (event.snippetKey to SnippetExecutionState.Error("Device is offline. Connect to the internet to run code."))
+                    } else {
+                        snippetExecutionStates = snippetExecutionStates + (event.snippetKey to SnippetExecutionState.Compiling)
+                        scope.launch {
+                            val result = playgroundCodeRunner.runSnippet(event.code, event.language)
+                            val state =
+                                when (result) {
+                                    is PlaygroundExecutionResult.Success -> {
+                                        SnippetExecutionState.Success(result.output)
+                                    }
 
-                                is PlaygroundExecutionResult.CompilationError -> {
-                                    SnippetExecutionState.CompilationError(result.diagnostic)
-                                }
+                                    is PlaygroundExecutionResult.CompilationError -> {
+                                        SnippetExecutionState.CompilationError(result.diagnostic)
+                                    }
 
-                                is PlaygroundExecutionResult.NetworkError -> {
-                                    SnippetExecutionState.Error(result.message)
+                                    is PlaygroundExecutionResult.NetworkError -> {
+                                        SnippetExecutionState.Error(result.message)
+                                    }
                                 }
-                            }
-                        snippetExecutionStates = snippetExecutionStates + (event.snippetKey to state)
+                            snippetExecutionStates = snippetExecutionStates + (event.snippetKey to state)
+                        }
                     }
                 }
 
@@ -531,6 +539,7 @@ class ChatPresenter(
                     sessionId = screen.sessionId,
                     availableCourse = availableCourse,
                     snippetExecutionStates = snippetExecutionStates,
+                    isOnline = isOnline,
                     eventSink = eventSink,
                 )
             }

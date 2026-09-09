@@ -184,6 +184,7 @@ private fun ChatMarkdownCodeFence(
     val canRun =
         settings.showPlaygroundRunner &&
             onRunSnippet != null &&
+            fenceIndex >= 0 &&
             isSnippetRunnable(resolvedLanguage, code)
 
     if (canRun) {
@@ -315,14 +316,15 @@ internal fun findCodeFenceNodes(root: ASTNode): List<ASTNode> {
 
 /**
  * Resolves the 0-based sequential index of a code fence within the document.
+ * Returns -1 if the fence node is not present in [allFences] (e.g. during incremental parse updates).
  */
 internal fun findCodeFenceIndex(
     fenceNode: ASTNode,
     allFences: List<ASTNode>,
-): Int {
-    val idx = allFences.indexOfFirst { it.startOffset == fenceNode.startOffset }
-    return if (idx >= 0) idx else 0
-}
+): Int =
+    allFences.indexOfFirst {
+        it === fenceNode || (it.startOffset == fenceNode.startOffset && it.endOffset == fenceNode.endOffset)
+    }
 
 @ThemePreviews
 @Composable

@@ -119,6 +119,89 @@ class MarkdownMessageTest {
     }
 
     @Test
+    fun `findCodeFenceIndex returns -1 for unmatched node`() {
+        val markdown1 =
+            """
+            |Intro before code fence
+            |```kotlin
+            |val a = 1
+            |```
+            """.trimMargin()
+        val markdown2 =
+            """
+            |```rust
+            |let b = 2;
+            |```
+            """.trimMargin()
+
+        val root1 = parser.buildMarkdownTreeFromString(markdown1)
+        val root2 = parser.buildMarkdownTreeFromString(markdown2)
+
+        val fences1 = findCodeFenceNodes(root1)
+        val fence2 = findCodeFenceNodes(root2).first()
+
+        assertThat(findCodeFenceIndex(fence2, fences1)).isEqualTo(-1)
+        assertThat(findCodeFenceIndex(fence2, emptyList())).isEqualTo(-1)
+    }
+
+    @Test
+    fun `findCodeFenceNodes ignores indented code blocks and inline code`() {
+        val markdown =
+            """
+            |Here is some `inline code` in text.
+            |
+            |    val indented = 42
+            |    println(indented)
+            |
+            |Now a real fence:
+            |```kotlin
+            |val fenced = 99
+            |```
+            |
+            |And more `inline` after.
+            """.trimMargin()
+
+        val rootNode = parser.buildMarkdownTreeFromString(markdown)
+        val fences = findCodeFenceNodes(rootNode)
+
+        assertThat(fences).hasSize(1)
+        assertThat(findCodeFenceIndex(fences[0], fences)).isEqualTo(0)
+
+        val (lang, code) = extractCodeFenceInfo(markdown, fences[0])
+        assertThat(lang).isEqualTo("kotlin")
+        assertThat(code).isEqualTo("val fenced = 99")
+    }
+
+    @Test
+    fun `findCodeFenceNodes discovers fences nested inside lists and blockquotes`() {
+        val markdown =
+            """
+            |> Blockquote start
+            |> ```kotlin
+            |> val inQuote = 1
+            |> ```
+            |
+            |1. List item 1
+            |   ```python
+            |   print("in list")
+            |   ```
+            |2. List item 2
+            """.trimMargin()
+
+        val rootNode = parser.buildMarkdownTreeFromString(markdown)
+        val fences = findCodeFenceNodes(rootNode)
+
+        assertThat(fences).hasSize(2)
+        assertThat(findCodeFenceIndex(fences[0], fences)).isEqualTo(0)
+        assertThat(findCodeFenceIndex(fences[1], fences)).isEqualTo(1)
+
+        val (lang0, _) = extractCodeFenceInfo(markdown, fences[0])
+        val (lang1, _) = extractCodeFenceInfo(markdown, fences[1])
+        assertThat(lang0).isEqualTo("kotlin")
+        assertThat(lang1).isEqualTo("python")
+    }
+
+    @Test
     fun `isPlaygroundLanguageSupported returns true for supported languages`() {
         val supported = listOf("kotlin", "kt", "rust", "rs", "go", "golang", "python", "py", "python3", "typescript", "ts")
         for (lang in supported) {
