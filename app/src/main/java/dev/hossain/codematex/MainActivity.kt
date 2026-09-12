@@ -87,51 +87,51 @@ class MainActivity
                         val isOnboardingCompleted by userPreferencesStore.isOnboardingCompletedFlow.collectAsState(initial = null)
                         val completed = isOnboardingCompleted ?: return@Surface
 
-                        // Cold-start deep link initialization: if launched directly via deep link,
-                        // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
-                        // On first run without deep links, seed with OnboardingScreen.
-                        val initialStack =
-                            remember {
-                                if (pendingDeepLinkScreen != null) {
-                                    val target = pendingDeepLinkScreen!!
+                        CircuitCompositionLocals(circuit) {
+                            // Cold-start deep link initialization: if launched directly via deep link,
+                            // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
+                            // On first run without deep links, seed with OnboardingScreen.
+                            val initialStack =
+                                remember {
+                                    if (pendingDeepLinkScreen != null) {
+                                        val target = pendingDeepLinkScreen!!
+                                        pendingDeepLinkScreen = null
+                                        listOf(HomeScreen, target)
+                                    } else if (!completed) {
+                                        listOf(OnboardingScreen)
+                                    } else {
+                                        listOf(HomeScreen)
+                                    }
+                                }
+                            val navStack = rememberSaveableNavStack(initialStack)
+                            val navigator = rememberCircuitNavigator(navStack)
+
+                            // Warm-start deep link handling: navigate to the deep-linked screen if already running
+                            LaunchedEffect(pendingDeepLinkScreen) {
+                                val target = pendingDeepLinkScreen
+                                if (target != null) {
+                                    if (navStack.topRecord?.screen != target) {
+                                        navigator.goTo(target)
+                                    }
                                     pendingDeepLinkScreen = null
-                                    listOf(HomeScreen, target)
-                                } else if (!completed) {
-                                    listOf(OnboardingScreen)
-                                } else {
-                                    listOf(HomeScreen)
                                 }
                             }
-                        val navStack = rememberSaveableNavStack(initialStack)
-                        val navigator = rememberCircuitNavigator(navStack)
 
-                        // Warm-start deep link handling: navigate to the deep-linked screen if already running
-                        LaunchedEffect(pendingDeepLinkScreen) {
-                            val target = pendingDeepLinkScreen
-                            if (target != null) {
-                                if (navStack.topRecord?.screen != target) {
-                                    navigator.goTo(target)
+                            val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
+                                .collectAsState(initial = CodeBlockSettings())
+                            val (lightHighlightTheme, darkHighlightTheme) =
+                                remember(codeBlockSettings.theme) {
+                                    codeBlockSettings.theme.resolveHighlightThemes()
                                 }
-                                pendingDeepLinkScreen = null
-                            }
-                        }
 
-                        val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
-                            .collectAsState(initial = CodeBlockSettings())
-                        val (lightHighlightTheme, darkHighlightTheme) =
-                            remember(codeBlockSettings.theme) {
-                                codeBlockSettings.theme.resolveHighlightThemes()
-                            }
-
-                        // See https://slackhq.github.io/circuit/circuit-content/
-                        HighlightThemeProvider(
-                            lightHighlightTheme = lightHighlightTheme,
-                            darkHighlightTheme = darkHighlightTheme,
-                        ) {
-                            CompositionLocalProvider(
-                                LocalCodeBlockSettings provides codeBlockSettings,
+                            // See https://slackhq.github.io/circuit/circuit-content/
+                            HighlightThemeProvider(
+                                lightHighlightTheme = lightHighlightTheme,
+                                darkHighlightTheme = darkHighlightTheme,
                             ) {
-                                CircuitCompositionLocals(circuit) {
+                                CompositionLocalProvider(
+                                    LocalCodeBlockSettings provides codeBlockSettings,
+                                ) {
                                     // See https://slackhq.github.io/circuit/shared-elements/
                                     SharedElementTransitionLayout {
                                         // See https://slackhq.github.io/circuit/overlays/
