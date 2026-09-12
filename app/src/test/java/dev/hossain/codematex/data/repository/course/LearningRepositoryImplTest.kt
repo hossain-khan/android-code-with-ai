@@ -1,6 +1,7 @@
 package dev.hossain.codematex.data.repository.course
 
 import com.google.common.truth.Truth.assertThat
+import dev.hossain.codematex.data.local.FakeLessonProgressDao
 import dev.hossain.codematex.data.local.LessonProgressDao
 import dev.hossain.codematex.data.local.LessonProgressEntity
 import dev.hossain.codematex.data.model.CodingTopic
@@ -214,27 +215,35 @@ class LearningRepositoryImplTest {
             assertThat(progress.completedLessons).isEqualTo(0)
             assertThat(dao.getLessonProgress("kotlin-hello-world")).isNull()
         }
-}
 
-class FakeLessonProgressDao : LessonProgressDao {
-    private val data = MutableStateFlow<Map<String, LessonProgressEntity>>(emptyMap())
+    @Test
+    fun `resetAllProgress wipes all progress records`() =
+        runTest(UnconfinedTestDispatcher()) {
+            repository.markLessonCompleted("kotlin-hello-world")
+            repository.markLessonCompleted("kotlin-variables")
 
-    override fun observeCourseProgress(courseId: String): Flow<List<LessonProgressEntity>> =
-        data.map { map ->
-            map.values.filter {
-                it.courseId == courseId
-            }
+            assertThat(repository.observeAllProgress().first()).hasSize(2)
+
+            repository.resetAllProgress()
+
+            assertThat(repository.observeAllProgress().first()).isEmpty()
         }
 
-    override fun observeLessonProgress(lessonId: String): Flow<LessonProgressEntity?> = data.map { it[lessonId] }
+    @Test
+    fun `seedSampleProgress marks first N lessons completed per course`() =
+        runTest(UnconfinedTestDispatcher()) {
+            repository.seedSampleProgress(lessonsPerCourse = 3)
 
-    override suspend fun getLessonProgress(lessonId: String): LessonProgressEntity? = data.value[lessonId]
+            val allProgress = repository.observeAllProgress().first()
+            assertThat(allProgress).isNotEmpty()
+            assertThat(allProgress.all { it.status == LessonStatus.COMPLETED }).isTrue()
 
-    override suspend fun upsert(progress: LessonProgressEntity) {
-        data.update { it + (progress.lessonId to progress) }
-    }
-
-    override suspend fun deleteCourseProgress(courseId: String) {
-        data.update { map -> map.filterValues { it.courseId != courseId } }
-    }
+            val courses = repository.getCourses().first()
+            courses.forEach { course ->
+                val courseLessons = course.chapters.flatMap { it.lessons }
+                val expectedSeeded = courseLessons.take(3).map { it.id }.toSet()
+                val actualSeeded = allProgress.filter { it.courseId == course.id }.map { it.lessonId }.toSet()
+                assertThat(actualSeeded).containsExactlyElementsIn(expectedSeeded)
+            }
+        }
 }

@@ -2,12 +2,14 @@ package dev.hossain.codematex.data.repository.course
 
 import dev.hossain.codematex.data.local.LessonProgressDao
 import dev.hossain.codematex.data.local.LessonProgressEntity
+import dev.hossain.codematex.data.local.toLessonProgress
 import dev.hossain.codematex.data.local.toLessonStatus
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.data.model.LessonProgress
 import dev.hossain.codematex.data.model.LessonStatus
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
@@ -59,6 +61,11 @@ class LearningRepositoryImpl
         override suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse? = bundledCourses.firstOrNull { it.topic == topic }
 
         override suspend fun getTopicsWithCourses(): Set<CodingTopic> = bundledCourses.map { it.topic }.toSet()
+
+        override fun observeAllProgress(): Flow<List<LessonProgress>> =
+            lessonProgressDao.observeAllProgress().map { entities ->
+                entities.map { it.toLessonProgress() }
+            }
 
         override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
             lessonProgressDao.observeCourseProgress(courseId).map { stored ->
@@ -117,5 +124,25 @@ class LearningRepositoryImpl
 
         override suspend fun resetCourseProgress(courseId: String) {
             lessonProgressDao.deleteCourseProgress(courseId)
+        }
+
+        override suspend fun resetAllProgress() {
+            lessonProgressDao.deleteAllProgress()
+        }
+
+        override suspend fun seedSampleProgress(lessonsPerCourse: Int) {
+            val sampleEntities =
+                bundledCourses.flatMap { course ->
+                    val lessons = course.chapters.flatMap { it.lessons }
+                    lessons.take(lessonsPerCourse).map { lesson ->
+                        LessonProgressEntity(
+                            lessonId = lesson.id,
+                            courseId = course.id,
+                            status = LessonStatus.COMPLETED.name,
+                            lastOpenedAt = System.currentTimeMillis(),
+                        )
+                    }
+                }
+            lessonProgressDao.upsertAll(sampleEntities)
         }
     }

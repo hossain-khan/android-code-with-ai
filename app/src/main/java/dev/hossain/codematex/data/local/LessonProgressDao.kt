@@ -8,6 +8,10 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface LessonProgressDao {
+    /** Observes all persisted lesson progress records across all courses. */
+    @Query("SELECT * FROM lesson_progress")
+    fun observeAllProgress(): Flow<List<LessonProgressEntity>>
+
     /** Observes all persisted lesson progress records for [courseId]. */
     @Query("SELECT * FROM lesson_progress WHERE courseId = :courseId")
     fun observeCourseProgress(courseId: String): Flow<List<LessonProgressEntity>>
@@ -24,7 +28,15 @@ interface LessonProgressDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(progress: LessonProgressEntity)
 
+    /** Inserts or replaces a list of progress records. */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertAll(progressList: List<LessonProgressEntity>)
+
     /** Deletes all progress records belonging to [courseId]. */
     @Query("DELETE FROM lesson_progress WHERE courseId = :courseId")
     suspend fun deleteCourseProgress(courseId: String)
+
+    /** Deletes all persisted lesson progress records across all courses. */
+    @Query("DELETE FROM lesson_progress")
+    suspend fun deleteAllProgress()
 }

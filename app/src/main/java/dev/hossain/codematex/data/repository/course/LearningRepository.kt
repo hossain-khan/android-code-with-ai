@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.data.model.LessonProgress
 import dev.hossain.codematex.data.model.LessonStatus
 import kotlinx.coroutines.flow.Flow
 
@@ -30,6 +31,9 @@ interface LearningRepository {
     /** Returns all coding topics that currently have a bundled guided course. */
     suspend fun getTopicsWithCourses(): Set<CodingTopic>
 
+    /** Observes all persisted lesson progress records across all courses. */
+    fun observeAllProgress(): Flow<List<LessonProgress>>
+
     /** Observes aggregate completion and resume information for [courseId]. */
     fun observeCourseProgress(courseId: String): Flow<CourseProgress>
 
@@ -44,4 +48,13 @@ interface LearningRepository {
 
     /** Removes all persisted lesson progress for [courseId]. */
     suspend fun resetCourseProgress(courseId: String)
+
+    /** Removes all persisted lesson progress records across all courses. */
+    suspend fun resetAllProgress()
+
+    /**
+     * Seeds initial progress by marking the first [lessonsPerCourse] lessons of each
+     * bundled course as completed.
+     */
+    suspend fun seedSampleProgress(lessonsPerCourse: Int = 3)
 }

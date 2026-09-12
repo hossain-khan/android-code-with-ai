@@ -53,9 +53,23 @@ data object DebugScreen : ParcelableScreen {
             val isPingingProxy: Boolean = false,
             val proxyPingMs: Long? = null,
             val proxyPingError: String? = null,
+            val databaseStats: DebugDatabaseStats = DebugDatabaseStats(),
             val eventSink: (Event) -> Unit,
         ) : State
     }
+
+    @Immutable
+    @Serializable
+    data class DebugDatabaseStats(
+        val completedLessons: Int = 0,
+        val inProgressLessons: Int = 0,
+        val totalBundledLessons: Int = 0,
+        val totalCourses: Int = 0,
+        val completedCourses: Int = 0,
+        val totalQuizzes: Int = 0,
+        val totalSessions: Int = 0,
+        val totalMessages: Int = 0,
+    )
 
     @Serializable
     enum class BenchmarkSamplerPreset(
@@ -161,6 +175,12 @@ data object DebugScreen : ParcelableScreen {
         data object RunRunnerSnippet : Event
 
         data object PingProxy : Event
+
+        data object ResetAllLessonProgress : Event
+
+        data object SeedSampleLessonProgress : Event
+
+        data object ClearAllChatSessions : Event
 
         data object Back : Event
     }

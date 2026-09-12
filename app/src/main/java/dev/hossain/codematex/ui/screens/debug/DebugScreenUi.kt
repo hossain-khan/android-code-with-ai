@@ -33,12 +33,14 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -92,6 +94,7 @@ import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.MemoryDelta
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.screens.debug.DebugScreen.DebugDatabaseStats
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -199,6 +202,16 @@ fun DebugScreenContent(
                 StorageInspectorCard(
                     models = state.models,
                     onDeleteModel = { state.eventSink(DebugScreen.Event.DeleteModel(it)) },
+                )
+            }
+
+            // Course Progress & Room Database Inspector
+            item {
+                DatabaseDiagnosticsCard(
+                    stats = state.databaseStats,
+                    onResetProgress = { state.eventSink(DebugScreen.Event.ResetAllLessonProgress) },
+                    onSeedProgress = { state.eventSink(DebugScreen.Event.SeedSampleLessonProgress) },
+                    onClearSessions = { state.eventSink(DebugScreen.Event.ClearAllChatSessions) },
                 )
             }
         }
@@ -1539,6 +1552,297 @@ private fun StorageInspectorCard(
     }
 }
 
+@Composable
+internal fun DatabaseDiagnosticsCard(
+    stats: DebugDatabaseStats,
+    onResetProgress: () -> Unit,
+    onSeedProgress: () -> Unit,
+    onClearSessions: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showResetProgressDialog by rememberSaveable { mutableStateOf(false) }
+    var showClearSessionsDialog by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.School,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp),
+                )
+                Column {
+                    Text(
+                        text = "Course Progress & Database Inspector",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "Curriculum progress and Room database metrics with QA test controls",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // Sub-section: Curricula & Learning Progress
+            Text(
+                text = "Learning Progress Scorecard",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            val lessonPercent =
+                if (stats.totalBundledLessons > 0) {
+                    (stats.completedLessons * 100) / stats.totalBundledLessons
+                } else {
+                    0
+                }
+
+            val courseMetrics =
+                listOf(
+                    "Completed Lessons" to "${stats.completedLessons} / ${stats.totalBundledLessons} ($lessonPercent%)",
+                    "In-Progress Lessons" to "${stats.inProgressLessons}",
+                    "Course Completion" to "${stats.completedCourses} / ${stats.totalCourses} courses",
+                    "Bundled Quizzes" to "${stats.totalQuizzes} quizzes across curricula",
+                )
+
+            courseMetrics.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // Sub-section: Room Conversation Storage
+            Text(
+                text = "Room Conversation Storage",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            val sessionMetrics =
+                listOf(
+                    "Saved Chat Sessions" to "${stats.totalSessions} sessions",
+                    "Persisted Message Rows" to "${stats.totalMessages} messages",
+                )
+
+            sessionMetrics.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+
+            // Sub-section: QA Testing Actions
+            Text(
+                text = "QA Testing Actions",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = onSeedProgress,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.School,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Seed Sample Progress (First 3/course)")
+                }
+
+                OutlinedButton(
+                    onClick = { showResetProgressDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Reset All Lesson Progress (0%)")
+                }
+
+                OutlinedButton(
+                    onClick = { showClearSessionsDialog = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error,
+                        ),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Clear All Chat Sessions & Messages")
+                }
+            }
+        }
+    }
+
+    if (showResetProgressDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetProgressDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text(
+                    text = "Reset All Course Progress?",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            },
+            text = {
+                Text(
+                    text =
+                        "Are you sure you want to reset all lesson progress? " +
+                            "This will set completion back to 0% across all curricula. This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showResetProgressDialog = false
+                        onResetProgress()
+                    },
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                ) {
+                    Text("Reset Progress")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetProgressDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+
+    if (showClearSessionsDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearSessionsDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            },
+            title = {
+                Text(
+                    text = "Clear All Chat Sessions?",
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            },
+            text = {
+                Text(
+                    text =
+                        "Are you sure you want to delete all saved conversations? " +
+                            "This will wipe all chat sessions and message rows from the Room database. This action cannot be undone.",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showClearSessionsDialog = false
+                        onClearSessions()
+                    },
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ),
+                ) {
+                    Text("Clear Sessions")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearSessionsDialog = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
+    }
+}
+
 // ==========================================
 // Previews
 // ==========================================
@@ -1595,6 +1899,17 @@ private fun DebugScreenPreview() {
                                 "Device Model" to "Google Pixel 8",
                                 "Android OS" to "Android 15 (API 35)",
                                 "CPU Cores" to "8 cores",
+                            ),
+                        databaseStats =
+                            DebugDatabaseStats(
+                                completedLessons = 42,
+                                inProgressLessons = 5,
+                                totalBundledLessons = 620,
+                                totalCourses = 10,
+                                completedCourses = 2,
+                                totalQuizzes = 45,
+                                totalSessions = 12,
+                                totalMessages = 158,
                             ),
                         eventSink = {},
                     ),
@@ -1769,6 +2084,31 @@ private fun InferenceBenchmarkCardPreview() {
                         benchmarkDurationMs = 6800L,
                         eventSink = {},
                     ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun DatabaseDiagnosticsCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            DatabaseDiagnosticsCard(
+                stats =
+                    DebugDatabaseStats(
+                        completedLessons = 42,
+                        inProgressLessons = 5,
+                        totalBundledLessons = 620,
+                        totalCourses = 10,
+                        completedCourses = 2,
+                        totalQuizzes = 45,
+                        totalSessions = 12,
+                        totalMessages = 158,
+                    ),
+                onResetProgress = {},
+                onSeedProgress = {},
+                onClearSessions = {},
             )
         }
     }
