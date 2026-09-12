@@ -4,12 +4,18 @@ import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
+import dev.hossain.codematex.data.local.FakeSessionDao
+import dev.hossain.codematex.data.local.MessageEntity
+import dev.hossain.codematex.data.local.SessionDao
+import dev.hossain.codematex.data.local.SessionEntity
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
@@ -87,6 +93,8 @@ class DebugPresenterTest {
         networkMonitor: NetworkMonitor = FakeNetworkMonitor(),
         hardwareEligibilityChecker: HardwareEligibilityChecker = FakeHardwareEligibilityChecker(),
         deviceMemoryProvider: DeviceMemoryProvider = FakeDeviceMemoryProvider(),
+        learningRepository: LearningRepository = FakeLearningRepository(),
+        sessionDao: SessionDao = FakeSessionDao(),
         isDevMode: () -> Boolean = { false },
         navigator: Navigator = FakeNavigator(DebugScreen),
         screen: DebugScreen = DebugScreen,
@@ -102,6 +110,8 @@ class DebugPresenterTest {
             networkMonitor = networkMonitor,
             hardwareEligibilityChecker = hardwareEligibilityChecker,
             deviceMemoryProvider = deviceMemoryProvider,
+            learningRepository = learningRepository,
+            sessionDao = sessionDao,
             isDevMode = isDevMode,
         )
 
@@ -928,6 +938,132 @@ class DebugPresenterTest {
 
                 assertThat(fakeEngine.isolatedInferenceCalls).isEqualTo(1)
                 assertThat(fakeEngine.lastIsolatedConfig).isEqualTo(customConfig)
+            }
+        }
+
+    @Test
+    fun `initial databaseStats computes bundled courses, quizzes, and session counts`() =
+        runTest {
+            val fakeRepo = FakeLearningRepository()
+            val fakeDao =
+                FakeSessionDao(
+                    sessions =
+                        listOf(
+                            SessionEntity("s1", "kotlin", "Title 1", "Summary 1", 2, 1000L, "gemma"),
+                            SessionEntity("s2", "python", "Title 2", "Summary 2", 1, 2000L, "gemma"),
+                        ),
+                    messages =
+                        listOf(
+                            MessageEntity(
+                                sessionId = "s1",
+                                messageId = "m1",
+                                type = "user",
+                                content = "Hello",
+                                timestamp = 1000L,
+                                orderIndex = 0,
+                            ),
+                            MessageEntity(
+                                sessionId = "s1",
+                                messageId = "m2",
+                                type = "agent",
+                                content = "Hi",
+                                timestamp = 1001L,
+                                orderIndex = 1,
+                            ),
+                            MessageEntity(
+                                sessionId = "s2",
+                                messageId = "m3",
+                                type = "user",
+                                content = "Hey",
+                                timestamp = 2000L,
+                                orderIndex = 0,
+                            ),
+                        ),
+                )
+            val presenter = createPresenter(learningRepository = fakeRepo, sessionDao = fakeDao)
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(state.databaseStats.totalCourses).isEqualTo(fakeRepo.courses.size)
+                assertThat(state.databaseStats.totalBundledLessons).isEqualTo(fakeRepo.courses.sumOf { it.lessonCount })
+                assertThat(state.databaseStats.totalSessions).isEqualTo(2)
+                assertThat(state.databaseStats.totalMessages).isEqualTo(3)
+                assertThat(state.databaseStats.completedLessons).isEqualTo(0)
+                assertThat(state.databaseStats.completedCourses).isEqualTo(0)
+                assertThat(state.databaseStats.totalQuizzes).isAtLeast(0)
+            }
+        }
+
+    @Test
+    fun `SeedSampleLessonProgress seeds 3 lessons per course and updates stats`() =
+        runTest {
+            val fakeRepo = FakeLearningRepository()
+            val presenter = createPresenter(learningRepository = fakeRepo)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(initialState.databaseStats.completedLessons).isEqualTo(0)
+
+                initialState.eventSink(DebugScreen.Event.SeedSampleLessonProgress)
+
+                val updatedState = expectMostRecentItem() as DebugScreen.State.Success
+                val expectedCompleted = fakeRepo.courses.sumOf { course -> minOf(3, course.chapters.flatMap { it.lessons }.size) }
+                assertThat(updatedState.databaseStats.completedLessons).isEqualTo(expectedCompleted)
+                assertThat(updatedState.statusMessage).contains("Seeded sample progress")
+            }
+        }
+
+    @Test
+    fun `ResetAllLessonProgress resets progress to 0 percent`() =
+        runTest {
+            val fakeRepo = FakeLearningRepository()
+            fakeRepo.seedSampleProgress(lessonsPerCourse = 3)
+            val presenter = createPresenter(learningRepository = fakeRepo)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(initialState.databaseStats.completedLessons).isGreaterThan(0)
+
+                initialState.eventSink(DebugScreen.Event.ResetAllLessonProgress)
+
+                val updatedState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updatedState.databaseStats.completedLessons).isEqualTo(0)
+                assertThat(updatedState.databaseStats.inProgressLessons).isEqualTo(0)
+                assertThat(updatedState.statusMessage).contains("reset to 0%")
+            }
+        }
+
+    @Test
+    fun `ClearAllChatSessions clears sessions and messages from room`() =
+        runTest {
+            val fakeDao =
+                FakeSessionDao(
+                    sessions = listOf(SessionEntity("s1", "kotlin", "Title", "Summary", 1, 1000L, "gemma")),
+                    messages =
+                        listOf(
+                            MessageEntity(
+                                sessionId = "s1",
+                                messageId = "m1",
+                                type = "user",
+                                content = "Hi",
+                                timestamp = 1000L,
+                                orderIndex = 0,
+                            ),
+                        ),
+                )
+            val presenter = createPresenter(sessionDao = fakeDao)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(initialState.databaseStats.totalSessions).isEqualTo(1)
+                assertThat(initialState.databaseStats.totalMessages).isEqualTo(1)
+
+                initialState.eventSink(DebugScreen.Event.ClearAllChatSessions)
+
+                val updatedState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(updatedState.databaseStats.totalSessions).isEqualTo(0)
+                assertThat(updatedState.databaseStats.totalMessages).isEqualTo(0)
+                assertThat(updatedState.statusMessage).contains("cleared")
             }
         }
 }

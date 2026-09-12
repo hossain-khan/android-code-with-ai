@@ -15,3 +15,11 @@ data class LessonProgressEntity(
 )
 
 fun LessonProgressEntity.toLessonStatus(): LessonStatus = LessonStatus.entries.find { it.name == status } ?: LessonStatus.NOT_STARTED
+
+fun LessonProgressEntity.toLessonProgress(): dev.hossain.codematex.data.model.LessonProgress =
+    dev.hossain.codematex.data.model.LessonProgress(
+        lessonId = lessonId,
+        courseId = courseId,
+        status = toLessonStatus(),
+        lastOpenedAt = lastOpenedAt,
+    )

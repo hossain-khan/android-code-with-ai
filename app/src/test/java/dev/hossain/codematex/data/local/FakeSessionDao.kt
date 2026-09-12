@@ -6,20 +6,25 @@ import kotlinx.coroutines.flow.map
 
 class FakeSessionDao(
     sessions: List<SessionEntity> = emptyList(),
-    private val messages: List<MessageEntity> = emptyList(),
+    messages: List<MessageEntity> = emptyList(),
     private val throwOnReplace: Boolean = false,
 ) : SessionDao {
     private val sessionsFlow = MutableStateFlow(sessions)
+    private val messagesFlow = MutableStateFlow(messages)
     val calls = mutableListOf<String>()
     val upsertedSessions = mutableListOf<SessionEntity>()
     val insertedMessages = mutableListOf<List<MessageEntity>>()
 
     override fun getAllSessions(): Flow<List<SessionEntity>> = sessionsFlow
 
+    override fun observeSessionCount(): Flow<Int> = sessionsFlow.map { it.size }
+
+    override fun observeMessageCount(): Flow<Int> = messagesFlow.map { it.size }
+
     override fun getSessionById(sessionId: String): Flow<SessionEntity?> =
         sessionsFlow.map { sessions -> sessions.find { it.id == sessionId } }
 
-    override suspend fun getMessages(sessionId: String): List<MessageEntity> = messages.filter { it.sessionId == sessionId }
+    override suspend fun getMessages(sessionId: String): List<MessageEntity> = messagesFlow.value.filter { it.sessionId == sessionId }
 
     override suspend fun upsertSession(session: SessionEntity) {
         calls += "upsertSession"
@@ -30,6 +35,7 @@ class FakeSessionDao(
     override suspend fun insertMessages(messages: List<MessageEntity>) {
         calls += "insertMessages"
         insertedMessages += messages
+        messagesFlow.value = messagesFlow.value + messages
     }
 
     override suspend fun deleteSession(sessionId: String) {
@@ -39,6 +45,7 @@ class FakeSessionDao(
 
     override suspend fun deleteMessages(sessionId: String) {
         calls += "deleteMessages:$sessionId"
+        messagesFlow.value = messagesFlow.value.filterNot { it.sessionId == sessionId }
     }
 
     override suspend fun deleteAllSessions() {
@@ -48,6 +55,7 @@ class FakeSessionDao(
 
     override suspend fun deleteAllMessages() {
         calls += "deleteAllMessages"
+        messagesFlow.value = emptyList()
     }
 
     override suspend fun replaceSession(
@@ -59,5 +67,6 @@ class FakeSessionDao(
         upsertedSessions += session
         sessionsFlow.value = sessionsFlow.value.filterNot { it.id == session.id } + session
         insertedMessages += messages
+        messagesFlow.value = messagesFlow.value.filterNot { it.sessionId == session.id } + messages
     }
 }

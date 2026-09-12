@@ -15,10 +15,14 @@ import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.BuildConfig
+import dev.hossain.codematex.data.local.SessionDao
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.LessonBlock
+import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
@@ -36,6 +40,7 @@ import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -83,6 +88,8 @@ class DebugPresenter(
     private val networkMonitor: NetworkMonitor,
     private val hardwareEligibilityChecker: HardwareEligibilityChecker,
     private val deviceMemoryProvider: DeviceMemoryProvider,
+    private val learningRepository: LearningRepository,
+    private val sessionDao: SessionDao,
     private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
 ) : Presenter<DebugScreen.State> {
     /**
@@ -218,6 +225,50 @@ class DebugPresenter(
             }
         }
 
+        var databaseStats by rememberRetained { mutableStateOf(DebugScreen.DebugDatabaseStats()) }
+
+        LaunchedEffect(Unit) {
+            combine(
+                learningRepository.getCourses(),
+                learningRepository.observeAllProgress(),
+                sessionDao.observeSessionCount(),
+                sessionDao.observeMessageCount(),
+            ) { courses, progressList, sessionCount, messageCount ->
+                val completedLessonIds =
+                    progressList
+                        .filter { it.status == LessonStatus.COMPLETED }
+                        .map { it.lessonId }
+                        .toSet()
+                val totalLessons = courses.sumOf { it.lessonCount }
+                val totalCourses = courses.size
+                val completedCourses =
+                    courses.count { course ->
+                        val lessonIds = course.chapters.flatMap { it.lessons }.map { it.id }
+                        lessonIds.isNotEmpty() && lessonIds.all { it in completedLessonIds }
+                    }
+                val totalQuizzes =
+                    courses.sumOf { course ->
+                        course.chapters.sumOf { chapter ->
+                            chapter.lessons.sumOf { lesson ->
+                                lesson.blocks.count { it is LessonBlock.Quiz }
+                            }
+                        }
+                    }
+                DebugScreen.DebugDatabaseStats(
+                    completedLessons = completedLessonIds.size,
+                    inProgressLessons = progressList.count { it.status == LessonStatus.IN_PROGRESS },
+                    totalBundledLessons = totalLessons,
+                    totalCourses = totalCourses,
+                    completedCourses = completedCourses,
+                    totalQuizzes = totalQuizzes,
+                    totalSessions = sessionCount,
+                    totalMessages = messageCount,
+                )
+            }.collect { stats ->
+                databaseStats = stats
+            }
+        }
+
         return DebugScreen.State.Success(
             models = models,
             selectedModel = selectedModel,
@@ -252,6 +303,7 @@ class DebugPresenter(
             isPingingProxy = isPingingProxy,
             proxyPingMs = proxyPingMs,
             proxyPingError = proxyPingError,
+            databaseStats = databaseStats,
         ) { event ->
             when (event) {
                 is DebugScreen.Event.SelectModel -> {
@@ -604,6 +656,30 @@ class DebugPresenter(
                         } finally {
                             isPingingProxy = false
                         }
+                    }
+                }
+
+                DebugScreen.Event.ResetAllLessonProgress -> {
+                    scope.launch {
+                        learningRepository.resetAllProgress()
+                        statusMessage = "All lesson progress reset to 0%."
+                        Timber.i("DebugPresenter: Reset all lesson progress")
+                    }
+                }
+
+                DebugScreen.Event.SeedSampleLessonProgress -> {
+                    scope.launch {
+                        learningRepository.seedSampleProgress(lessonsPerCourse = 3)
+                        statusMessage = "Seeded sample progress (first 3 lessons completed per course)."
+                        Timber.i("DebugPresenter: Seeded sample lesson progress")
+                    }
+                }
+
+                DebugScreen.Event.ClearAllChatSessions -> {
+                    scope.launch {
+                        sessionDao.clearAll()
+                        statusMessage = "All chat sessions and messages cleared."
+                        Timber.i("DebugPresenter: Cleared all chat sessions and messages")
                     }
                 }
 

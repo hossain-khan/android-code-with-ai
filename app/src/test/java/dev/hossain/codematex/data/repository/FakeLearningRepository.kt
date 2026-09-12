@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningChapter
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LearningLesson
+import dev.hossain.codematex.data.model.LessonProgress
 import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
@@ -84,5 +85,35 @@ class FakeLearningRepository(
                 .map { it.id }
                 .toSet()
         lessonStatusMap.value = lessonStatusMap.value.filterKeys { it !in lessonIds }
+    }
+
+    override fun observeAllProgress(): Flow<List<LessonProgress>> =
+        lessonStatusMap.map { statuses ->
+            statuses.mapNotNull { (lessonId, status) ->
+                val course = getCourseForLesson(lessonId)
+                course?.let {
+                    LessonProgress(
+                        lessonId = lessonId,
+                        courseId = it.id,
+                        status = status,
+                        lastOpenedAt = 0L,
+                    )
+                }
+            }
+        }
+
+    override suspend fun resetAllProgress() {
+        lessonStatusMap.value = emptyMap()
+    }
+
+    override suspend fun seedSampleProgress(lessonsPerCourse: Int) {
+        val seeded = mutableMapOf<String, LessonStatus>()
+        courses.forEach { course ->
+            val allLessons = course.chapters.flatMap { it.lessons }
+            allLessons.take(lessonsPerCourse).forEach { lesson ->
+                seeded[lesson.id] = LessonStatus.COMPLETED
+            }
+        }
+        lessonStatusMap.value = lessonStatusMap.value + seeded
     }
 }

@@ -19,6 +19,18 @@ interface SessionDao {
     fun getAllSessions(): Flow<List<SessionEntity>>
 
     /**
+     * Returns an observable [Flow] of the total number of sessions.
+     */
+    @Query("SELECT COUNT(*) FROM sessions")
+    fun observeSessionCount(): Flow<Int>
+
+    /**
+     * Returns an observable [Flow] of the total number of messages across all sessions.
+     */
+    @Query("SELECT COUNT(*) FROM messages")
+    fun observeMessageCount(): Flow<Int>
+
+    /**
      * Returns an observable [Flow] of the session matching [sessionId], or `null` if it does not exist.
      */
     @Query("SELECT * FROM sessions WHERE id = :sessionId")
