@@ -8,56 +8,64 @@ CodeMateX - AI Coding Tutor
 --------------------------------------------------------------------------------
 SHORT DESCRIPTION (Max 80 characters)
 --------------------------------------------------------------------------------
-100% private, on-device AI coding tutor for Android, Kotlin, Python & more.
+100% private, on-device AI coding tutor, interactive lessons & code runner.
 
 --------------------------------------------------------------------------------
 FULL DESCRIPTION (Max 4000 characters)
 --------------------------------------------------------------------------------
-CodeMateX is your intelligent, 100% on-device AI coding companion and tutor. Built for mobile engineers, students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
+CodeMateX is your intelligent, 100% on-device AI coding companion, tutor, and interactive learning platform. Built for mobile engineers, computer science students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
 
-No cloud servers. No subscriptions. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, concept learning, and architecture guidance without sending a single byte of your code or queries over the internet.
+No cloud subscriptions. No telemetry. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, concept learning, and architecture guidance without sending a single byte of your code or queries over the internet.
 
-✨ KEY FEATURES
+✨ KEY HIGHLIGHTS & FEATURES
+
+📚 Interactive Guided Courses & Syllabi
+Master modern languages with structured, offline-first curriculum courses:
+• Kotlin: Complete Kotlin Tour (Beginner & Intermediate) + Kotlin Foundations
+• Go: Comprehensive "Go by Example" (85+ lessons) + Go Foundations
+• Rust: Complete "Rust by Example" (196+ lessons) + Rust Foundations
+• Python, TypeScript & Swift: Full foundational syllabi with syntax deep-dives
+• Interactive Quick-Check Quizzes: Test your comprehension with instant visual validation and explanations
+• Curriculum Progress Tracking: Track completed chapters, active lessons, and resume anytime
+• Language Filtering: Sticky filter chips to seamlessly browse courses by language
+
+▶️ In-App Code Execution & Terminal Runner
+Run code snippets directly within guided lessons:
+• Execute interactive code snippets in Kotlin, Go, Rust, Python, and TypeScript
+• Real-time terminal console output for learning verification
+• Smart offline mode preserving 100% offline reading when disconnected
 
 🧠 100% Local On-Device AI
-• Powered by Google LiteRT-LM (supporting optimized Gemma 2B and lightweight models).
-• Zero latency from cloud network roundtrips.
-• Fully functional offline—code on planes, trains, or anywhere without Wi-Fi.
+• Powered by Google LiteRT-LM (supporting Gemma 2 2B, Qwen 2.5 Coder, Qwen 3, and Phi-4 Mini)
+• Zero latency from network roundtrips
+• Context-Aware In-Lesson Chat: Ask AI Tutor questions directly about specific lesson snippets
+• Tunable AI Personas: Switch between Senior Architect, Beginner Tutor, and Interview Coach
+• Developer Profile: Inject your experience level and preferred stack into the AI's context
 
 🛡️ Complete Privacy & Security
-• Your code, prompts, and conversation history never leave your phone.
-• No accounts, tracking, or cloud data collection required.
+• Your code, prompts, and chat history never leave your device
+• No accounts, sign-ups, tracking, or cloud data collection
 
-💻 Specialized Developer Tutoring Topics
-Get targeted assistance with interactive topic tracks tailored for modern development:
-• Kotlin Programming & Language Idioms
-• Android Jetpack & Modern Architecture (MVI / MVVM)
-• Jetpack Compose & Material 3 UI/UX
-• Kotlin Coroutines, Asynchronous Flow & Concurrency
-• Code Understanding & Syntax Q&A
-• System Design, Algorithms & Data Structures
-• Python, Swift, Rust, and Web Technologies
+📊 Real-Time Hardware Telemetry & Benchmarking
+Inspect on-device LLM performance in real time:
+• Hardware Backend acceleration indicators (NPU, GPU OpenCL/Vulkan, and CPU)
+• Time-to-First-Token (TTFT) prefill latency in milliseconds
+• Active decode speed in tokens per second (t/s)
+• Real-time model memory footprint and hyperparameter tuning (Temp, Top-K, Top-P)
 
-📊 Real-Time Technical Benchmarking Dashboard
-Inspect hardware execution in real time:
-• Hardware Backend acceleration badges (NPU, GPU OpenCL/Vulkan, and CPU).
-• Prefill Latency / Time-to-First-Token (TTFT) in milliseconds.
-• Active decode throughput in tokens per second (t/s).
-• Active model memory footprint and parameter boundaries.
-
-🎨 Modern Material 3 Expressive Design
-• Built entirely with Jetpack Compose following Material 3 Expressive guidelines.
-• Atmospheric ambient lighting and dynamic topic visual branding.
-• Responsive adaptive layout optimized for compact phones, foldables, and large tablets.
-• Dynamic topic filter chips for rapid session management.
+🎨 Material 3 Expressive & Code Customization
+• Atmospheric ambient lighting and dynamic topic visual branding
+• Syntax highlighting powered by Highlight.js with themes: Tomorrow, Atom One, GitHub, Dracula
+• Configurable code view: line numbers, font sizing, and compact density presets
+• Material You adaptive layout optimized for phones, foldables, and tablets
 
 ⚙️ HARDWARE REQUIREMENTS
-To deliver responsive on-device LLM inference without taxing the operating system, CodeMateX is optimized for modern high-performance devices:
-• RAM: 8 GB RAM minimum (devices with 6 GB or less may experience instability).
-• Processor: 64-bit architecture (ARM64-v8a).
-• Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration.
+To deliver responsive on-device LLM inference, CodeMateX is optimized for modern high-performance devices:
+• RAM: 8 GB RAM recommended (6 GB minimum)
+• Processor: 64-bit ARM architecture (ARM64-v8a)
+• Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration
 
-Level up your engineering skills today with a private, powerful AI tutor right in your pocket.
+Level up your programming skills today with a private, powerful AI tutor and interactive code lab right in your pocket.
 
 --------------------------------------------------------------------------------
 STORE LISTING URLS & LEGAL
