@@ -8,7 +8,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -180,10 +179,8 @@ private fun LessonCatalogInnerContent(
                 AnimatedContent(
                     targetState = state.selectedTopic,
                     transitionSpec = {
-                        (
-                            fadeIn(animationSpec = tween(220, delayMillis = 60)) +
-                                scaleIn(initialScale = 0.95f, animationSpec = tween(220, delayMillis = 60))
-                        ).togetherWith(fadeOut(animationSpec = tween(100)))
+                        fadeIn(animationSpec = tween(durationMillis = 200))
+                            .togetherWith(fadeOut(animationSpec = tween(durationMillis = 150)))
                     },
                     label = "LessonCatalogFilterAnimation",
                     modifier = Modifier.fillMaxSize().padding(padding),
@@ -219,13 +216,13 @@ private fun LessonCatalogInnerContent(
                                     transitionScope = transitionScope,
                                     modifier =
                                         Modifier.animateItem(
-                                            fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                            fadeInSpec = tween(durationMillis = 200),
                                             placementSpec =
                                                 spring(
-                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                    stiffness = Spring.StiffnessLow,
+                                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                                    stiffness = Spring.StiffnessMedium,
                                                 ),
-                                            fadeOutSpec = spring(stiffness = Spring.StiffnessLow),
+                                            fadeOutSpec = tween(durationMillis = 150),
                                         ),
                                 ) {
                                     state.eventSink(LessonCatalogScreen.Event.OpenCourse(course.id))
