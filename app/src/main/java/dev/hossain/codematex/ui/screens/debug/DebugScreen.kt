@@ -4,13 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
-import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ModelConfig
-import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
-import dev.hossain.codematex.runtime.LlmEngine
-import dev.hossain.codematex.system.DebugMemoryStats
-import dev.hossain.codematex.system.HardwareEligibility
-import dev.hossain.codematex.system.MemoryDelta
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -20,40 +14,9 @@ data object DebugScreen : ParcelableScreen {
     @Serializable
     sealed interface State : CircuitUiState {
         data class Success(
-            val models: List<AiModel>,
-            val selectedModel: AiModel?,
-            val selectedBackend: LlmEngine.Backend,
-            val isModelLoaded: Boolean,
-            val loadedModelName: String?,
-            val activeBackend: LlmEngine.Backend?,
-            val isLoadingModel: Boolean,
-            val isUnloadingModel: Boolean,
-            val lastLoadDelta: MemoryDelta? = null,
-            val lastUnloadDelta: MemoryDelta? = null,
+            val isModelLoaded: Boolean = false,
+            val loadedModelName: String? = null,
             val statusMessage: String? = null,
-            val telemetryStats: DebugMemoryStats = DebugMemoryStats(),
-            val benchmarkPrompt: String = DEFAULT_BENCHMARK_PROMPT,
-            val benchmarkConfig: ModelConfig = DEFAULT_BENCHMARK_CONFIG,
-            val isBenchmarking: Boolean = false,
-            val benchmarkTokens: String = "",
-            val benchmarkTtftMs: Long? = null,
-            val benchmarkSpeedTps: Float? = null,
-            val benchmarkTotalTokens: Int = 0,
-            val benchmarkDurationMs: Long? = null,
-            val deviceInfo: Map<String, String> = emptyMap(),
-            val hardwareEligibility: HardwareEligibility = HardwareEligibility.Eligible,
-            val isDevMode: Boolean = false,
-            val runtimeSpecs: Map<String, String> = emptyMap(),
-            val isOnline: Boolean = true,
-            val runnerSelectedLang: String = DEFAULT_RUNNER_LANGUAGE,
-            val runnerSnippetCode: String = DEFAULT_RUNNER_SNIPPETS[DEFAULT_RUNNER_LANGUAGE] ?: "",
-            val isRunningSnippet: Boolean = false,
-            val runnerResult: PlaygroundExecutionResult? = null,
-            val runnerDurationMs: Long? = null,
-            val isPingingProxy: Boolean = false,
-            val proxyPingMs: Long? = null,
-            val proxyPingError: String? = null,
-            val databaseStats: DebugDatabaseStats = DebugDatabaseStats(),
             val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -114,75 +77,19 @@ data object DebugScreen : ParcelableScreen {
 
     @Serializable
     sealed interface Event : CircuitUiEvent {
-        data class SelectModel(
-            val model: AiModel,
-        ) : Event
-
-        data class SelectBackend(
-            val backend: LlmEngine.Backend,
-        ) : Event
-
-        data object LoadModel : Event
-
-        data object UnloadModel : Event
-
-        data class UpdateBenchmarkPrompt(
-            val prompt: String,
-        ) : Event
-
-        data class UpdateBenchmarkTemperature(
-            val temperature: Float,
-        ) : Event
-
-        data class UpdateBenchmarkTopK(
-            val topK: Int,
-        ) : Event
-
-        data class UpdateBenchmarkTopP(
-            val topP: Float,
-        ) : Event
-
-        data class UpdateBenchmarkMaxTokens(
-            val maxTokens: Int,
-        ) : Event
-
-        data class ApplySamplerPreset(
-            val preset: BenchmarkSamplerPreset,
-        ) : Event
-
-        data object ResetBenchmarkConfig : Event
-
-        data object RunBenchmark : Event
-
-        data object StopBenchmark : Event
-
-        data object TriggerGc : Event
-
-        data class DeleteModel(
-            val model: AiModel,
-        ) : Event
-
-        data class SelectRunnerLanguage(
-            val language: String,
-        ) : Event
-
-        data class UpdateRunnerSnippet(
-            val code: String,
-        ) : Event
-
-        data object ResetRunnerSnippet : Event
-
-        data object RunRunnerSnippet : Event
-
-        data object PingProxy : Event
-
-        data object ResetAllLessonProgress : Event
-
-        data object SeedSampleLessonProgress : Event
-
-        data object ClearAllChatSessions : Event
-
         data object Back : Event
+
+        data class ShowSnackbar(
+            val message: String,
+        ) : Event
+
+        data object ClearStatusMessage : Event
+
+        data class ModelLoaded(
+            val modelName: String,
+        ) : Event
+
+        data object ModelUnloaded : Event
     }
 }
 

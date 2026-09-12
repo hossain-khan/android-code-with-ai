@@ -238,6 +238,7 @@ dependencies {
     implementation(libs.circuitx.effects)
     implementation(libs.circuitx.gestureNav)
     implementation(libs.circuitx.overlays)
+    implementation(libs.circuitx.subcircuit)
 
     implementation(libs.javax.inject)
 
@@ -285,6 +286,7 @@ dependencies {
     // Circuit test utilities: presenterTestOf(), Presenter.test(), FakeNavigator, TestEventSink
     // See https://slackhq.github.io/circuit/testing/
     testImplementation(libs.circuit.test)
+    testImplementation(libs.circuitx.subcircuit.test)
     // Required for runTest in presenter unit tests
     testImplementation(libs.kotlinx.coroutines.test)
 }

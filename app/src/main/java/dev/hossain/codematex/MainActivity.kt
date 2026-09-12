@@ -27,6 +27,8 @@ import com.slack.circuit.foundation.rememberCircuitNavigator
 import com.slack.circuit.overlay.ContentWithOverlays
 import com.slack.circuit.runtime.screen.Screen
 import com.slack.circuit.sharedelements.SharedElementTransitionLayout
+import com.slack.circuit.subcircuit.LocalSubCircuit
+import com.slack.circuit.subcircuit.SubCircuit
 import com.slack.circuitx.gesturenavigation.GestureNavigationDecorationFactory
 import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.repository.UserPreferencesStore
@@ -68,6 +70,7 @@ import dev.zacsweers.metro.binding
 class MainActivity
     constructor(
         private val circuit: Circuit,
+        private val subCircuit: SubCircuit,
         private val userPreferencesStore: UserPreferencesStore,
     ) : ComponentActivity() {
         private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
@@ -88,62 +91,64 @@ class MainActivity
                         val completed = isOnboardingCompleted ?: return@Surface
 
                         CircuitCompositionLocals(circuit) {
-                            // Cold-start deep link initialization: if launched directly via deep link,
-                            // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
-                            // On first run without deep links, seed with OnboardingScreen.
-                            val initialStack =
-                                remember {
-                                    if (pendingDeepLinkScreen != null) {
-                                        val target = pendingDeepLinkScreen!!
+                            CompositionLocalProvider(LocalSubCircuit provides subCircuit) {
+                                // Cold-start deep link initialization: if launched directly via deep link,
+                                // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
+                                // On first run without deep links, seed with OnboardingScreen.
+                                val initialStack =
+                                    remember {
+                                        if (pendingDeepLinkScreen != null) {
+                                            val target = pendingDeepLinkScreen!!
+                                            pendingDeepLinkScreen = null
+                                            listOf(HomeScreen, target)
+                                        } else if (!completed) {
+                                            listOf(OnboardingScreen)
+                                        } else {
+                                            listOf(HomeScreen)
+                                        }
+                                    }
+                                val navStack = rememberSaveableNavStack(initialStack)
+                                val navigator = rememberCircuitNavigator(navStack)
+
+                                // Warm-start deep link handling: navigate to the deep-linked screen if already running
+                                LaunchedEffect(pendingDeepLinkScreen) {
+                                    val target = pendingDeepLinkScreen
+                                    if (target != null) {
+                                        if (navStack.topRecord?.screen != target) {
+                                            navigator.goTo(target)
+                                        }
                                         pendingDeepLinkScreen = null
-                                        listOf(HomeScreen, target)
-                                    } else if (!completed) {
-                                        listOf(OnboardingScreen)
-                                    } else {
-                                        listOf(HomeScreen)
                                     }
                                 }
-                            val navStack = rememberSaveableNavStack(initialStack)
-                            val navigator = rememberCircuitNavigator(navStack)
 
-                            // Warm-start deep link handling: navigate to the deep-linked screen if already running
-                            LaunchedEffect(pendingDeepLinkScreen) {
-                                val target = pendingDeepLinkScreen
-                                if (target != null) {
-                                    if (navStack.topRecord?.screen != target) {
-                                        navigator.goTo(target)
+                                val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
+                                    .collectAsState(initial = CodeBlockSettings())
+                                val (lightHighlightTheme, darkHighlightTheme) =
+                                    remember(codeBlockSettings.theme) {
+                                        codeBlockSettings.theme.resolveHighlightThemes()
                                     }
-                                    pendingDeepLinkScreen = null
-                                }
-                            }
 
-                            val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
-                                .collectAsState(initial = CodeBlockSettings())
-                            val (lightHighlightTheme, darkHighlightTheme) =
-                                remember(codeBlockSettings.theme) {
-                                    codeBlockSettings.theme.resolveHighlightThemes()
-                                }
-
-                            // See https://slackhq.github.io/circuit/circuit-content/
-                            HighlightThemeProvider(
-                                lightHighlightTheme = lightHighlightTheme,
-                                darkHighlightTheme = darkHighlightTheme,
-                            ) {
-                                CompositionLocalProvider(
-                                    LocalCodeBlockSettings provides codeBlockSettings,
+                                // See https://slackhq.github.io/circuit/circuit-content/
+                                HighlightThemeProvider(
+                                    lightHighlightTheme = lightHighlightTheme,
+                                    darkHighlightTheme = darkHighlightTheme,
                                 ) {
-                                    // See https://slackhq.github.io/circuit/shared-elements/
-                                    SharedElementTransitionLayout {
-                                        // See https://slackhq.github.io/circuit/overlays/
-                                        ContentWithOverlays {
-                                            NavigableCircuitContent(
-                                                navigator = navigator,
-                                                navStack = navStack,
-                                                decoratorFactory =
-                                                    remember {
-                                                        GestureNavigationDecorationFactory()
-                                                    },
-                                            )
+                                    CompositionLocalProvider(
+                                        LocalCodeBlockSettings provides codeBlockSettings,
+                                    ) {
+                                        // See https://slackhq.github.io/circuit/shared-elements/
+                                        SharedElementTransitionLayout {
+                                            // See https://slackhq.github.io/circuit/overlays/
+                                            ContentWithOverlays {
+                                                NavigableCircuitContent(
+                                                    navigator = navigator,
+                                                    navStack = navStack,
+                                                    decoratorFactory =
+                                                        remember {
+                                                            GestureNavigationDecorationFactory()
+                                                        },
+                                                )
+                                            }
                                         }
                                     }
                                 }

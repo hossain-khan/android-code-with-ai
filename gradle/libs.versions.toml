@@ -104,6 +104,9 @@ circuitx-android = { group = "com.slack.circuit", name = "circuitx-android", ver
 circuitx-effects = { group = "com.slack.circuit", name = "circuitx-effects", version.ref = "circuit" }
 circuitx-gestureNav = { group = "com.slack.circuit", name = "circuitx-gesture-navigation", version.ref = "circuit" }
 circuitx-overlays = { group = "com.slack.circuit", name = "circuitx-overlays", version.ref = "circuit" }
+circuitx-subcircuit = { group = "com.slack.circuit", name = "circuitx-subcircuit", version.ref = "circuit" }
+circuitx-subcircuit-test = { group = "com.slack.circuit", name = "circuitx-subcircuit-test", version.ref = "circuit" }
+circuit-codegen = { group = "com.slack.circuit", name = "circuit-codegen", version.ref = "circuit" }
 
 javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
 
