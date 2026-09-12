@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.23.0` | `46` | 2026-09-12 | Bundled official 'Kotlin Tour: Beginner' and 'Kotlin Tour: Intermediate' interactive courses (16 chapters, 250+ snippets) with Kotlin Playground execution; bundled official 'Go by Example' comprehensive course (85 runnable lessons); upgraded Circuit 0.38.0, Metro 1.4.3 (@BindingContainer), LiteRT-LM 0.17.0, Compose BOM 2026.09, and Room 2.8.5. |
 | `1.22.4` | `45` | 2026-09-08 | Reactive network connectivity monitoring with Android ConnectivityManager; smart offline mode automatically hiding "Run Code" playground buttons when disconnected; pre-flight network validation check for code runner. |
 | `1.22.3` | `44` | 2026-09-08 | Polished playground terminal output eliminating trailing blank lines and stdout flushes; updated modern Compose Compiler Stability starter prompt for Android AI Tutor; expanded test coverage for playground snippet execution and topic styling. |
 | `1.22.2` | `43` | 2026-09-07 | Comprehensive Circuit Shared Element Transitions across the application: fluid topic card morphing into Chat TopAppBar, seamless course/chapter/lesson card transitions, active model status bar shared bounds with Model Picker, and session history transitions to restored chat sessions. |
