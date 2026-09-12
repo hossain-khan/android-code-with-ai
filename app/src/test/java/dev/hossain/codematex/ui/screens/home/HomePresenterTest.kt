@@ -4,16 +4,8 @@ import com.google.common.truth.Truth.assertThat
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.LearningCourse
-import dev.hossain.codematex.data.repository.FakeChatSessionRepository
-import dev.hossain.codematex.data.repository.FakeLearningRepository
-import dev.hossain.codematex.data.repository.FakeModelRepository
-import dev.hossain.codematex.data.repository.testModel
-import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.system.FakeHardwareEligibilityChecker
 import dev.hossain.codematex.system.HardwareEligibility
-import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import dev.hossain.codematex.ui.screens.chatsessions.SessionHistoryScreen
@@ -25,62 +17,27 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 /**
- * Unit tests for [HomePresenter].
+ * Unit tests for coordinator [HomePresenter].
  */
 class HomePresenterTest {
-    private val fakeSessionRepo = FakeChatSessionRepository()
-    private val fakeModelRepo = FakeModelRepository()
-    private val fakeLlmEngine = FakeLlmEngine()
-    private val fakeLearningRepo =
-        FakeLearningRepository(
-            courses =
-                listOf(
-                    LearningCourse(
-                        id = "kotlin-foundations",
-                        language = "Kotlin",
-                        title = "Kotlin Foundations",
-                        description = "Learn Kotlin",
-                        version = 1,
-                        chapters = emptyList(),
-                    ),
-                    LearningCourse(
-                        id = "rust-foundations",
-                        language = "Rust",
-                        title = "Rust Foundations",
-                        description = "Learn Rust",
-                        version = 1,
-                        chapters = emptyList(),
-                    ),
-                ),
-        )
-
     private fun createPresenter(
         navigator: FakeNavigator = FakeNavigator(HomeScreen),
         hardwareEligibility: HardwareEligibility = HardwareEligibility.Eligible,
-        modelRepository: FakeModelRepository = fakeModelRepo,
-        llmEngine: FakeLlmEngine = fakeLlmEngine,
     ): HomePresenter =
         HomePresenter(
             navigator = navigator,
             screen = HomeScreen,
-            sessionRepository = fakeSessionRepo,
-            modelRepository = modelRepository,
             hardwareEligibilityChecker = FakeHardwareEligibilityChecker(hardwareEligibility),
-            learningRepository = fakeLearningRepo,
-            llmEngine = llmEngine,
         )
 
     @Test
-    fun `given device is eligible - emits success state with topics and available courses`() =
+    fun `given device is eligible - emits success state`() =
         runTest {
             val presenter = createPresenter()
 
             presenter.test {
-                val state = expectMostRecentItem() as HomeScreen.State.Success
-                assertThat(state.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
-                assertThat(state.topicsWithCourses).containsExactly(CodingTopic.KOTLIN, CodingTopic.RUST)
-                assertThat(state.availableCourses).hasSize(2)
-                assertThat(state.availableCourses.map { it.id }).containsExactly("kotlin-foundations", "rust-foundations")
+                val state = expectMostRecentItem()
+                assertThat(state).isInstanceOf(HomeScreen.State.Success::class.java)
             }
         }
 
@@ -103,8 +60,8 @@ class HomePresenterTest {
 
                 // Dismiss warning
                 state.eventSink(HomeScreen.Event.DismissIneligibilityWarning)
-                val successState = expectMostRecentItem() as HomeScreen.State.Success
-                assertThat(successState.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
+                val successState = expectMostRecentItem()
+                assertThat(successState).isInstanceOf(HomeScreen.State.Success::class.java)
             }
         }
 
@@ -118,6 +75,21 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.TopicSelected(CodingTopic.KOTLIN))
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChatScreen(CodingTopic.KOTLIN))
+            }
+        }
+
+    @Test
+    fun `given session selected event - navigates to chat screen with session id`() =
+        runTest {
+            val navigator = FakeNavigator(HomeScreen)
+            val presenter = createPresenter(navigator = navigator)
+
+            presenter.test {
+                val state = expectMostRecentItem() as HomeScreen.State.Success
+                state.eventSink(HomeScreen.Event.SessionSelected(CodingTopic.KOTLIN, "session-123"))
+                assertThat(navigator.awaitNextScreen()).isEqualTo(
+                    ChatScreen(topic = CodingTopic.KOTLIN, sessionId = "session-123"),
+                )
             }
         }
 
@@ -196,40 +168,6 @@ class HomePresenterTest {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.GuidedLessons)
                 assertThat(navigator.awaitNextScreen()).isEqualTo(LessonCatalogScreen())
-            }
-        }
-
-    @Test
-    fun `given model and memory state - populates model status fields correctly`() =
-        runTest {
-            fakeLlmEngine.isInitializedValue = true
-            val presenter = createPresenter(llmEngine = fakeLlmEngine)
-
-            presenter.test {
-                val state = expectMostRecentItem() as HomeScreen.State.Success
-                assertThat(state.isModelInMemory).isTrue()
-                assertThat(state.memoryBackend).isEqualTo("CPU")
-            }
-        }
-
-    @Test
-    fun `when model download completes - updates selectedModel and hasDownloadedModel reactively`() =
-        runTest {
-            val modelRepo = FakeModelRepository()
-            val presenter = createPresenter(modelRepository = modelRepo)
-
-            presenter.test {
-                val initialState = expectMostRecentItem() as HomeScreen.State.Success
-                assertThat(initialState.hasDownloadedModel).isFalse()
-                assertThat(initialState.selectedModelName).isNull()
-
-                val downloadedModel = testModel(id = "google/gemma-2-2b-it", downloadStatus = DownloadStatus.DOWNLOADED)
-                modelRepo.selectModel(downloadedModel)
-                modelRepo.emitModels(listOf(downloadedModel.copy(isSelected = true)))
-
-                val updatedState = awaitItem() as HomeScreen.State.Success
-                assertThat(updatedState.hasDownloadedModel).isTrue()
-                assertThat(updatedState.selectedModelName).isEqualTo("gemma-2-2b-it")
             }
         }
 }

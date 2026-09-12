@@ -107,6 +107,12 @@ data class SessionTitleSharedKey(
 ) : SharedTransitionKey
 
 /**
+ * CompositionLocal providing the current [SharedElementTransitionScope] across
+ * subcircuits and nested composables in the UI hierarchy.
+ */
+val LocalSharedElementTransitionScope = androidx.compose.runtime.compositionLocalOf<SharedElementTransitionScope?> { null }
+
+/**
  * Applies a shared element transition using the [SharedElementTransitionScope.AnimatedScope.Navigation]
  * scope if [scope] is provided and has an active navigation animated scope.
  */
@@ -127,6 +133,13 @@ fun Modifier.sharedElementNav(
         )
     }
 }
+
+/**
+ * Convenience overload that reads [LocalSharedElementTransitionScope].
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.sharedElementNav(key: Any): Modifier = sharedElementNav(LocalSharedElementTransitionScope.current, key)
 
 /**
  * Applies a shared bounds transition using the [SharedElementTransitionScope.AnimatedScope.Navigation]
@@ -158,3 +171,13 @@ fun Modifier.sharedBoundsNav(
         }
     }
 }
+
+/**
+ * Convenience overload that reads [LocalSharedElementTransitionScope].
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun Modifier.sharedBoundsNav(
+    key: Any,
+    boundsTransform: BoundsTransform? = null,
+): Modifier = sharedBoundsNav(LocalSharedElementTransitionScope.current, key, boundsTransform)
