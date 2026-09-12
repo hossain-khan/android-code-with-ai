@@ -5,6 +5,7 @@ import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
@@ -32,6 +33,7 @@ data object DebugScreen : ParcelableScreen {
             val statusMessage: String? = null,
             val telemetryStats: DebugMemoryStats = DebugMemoryStats(),
             val benchmarkPrompt: String = DEFAULT_BENCHMARK_PROMPT,
+            val benchmarkConfig: ModelConfig = DEFAULT_BENCHMARK_CONFIG,
             val isBenchmarking: Boolean = false,
             val benchmarkTokens: String = "",
             val benchmarkTtftMs: Long? = null,
@@ -56,6 +58,47 @@ data object DebugScreen : ParcelableScreen {
     }
 
     @Serializable
+    enum class BenchmarkSamplerPreset(
+        val label: String,
+        val description: String,
+        val config: ModelConfig,
+    ) {
+        GREEDY(
+            label = "Greedy",
+            description = "Temp: 0.1, Top-K: 1",
+            config =
+                ModelConfig(
+                    temperature = 0.1f,
+                    topK = 1,
+                    topP = 0.95f,
+                    maxTokens = 512,
+                ),
+        ),
+        BALANCED(
+            label = "Balanced",
+            description = "Temp: 0.7, Top-K: 40",
+            config =
+                ModelConfig(
+                    temperature = 0.7f,
+                    topK = 40,
+                    topP = 0.95f,
+                    maxTokens = 512,
+                ),
+        ),
+        CREATIVE(
+            label = "Creative",
+            description = "Temp: 1.0, Top-K: 80",
+            config =
+                ModelConfig(
+                    temperature = 1.0f,
+                    topK = 80,
+                    topP = 0.95f,
+                    maxTokens = 512,
+                ),
+        ),
+    }
+
+    @Serializable
     sealed interface Event : CircuitUiEvent {
         data class SelectModel(
             val model: AiModel,
@@ -72,6 +115,28 @@ data object DebugScreen : ParcelableScreen {
         data class UpdateBenchmarkPrompt(
             val prompt: String,
         ) : Event
+
+        data class UpdateBenchmarkTemperature(
+            val temperature: Float,
+        ) : Event
+
+        data class UpdateBenchmarkTopK(
+            val topK: Int,
+        ) : Event
+
+        data class UpdateBenchmarkTopP(
+            val topP: Float,
+        ) : Event
+
+        data class UpdateBenchmarkMaxTokens(
+            val maxTokens: Int,
+        ) : Event
+
+        data class ApplySamplerPreset(
+            val preset: BenchmarkSamplerPreset,
+        ) : Event
+
+        data object ResetBenchmarkConfig : Event
 
         data object RunBenchmark : Event
 
@@ -100,6 +165,14 @@ data object DebugScreen : ParcelableScreen {
         data object Back : Event
     }
 }
+
+internal val DEFAULT_BENCHMARK_CONFIG =
+    ModelConfig(
+        temperature = 0.8f,
+        topK = 40,
+        topP = 0.95f,
+        maxTokens = 512,
+    )
 
 internal const val DEFAULT_BENCHMARK_PROMPT =
     "Write a concise Kotlin function that computes Fibonacci numbers using recursion with memoization."

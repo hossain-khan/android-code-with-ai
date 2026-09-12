@@ -50,6 +50,8 @@ class FakeLlmEngine : LlmEngine {
         }
     }
 
+    var lastIsolatedConfig: ModelConfig? = null
+
     override suspend fun runInferenceIsolated(
         input: String,
         systemInstruction: String?,
@@ -57,6 +59,7 @@ class FakeLlmEngine : LlmEngine {
         onToken: (partialResult: String, done: Boolean) -> Unit,
     ) {
         isolatedInferenceCalls++
+        lastIsolatedConfig = config
         runInference(input, onToken)
     }
 
