@@ -111,6 +111,7 @@ app/src/main/java/dev/hossain/codematex/
 
 - 🎨 **[Design Guidelines](docs/DESIGN_GUIDELINES.md)** - Material 3 Expressive specifications, adaptive layouts, and topic color systems.
 - 📖 **[Adding Courses Guide](docs/ADDING_COURSES.md)** - Step-by-step guide for authoring, structuring, and verifying new language courses.
+- ⚡ **[Edge Playground Integration Guide](docs/EDGE_PLAYGROUND_INTEGRATION.md)** - Drop-in guide for integrating multi-language online code execution via the Cloudflare Workers proxy microservice.
 - 🚢 **[Release Process Guide](RELEASE.md)** - Step-by-step release lifecycle, versioning rules, and CI/CD cryptographic validation.
 - 🤖 **[AI Agent Guide](AGENTS.md)** - Project overview, JNI memory safety constraints, and core workflows for autonomous developers.
 
