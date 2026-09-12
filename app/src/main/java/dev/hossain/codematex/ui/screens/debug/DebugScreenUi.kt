@@ -76,6 +76,7 @@ import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
+import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.MemoryDelta
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -170,9 +171,14 @@ fun DebugScreenContent(
                 EdgeRunnerDiagnosticsCard(state)
             }
 
-            // Hardware & Environment Diagnostics
+            // Hardware, Runtime & Eligibility Diagnostics
             item {
-                HardwareDiagnosticsCard(state.deviceInfo)
+                HardwareDiagnosticsCard(
+                    deviceInfo = state.deviceInfo,
+                    runtimeSpecs = state.runtimeSpecs,
+                    eligibility = state.hardwareEligibility,
+                    isDevMode = state.isDevMode,
+                )
             }
 
             // Downloaded Weights & Disk Storage Inspector
@@ -1044,7 +1050,12 @@ private fun EdgeRunnerDiagnosticsCard(state: DebugScreen.State.Success) {
 }
 
 @Composable
-private fun HardwareDiagnosticsCard(deviceInfo: Map<String, String>) {
+private fun HardwareDiagnosticsCard(
+    deviceInfo: Map<String, String>,
+    runtimeSpecs: Map<String, String>,
+    eligibility: HardwareEligibility,
+    isDevMode: Boolean,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -1056,31 +1067,142 @@ private fun HardwareDiagnosticsCard(deviceInfo: Map<String, String>) {
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            // Header Row: Title + Eligibility Badge
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp),
-                )
-                Text(
-                    text = "Hardware & Environment Specs",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = "Hardware & Runtime Specs",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                val (badgeLabel, badgeBg, badgeFg) =
+                    when (eligibility) {
+                        is HardwareEligibility.Eligible -> {
+                            if (isDevMode) {
+                                Triple(
+                                    "Eligible (Dev Mode)",
+                                    MaterialTheme.colorScheme.tertiaryContainer,
+                                    MaterialTheme.colorScheme.onTertiaryContainer,
+                                )
+                            } else {
+                                Triple(
+                                    "Hardware Eligible",
+                                    MaterialTheme.colorScheme.primaryContainer,
+                                    MaterialTheme.colorScheme.onPrimaryContainer,
+                                )
+                            }
+                        }
+
+                        is HardwareEligibility.Ineligible -> {
+                            Triple(
+                                "Ineligible",
+                                MaterialTheme.colorScheme.errorContainer,
+                                MaterialTheme.colorScheme.onErrorContainer,
+                            )
+                        }
+                    }
+
+                Surface(shape = CircleShape, color = badgeBg) {
+                    Text(
+                        text = badgeLabel,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = badgeFg,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                    )
+                }
             }
+
+            // Ineligibility Warning Banner if applicable
+            if (eligibility is HardwareEligibility.Ineligible) {
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Text(
+                            text = eligibility.reason,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+            }
+
+            // Sub-section: Device & Architecture Specs
+            Text(
+                text = "Device & Architecture",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
 
             deviceInfo.forEach { (key, value) ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(text = key, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        text = key,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = value,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace,
+                    )
+                }
+            }
+
+            // Sub-section: LiteRT-LM Runtime & Acceleration Delegates
+            Text(
+                text = "LiteRT-LM Runtime & Delegates",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+
+            runtimeSpecs.forEach { (key, value) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(
+                        text = key,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     Text(
                         text = value,
                         style = MaterialTheme.typography.bodySmall,
@@ -1278,9 +1400,82 @@ private fun EdgeRunnerDiagnosticsCardOfflinePreview() {
                                 "Internet connection required to run code on the playground.",
                             ),
                         runnerDurationMs = 12L,
-                        proxyPingError = "No internet connectivity",
                         eventSink = {},
                     ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun HardwareDiagnosticsCardEligiblePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            HardwareDiagnosticsCard(
+                deviceInfo =
+                    mapOf(
+                        "Manufacturer" to "Google",
+                        "Device Model" to "Pixel 8 Pro",
+                        "Android OS" to "Android 15 (API 35)",
+                        "CPU Cores" to "8 cores",
+                        "Supported ABIs" to "arm64-v8a",
+                        "64-bit Architecture" to "Yes (arm64-v8a)",
+                        "Total System RAM" to "12.0 GB",
+                        "Authoritative RAM" to "11.45 GB (11450000000 bytes)",
+                    ),
+                runtimeSpecs =
+                    mapOf(
+                        "Inference Runtime" to "Google LiteRT-LM",
+                        "Runtime Version" to LITERT_LM_VERSION,
+                        "Active Backend" to "GPU (OpenCL)",
+                        "GPU Acceleration" to "OpenCL / Vulkan",
+                        "NPU Acceleration" to "Qualcomm Hexagon / NNAPI",
+                        "CPU Fallback" to "XNNPACK SIMD (FP32/FP16)",
+                        "Dev Mode Bypass" to "Disabled (8GB RAM required)",
+                    ),
+                eligibility = HardwareEligibility.Eligible,
+                isDevMode = false,
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun HardwareDiagnosticsCardIneligiblePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            HardwareDiagnosticsCard(
+                deviceInfo =
+                    mapOf(
+                        "Manufacturer" to "Generic",
+                        "Device Model" to "Android Emulator",
+                        "Android OS" to "Android 14 (API 34)",
+                        "CPU Cores" to "4 cores",
+                        "Supported ABIs" to "arm64-v8a",
+                        "64-bit Architecture" to "Yes (arm64-v8a)",
+                        "Total System RAM" to "4.0 GB",
+                        "Authoritative RAM" to "3.80 GB (3800000000 bytes)",
+                    ),
+                runtimeSpecs =
+                    mapOf(
+                        "Inference Runtime" to "Google LiteRT-LM",
+                        "Runtime Version" to LITERT_LM_VERSION,
+                        "Active Backend" to "Idle / Unloaded",
+                        "GPU Acceleration" to "OpenCL / Vulkan",
+                        "NPU Acceleration" to "Qualcomm Hexagon / NNAPI",
+                        "CPU Fallback" to "XNNPACK SIMD (FP32/FP16)",
+                        "Dev Mode Bypass" to "Disabled (8GB RAM required)",
+                    ),
+                eligibility =
+                    HardwareEligibility.Ineligible(
+                        reason = "On-device AI models require at least 8 GB RAM for stable execution.",
+                        detectedRamGb = 3.8,
+                        minRequiredRamGb = 8.0,
+                        is64BitSupported = true,
+                    ),
+                isDevMode = false,
             )
         }
     }

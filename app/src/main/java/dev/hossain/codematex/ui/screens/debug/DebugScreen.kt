@@ -8,6 +8,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
+import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.MemoryDelta
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
@@ -38,6 +39,9 @@ data object DebugScreen : ParcelableScreen {
             val benchmarkTotalTokens: Int = 0,
             val benchmarkDurationMs: Long? = null,
             val deviceInfo: Map<String, String> = emptyMap(),
+            val hardwareEligibility: HardwareEligibility = HardwareEligibility.Eligible,
+            val isDevMode: Boolean = false,
+            val runtimeSpecs: Map<String, String> = emptyMap(),
             val isOnline: Boolean = true,
             val runnerSelectedLang: String = DEFAULT_RUNNER_LANGUAGE,
             val runnerSnippetCode: String = DEFAULT_RUNNER_SNIPPETS[DEFAULT_RUNNER_LANGUAGE] ?: "",
@@ -144,3 +148,5 @@ internal val DEFAULT_RUNNER_SNIPPETS =
             console.log(greeting);
             """.trimIndent(),
     )
+
+internal const val LITERT_LM_VERSION = "0.17.0"

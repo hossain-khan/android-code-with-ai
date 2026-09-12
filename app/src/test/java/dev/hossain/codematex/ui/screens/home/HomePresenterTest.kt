@@ -11,6 +11,7 @@ import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.runtime.FakeLlmEngine
+import dev.hossain.codematex.system.FakeHardwareEligibilityChecker
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -22,12 +23,6 @@ import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.SettingsScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
-
-class FakeHardwareEligibilityChecker(
-    var result: HardwareEligibility = HardwareEligibility.Eligible,
-) : HardwareEligibilityChecker {
-    override fun checkEligibility(): HardwareEligibility = result
-}
 
 /**
  * Unit tests for [HomePresenter].
