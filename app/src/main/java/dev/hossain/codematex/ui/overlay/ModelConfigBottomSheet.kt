@@ -342,6 +342,7 @@ private fun ConfigSliderItem(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            @Suppress("DEPRECATION")
             Slider(
                 value = value.coerceIn(valueRange.start, valueRange.endInclusive),
                 onValueChange = onValueChange,

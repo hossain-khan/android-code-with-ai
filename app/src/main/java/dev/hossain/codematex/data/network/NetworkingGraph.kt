@@ -4,6 +4,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.data.remote.PlaygroundProxyApi
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
@@ -25,7 +26,8 @@ import kotlin.time.toJavaDuration
  * See https://zacsweers.github.io/metro/latest/aggregation/ for more on aggregation.
  */
 @ContributesTo(AppScope::class)
-interface NetworkingGraph {
+@BindingContainer
+object NetworkingGraph {
     /**
      * Provides a configured [OkHttpClient] with:
      * - HTTP request/response header logging (HEADERS level in debug, NONE in release to avoid buffering large payloads)

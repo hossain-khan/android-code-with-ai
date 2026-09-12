@@ -5,6 +5,7 @@ import androidx.room.Room
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.di.ApplicationContext
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
@@ -21,7 +22,8 @@ interface DatabaseMigrationPolicy {
 }
 
 @ContributesTo(AppScope::class)
-interface DatabaseGraph {
+@BindingContainer
+object DatabaseGraph {
     @Provides
     @SingleIn(AppScope::class)
     fun provideMigrationPolicy(): DatabaseMigrationPolicy =
