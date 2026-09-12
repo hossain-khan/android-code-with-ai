@@ -27,6 +27,8 @@ class LearningRepositoryImpl
         private val bundledCourses =
             listOf(
                 KotlinCourseContent.course,
+                KotlinTourBeginnerCourseContent.course,
+                KotlinTourIntermediateCourseContent.course,
                 PythonCourseContent.course,
                 TypeScriptCourseContent.course,
                 GoCourseContent.course,
