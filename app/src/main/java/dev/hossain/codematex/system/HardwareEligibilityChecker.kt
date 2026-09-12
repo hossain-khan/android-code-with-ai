@@ -43,7 +43,7 @@ interface HardwareEligibilityChecker {
 @ContributesBinding(AppScope::class)
 class HardwareEligibilityCheckerImpl(
     private val deviceMemoryProvider: DeviceMemoryProvider,
-    private val is64BitSupported: () -> Boolean = { Build.SUPPORTED_64_BIT_ABIS.isNotEmpty() },
+    private val is64BitSupported: () -> Boolean = { Build.SUPPORTED_64_BIT_ABIS?.isNotEmpty() == true },
     private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
 ) : HardwareEligibilityChecker {
     override fun checkEligibility(): HardwareEligibility {

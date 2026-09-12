@@ -17,7 +17,12 @@ import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryProvider
 import dev.hossain.codematex.system.DebugMemoryStats
+import dev.hossain.codematex.system.DeviceMemoryProvider
+import dev.hossain.codematex.system.FakeDeviceMemoryProvider
+import dev.hossain.codematex.system.FakeHardwareEligibilityChecker
 import dev.hossain.codematex.system.FakeNetworkMonitor
+import dev.hossain.codematex.system.HardwareEligibility
+import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.system.MemorySnapshot
 import dev.hossain.codematex.system.NetworkMonitor
 import kotlinx.coroutines.test.runTest
@@ -79,6 +84,9 @@ class DebugPresenterTest {
         debugMemoryProvider: DebugMemoryProvider = FakeDebugMemoryProvider(),
         codeRunner: PlaygroundCodeRunner = FakePlaygroundCodeRunner(),
         networkMonitor: NetworkMonitor = FakeNetworkMonitor(),
+        hardwareEligibilityChecker: HardwareEligibilityChecker = FakeHardwareEligibilityChecker(),
+        deviceMemoryProvider: DeviceMemoryProvider = FakeDeviceMemoryProvider(),
+        isDevMode: () -> Boolean = { false },
         navigator: Navigator = FakeNavigator(DebugScreen),
         screen: DebugScreen = DebugScreen,
     ): DebugPresenter =
@@ -91,6 +99,9 @@ class DebugPresenterTest {
             debugMemoryProvider = debugMemoryProvider,
             codeRunner = codeRunner,
             networkMonitor = networkMonitor,
+            hardwareEligibilityChecker = hardwareEligibilityChecker,
+            deviceMemoryProvider = deviceMemoryProvider,
+            isDevMode = isDevMode,
         )
 
     @Test
@@ -739,6 +750,76 @@ class DebugPresenterTest {
                 fakeNetworkMonitor.setOnline(true)
                 val backOnlineState = expectMostRecentItem() as DebugScreen.State.Success
                 assertThat(backOnlineState.isOnline).isTrue()
+            }
+        }
+
+    @Test
+    fun `initial state contains hardware eligibility and runtime specs`() =
+        runTest {
+            val fakeEligibilityChecker = FakeHardwareEligibilityChecker(result = HardwareEligibility.Eligible)
+            val fakeMemoryProvider = FakeDeviceMemoryProvider()
+            fakeMemoryProvider.returnedTotalBytes = 8_000_000_000L // 8.00 GB
+
+            val presenter =
+                createPresenter(
+                    hardwareEligibilityChecker = fakeEligibilityChecker,
+                    deviceMemoryProvider = fakeMemoryProvider,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(state.hardwareEligibility).isEqualTo(HardwareEligibility.Eligible)
+                assertThat(state.isDevMode).isFalse()
+
+                // Verify runtime specs
+                assertThat(state.runtimeSpecs["Inference Runtime"]).isEqualTo("Google LiteRT-LM")
+                assertThat(state.runtimeSpecs["Runtime Version"]).isEqualTo(LITERT_LM_VERSION)
+                assertThat(state.runtimeSpecs["GPU Acceleration"]).contains("OpenCL")
+                assertThat(state.runtimeSpecs["NPU Acceleration"]).contains("Hexagon")
+                assertThat(state.runtimeSpecs["CPU Fallback"]).contains("XNNPACK")
+                assertThat(state.runtimeSpecs["Dev Mode Bypass"]).contains("Disabled")
+
+                // Verify device info includes authoritative RAM bytes and arch check
+                assertThat(state.deviceInfo["Authoritative RAM"]).isEqualTo("8.00 GB (8000000000 bytes)")
+                assertThat(state.deviceInfo).containsKey("64-bit Architecture")
+            }
+        }
+
+    @Test
+    fun `ineligible hardware propagates ineligible state to debug screen`() =
+        runTest {
+            val fakeEligibilityChecker =
+                FakeHardwareEligibilityChecker(
+                    result =
+                        HardwareEligibility.Ineligible(
+                            reason = "Device has 3.5 GB RAM; minimum is 8.0 GB",
+                            detectedRamGb = 3.5,
+                            is64BitSupported = true,
+                        ),
+                )
+
+            val presenter = createPresenter(hardwareEligibilityChecker = fakeEligibilityChecker)
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(state.hardwareEligibility).isInstanceOf(HardwareEligibility.Ineligible::class.java)
+                val ineligible = state.hardwareEligibility as HardwareEligibility.Ineligible
+                assertThat(ineligible.reason).contains("3.5 GB RAM")
+            }
+        }
+
+    @Test
+    fun `dev mode bypass activates when isDevMode is true`() =
+        runTest {
+            val presenter =
+                createPresenter(
+                    isDevMode = { true },
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(state.isDevMode).isTrue()
+                assertThat(state.runtimeSpecs["Dev Mode Bypass"]).contains("Active")
             }
         }
 }
