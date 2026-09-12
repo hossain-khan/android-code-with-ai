@@ -14,6 +14,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ModelConfigStore
@@ -23,6 +24,10 @@ import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryProvider
 import dev.hossain.codematex.system.DebugMemoryStats
+import dev.hossain.codematex.system.DeviceMemoryProvider
+import dev.hossain.codematex.system.HardwareEligibility
+import dev.hossain.codematex.system.HardwareEligibilityChecker
+import dev.hossain.codematex.system.MemoryCompatibilityPolicy
 import dev.hossain.codematex.system.MemoryDelta
 import dev.hossain.codematex.system.NetworkMonitor
 import dev.zacsweers.metro.AppScope
@@ -51,6 +56,8 @@ import kotlin.time.Duration.Companion.milliseconds
  *   decode throughput (tokens/second), and generation duration.
  * - **Edge Code Runner Diagnostics**: Runs multi-language snippets (Kotlin, Go, Rust, Python, TypeScript) via
  *   [PlaygroundCodeRunner] to evaluate Cloudflare Workers proxy health, roundtrip latency, and stdout/stderr.
+ * - **Hardware & Environment Diagnostics**: Evaluates 64-bit architecture and RAM qualification status via
+ *   [HardwareEligibilityChecker], and exposes LiteRT-LM runtime specifications.
  * - **Device & Storage Inspection**: Extracts hardware specifications and lists downloaded model files on disk.
  *
  * @param navigator Circuit navigator for screen transitions.
@@ -61,6 +68,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param debugMemoryProvider Low-level memory sampler providing native heap, JVM heap, and system RAM metrics.
  * @param codeRunner Edge playground code execution runner.
  * @param networkMonitor Network connectivity monitor for online/offline mode.
+ * @param hardwareEligibilityChecker Evaluates 64-bit and RAM baseline eligibility for on-device AI models.
+ * @param deviceMemoryProvider Provides authoritative device memory and hardware bytes.
  */
 @AssistedInject
 class DebugPresenter(
@@ -72,6 +81,9 @@ class DebugPresenter(
     private val debugMemoryProvider: DebugMemoryProvider,
     private val codeRunner: PlaygroundCodeRunner,
     private val networkMonitor: NetworkMonitor,
+    private val hardwareEligibilityChecker: HardwareEligibilityChecker,
+    private val deviceMemoryProvider: DeviceMemoryProvider,
+    private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
 ) : Presenter<DebugScreen.State> {
     /**
      * Assisted injection factory for [DebugPresenter].
@@ -131,6 +143,27 @@ class DebugPresenter(
             }
         }
 
+        val eligibility = remember { hardwareEligibilityChecker.checkEligibility() }
+        val devModeActive = remember { isDevMode() }
+
+        val runtimeSpecs =
+            remember(activeBackend, devModeActive) {
+                mapOf(
+                    "Inference Runtime" to "Google LiteRT-LM",
+                    "Runtime Version" to LITERT_LM_VERSION,
+                    "Active Backend" to (activeBackend?.name ?: "Idle / Unloaded"),
+                    "GPU Acceleration" to "OpenCL / Vulkan",
+                    "NPU Acceleration" to "Qualcomm Hexagon / NNAPI",
+                    "CPU Fallback" to "XNNPACK SIMD (FP32/FP16)",
+                    "Dev Mode Bypass" to
+                        if (devModeActive) {
+                            "Active (Bypassing RAM checks)"
+                        } else {
+                            "Disabled (8GB RAM required)"
+                        },
+                )
+            }
+
         val deviceInfo =
             remember {
                 val manufacturer =
@@ -142,6 +175,9 @@ class DebugPresenter(
                 val sdkInt = Build.VERSION.SDK_INT
                 val abis = Build.SUPPORTED_ABIS?.joinToString(", ") ?: "arm64-v8a"
                 val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+                val totalMemoryBytes = deviceMemoryProvider.getTotalMemoryBytes()
+                val detectedRamGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalMemoryBytes)
+                val is64Bit = Build.SUPPORTED_64_BIT_ABIS?.isNotEmpty() == true
 
                 mapOf(
                     "Manufacturer" to manufacturer,
@@ -149,7 +185,9 @@ class DebugPresenter(
                     "Android OS" to "Android $release (API $sdkInt)",
                     "CPU Cores" to "$cores cores",
                     "Supported ABIs" to abis,
-                    "Total RAM" to "${"%.1f".format(debugMemoryProvider.getDebugMemoryStats().ramTotalGb)} GB",
+                    "64-bit Architecture" to if (is64Bit) "Yes (arm64-v8a)" else "No (32-bit only)",
+                    "Total System RAM" to "${"%.1f".format(debugMemoryProvider.getDebugMemoryStats().ramTotalGb)} GB",
+                    "Authoritative RAM" to "${"%.2f".format(detectedRamGb)} GB ($totalMemoryBytes bytes)",
                 )
             }
 
@@ -200,6 +238,9 @@ class DebugPresenter(
             benchmarkTotalTokens = benchmarkTotalTokens,
             benchmarkDurationMs = benchmarkDurationMs,
             deviceInfo = deviceInfo,
+            hardwareEligibility = eligibility,
+            isDevMode = devModeActive,
+            runtimeSpecs = runtimeSpecs,
             isOnline = isOnline,
             runnerSelectedLang = runnerSelectedLang,
             runnerSnippetCode = runnerSnippetCode,
