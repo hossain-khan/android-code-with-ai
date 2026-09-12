@@ -225,7 +225,57 @@ def parse_segs(lines):
     return segs
 
 
-def extract_summary(lines):
+def html_to_markdown(text):
+    """
+    Converts inline HTML tags in upstream Go by Example comments into standard Markdown.
+    e.g. <a href="url"><em>text</em></a> -> [text](url)
+    """
+    # Replace <a href="URL"><em>TEXT</em></a> or <a href="URL">TEXT</a>
+    def replace_a(match):
+        url = match.group(1)
+        body = match.group(2)
+        body = re.sub(r'</?em>', '*', body)
+        body = re.sub(r'</?code>', '`', body)
+        return f'[{body}]({url})'
+
+    text = re.sub(r'<a\s+href=["\']([^"\']+)["\']>(.*?)</a>', replace_a, text, flags=re.DOTALL)
+    text = re.sub(r'</?em>', '*', text)
+    text = re.sub(r'</?code>', '`', text)
+    return text
+
+
+def clean_summary_to_plain_text(text, default_title):
+    """
+    Extracts a concise, clean plain-text summary suitable for cards and list views.
+    Strips markdown syntax, links, and HTML tags.
+    """
+    # First convert HTML
+    plain = html_to_markdown(text)
+    # Strip markdown links [label](url) -> label (handling URLs with balanced parens)
+    plain = re.sub(r'\[([^\]]+)\]\((?:[^\s()]+|\([^\s()]+\))*\)', r'\1', plain)
+    # Strip HTML tags
+    plain = re.sub(r'<[^>]+>', '', plain)
+    # Strip markdown emphasis and code formatting
+    plain = re.sub(r'[*_`]', '', plain)
+    # Normalize whitespace
+    plain = re.sub(r'\s+', ' ', plain).strip()
+
+    if not plain:
+        return f"Learn how to use {default_title} in Go with complete runnable code and explanations."
+
+    # If within 125 chars, return directly
+    if len(plain) <= 125:
+        return plain
+
+    # Otherwise split into sentences (avoiding splitting on e.g. or i.e.)
+    sentences = re.split(r'(?<!\be\.g)(?<!\bi\.e)(?<=[.!?])\s+', plain)
+    first_sentence = sentences[0] if sentences else plain
+    if len(first_sentence) > 125:
+        first_sentence = first_sentence[:122].rsplit(' ', 1)[0] + '...'
+    return first_sentence
+
+
+def extract_leading_comments(lines):
     """
     Extracts the leading doc comment at the top of the Go source file.
     """
@@ -265,15 +315,15 @@ def render_example(base_dir, slug, title):
 
     playground_url = f"https://go.dev/play/p/{url_hash}" if url_hash else None
 
-    summary = extract_summary(go_code.splitlines())
-    if not summary:
-        summary = f"Learn how to use {title} in Go with complete runnable code and explanations."
+    raw_leading = extract_leading_comments(go_code.splitlines())
+    summary = clean_summary_to_plain_text(raw_leading, title)
+    markdown_explanation = html_to_markdown(raw_leading) if raw_leading else f"Learn how to use {title} in Go."
 
     sh_segs = parse_segs(sh_code.splitlines())
 
     blocks = []
-    # 1. Lead-in explanation
-    blocks.append(('markdown', summary))
+    # 1. Lead-in explanation with clean Markdown
+    blocks.append(('markdown', markdown_explanation))
 
     # 2. Main complete Go code snippet
     # testing-and-benchmarking uses main_test.go without a func main()

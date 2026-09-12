@@ -183,7 +183,7 @@ object GoByExampleCourseContent {
                                     title = "Variables",
                                     summary =
                                         """
-                                        In Go, _variables_ are explicitly declared and used by the compiler to e.g. check type-correctness of function calls.
+                                        In Go, variables are explicitly declared and used by the compiler to e.g. check type-correctness of function calls.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -260,7 +260,7 @@ object GoByExampleCourseContent {
                                     title = "Constants",
                                     summary =
                                         """
-                                        Go supports _constants_ of character, string, boolean, and numeric values.
+                                        Go supports constants of character, string, boolean, and numeric values.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -336,7 +336,7 @@ object GoByExampleCourseContent {
                                     title = "For",
                                     summary =
                                         """
-                                        `for` is Go's only looping construct. Here are some basic types of `for` loops.
+                                        for is Go's only looping construct. Here are some basic types of for loops.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -434,7 +434,7 @@ object GoByExampleCourseContent {
                                     title = "If/Else",
                                     summary =
                                         """
-                                        Branching with `if` and `else` in Go is straight-forward.
+                                        Branching with if and else in Go is straight-forward.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -520,7 +520,7 @@ object GoByExampleCourseContent {
                                     title = "Switch",
                                     summary =
                                         """
-                                        _Switch statements_ express conditionals across many branches.
+                                        Switch statements express conditionals across many branches.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -626,7 +626,7 @@ object GoByExampleCourseContent {
                                     title = "Arrays",
                                     summary =
                                         """
-                                        In Go, an _array_ is a numbered sequence of elements of a specific length. In typical Go code, [slices](slices) are much more common; arrays are useful in some special scenarios.
+                                        In Go, an array is a numbered sequence of elements of a specific length.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -737,7 +737,7 @@ object GoByExampleCourseContent {
                                     title = "Slices",
                                     summary =
                                         """
-                                        _Slices_ are an important data type in Go, giving a more powerful interface to sequences than arrays.
+                                        Slices are an important data type in Go, giving a more powerful interface to sequences than arrays.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -892,7 +892,7 @@ object GoByExampleCourseContent {
                                     title = "Maps",
                                     summary =
                                         """
-                                        _Maps_ are Go's built-in [associative data type](https://en.wikipedia.org/wiki/Associative_array) (sometimes called _hashes_ or _dicts_ in other languages).
+                                        Maps are Go's built-in associative data type (sometimes called hashes or dicts in other languages).
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1024,7 +1024,7 @@ object GoByExampleCourseContent {
                                     title = "Functions",
                                     summary =
                                         """
-                                        _Functions_ are central in Go. We'll learn about functions with a few different examples.
+                                        Functions are central in Go. We'll learn about functions with a few different examples.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1101,7 +1101,7 @@ object GoByExampleCourseContent {
                                     title = "Multiple Return Values",
                                     summary =
                                         """
-                                        Go has built-in support for _multiple return values_. This feature is used often in idiomatic Go, for example to return both result and error values from a function.
+                                        Go has built-in support for multiple return values.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1171,7 +1171,7 @@ object GoByExampleCourseContent {
                                     title = "Variadic Functions",
                                     summary =
                                         """
-                                        [_Variadic functions_](https://en.wikipedia.org/wiki/Variadic_function) can be called with any number of trailing arguments. For example, `fmt.Println` is a common variadic function.
+                                        Variadic functions can be called with any number of trailing arguments.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1250,14 +1250,14 @@ object GoByExampleCourseContent {
                                     title = "Closures",
                                     summary =
                                         """
-                                        Go supports [_anonymous functions_](https://en.wikipedia.org/wiki/Anonymous_function), which can form <a href=\"https://en.wikipedia.org/wiki/Closure_(computer_science)\"><em>closures</em></a>. Anonymous functions are useful when you want to define a function inline without having to name it.
+                                        Go supports anonymous functions, which can form closures.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
                                         listOf(
                                             LessonBlock.Markdown(
                                                 """
-                                                Go supports [_anonymous functions_](https://en.wikipedia.org/wiki/Anonymous_function), which can form <a href="https://en.wikipedia.org/wiki/Closure_(computer_science)"><em>closures</em></a>. Anonymous functions are useful when you want to define a function inline without having to name it.
+                                                Go supports [_anonymous functions_](https://en.wikipedia.org/wiki/Anonymous_function), which can form [*closures*](https://en.wikipedia.org/wiki/Closure_(computer_science)). Anonymous functions are useful when you want to define a function inline without having to name it.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
@@ -1334,14 +1334,14 @@ object GoByExampleCourseContent {
                                     title = "Recursion",
                                     summary =
                                         """
-                                        Go supports <a href=\"https://en.wikipedia.org/wiki/Recursion_(computer_science)\"><em>recursive functions</em></a>. Here's a classic example.
+                                        Go supports recursive functions. Here's a classic example.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
                                         listOf(
                                             LessonBlock.Markdown(
                                                 """
-                                                Go supports <a href="https://en.wikipedia.org/wiki/Recursion_(computer_science)"><em>recursive functions</em></a>. Here's a classic example.
+                                                Go supports [*recursive functions*](https://en.wikipedia.org/wiki/Recursion_(computer_science)). Here's a classic example.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
@@ -1410,7 +1410,7 @@ object GoByExampleCourseContent {
                                     title = "Range over Built-in Types",
                                     summary =
                                         """
-                                        _range_ iterates over elements in a variety of built-in data structures. Let's see how to use `range` with some of the data structures we've already learned.
+                                        range iterates over elements in a variety of built-in data structures.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1506,14 +1506,14 @@ object GoByExampleCourseContent {
                                     title = "Pointers",
                                     summary =
                                         """
-                                        Go supports <em><a href=\"https://en.wikipedia.org/wiki/Pointer_(computer_programming)\">pointers</a></em>, allowing you to pass references to values and records within your program.
+                                        Go supports pointers, allowing you to pass references to values and records within your program.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
                                         listOf(
                                             LessonBlock.Markdown(
                                                 """
-                                                Go supports <em><a href="https://en.wikipedia.org/wiki/Pointer_(computer_programming)">pointers</a></em>, allowing you to pass references to values and records within your program.
+                                                Go supports *[pointers](https://en.wikipedia.org/wiki/Pointer_(computer_programming))*, allowing you to pass references to values and records within your program.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
@@ -1602,7 +1602,7 @@ object GoByExampleCourseContent {
                                     title = "Strings and Runes",
                                     summary =
                                         """
-                                        A Go string is a read-only slice of bytes. The language and the standard library treat strings specially - as containers of text encoded in [UTF-8](https://en.wikipedia.org/wiki/UTF-8). In other languages, strings are made of \"characters\". In Go, the concept of a character is called a `rune` - it's an integer that represents a Unicode code point. [This Go blog post](https://go.dev/blog/strings) is a good introduction to the topic.
+                                        A Go string is a read-only slice of bytes.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1746,7 +1746,7 @@ object GoByExampleCourseContent {
                                     title = "Structs",
                                     summary =
                                         """
-                                        Go's _structs_ are typed collections of fields. They're useful for grouping data together to form records.
+                                        Go's structs are typed collections of fields. They're useful for grouping data together to form records.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1860,7 +1860,7 @@ object GoByExampleCourseContent {
                                     title = "Methods",
                                     summary =
                                         """
-                                        Go supports _methods_ defined on struct types.
+                                        Go supports methods defined on struct types.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -1941,7 +1941,7 @@ object GoByExampleCourseContent {
                                     title = "Interfaces",
                                     summary =
                                         """
-                                        _Interfaces_ are named collections of method signatures.
+                                        Interfaces are named collections of method signatures.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2064,7 +2064,7 @@ object GoByExampleCourseContent {
                                     title = "Enums",
                                     summary =
                                         """
-                                        _Enumerated types_ (enums) are a special case of [sum types](https://en.wikipedia.org/wiki/Algebraic_data_type). An enum is a type that has a fixed number of possible values, each with a distinct name. Go doesn't have an enum type as a distinct language feature, but enums are simple to implement using existing language idioms.
+                                        Enumerated types (enums) are a special case of sum types.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2176,7 +2176,7 @@ object GoByExampleCourseContent {
                                     title = "Struct Embedding",
                                     summary =
                                         """
-                                        Go supports _embedding_ of structs and interfaces to express a more seamless _composition_ of types. This is not to be confused with [`//go:embed`](embed-directive) which is a go directive introduced in Go version 1.16+ to embed files and folders into the application binary.
+                                        Go supports embedding of structs and interfaces to express a more seamless composition of types.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2279,7 +2279,7 @@ object GoByExampleCourseContent {
                                     title = "Generics",
                                     summary =
                                         """
-                                        Starting with version 1.18, Go has added support for _generics_, also known as _type parameters_.
+                                        Starting with version 1.18, Go has added support for generics, also known as type parameters.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2397,7 +2397,7 @@ object GoByExampleCourseContent {
                                     title = "Range over Iterators",
                                     summary =
                                         """
-                                        Starting with version 1.23, Go has added support for [iterators](https://go.dev/blog/range-functions), which lets us range over pretty much anything!
+                                        Starting with version 1.23, Go has added support for iterators, which lets us range over pretty much anything!
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2555,7 +2555,7 @@ object GoByExampleCourseContent {
                                     title = "Errors",
                                     summary =
                                         """
-                                        In Go it's idiomatic to communicate errors via an explicit, separate return value. This contrasts with the exceptions used in languages like Java, Python and Ruby and the overloaded single result / error value sometimes used in C. Go's approach makes it easy to see which functions return errors and to handle them using the same language constructs employed for other, non-error tasks. See the documentation of the [errors package](https://pkg.go.dev/errors) and [this blog post](https://go.dev/blog/go1.13-errors) for additional details.
+                                        In Go it's idiomatic to communicate errors via an explicit, separate return value.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2686,7 +2686,7 @@ object GoByExampleCourseContent {
                                     title = "Custom Errors",
                                     summary =
                                         """
-                                        It's possible to define custom error types by implementing the `Error()` method on them. Here's a variant on the example above that uses a custom type to explicitly represent an argument error.
+                                        It's possible to define custom error types by implementing the Error() method on them.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2785,7 +2785,7 @@ object GoByExampleCourseContent {
                                     title = "Goroutines",
                                     summary =
                                         """
-                                        A _goroutine_ is a lightweight thread of execution.
+                                        A goroutine is a lightweight thread of execution.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2878,7 +2878,7 @@ object GoByExampleCourseContent {
                                     title = "Channels",
                                     summary =
                                         """
-                                        _Channels_ are the pipes that connect concurrent goroutines. You can send values into channels from one goroutine and receive those values into another goroutine.
+                                        Channels are the pipes that connect concurrent goroutines.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -2951,7 +2951,7 @@ object GoByExampleCourseContent {
                                     title = "Channel Buffering",
                                     summary =
                                         """
-                                        By default channels are _unbuffered_, meaning that they will only accept sends (`chan <-`) if there is a corresponding receive (`<- chan`) ready to receive the sent value. _Buffered channels_ accept a limited number of  values without a corresponding receiver for those values.
+                                        By default channels are unbuffered, meaning that they will only accept sends (chan <-) if there is a corresponding...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3017,7 +3017,7 @@ object GoByExampleCourseContent {
                                     title = "Channel Synchronization",
                                     summary =
                                         """
-                                        We can use channels to synchronize execution across goroutines. Here's an example of using a blocking receive to wait for a goroutine to finish. When waiting for multiple goroutines to finish, you may prefer to use a [WaitGroup](waitgroups).
+                                        We can use channels to synchronize execution across goroutines.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3095,7 +3095,7 @@ object GoByExampleCourseContent {
                                     title = "Channel Directions",
                                     summary =
                                         """
-                                        When using channels as function parameters, you can specify if a channel is meant to only send or receive values. This specificity increases the type-safety of the program.
+                                        When using channels as function parameters, you can specify if a channel is meant to only send or receive values.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3163,7 +3163,7 @@ object GoByExampleCourseContent {
                                     title = "Select",
                                     summary =
                                         """
-                                        Go's _select_ lets you wait on multiple channel operations. Combining goroutines and channels with select is a powerful feature of Go.
+                                        Go's select lets you wait on multiple channel operations.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3253,7 +3253,7 @@ object GoByExampleCourseContent {
                                     title = "Timeouts",
                                     summary =
                                         """
-                                        _Timeouts_ are important for programs that connect to external resources or that otherwise need to bound execution time. Implementing timeouts in Go is easy and elegant thanks to channels and `select`.
+                                        Timeouts are important for programs that connect to external resources or that otherwise need to bound execution time.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3348,7 +3348,7 @@ object GoByExampleCourseContent {
                                     title = "Non-Blocking Channel Operations",
                                     summary =
                                         """
-                                        Basic sends and receives on channels are blocking. However, we can use `select` with a `default` clause to implement _non-blocking_ sends, receives, and even non-blocking multi-way `select`s.
+                                        Basic sends and receives on channels are blocking.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3437,7 +3437,7 @@ object GoByExampleCourseContent {
                                     title = "Closing Channels",
                                     summary =
                                         """
-                                        _Closing_ a channel indicates that no more values will be sent on it. This can be useful to communicate completion to the channel's receivers.
+                                        Closing a channel indicates that no more values will be sent on it.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3546,7 +3546,7 @@ object GoByExampleCourseContent {
                                     title = "Range over Channels",
                                     summary =
                                         """
-                                        In a [previous](range-over-built-in-types) example we saw how `for` and `range` provide iteration over basic data structures. We can also use this syntax to iterate over values received from a channel.
+                                        In a previous example we saw how for and range provide iteration over basic data structures.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3614,7 +3614,7 @@ object GoByExampleCourseContent {
                                     title = "Timers",
                                     summary =
                                         """
-                                        We often want to execute Go code at some point in the future, or repeatedly at some interval. Go's built-in _timer_ and _ticker_ features make both of these tasks easy. We'll look first at timers and then at [tickers](tickers).
+                                        We often want to execute Go code at some point in the future, or repeatedly at some interval.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3702,7 +3702,7 @@ object GoByExampleCourseContent {
                                     title = "Tickers",
                                     summary =
                                         """
-                                        [Timers](timers) are for when you want to do something once in the future - _tickers_ are for when you want to do something repeatedly at regular intervals. Here's an example of a ticker that ticks periodically until we stop it.
+                                        Timers are for when you want to do something once in the future - tickers are for when you want to do something...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3787,7 +3787,7 @@ object GoByExampleCourseContent {
                                     title = "Worker Pools",
                                     summary =
                                         """
-                                        In this example we'll look at how to implement a _worker pool_ using goroutines and channels.
+                                        In this example we'll look at how to implement a worker pool using goroutines and channels.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3897,7 +3897,7 @@ object GoByExampleCourseContent {
                                     title = "WaitGroups",
                                     summary =
                                         """
-                                        To wait for multiple goroutines to finish, we can use a *wait group*.
+                                        To wait for multiple goroutines to finish, we can use a wait group.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -3991,7 +3991,7 @@ object GoByExampleCourseContent {
                                     title = "Rate Limiting",
                                     summary =
                                         """
-                                        [_Rate limiting_](https://en.wikipedia.org/wiki/Rate_limiting) is an important mechanism for controlling resource utilization and maintaining quality of service. Go elegantly supports rate limiting with goroutines, channels, and [tickers](tickers).
+                                        Rate limiting is an important mechanism for controlling resource utilization and maintaining quality of service.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4119,7 +4119,7 @@ object GoByExampleCourseContent {
                                     title = "Atomic Counters",
                                     summary =
                                         """
-                                        The primary mechanism for managing state in Go is communication over channels. We saw this for example with [worker pools](worker-pools). There are a few other options for managing state though. Here we'll look at using the `sync/atomic` package for _atomic counters_ accessed by multiple goroutines.
+                                        The primary mechanism for managing state in Go is communication over channels.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4212,7 +4212,7 @@ object GoByExampleCourseContent {
                                     title = "Mutexes",
                                     summary =
                                         """
-                                        In the previous example we saw how to manage simple counter state using [atomic operations](atomic-counters). For more complex state we can use a [_mutex_](https://en.wikipedia.org/wiki/Mutual_exclusion) to safely access data across multiple goroutines.
+                                        In the previous example we saw how to manage simple counter state using atomic operations.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4324,7 +4324,7 @@ object GoByExampleCourseContent {
                                     title = "Stateful Goroutines",
                                     summary =
                                         """
-                                        In the previous example we used explicit locking with [mutexes](mutexes) to synchronize access to shared state across multiple goroutines. Another option is to use the built-in synchronization features of  goroutines and channels to achieve the same result. This channel-based approach aligns with Go's ideas of sharing memory by communicating and having each piece of data owned by exactly one goroutine.
+                                        In the previous example we used explicit locking with mutexes to synchronize access to shared state across multiple...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4503,7 +4503,7 @@ object GoByExampleCourseContent {
                                     title = "Sorting",
                                     summary =
                                         """
-                                        Go's `slices` package implements sorting for builtins and user-defined types. We'll look at sorting for builtins first.
+                                        Go's slices package implements sorting for builtins and user-defined types. We'll look at sorting for builtins first.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4573,7 +4573,7 @@ object GoByExampleCourseContent {
                                     title = "Sorting by Functions",
                                     summary =
                                         """
-                                        Sometimes we'll want to sort a collection by something other than its natural order. For example, suppose we wanted to sort strings by their length instead of alphabetically. Here's an example of custom sorts in Go.
+                                        Sometimes we'll want to sort a collection by something other than its natural order.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4665,7 +4665,7 @@ object GoByExampleCourseContent {
                                     title = "Panic",
                                     summary =
                                         """
-                                        A `panic` typically means something went unexpectedly wrong. Mostly we use it to fail fast on errors that shouldn't occur during normal operation, or that we aren't prepared to handle gracefully.
+                                        A panic typically means something went unexpectedly wrong.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4753,7 +4753,7 @@ object GoByExampleCourseContent {
                                     title = "Defer",
                                     summary =
                                         """
-                                        _Defer_ is used to ensure that a function call is performed later in a program's execution, usually for purposes of cleanup. `defer` is often used where e.g. `ensure` and `finally` would be used in other languages.
+                                        Defer is used to ensure that a function call is performed later in a program's execution, usually for purposes of cleanup.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4848,7 +4848,7 @@ object GoByExampleCourseContent {
                                     title = "Recover",
                                     summary =
                                         """
-                                        Go makes it possible to _recover_ from a panic, by using the `recover` built-in function. A `recover` can stop a `panic` from aborting the program and let it continue with execution instead.
+                                        Go makes it possible to recover from a panic, by using the recover built-in function.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -4928,7 +4928,7 @@ object GoByExampleCourseContent {
                                     title = "String Functions",
                                     summary =
                                         """
-                                        The standard library's `strings` package provides many useful string-related functions. Here are some examples to give you a sense of the package.
+                                        The standard library's strings package provides many useful string-related functions.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -5014,7 +5014,7 @@ object GoByExampleCourseContent {
                                     title = "String Formatting",
                                     summary =
                                         """
-                                        Go offers excellent support for string formatting in the `printf` tradition. Here are some examples of common string formatting tasks.
+                                        Go offers excellent support for string formatting in the printf tradition.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -5184,7 +5184,7 @@ object GoByExampleCourseContent {
                                     title = "Text Templates",
                                     summary =
                                         """
-                                        Go offers built-in support for creating dynamic content or showing customized output to the user with the `text/template` package. A sibling package named `html/template` provides the same API but has additional security features and should be used for generating HTML.
+                                        Go offers built-in support for creating dynamic content or showing customized output to the user with the text/template...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -5312,7 +5312,7 @@ object GoByExampleCourseContent {
                                     title = "Regular Expressions",
                                     summary =
                                         """
-                                        Go offers built-in support for [regular expressions](https://en.wikipedia.org/wiki/Regular_expression). Here are some examples of  common regexp-related tasks in Go.
+                                        Go offers built-in support for regular expressions. Here are some examples of common regexp-related tasks in Go.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -5641,7 +5641,7 @@ object GoByExampleCourseContent {
                                     title = "XML",
                                     summary =
                                         """
-                                        Go offers built-in support for XML and XML-like formats with the `encoding/xml` package.
+                                        Go offers built-in support for XML and XML-like formats with the encoding/xml package.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -5899,7 +5899,7 @@ object GoByExampleCourseContent {
                                     title = "Epoch",
                                     summary =
                                         """
-                                        A common requirement in programs is getting the number of seconds, milliseconds, or nanoseconds since the [Unix epoch](https://en.wikipedia.org/wiki/Unix_time). Here's how to do it in Go.
+                                        A common requirement in programs is getting the number of seconds, milliseconds, or nanoseconds since the Unix epoch.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6068,7 +6068,7 @@ object GoByExampleCourseContent {
                                     title = "Random Numbers",
                                     summary =
                                         """
-                                        Go's `math/rand/v2` package provides [pseudorandom number](https://en.wikipedia.org/wiki/Pseudorandom_number_generator) generation.
+                                        Go's math/rand/v2 package provides pseudorandom number generation.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6263,7 +6263,7 @@ object GoByExampleCourseContent {
                                     title = "URL Parsing",
                                     summary =
                                         """
-                                        URLs provide a [uniform way to locate resources](https://adam.herokuapp.com/past/2010/3/30/urls_are_the_uniform_way_to_locate_resources/). Here's how to parse URLs in Go.
+                                        URLs provide a uniform way to locate resources. Here's how to parse URLs in Go.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6372,7 +6372,7 @@ object GoByExampleCourseContent {
                                     title = "SHA256 Hashes",
                                     summary =
                                         """
-                                        [_SHA256 hashes_](https://en.wikipedia.org/wiki/SHA-2) are frequently used to compute short identities for binary or text blobs. For example, TLS/SSL certificates use SHA256 to compute a certificate's signature. Here's how to compute SHA256 hashes in Go.
+                                        SHA256 hashes are frequently used to compute short identities for binary or text blobs.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6456,7 +6456,7 @@ object GoByExampleCourseContent {
                                     title = "Base64 Encoding",
                                     summary =
                                         """
-                                        Go provides built-in support for [base64 encoding/decoding](https://en.wikipedia.org/wiki/Base64).
+                                        Go provides built-in support for base64 encoding/decoding.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6803,7 +6803,7 @@ object GoByExampleCourseContent {
                                     title = "Line Filters",
                                     summary =
                                         """
-                                        A _line filter_ is a common type of program that reads input on stdin, processes it, and then prints some derived result to stdout. `grep` and `sed` are common line filters.
+                                        A line filter is a common type of program that reads input on stdin, processes it, and then prints some derived result to...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -6893,7 +6893,7 @@ object GoByExampleCourseContent {
                                     title = "File Paths",
                                     summary =
                                         """
-                                        The `filepath` package provides functions to parse and construct *file paths* in a way that is portable between operating systems; `dir/file` on Linux vs. `dir\file` on Windows, for example.
+                                        The filepath package provides functions to parse and construct file paths in a way that is portable between operating...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7005,7 +7005,7 @@ object GoByExampleCourseContent {
                                     title = "Directories",
                                     summary =
                                         """
-                                        Go has several useful functions for working with *directories* in the file system.
+                                        Go has several useful functions for working with directories in the file system.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7152,7 +7152,7 @@ object GoByExampleCourseContent {
                                     title = "Temporary Files and Directories",
                                     summary =
                                         """
-                                        Throughout program execution, we often want to create data that isn't needed after the program exits. *Temporary files and directories* are useful for this purpose since they don't pollute the file system over time.
+                                        Throughout program execution, we often want to create data that isn't needed after the program exits.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7268,7 +7268,7 @@ object GoByExampleCourseContent {
                                     title = "Embed Directive",
                                     summary =
                                         """
-                                        `//go:embed` is a [compiler directive](https://pkg.go.dev/cmd/compile#hdr-Compiler_Directives) that allows programs to include arbitrary files and folders in the Go binary at build time. Read more about the embed directive [here](https://pkg.go.dev/embed).
+                                        //go:embed is a compiler directive that allows programs to include arbitrary files and folders in the Go binary at build...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7366,7 +7366,7 @@ object GoByExampleCourseContent {
                                     title = "Testing and Benchmarking",
                                     summary =
                                         """
-                                        Unit testing is an important part of writing principled Go programs. The `testing` package provides the tools we need to write unit tests and the `go test` command runs tests.
+                                        Unit testing is an important part of writing principled Go programs.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7516,7 +7516,7 @@ object GoByExampleCourseContent {
                                     title = "Command-Line Arguments",
                                     summary =
                                         """
-                                        [_Command-line arguments_](https://en.wikipedia.org/wiki/Command-line_interface#Arguments) are a common way to parameterize execution of programs. For example, `go run hello.go` uses `run` and `hello.go` arguments to the `go` program.
+                                        Command-line arguments are a common way to parameterize execution of programs.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7591,7 +7591,7 @@ object GoByExampleCourseContent {
                                     title = "Command-Line Flags",
                                     summary =
                                         """
-                                        [_Command-line flags_](https://en.wikipedia.org/wiki/Command-line_interface#Command-line_option) are a common way to specify options for command-line programs. For example, in `wc -l` the `-l` is a command-line flag.
+                                        Command-line flags are a common way to specify options for command-line programs.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7753,7 +7753,7 @@ object GoByExampleCourseContent {
                                     title = "Command-Line Subcommands",
                                     summary =
                                         """
-                                        Some command-line tools, like the `go` tool or `git` have many *subcommands*, each with its own set of flags. For example, `go build` and `go get` are two different subcommands of the `go` tool. The `flag` package lets us easily define simple subcommands that have their own flags.
+                                        Some command-line tools, like the go tool or git have many subcommands, each with its own set of flags.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7879,7 +7879,7 @@ object GoByExampleCourseContent {
                                     title = "Environment Variables",
                                     summary =
                                         """
-                                        [Environment variables](https://en.wikipedia.org/wiki/Environment_variable) are a universal mechanism for [conveying configuration information to Unix programs](https://www.12factor.net/config). Let's look at how to set, get, and list environment variables.
+                                        Environment variables are a universal mechanism for conveying configuration information to Unix programs.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -7976,7 +7976,7 @@ object GoByExampleCourseContent {
                                     title = "Logging",
                                     summary =
                                         """
-                                        The Go standard library provides straightforward tools for outputting logs from Go programs, with the [log](https://pkg.go.dev/log) package for free-form output and the [log/slog](https://pkg.go.dev/log/slog) package for structured output.
+                                        The Go standard library provides straightforward tools for outputting logs from Go programs, with the log package for...
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8111,7 +8111,7 @@ object GoByExampleCourseContent {
                                     title = "HTTP Client",
                                     summary =
                                         """
-                                        The Go standard library comes with excellent support for HTTP clients and servers in the `net/http` package. In this example we'll use it to issue simple HTTP requests.
+                                        The Go standard library comes with excellent support for HTTP clients and servers in the net/http package.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8192,7 +8192,7 @@ object GoByExampleCourseContent {
                                     title = "HTTP Server",
                                     summary =
                                         """
-                                        Writing a basic HTTP server is easy using the `net/http` package.
+                                        Writing a basic HTTP server is easy using the net/http package.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8288,7 +8288,7 @@ object GoByExampleCourseContent {
                                     title = "TCP Server",
                                     summary =
                                         """
-                                        The `net` package provides the tools we need to easily build TCP socket servers.
+                                        The net package provides the tools we need to easily build TCP socket servers.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8400,7 +8400,7 @@ object GoByExampleCourseContent {
                                     title = "Context",
                                     summary =
                                         """
-                                        In the previous example we looked at setting up a simple [HTTP server](http-server). HTTP servers are useful for demonstrating the usage of `context.Context` for controlling cancellation. A `Context` carries deadlines, cancellation signals, and other request-scoped values across API boundaries and goroutines.
+                                        In the previous example we looked at setting up a simple HTTP server.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8645,14 +8645,14 @@ object GoByExampleCourseContent {
                                     title = "Exec'ing Processes",
                                     summary =
                                         """
-                                        In the previous example we looked at [spawning external processes](spawning-processes). We do this when we need an external process accessible to a running Go process. Sometimes we just want to completely replace the current Go process with another (perhaps non-Go) one. To do this we'll use Go's implementation of the classic <a href=\"https://en.wikipedia.org/wiki/Exec_(operating_system)\"><code>exec</code></a> function.
+                                        In the previous example we looked at spawning external processes.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
                                         listOf(
                                             LessonBlock.Markdown(
                                                 """
-                                                In the previous example we looked at [spawning external processes](spawning-processes). We do this when we need an external process accessible to a running Go process. Sometimes we just want to completely replace the current Go process with another (perhaps non-Go) one. To do this we'll use Go's implementation of the classic <a href="https://en.wikipedia.org/wiki/Exec_(operating_system)"><code>exec</code></a> function.
+                                                In the previous example we looked at [spawning external processes](spawning-processes). We do this when we need an external process accessible to a running Go process. Sometimes we just want to completely replace the current Go process with another (perhaps non-Go) one. To do this we'll use Go's implementation of the classic [`exec`](https://en.wikipedia.org/wiki/Exec_(operating_system)) function.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
@@ -8743,7 +8743,7 @@ object GoByExampleCourseContent {
                                     title = "Signals",
                                     summary =
                                         """
-                                        Sometimes we'd like our Go programs to intelligently handle [Unix signals](https://en.wikipedia.org/wiki/Unix_signal). For example, we might want a server to gracefully shutdown when it receives a `SIGTERM`, or a command-line tool to stop processing input if it receives a `SIGINT`. Here's a modern way to handle signals using contexts.
+                                        Sometimes we'd like our Go programs to intelligently handle Unix signals.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
@@ -8824,7 +8824,7 @@ object GoByExampleCourseContent {
                                     title = "Exit",
                                     summary =
                                         """
-                                        Use `os.Exit` to immediately exit with a given status.
+                                        Use os.Exit to immediately exit with a given status.
                                         """.trimIndent(),
                                     estimatedMinutes = 10,
                                     blocks =
