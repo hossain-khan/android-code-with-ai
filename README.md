@@ -2,7 +2,7 @@
 
 # CodeMateX - Code with AI
 
-An **on-device AI coding tutor** for Android. Chat privately with locally-executed Large Language Models (LLMs) about programming languages, algorithms, architecture, and system design, or learn via guided interactive courses — **100% offline, private, and with zero subscription fees**.
+An **on-device AI coding tutor** for Android. Chat privately with locally-executed Large Language Models (LLMs) about programming languages, algorithms, architecture, and system design, or learn via guided interactive courses — **100% private on-device AI, offline-first courses, and zero subscription fees**.
 
 <a href="https://play.google.com/store/apps/details?id=dev.hossain.codematex&pcampaignid=web_share" target="_blank"><img src="https://liquidlabs.ca/img/google-play.svg" height="45"></a>
 
@@ -10,9 +10,11 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 
 ## ✨ Features
 
-- 🧠 **100% On-Device AI** - Run Large Language Models locally on your device with complete privacy, zero cloud dependency, and no subscription fees.
+- 🧠 **100% On-Device AI** - Run Large Language Models locally on your device with complete privacy, zero cloud LLM dependency, and no subscription fees.
 - 🤖 **Curated Model Catalog** - Download and run optimized coding models (Gemma, Qwen Coder, Phi-4 Mini) with automatic hardware acceleration.
-- 🎓 **Interactive Guided Courses** - 6 bundled curricula (**Kotlin**, **Python**, **TypeScript**, **Go**, **Rust**, **Swift**) with chapters, bite-sized lessons, syntax-highlighted code, interactive quizzes, and progress tracking.
+- 🎓 **Interactive Guided Courses** - 10+ bundled curricula across **Kotlin** (Beginner & Intermediate Tours, Foundations), **Go** (Go by Example, Foundations), **Rust** (Rust by Example, Foundations), **Python**, **TypeScript**, and **Swift** with 600+ bite-sized lessons, interactive quizzes, and progress tracking.
+- ▶️ **In-App Code Execution & Terminal Runner** - Run interactive code snippets in Kotlin, Go, Rust, Python, and TypeScript with real-time terminal output and smart offline detection.
+- 🏷️ **Language Filter Chips** - Seamlessly filter guided courses by language with sticky chips, dynamic topic themes, and smooth fade transitions.
 - 🧭 **Topic Discovery & Starters** - Explore programming topics with prompt starters and course recommendations to kickstart learning.
 - 🎭 **Tutor Personas** - Tailor AI explanations with switchable teaching styles (**Senior Engineer**, **Beginner Tutor**, **Interview Coach**).
 - 💬 **Rich Markdown & Code Highlighting** - Formatted responses with fast syntax highlighting, line numbers, and copy-to-clipboard actions.
@@ -28,7 +30,8 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 | **UI & Layout** | **Jetpack Compose + Material 3 Expressive** | Modern declarative UI with adaptive multi-pane window sizing |
 | **Architecture** | **Slack Circuit** | MVI-based Presenter/UI pattern with unidirectional data flow |
 | **Dependency Injection** | **Metro** | KSP-based compile-time dependency injection |
-| **Inference Runtime** | **Google LiteRT-LM (0.16.1)** | High-performance edge AI model runtime |
+| **Inference Runtime** | **Google LiteRT-LM (0.17.0)** | High-performance edge AI model runtime |
+| **Code Runner** | **Cloudflare Workers + Kotlin Playground** | Edge proxy microservice executing sandboxed interactive code |
 | **Syntax Highlighting** | **compose-highlight (0.36.0)** | Native Compose Highlight.js engine for streaming & static code blocks |
 | **Markdown Rendering** | **multiplatform-markdown-renderer (0.45.0)** | Material 3 Markdown parsing with custom component interception |
 | **Persistence** | **Room Database** | Type-safe SQLite persistence for sessions, messages, and course progress |
@@ -88,6 +91,7 @@ app/src/main/java/dev/hossain/codematex/
 │   ├── ChatInferenceOrchestrator.kt # Inference lifecycle & token streaming orchestration
 │   └── TopicPromptProvider.kt      # System prompts & tutor persona definitions
 ├── domain/
+│   ├── runner/                     # Cloudflare edge playground code runner for interactive snippets
 │   └── summary/                    # Session summary generators and LLM prompt formatters
 ├── runtime/                        # LiteRT-LM engine wrapper, factory, and fallback strategy
 ├── system/                         # Device memory analysis, hardware eligibility, & compatibility policies
