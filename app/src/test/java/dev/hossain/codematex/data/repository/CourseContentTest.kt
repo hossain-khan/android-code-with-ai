@@ -5,6 +5,8 @@ import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.repository.course.GoByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.data.repository.course.KotlinTourBeginnerCourseContent
+import dev.hossain.codematex.data.repository.course.KotlinTourIntermediateCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
@@ -16,6 +18,8 @@ class CourseContentTest {
     private val courses =
         listOf(
             KotlinCourseContent.course,
+            KotlinTourBeginnerCourseContent.course,
+            KotlinTourIntermediateCourseContent.course,
             PythonCourseContent.course,
             TypeScriptCourseContent.course,
             GoCourseContent.course,
@@ -420,6 +424,28 @@ class CourseContentTest {
             "gbe-testing-and-benchmarking",
             "gbe-embed-directive",
         )
+
+        val ktBegCourse = KotlinTourBeginnerCourseContent.course
+        assertThat(ktBegCourse.chapters).hasSize(7)
+        assertThat(ktBegCourse.lessonCount).isEqualTo(7)
+        val ktBegBlocks =
+            ktBegCourse.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(ktBegBlocks).hasSize(105)
+        assertThat(ktBegBlocks.count { it.isPlaygroundRunnable }).isEqualTo(47)
+
+        val ktIntCourse = KotlinTourIntermediateCourseContent.course
+        assertThat(ktIntCourse.chapters).hasSize(9)
+        assertThat(ktIntCourse.lessonCount).isEqualTo(9)
+        val ktIntBlocks =
+            ktIntCourse.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(ktIntBlocks).hasSize(152)
+        assertThat(ktIntBlocks.count { it.isPlaygroundRunnable }).isEqualTo(68)
     }
 
     private fun <T : Comparable<T>> isStrictlyIncreasing(values: List<T>): Boolean =
