@@ -1,6 +1,15 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -107,12 +117,17 @@ private fun LessonCatalogInnerContent(
                 CodingTopic.KOTLIN.visualInfo.accentColor
             }
         }
+    val animatedAccentColor by animateColorAsState(
+        targetValue = activeAccentColor,
+        animationSpec = tween(300),
+        label = "LessonCatalogAmbientGlow",
+    )
     Scaffold(
         modifier =
             modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .radialGradientScrim(activeAccentColor.copy(alpha = 0.15f)),
+                .radialGradientScrim(animatedAccentColor.copy(alpha = 0.15f)),
         topBar = {
             Column(
                 modifier =
@@ -162,32 +177,59 @@ private fun LessonCatalogInnerContent(
             }
 
             is LessonCatalogScreen.State.Success -> {
-                if (state.courses.isEmpty()) {
-                    EmptyLessonsState(
-                        modifier = Modifier.fillMaxSize().padding(padding),
-                        isFiltered = state.selectedTopic != null,
-                        onClearFilter = { state.eventSink(LessonCatalogScreen.Event.SelectTopic(null)) },
-                        onRetry = { state.eventSink(LessonCatalogScreen.Event.Retry) },
-                    )
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 340.dp),
-                        modifier = Modifier.fillMaxSize().padding(padding),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                    ) {
-                        items(
-                            items = state.courses,
-                            key = { it.id },
-                        ) { course ->
-                            CourseCard(
-                                course = course,
-                                progress = state.progress[course.id],
-                                transitionScope = transitionScope,
-                                modifier = Modifier.animateItem(),
-                            ) {
-                                state.eventSink(LessonCatalogScreen.Event.OpenCourse(course.id))
+                AnimatedContent(
+                    targetState = state.selectedTopic,
+                    transitionSpec = {
+                        (
+                            fadeIn(animationSpec = tween(220, delayMillis = 60)) +
+                                scaleIn(initialScale = 0.95f, animationSpec = tween(220, delayMillis = 60))
+                        ).togetherWith(fadeOut(animationSpec = tween(100)))
+                    },
+                    label = "LessonCatalogFilterAnimation",
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                ) { targetTopic ->
+                    val displayCourses =
+                        if (targetTopic == null) {
+                            state.allCourses
+                        } else {
+                            state.allCourses.filter { it.topic == targetTopic }
+                        }
+                    if (displayCourses.isEmpty()) {
+                        EmptyLessonsState(
+                            modifier = Modifier.fillMaxSize(),
+                            isFiltered = targetTopic != null,
+                            onClearFilter = { state.eventSink(LessonCatalogScreen.Event.SelectTopic(null)) },
+                            onRetry = { state.eventSink(LessonCatalogScreen.Event.Retry) },
+                        )
+                    } else {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 340.dp),
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                        ) {
+                            items(
+                                items = displayCourses,
+                                key = { it.id },
+                            ) { course ->
+                                CourseCard(
+                                    course = course,
+                                    progress = state.progress[course.id],
+                                    transitionScope = transitionScope,
+                                    modifier =
+                                        Modifier.animateItem(
+                                            fadeInSpec = spring(stiffness = Spring.StiffnessLow),
+                                            placementSpec =
+                                                spring(
+                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                                    stiffness = Spring.StiffnessLow,
+                                                ),
+                                            fadeOutSpec = spring(stiffness = Spring.StiffnessLow),
+                                        ),
+                                ) {
+                                    state.eventSink(LessonCatalogScreen.Event.OpenCourse(course.id))
+                                }
                             }
                         }
                     }
