@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.23.0:
+• Official Kotlin Tour Courses: Added Beginner & Intermediate interactive courses with 16 chapters, 250+ code snippets, and in-app Kotlin Playground execution.
+• Go by Example Course: Added complete guided course with 85 hands-on lessons and live Cloudflare edge code runner support.
+• Dependency & Runtime Upgrades: Circuit 0.38.0, Metro 1.4.3 (@BindingContainer), LiteRT-LM 0.17.0 (optimized attention), Compose BOM 2026.09, and Room 2.8.5.
