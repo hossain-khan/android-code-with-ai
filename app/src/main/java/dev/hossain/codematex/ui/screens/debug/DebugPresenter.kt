@@ -118,6 +118,7 @@ class DebugPresenter(
         var telemetryStats by remember { mutableStateOf(debugMemoryProvider.getDebugMemoryStats()) }
 
         var benchmarkPrompt by rememberRetained { mutableStateOf(DEFAULT_BENCHMARK_PROMPT) }
+        var benchmarkConfig by rememberRetained { mutableStateOf(DEFAULT_BENCHMARK_CONFIG) }
         var isBenchmarking by rememberRetained { mutableStateOf(false) }
         var benchmarkTokens by rememberRetained { mutableStateOf("") }
         var benchmarkTtftMs by rememberRetained { mutableStateOf<Long?>(null) }
@@ -231,6 +232,7 @@ class DebugPresenter(
             statusMessage = statusMessage,
             telemetryStats = telemetryStats,
             benchmarkPrompt = benchmarkPrompt,
+            benchmarkConfig = benchmarkConfig,
             isBenchmarking = isBenchmarking,
             benchmarkTokens = benchmarkTokens,
             benchmarkTtftMs = benchmarkTtftMs,
@@ -369,6 +371,34 @@ class DebugPresenter(
                     benchmarkPrompt = event.prompt
                 }
 
+                is DebugScreen.Event.UpdateBenchmarkTemperature -> {
+                    benchmarkConfig = benchmarkConfig.copy(temperature = event.temperature)
+                }
+
+                is DebugScreen.Event.UpdateBenchmarkTopK -> {
+                    benchmarkConfig = benchmarkConfig.copy(topK = event.topK)
+                }
+
+                is DebugScreen.Event.UpdateBenchmarkTopP -> {
+                    benchmarkConfig = benchmarkConfig.copy(topP = event.topP)
+                }
+
+                is DebugScreen.Event.UpdateBenchmarkMaxTokens -> {
+                    benchmarkConfig = benchmarkConfig.copy(maxTokens = event.maxTokens)
+                }
+
+                is DebugScreen.Event.ApplySamplerPreset -> {
+                    benchmarkConfig = event.preset.config
+                    statusMessage = "Applied sampler preset: ${event.preset.label} (${event.preset.description})"
+                    Timber.d("DebugPresenter: Applied sampler preset: %s", event.preset.name)
+                }
+
+                DebugScreen.Event.ResetBenchmarkConfig -> {
+                    benchmarkConfig = DEFAULT_BENCHMARK_CONFIG
+                    statusMessage = "Reset sampler configuration to defaults."
+                    Timber.d("DebugPresenter: Reset sampler configuration to defaults")
+                }
+
                 // Runs isolated inference to evaluate TTFT, decode throughput (t/s), and generation duration
                 DebugScreen.Event.RunBenchmark -> {
                     if (!isModelLoaded && selectedModel?.localPath == null) {
@@ -385,9 +415,13 @@ class DebugPresenter(
                         benchmarkDurationMs = null
                         statusMessage = "Running benchmark evaluation..."
                         Timber.i(
-                            "DebugPresenter [BENCHMARK_START]: model=%s, promptLength=%d",
+                            "DebugPresenter [BENCHMARK_START]: model=%s, promptLength=%d, temp=%.2f, topK=%d, topP=%.2f, maxTokens=%d",
                             selectedModel?.name ?: loadedModelName ?: "Unknown",
                             benchmarkPrompt.length,
+                            benchmarkConfig.temperature,
+                            benchmarkConfig.topK,
+                            benchmarkConfig.topP,
+                            benchmarkConfig.maxTokens,
                         )
 
                         val startTime = System.currentTimeMillis()
@@ -395,11 +429,10 @@ class DebugPresenter(
                         var tokenCount = 0
 
                         try {
-                            val currentConfig = selectedModel?.let { configStore.getConfig(it.id) } ?: configStore.config
                             llmEngine.runInferenceIsolated(
                                 input = benchmarkPrompt,
                                 systemInstruction = "You are a concise coding assistant.",
-                                config = currentConfig,
+                                config = benchmarkConfig,
                             ) { partial, done ->
                                 val now = System.currentTimeMillis()
                                 if (firstTokenTime == null && partial.isNotEmpty()) {

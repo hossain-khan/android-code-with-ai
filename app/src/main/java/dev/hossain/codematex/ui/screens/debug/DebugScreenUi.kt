@@ -1,7 +1,9 @@
 package dev.hossain.codematex.ui.screens.debug
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,15 +17,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.PlayArrow
@@ -31,6 +36,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
@@ -41,6 +47,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -49,6 +56,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Slider
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -60,19 +68,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
@@ -84,6 +96,7 @@ import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @CircuitInject(screen = DebugScreen::class, scope = AppScope::class)
@@ -585,6 +598,12 @@ private fun MetricPill(
 
 @Composable
 private fun InferenceBenchmarkCard(state: DebugScreen.State.Success) {
+    var isSamplerExpanded by rememberSaveable { mutableStateOf(false) }
+    val rotationAngle by animateFloatAsState(
+        targetValue = if (isSamplerExpanded) 180f else 0f,
+        label = "sampler_expand_rotation",
+    )
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -660,6 +679,164 @@ private fun InferenceBenchmarkCard(state: DebugScreen.State.Success) {
                 maxLines = 4,
             )
 
+            // Sampler & Decoding Tuning Panel
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.5f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(
+                    modifier = Modifier.padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { isSamplerExpanded = !isSamplerExpanded },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.weight(1f),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp),
+                            )
+                            Column {
+                                Text(
+                                    text = "Sampler Configuration",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    text =
+                                        "T=${"%.2f".format(state.benchmarkConfig.temperature)} • " +
+                                            "K=${state.benchmarkConfig.topK} • " +
+                                            "P=${"%.2f".format(state.benchmarkConfig.topP)} • " +
+                                            "Max=${state.benchmarkConfig.maxTokens}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = FontFamily.Monospace,
+                                )
+                            }
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            if (isSamplerExpanded) {
+                                TextButton(
+                                    onClick = { state.eventSink(DebugScreen.Event.ResetBenchmarkConfig) },
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(28.dp),
+                                ) {
+                                    Text("Reset", style = MaterialTheme.typography.labelSmall)
+                                }
+                            }
+                            IconButton(
+                                onClick = { isSamplerExpanded = !isSamplerExpanded },
+                                modifier = Modifier.size(28.dp),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ExpandMore,
+                                    contentDescription =
+                                        if (isSamplerExpanded) "Collapse sampler settings" else "Expand sampler settings",
+                                    modifier = Modifier.rotate(rotationAngle).size(20.dp),
+                                )
+                            }
+                        }
+                    }
+
+                    AnimatedVisibility(visible = isSamplerExpanded) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            // Sampler Presets
+                            Text(
+                                text = "One-Tap Presets:",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                DebugScreen.BenchmarkSamplerPreset.entries.forEach { preset ->
+                                    val isSelected =
+                                        state.benchmarkConfig.temperature == preset.config.temperature &&
+                                            state.benchmarkConfig.topK == preset.config.topK &&
+                                            state.benchmarkConfig.topP == preset.config.topP
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = {
+                                            state.eventSink(DebugScreen.Event.ApplySamplerPreset(preset))
+                                        },
+                                        label = { Text("${preset.label} (${preset.description})") },
+                                    )
+                                }
+                            }
+
+                            // Temperature Slider
+                            BenchmarkSliderItem(
+                                title = "Temperature (0.00 - 1.50)",
+                                subtitle = "Deterministic code (0.1) vs creative explanations (1.0+)",
+                                value = state.benchmarkConfig.temperature,
+                                valueRange = 0.0f..1.5f,
+                                displayValue = "%.2f".format(state.benchmarkConfig.temperature),
+                                onValueChange = {
+                                    val rounded = (it * 20f).roundToInt() / 20f
+                                    state.eventSink(DebugScreen.Event.UpdateBenchmarkTemperature(rounded))
+                                },
+                            )
+
+                            // Top-K Slider
+                            BenchmarkSliderItem(
+                                title = "Top-K (1 - 100)",
+                                subtitle = "Limits token candidates to top K highest probabilities",
+                                value = state.benchmarkConfig.topK.toFloat(),
+                                valueRange = 1f..100f,
+                                displayValue = "${state.benchmarkConfig.topK}",
+                                onValueChange = {
+                                    state.eventSink(DebugScreen.Event.UpdateBenchmarkTopK(it.roundToInt()))
+                                },
+                            )
+
+                            // Top-P Slider
+                            BenchmarkSliderItem(
+                                title = "Top-P Nucleus (0.10 - 1.00)",
+                                subtitle = "Dynamically samples tokens up to cumulative probability P",
+                                value = state.benchmarkConfig.topP,
+                                valueRange = 0.1f..1.0f,
+                                displayValue = "%.2f".format(state.benchmarkConfig.topP),
+                                onValueChange = {
+                                    val rounded = (it * 20f).roundToInt() / 20f
+                                    state.eventSink(DebugScreen.Event.UpdateBenchmarkTopP(rounded))
+                                },
+                            )
+
+                            // Max Tokens Slider
+                            BenchmarkSliderItem(
+                                title = "Max Tokens (64 - 2048)",
+                                subtitle = "Maximum output tokens decoded during benchmark evaluation",
+                                value = state.benchmarkConfig.maxTokens.toFloat(),
+                                valueRange = 64f..2048f,
+                                displayValue = "${state.benchmarkConfig.maxTokens}",
+                                onValueChange = {
+                                    val stepped = ((it / 32f).roundToInt() * 32).coerceIn(64, 2048)
+                                    state.eventSink(DebugScreen.Event.UpdateBenchmarkMaxTokens(stepped))
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -701,14 +878,34 @@ private fun InferenceBenchmarkCard(state: DebugScreen.State.Success) {
                     color = MaterialTheme.colorScheme.surfaceContainerHighest,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        MetricPill("TTFT", "${state.benchmarkTtftMs ?: 0}ms")
-                        MetricPill("Speed", "${"%.1f".format(state.benchmarkSpeedTps ?: 0f)} t/s")
-                        MetricPill("Tokens", "${state.benchmarkTotalTokens}")
-                        MetricPill("Total Time", "${state.benchmarkDurationMs ?: 0}ms")
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            MetricPill("TTFT", "${state.benchmarkTtftMs ?: 0}ms")
+                            MetricPill("Speed", "${"%.1f".format(state.benchmarkSpeedTps ?: 0f)} t/s")
+                            MetricPill("Tokens", "${state.benchmarkTotalTokens}")
+                            MetricPill("Total Time", "${state.benchmarkDurationMs ?: 0}ms")
+                        }
+
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                        )
+
+                        Text(
+                            text =
+                                "Sampler: Temp: ${"%.2f".format(state.benchmarkConfig.temperature)} • " +
+                                    "Top-K: ${state.benchmarkConfig.topK} • " +
+                                    "Top-P: ${"%.2f".format(state.benchmarkConfig.topP)} • " +
+                                    "Max: ${state.benchmarkConfig.maxTokens} tokens",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = FontFamily.Monospace,
+                        )
                     }
                 }
             }
@@ -737,6 +934,65 @@ private fun InferenceBenchmarkCard(state: DebugScreen.State.Success) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BenchmarkSliderItem(
+    title: String,
+    subtitle: String,
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    displayValue: String,
+    onValueChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                )
+            }
+
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.surfaceContainer,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+                modifier = Modifier.widthIn(min = 52.dp),
+            ) {
+                Text(
+                    text = displayValue,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                )
+            }
+        }
+
+        @Suppress("DEPRECATION")
+        Slider(
+            value = value.coerceIn(valueRange.start, valueRange.endInclusive),
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -1476,6 +1732,43 @@ private fun HardwareDiagnosticsCardIneligiblePreview() {
                         is64BitSupported = true,
                     ),
                 isDevMode = false,
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun InferenceBenchmarkCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            InferenceBenchmarkCard(
+                state =
+                    DebugScreen.State.Success(
+                        models = emptyList(),
+                        selectedModel = null,
+                        selectedBackend = LlmEngine.Backend.GPU,
+                        isModelLoaded = true,
+                        loadedModelName = "google/gemma-2-2b-it",
+                        activeBackend = LlmEngine.Backend.GPU,
+                        isLoadingModel = false,
+                        isUnloadingModel = false,
+                        benchmarkPrompt = "Write a concise Kotlin function that computes Fibonacci numbers.",
+                        benchmarkConfig =
+                            ModelConfig(
+                                temperature = 0.8f,
+                                topK = 40,
+                                topP = 0.95f,
+                                maxTokens = 512,
+                            ),
+                        isBenchmarking = false,
+                        benchmarkTokens = "```kotlin\nfun fibonacci(n: Int): Int = ...\n```",
+                        benchmarkTtftMs = 384L,
+                        benchmarkSpeedTps = 18.5f,
+                        benchmarkTotalTokens = 120,
+                        benchmarkDurationMs = 6800L,
+                        eventSink = {},
+                    ),
             )
         }
     }

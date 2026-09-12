@@ -5,6 +5,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
@@ -820,6 +821,113 @@ class DebugPresenterTest {
                 val state = expectMostRecentItem() as DebugScreen.State.Success
                 assertThat(state.isDevMode).isTrue()
                 assertThat(state.runtimeSpecs["Dev Mode Bypass"]).contains("Active")
+            }
+        }
+
+    @Test
+    fun `initial state contains default benchmark sampler config`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(state.benchmarkConfig).isEqualTo(DEFAULT_BENCHMARK_CONFIG)
+                assertThat(state.benchmarkConfig.temperature).isEqualTo(0.8f)
+                assertThat(state.benchmarkConfig.topK).isEqualTo(40)
+                assertThat(state.benchmarkConfig.topP).isEqualTo(0.95f)
+                assertThat(state.benchmarkConfig.maxTokens).isEqualTo(512)
+            }
+        }
+
+    @Test
+    fun `updating benchmark sampler parameters updates state`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+
+                state.eventSink(DebugScreen.Event.UpdateBenchmarkTemperature(0.25f))
+                val tempUpdated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(tempUpdated.benchmarkConfig.temperature).isEqualTo(0.25f)
+
+                tempUpdated.eventSink(DebugScreen.Event.UpdateBenchmarkTopK(10))
+                val topKUpdated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(topKUpdated.benchmarkConfig.topK).isEqualTo(10)
+
+                topKUpdated.eventSink(DebugScreen.Event.UpdateBenchmarkTopP(0.85f))
+                val topPUpdated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(topPUpdated.benchmarkConfig.topP).isEqualTo(0.85f)
+
+                topPUpdated.eventSink(DebugScreen.Event.UpdateBenchmarkMaxTokens(256))
+                val maxTokensUpdated = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(maxTokensUpdated.benchmarkConfig.maxTokens).isEqualTo(256)
+            }
+        }
+
+    @Test
+    fun `applying sampler preset updates benchmark config state`() =
+        runTest {
+            val presenter = createPresenter()
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+
+                state.eventSink(DebugScreen.Event.ApplySamplerPreset(DebugScreen.BenchmarkSamplerPreset.GREEDY))
+                val greedyState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(greedyState.benchmarkConfig).isEqualTo(DebugScreen.BenchmarkSamplerPreset.GREEDY.config)
+                assertThat(greedyState.benchmarkConfig.temperature).isEqualTo(0.1f)
+                assertThat(greedyState.benchmarkConfig.topK).isEqualTo(1)
+
+                greedyState.eventSink(DebugScreen.Event.ApplySamplerPreset(DebugScreen.BenchmarkSamplerPreset.CREATIVE))
+                val creativeState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(creativeState.benchmarkConfig).isEqualTo(DebugScreen.BenchmarkSamplerPreset.CREATIVE.config)
+                assertThat(creativeState.benchmarkConfig.temperature).isEqualTo(1.0f)
+                assertThat(creativeState.benchmarkConfig.topK).isEqualTo(80)
+
+                creativeState.eventSink(DebugScreen.Event.ResetBenchmarkConfig)
+                val resetState = expectMostRecentItem() as DebugScreen.State.Success
+                assertThat(resetState.benchmarkConfig).isEqualTo(DEFAULT_BENCHMARK_CONFIG)
+            }
+        }
+
+    @Test
+    fun `running benchmark propagates custom benchmarkConfig to llmEngine runInferenceIsolated`() =
+        runTest {
+            val fakeEngine = FakeLlmEngine()
+            val customConfig =
+                ModelConfig(
+                    temperature = 0.15f,
+                    topK = 5,
+                    topP = 0.8f,
+                    maxTokens = 128,
+                )
+
+            val presenter = createPresenter(llmEngine = fakeEngine)
+
+            presenter.test {
+                val state = expectMostRecentItem() as DebugScreen.State.Success
+
+                // Load model first
+                state.eventSink(DebugScreen.Event.LoadModel)
+                val loadedState = expectMostRecentItem() as DebugScreen.State.Success
+
+                // Apply custom config
+                loadedState.eventSink(DebugScreen.Event.UpdateBenchmarkTemperature(customConfig.temperature))
+                val tempState = expectMostRecentItem() as DebugScreen.State.Success
+                tempState.eventSink(DebugScreen.Event.UpdateBenchmarkTopK(customConfig.topK))
+                val topKState = expectMostRecentItem() as DebugScreen.State.Success
+                topKState.eventSink(DebugScreen.Event.UpdateBenchmarkTopP(customConfig.topP))
+                val topPState = expectMostRecentItem() as DebugScreen.State.Success
+                topPState.eventSink(DebugScreen.Event.UpdateBenchmarkMaxTokens(customConfig.maxTokens))
+                val readyState = expectMostRecentItem() as DebugScreen.State.Success
+
+                // Run benchmark
+                readyState.eventSink(DebugScreen.Event.RunBenchmark)
+                expectMostRecentItem()
+
+                assertThat(fakeEngine.isolatedInferenceCalls).isEqualTo(1)
+                assertThat(fakeEngine.lastIsolatedConfig).isEqualTo(customConfig)
             }
         }
 }
