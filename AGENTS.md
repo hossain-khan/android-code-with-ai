@@ -194,4 +194,14 @@ Whenever preparing or cutting a new application release, **all agents must stric
 6. **Tag & Publish**: Create git tag `X.Y.Z` (`git tag X.Y.Z && git push origin X.Y.Z`) and publish a GitHub Release (`gh release create X.Y.Z ...`).
 7. **CI/CD Automation**: GitHub Actions ([`.github/workflows/android-release.yml`](.github/workflows/android-release.yml)) will build, sign with the production keystore, cryptographically verify the signature with `apksigner` against the expected SHA-256 certificate fingerprint, and attach the verified release APK & AAB to the release.
 
+---
+
+## 8. Pull Request & Auto-Merge Policy
+
+Whenever creating pull requests:
+* **Never Enable Auto-Merge**: **DO NOT create or update PRs with auto-merge enabled** (never run `gh pr merge --auto` or enable automatic merging).
+* **Manual Review**: All pull requests must remain open for the repository owner to review and merge manually.
+* **Verification Before PR**: Always verify that `./gradlew formatKotlin && ./gradlew check` passes before submitting pull requests.
+
+
 
