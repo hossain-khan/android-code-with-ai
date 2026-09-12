@@ -8,8 +8,8 @@ Use this reference guide when completing the **Data Safety** questionnaire in Go
 
 | Question | Answer | Rationale |
 | :--- | :--- | :--- |
-| **Does your app collect or share any of the required user data types?** | **No** | All user chats, queries, prompts, and code snippets are processed entirely on-device via LiteRT-LM and stored in local Room database. |
-| **Is all user data collected by your app encrypted in transit?** | **N/A** (No user data collected or transmitted) | N/A |
+| **Does your app collect or share any of the required user data types?** | **No** | All AI chats, queries, prompts, and personal notes are processed entirely on-device via LiteRT-LM and stored in the local Room database. Executing a lesson code snippet in the optional runner transmits only the code snippet over encrypted HTTPS to compile and return stdout, without user tracking or data collection. |
+| **Is all user data collected by your app encrypted in transit?** | **N/A** (No user data collected or transmitted) | All transient network communications (model downloads and code execution) use HTTPS encryption in transit. |
 | **Do you provide a way for users to request that their data be deleted?** | **Yes** | Users can delete individual sessions or clear all app data directly in the app settings / session history. |
 
 ---
@@ -33,7 +33,8 @@ Use this reference guide when completing the **Data Safety** questionnaire in Go
 ## 3. Network Usage Clarification
 
 CodeMateX uses the `INTERNET` and `ACCESS_NETWORK_STATE` permissions solely for:
-1. Downloading on-device open-source model weights (e.g. Gemma 2B) when the user initiates a model download in the Model Manager.
-2. Checking network connectivity status to prevent partial downloads on metered connections.
+1. Downloading on-device open-source model weights (e.g. Gemma 2B, Qwen, Phi-4) when the user initiates a model download in the Model Manager.
+2. Checking network connectivity status to prevent partial downloads on metered connections and automatically toggle the offline reading mode.
+3. Executing user-initiated code snippets in the optional interactive code runner: when the user taps "Run Code", the code snippet is transmitted via encrypted HTTPS to a sandbox execution proxy (`code-playground.gohk.xyz` or official Kotlin Playground API) solely to compile, execute, and return standard output to the user. No personal information, user accounts, or prompt history are attached or retained.
 
-*No user telemetry, analytics, advertising IDs, or prompt queries are ever transmitted over the network.*
+*No user telemetry, analytics, advertising IDs, or AI prompt queries are ever transmitted over the network.*
