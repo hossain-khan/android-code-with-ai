@@ -216,13 +216,13 @@ private fun LessonCatalogInnerContent(
                                     transitionScope = transitionScope,
                                     modifier =
                                         Modifier.animateItem(
-                                            fadeInSpec = tween(durationMillis = 200),
+                                            fadeInSpec = tween(durationMillis = 400),
                                             placementSpec =
                                                 spring(
                                                     dampingRatio = Spring.DampingRatioNoBouncy,
                                                     stiffness = Spring.StiffnessMedium,
                                                 ),
-                                            fadeOutSpec = tween(durationMillis = 150),
+                                            fadeOutSpec = tween(durationMillis = 300),
                                         ),
                                 ) {
                                     state.eventSink(LessonCatalogScreen.Event.OpenCourse(course.id))
