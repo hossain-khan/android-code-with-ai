@@ -3,36 +3,22 @@ package dev.hossain.codematex.ui.screens.home
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Memory
 import androidx.compose.material.icons.filled.Settings
@@ -40,65 +26,43 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
-import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
 import com.slack.circuit.sharedelements.SharedElementTransitionScope
-import dev.hossain.codematex.data.model.ChatSession
-import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.LearningChapter
-import dev.hossain.codematex.data.model.LearningCourse
-import dev.hossain.codematex.data.model.LearningLesson
-import dev.hossain.codematex.ui.animation.ActiveModelBadgeSharedKey
-import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
-import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
-import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
-import dev.hossain.codematex.ui.animation.CourseCardSharedKey
-import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
-import dev.hossain.codematex.ui.animation.SessionCardSharedKey
-import dev.hossain.codematex.ui.animation.SessionGlyphSharedKey
-import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
-import dev.hossain.codematex.ui.animation.TopicCardSharedKey
-import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
-import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
-import dev.hossain.codematex.ui.animation.sharedBoundsNav
-import dev.hossain.codematex.ui.animation.sharedElementNav
+import com.slack.circuit.subcircuit.SubCircuitContent
+import dev.hossain.codematex.ui.animation.LocalSharedElementTransitionScope
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesOuterEvent
+import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesSubScreen
+import dev.hossain.codematex.ui.screens.home.model.ActiveModelBannerOuterEvent
+import dev.hossain.codematex.ui.screens.home.model.ActiveModelBannerSubScreen
+import dev.hossain.codematex.ui.screens.home.sessions.RecentSessionsOuterEvent
+import dev.hossain.codematex.ui.screens.home.sessions.RecentSessionsSubScreen
+import dev.hossain.codematex.ui.screens.home.topics.TopicsGridOuterEvent
+import dev.hossain.codematex.ui.screens.home.topics.TopicsGridSubScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
-import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 import java.util.Locale
 
@@ -111,10 +75,12 @@ fun HomeScreenContent(
 ) {
     if (SharedElementTransitionScope.isAvailable) {
         SharedElementTransitionScope {
-            HomeScreenInnerContent(state = state, modifier = modifier, transitionScope = this)
+            CompositionLocalProvider(LocalSharedElementTransitionScope provides this) {
+                HomeScreenInnerContent(state = state, modifier = modifier)
+            }
         }
     } else {
-        HomeScreenInnerContent(state = state, modifier = modifier, transitionScope = null)
+        HomeScreenInnerContent(state = state, modifier = modifier)
     }
 }
 
@@ -122,36 +88,26 @@ fun HomeScreenContent(
 private fun HomeScreenInnerContent(
     state: HomeScreen.State,
     modifier: Modifier = Modifier,
-    transitionScope: SharedElementTransitionScope? = null,
 ) {
     when (state) {
-        is HomeScreen.State.Loading -> {
-            Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularWavyProgressIndicator()
-            }
-        }
-
         is HomeScreen.State.IneligibleDevice -> {
             IneligibleDeviceLayout(state, modifier)
         }
 
         is HomeScreen.State.Success -> {
-            HomeLayout(state, modifier, transitionScope)
+            HomeLayout(state, modifier)
         }
     }
 }
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class,
-    ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalFoundationApi::class,
 )
 @Composable
 private fun HomeLayout(
     state: HomeScreen.State.Success,
     modifier: Modifier = Modifier,
-    transitionScope: SharedElementTransitionScope? = null,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -206,7 +162,7 @@ private fun HomeLayout(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                // Left Column: Hero Banner + Topics Grid
+                // Left Column: Active Model Banner + Guided Courses + Topics Grid
                 Column(
                     modifier =
                         Modifier
@@ -214,101 +170,43 @@ private fun HomeLayout(
                             .fillMaxHeight(),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    HeroBanner(
-                        hasDownloadedModel = state.hasDownloadedModel,
-                        selectedModelName = state.selectedModelName,
-                        isModelInMemory = state.isModelInMemory,
-                        memoryBackend = state.memoryBackend,
-                        onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
-                        transitionScope = transitionScope,
-                    )
-
-                    if (state.availableCourses.isNotEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Text(
-                                    "Guided Courses",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                ) {
-                                    Text(
-                                        text = "${state.availableCourses.size} available",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    )
+                    SubCircuitContent(
+                        screen = ActiveModelBannerSubScreen,
+                        outerEventSink = { event ->
+                            when (event) {
+                                ActiveModelBannerOuterEvent.NavigateToModelPicker -> {
+                                    state.eventSink(HomeScreen.Event.ManageModels)
                                 }
                             }
-                            FilledTonalButton(
-                                onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            ) {
-                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                        },
+                    )
+
+                    SubCircuitContent(
+                        screen = GuidedCoursesSubScreen,
+                        outerEventSink = { event ->
+                            when (event) {
+                                is GuidedCoursesOuterEvent.NavigateToCourse -> {
+                                    state.eventSink(HomeScreen.Event.CourseClicked(event.courseId))
+                                }
+
+                                GuidedCoursesOuterEvent.NavigateToAllCourses -> {
+                                    state.eventSink(HomeScreen.Event.GuidedLessons)
+                                }
                             }
-                        }
+                        },
+                    )
 
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(vertical = 4.dp),
-                        ) {
-                            items(state.availableCourses) { course ->
-                                CourseHomeCard(
-                                    course = course,
-                                    onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
-                                    transitionScope = transitionScope,
-                                )
-                            }
-                        }
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            "Chat with AI Tutor",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        ) {
-                            Text(
-                                text = "${state.topics.size} topics",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            )
-                        }
-                    }
-
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 220.dp),
+                    SubCircuitContent(
+                        screen = TopicsGridSubScreen(isCompact = false),
                         modifier = Modifier.weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(state.topics) { topic ->
-                            TopicCard(
-                                topic = topic,
-                                hasCourse = state.topicsWithCourses.contains(topic),
-                                onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
-                                transitionScope = transitionScope,
-                            )
-                        }
-                    }
+                        outerEventSink = { event ->
+                            when (event) {
+                                is TopicsGridOuterEvent.NavigateToTopic -> {
+                                    state.eventSink(HomeScreen.Event.TopicSelected(event.topic))
+                                }
+                            }
+                        },
+                    )
                 }
 
                 // Right Column: Recent Sessions
@@ -317,42 +215,21 @@ private fun HomeLayout(
                         Modifier
                             .weight(1f)
                             .fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            "Recent Sessions",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        if (state.recentSessions.isNotEmpty()) {
-                            FilledTonalButton(
-                                onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            ) {
-                                Text("View all", style = MaterialTheme.typography.labelMedium)
-                            }
-                        }
-                    }
+                    SubCircuitContent(
+                        screen = RecentSessionsSubScreen(isExpanded = true),
+                        outerEventSink = { event ->
+                            when (event) {
+                                is RecentSessionsOuterEvent.NavigateToSession -> {
+                                    state.eventSink(HomeScreen.Event.SessionSelected(event.topic, event.sessionId))
+                                }
 
-                    if (state.recentSessions.isEmpty()) {
-                        EmptySessionsCard(modifier = Modifier.fillMaxWidth())
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            items(state.recentSessions) { session ->
-                                SessionCard(session, transitionScope = transitionScope) {
-                                    state.eventSink(HomeScreen.Event.SessionClicked(session.id))
+                                RecentSessionsOuterEvent.NavigateToAllSessions -> {
+                                    state.eventSink(HomeScreen.Event.ViewAllSessions)
                                 }
                             }
-                        }
-                    }
+                        },
+                    )
                 }
             }
         } else {
@@ -363,793 +240,64 @@ private fun HomeLayout(
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
                 item {
-                    HeroBanner(
-                        hasDownloadedModel = state.hasDownloadedModel,
-                        selectedModelName = state.selectedModelName,
-                        isModelInMemory = state.isModelInMemory,
-                        memoryBackend = state.memoryBackend,
-                        onManageModels = { state.eventSink(HomeScreen.Event.ManageModels) },
-                        transitionScope = transitionScope,
-                    )
-                }
-
-                if (state.availableCourses.isNotEmpty()) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            ) {
-                                Text(
-                                    "Guided Courses",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                ) {
-                                    Text(
-                                        text = "${state.availableCourses.size} available",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                    )
+                    SubCircuitContent(
+                        screen = ActiveModelBannerSubScreen,
+                        outerEventSink = { event ->
+                            when (event) {
+                                ActiveModelBannerOuterEvent.NavigateToModelPicker -> {
+                                    state.eventSink(HomeScreen.Event.ManageModels)
                                 }
                             }
-                            FilledTonalButton(
-                                onClick = { state.eventSink(HomeScreen.Event.GuidedLessons) },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            ) {
-                                Text("View all", style = MaterialTheme.typography.labelMedium)
-                            }
-                        }
-                    }
-
-                    item {
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            contentPadding = PaddingValues(vertical = 4.dp),
-                        ) {
-                            items(state.availableCourses) { course ->
-                                CourseHomeCard(
-                                    course = course,
-                                    onClick = { state.eventSink(HomeScreen.Event.CourseClicked(course.id)) },
-                                    transitionScope = transitionScope,
-                                )
-                            }
-                        }
-                    }
+                        },
+                    )
                 }
 
                 item {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            "Chat with AI Tutor",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        ) {
-                            Text(
-                                text = "${state.topics.size} topics",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                            )
-                        }
-                    }
+                    SubCircuitContent(
+                        screen = GuidedCoursesSubScreen,
+                        outerEventSink = { event ->
+                            when (event) {
+                                is GuidedCoursesOuterEvent.NavigateToCourse -> {
+                                    state.eventSink(HomeScreen.Event.CourseClicked(event.courseId))
+                                }
+
+                                GuidedCoursesOuterEvent.NavigateToAllCourses -> {
+                                    state.eventSink(HomeScreen.Event.GuidedLessons)
+                                }
+                            }
+                        },
+                    )
                 }
 
                 item {
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(vertical = 4.dp),
-                    ) {
-                        items(state.topics) { topic ->
-                            TopicCompactCard(
-                                topic = topic,
-                                hasCourse = state.topicsWithCourses.contains(topic),
-                                onClick = { state.eventSink(HomeScreen.Event.TopicSelected(topic)) },
-                                transitionScope = transitionScope,
-                            )
-                        }
-                    }
-                }
-
-                if (state.recentSessions.isNotEmpty()) {
-                    item {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                "Recent Sessions",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                            FilledTonalButton(
-                                onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                            ) {
-                                Text("View all", style = MaterialTheme.typography.labelMedium)
+                    SubCircuitContent(
+                        screen = TopicsGridSubScreen(isCompact = true),
+                        outerEventSink = { event ->
+                            when (event) {
+                                is TopicsGridOuterEvent.NavigateToTopic -> {
+                                    state.eventSink(HomeScreen.Event.TopicSelected(event.topic))
+                                }
                             }
-                        }
-                    }
-
-                    items(state.recentSessions) { session ->
-                        SessionCard(session, transitionScope = transitionScope) {
-                            state.eventSink(HomeScreen.Event.SessionClicked(session.id))
-                        }
-                    }
-                } else {
-                    item {
-                        EmptySessionsCard()
-                    }
+                        },
+                    )
                 }
-            }
-        }
-    }
-}
 
-@Composable
-private fun HeroBanner(
-    hasDownloadedModel: Boolean,
-    selectedModelName: String?,
-    isModelInMemory: Boolean,
-    memoryBackend: String?,
-    onManageModels: () -> Unit,
-    modifier: Modifier = Modifier,
-    transitionScope: SharedElementTransitionScope? = null,
-) {
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
-        shape = MaterialTheme.shapes.extraLarge,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Column {
-                Text(
-                    "On-Device AI Tutor",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "Ask & Learn Locally",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                )
-            }
+                item {
+                    SubCircuitContent(
+                        screen = RecentSessionsSubScreen(isExpanded = false),
+                        outerEventSink = { event ->
+                            when (event) {
+                                is RecentSessionsOuterEvent.NavigateToSession -> {
+                                    state.eventSink(HomeScreen.Event.SessionSelected(event.topic, event.sessionId))
+                                }
 
-            Text(
-                "Run optimized LLMs locally on your device with zero cloud latency and complete code privacy.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            // Dedicated Model & Memory Status Bar
-            Surface(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(MaterialTheme.shapes.medium)
-                        .then(
-                            if (hasDownloadedModel) {
-                                Modifier.sharedBoundsNav(transitionScope, ActiveModelCardSharedKey)
-                            } else {
-                                Modifier
-                            },
-                        ).clickable(onClick = onManageModels),
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.weight(1f, fill = false),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Memory,
-                            contentDescription = null,
-                            tint =
-                                if (hasDownloadedModel) {
-                                    MaterialTheme.colorScheme.primary
-                                } else {
-                                    MaterialTheme.colorScheme.outline
-                                },
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text =
-                                if (hasDownloadedModel) {
-                                    selectedModelName ?: "AI Model Ready"
-                                } else {
-                                    "No Model Selected"
-                                },
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier =
-                                if (hasDownloadedModel) {
-                                    Modifier.sharedBoundsNav(transitionScope, ActiveModelTitleSharedKey)
-                                } else {
-                                    Modifier
-                                },
-                        )
-                    }
-
-                    if (hasDownloadedModel) {
-                        Surface(
-                            shape = CircleShape,
-                            color =
-                                if (isModelInMemory) {
-                                    Color(0xFF2E7D32).copy(alpha = 0.15f)
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f)
-                                },
-                            border =
-                                BorderStroke(
-                                    1.dp,
-                                    if (isModelInMemory) {
-                                        Color(0xFF2E7D32).copy(alpha = 0.4f)
-                                    } else {
-                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                                    },
-                                ),
-                            modifier = Modifier.sharedElementNav(transitionScope, ActiveModelBadgeSharedKey),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                            ) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .size(6.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                if (isModelInMemory) {
-                                                    Color(0xFF2E7D32)
-                                                } else {
-                                                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-                                                },
-                                            ),
-                                )
-                                Text(
-                                    text =
-                                        if (isModelInMemory) {
-                                            "In RAM • ${memoryBackend ?: "GPU"}"
-                                        } else {
-                                            "Ready (On Storage)"
-                                        },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color =
-                                        if (isModelInMemory) {
-                                            Color(0xFF2E7D32)
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                )
+                                RecentSessionsOuterEvent.NavigateToAllSessions -> {
+                                    state.eventSink(HomeScreen.Event.ViewAllSessions)
+                                }
                             }
-                        }
-                    } else {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Download,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = MaterialTheme.colorScheme.onErrorContainer,
-                                )
-                                Text(
-                                    text = "Setup required",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TopicCard(
-    topic: CodingTopic,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    hasCourse: Boolean = false,
-    transitionScope: SharedElementTransitionScope? = null,
-) {
-    val visualInfo = topic.visualInfo
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .sharedBoundsNav(transitionScope, TopicCardSharedKey(topic.stableId))
-                .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.3f)),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.small,
-                        color = visualInfo.accentColor.copy(alpha = 0.15f),
-                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
-                        modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(topic.stableId)),
-                    ) {
-                        Text(
-                            text = visualInfo.iconGlyph,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = visualInfo.accentColor,
-                        )
-                    }
-
-                    if (hasCourse) {
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = visualInfo.accentColor.copy(alpha = 0.12f),
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            ) {
-                                Icon(
-                                    Icons.AutoMirrored.Filled.MenuBook,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(12.dp),
-                                    tint = visualInfo.accentColor,
-                                )
-                                Text(
-                                    "Course",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = visualInfo.accentColor,
-                                    fontWeight = FontWeight.SemiBold,
-                                )
-                            }
-                        }
-                    }
-                }
-
-                Icon(
-                    Icons.AutoMirrored.Default.ArrowForward,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-
-            Text(
-                text = topic.displayName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(topic.stableId)),
-            )
-
-            Text(
-                text = visualInfo.tagline,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-@Composable
-private fun CourseHomeCard(
-    course: LearningCourse,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    transitionScope: SharedElementTransitionScope? = null,
-) {
-    val visualInfo = course.topic.visualInfo
-    Card(
-        modifier =
-            modifier
-                .width(260.dp)
-                .sharedBoundsNav(transitionScope, CourseCardSharedKey(course.id))
-                .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = visualInfo.accentColor.copy(alpha = 0.2f),
-                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.5f)),
-                        modifier = Modifier.sharedElementNav(transitionScope, CourseBadgeSharedKey(course.id)),
-                    ) {
-                        Text(
-                            text = visualInfo.iconGlyph,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            color = visualInfo.accentColor,
-                        )
-                    }
-                    Text(
-                        text = course.language,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        color = visualInfo.accentColor,
+                        },
                     )
                 }
-
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = visualInfo.accentColor,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
-
-            Text(
-                text = course.title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.sharedBoundsNav(transitionScope, CourseTitleSharedKey(course.id)),
-            )
-
-            Text(
-                text = course.description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Icon(
-                    Icons.AutoMirrored.Filled.MenuBook,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = "${course.chapters.size} chapters • ${course.lessonCount} lessons",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TopicCompactCard(
-    topic: CodingTopic,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    hasCourse: Boolean = false,
-    transitionScope: SharedElementTransitionScope? = null,
-) {
-    val visualInfo = topic.visualInfo
-    OutlinedCard(
-        modifier =
-            modifier
-                .width(180.dp)
-                .sharedBoundsNav(transitionScope, TopicCardSharedKey(topic.stableId))
-                .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors =
-            CardDefaults.outlinedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.15f))
-                    .padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.small,
-                    color = visualInfo.accentColor.copy(alpha = 0.15f),
-                    modifier = Modifier.sharedElementNav(transitionScope, TopicGlyphSharedKey(topic.stableId)),
-                ) {
-                    Text(
-                        text = visualInfo.iconGlyph,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold,
-                        color = visualInfo.accentColor,
-                    )
-                }
-
-                if (hasCourse) {
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = visualInfo.accentColor.copy(alpha = 0.12f),
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        ) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.MenuBook,
-                                contentDescription = null,
-                                modifier = Modifier.size(10.dp),
-                                tint = visualInfo.accentColor,
-                            )
-                            Text(
-                                "Course",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = visualInfo.accentColor,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
-                    }
-                }
-            }
-
-            Text(
-                text = topic.displayName,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.sharedBoundsNav(transitionScope, TopicTitleSharedKey(topic.stableId)),
-            )
-
-            Text(
-                text = visualInfo.tagline,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SessionCard(
-    session: ChatSession,
-    modifier: Modifier = Modifier,
-    transitionScope: SharedElementTransitionScope? = null,
-    onClick: () -> Unit,
-) {
-    val visualInfo = session.topic.visualInfo
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
-                .clickable(onClick = onClick),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
-    ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Topic accent vertical strip
-            Box(
-                modifier =
-                    Modifier
-                        .width(4.dp)
-                        .height(44.dp)
-                        .clip(CircleShape)
-                        .background(visualInfo.accentColor),
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = session.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(session.id)),
-                )
-                Text(
-                    session.summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        session.topic.displayName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = visualInfo.accentColor,
-                        fontWeight = FontWeight.Medium,
-                    )
-                    val relativeTime =
-                        dev.hossain.codematex.util
-                            .formatRelativeTime(session.lastActiveAt)
-                    val metadataText =
-                        if (relativeTime.isNotEmpty()) {
-                            "${session.messageCount} messages • $relativeTime"
-                        } else {
-                            "${session.messageCount} messages"
-                        }
-                    Text(
-                        metadataText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
-                    )
-                }
-            }
-
-            Icon(
-                Icons.AutoMirrored.Default.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(16.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptySessionsCard(modifier: Modifier = Modifier) {
-    Card(
-        shape = MaterialTheme.shapes.large,
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Surface(
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(48.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            }
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                Text(
-                    text = "Start Your First Session",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = "Select a topic above to ask questions and learn concepts with your private on-device AI tutor.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
             }
         }
     }
@@ -1336,248 +484,29 @@ private fun IneligibleDeviceLayout(
 // ==========================================
 
 @DevicePreviews
+@ThemePreviews
 @Composable
 private fun HomeScreenPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         HomeLayout(
+            state = HomeScreen.State.Success(eventSink = {}),
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun IneligibleDevicePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        IneligibleDeviceLayout(
             state =
-                HomeScreen.State.Success(
-                    recentSessions =
-                        listOf(
-                            ChatSession(
-                                id = "1",
-                                title = "Kotlin Coroutines & Flow",
-                                summary = "Explaining stateIn vs shareIn operators with practical examples.",
-                                topic = CodingTopic.KOTLIN,
-                                messageCount = 6,
-                                lastActiveAt = 0L,
-                                modelUsed = "Gemma 4-E2B IT",
-                            ),
-                            ChatSession(
-                                id = "2",
-                                title = "Jetpack Compose Performance",
-                                summary = "Stability and smart recomposition optimization techniques.",
-                                topic = CodingTopic.ANDROID,
-                                messageCount = 4,
-                                lastActiveAt = 0L,
-                                modelUsed = "Gemma 4-E2B IT",
-                            ),
-                        ),
-                    topics = CodingTopic.selectableEntries,
-                    hasDownloadedModel = true,
-                    topicsWithCourses = setOf(CodingTopic.KOTLIN, CodingTopic.RUST),
-                    availableCourses =
-                        listOf(
-                            LearningCourse(
-                                id = "kotlin-foundations",
-                                language = "Kotlin",
-                                title = "Kotlin Foundations",
-                                description = "Master idiomatic Kotlin programming with real-world exercises.",
-                                version = 1,
-                                chapters =
-                                    listOf(
-                                        LearningChapter(
-                                            id = "ch-1",
-                                            courseId = "kotlin-foundations",
-                                            order = 1,
-                                            title = "Basics",
-                                            description = "Basics",
-                                            lessons =
-                                                listOf(
-                                                    LearningLesson(
-                                                        id = "l-1",
-                                                        chapterId = "ch-1",
-                                                        order = 1,
-                                                        title = "Variables",
-                                                        summary = "Variables summary",
-                                                        estimatedMinutes = 5,
-                                                        blocks = emptyList(),
-                                                    ),
-                                                ),
-                                        ),
-                                    ),
-                            ),
-                        ),
+                HomeScreen.State.IneligibleDevice(
+                    reason = "Device has 4.0 GB of RAM. Minimum required is 8.0 GB.",
+                    detectedRamGb = 4.0,
+                    minRequiredRamGb = 8.0,
+                    is64BitSupported = true,
                     eventSink = {},
                 ),
-        )
-    }
-}
-
-@DevicePreviews
-@Composable
-private fun HomeScreenEmptySessionsPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        HomeLayout(
-            state =
-                HomeScreen.State.Success(
-                    recentSessions = emptyList(),
-                    topics = CodingTopic.selectableEntries,
-                    hasDownloadedModel = true,
-                    eventSink = {},
-                ),
-        )
-    }
-}
-
-@ThemePreviews
-@Composable
-private fun HeroBannerPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        HeroBanner(
-            hasDownloadedModel = true,
-            selectedModelName = "Gemma 2B IT",
-            isModelInMemory = true,
-            memoryBackend = "GPU",
-            onManageModels = {},
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@ThemePreviews
-@Composable
-private fun CourseHomeCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        PreviewSharedElementTransitionLayout {
-            SharedElementTransitionScope {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    CourseHomeCard(
-                        course =
-                            LearningCourse(
-                                id = "kotlin-foundations",
-                                language = "Kotlin",
-                                title = "Kotlin Foundations",
-                                description = "Master idiomatic Kotlin programming with real-world exercises and patterns.",
-                                version = 1,
-                                chapters =
-                                    listOf(
-                                        LearningChapter(
-                                            id = "ch-1",
-                                            courseId = "kotlin-foundations",
-                                            order = 1,
-                                            title = "Kotlin Basics",
-                                            description = "Core language concepts",
-                                            lessons =
-                                                listOf(
-                                                    LearningLesson(
-                                                        id = "l-1",
-                                                        chapterId = "ch-1",
-                                                        order = 1,
-                                                        title = "Variables & Types",
-                                                        summary = "Basics of variables",
-                                                        estimatedMinutes = 5,
-                                                        blocks = emptyList(),
-                                                    ),
-                                                ),
-                                        ),
-                                    ),
-                            ),
-                        onClick = {},
-                        transitionScope = this@SharedElementTransitionScope,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@ThemePreviews
-@Composable
-private fun TopicCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        PreviewSharedElementTransitionLayout {
-            SharedElementTransitionScope {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TopicCard(
-                        topic = CodingTopic.KOTLIN,
-                        hasCourse = true,
-                        onClick = {},
-                        modifier = Modifier.weight(1f),
-                        transitionScope = this@SharedElementTransitionScope,
-                    )
-                    TopicCard(
-                        topic = CodingTopic.ANDROID,
-                        hasCourse = false,
-                        onClick = {},
-                        modifier = Modifier.weight(1f),
-                        transitionScope = this@SharedElementTransitionScope,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@ThemePreviews
-@Composable
-private fun TopicCompactCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        PreviewSharedElementTransitionLayout {
-            SharedElementTransitionScope {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    TopicCompactCard(
-                        topic = CodingTopic.RUST,
-                        hasCourse = true,
-                        onClick = {},
-                        transitionScope = this@SharedElementTransitionScope,
-                    )
-                    TopicCompactCard(
-                        topic = CodingTopic.SWIFT,
-                        hasCourse = false,
-                        onClick = {},
-                        transitionScope = this@SharedElementTransitionScope,
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@ThemePreviews
-@Composable
-private fun SessionCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        PreviewSharedElementTransitionLayout {
-            SharedElementTransitionScope {
-                SessionCard(
-                    session =
-                        ChatSession(
-                            id = "1",
-                            title = "Kotlin Coroutines & Flow",
-                            summary = "Explaining stateIn vs shareIn operators with practical examples.",
-                            topic = CodingTopic.KOTLIN,
-                            messageCount = 6,
-                            lastActiveAt = 0L,
-                            modelUsed = "Gemma 4-E2B IT",
-                        ),
-                    transitionScope = this@SharedElementTransitionScope,
-                    onClick = {},
-                )
-            }
-        }
-    }
-}
-
-@ThemePreviews
-@Composable
-private fun EmptySessionsCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        EmptySessionsCard(
-            modifier = Modifier.padding(16.dp),
         )
     }
 }

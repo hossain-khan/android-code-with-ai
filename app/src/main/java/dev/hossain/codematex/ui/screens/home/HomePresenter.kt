@@ -1,7 +1,6 @@
 package dev.hossain.codematex.ui.screens.home
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -10,15 +9,6 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
-import dev.hossain.codematex.data.model.AiModel
-import dev.hossain.codematex.data.model.ChatSession
-import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.LearningCourse
-import dev.hossain.codematex.data.repository.ChatSessionRepository
-import dev.hossain.codematex.data.repository.ModelRepository
-import dev.hossain.codematex.data.repository.course.LearningRepository
-import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
@@ -32,61 +22,17 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @AssistedInject
 class HomePresenter(
     @Assisted private val navigator: Navigator,
     @Assisted private val screen: HomeScreen,
-    private val sessionRepository: ChatSessionRepository,
-    private val modelRepository: ModelRepository,
     private val hardwareEligibilityChecker: HardwareEligibilityChecker,
-    private val learningRepository: LearningRepository,
-    private val llmEngine: LlmEngine,
 ) : Presenter<HomeScreen.State> {
     @Composable
     override fun present(): HomeScreen.State {
-        var recentSessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
-        var topicsWithCourses by rememberRetained { mutableStateOf<Set<CodingTopic>>(emptySet()) }
-        var availableCourses by rememberRetained { mutableStateOf<List<LearningCourse>>(emptyList()) }
-        var isLoading by rememberRetained { mutableStateOf(true) }
         var isWarningDismissed by rememberRetained { mutableStateOf(false) }
-
         val hardwareEligibility = remember { hardwareEligibilityChecker.checkEligibility() }
-        var selectedModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
-        val hasDownloadedModel = selectedModel != null
-        val selectedModelName = selectedModel?.displayName
-        val isModelInMemory = llmEngine.isInitialized()
-        val memoryBackend = llmEngine.getActiveBackend()?.name
-
-        LaunchedEffect(Unit) {
-            topicsWithCourses = learningRepository.getTopicsWithCourses()
-            launch {
-                learningRepository.getCourses().collect { courses ->
-                    availableCourses = courses
-                }
-            }
-            launch {
-                modelRepository.getAvailableModels().collect { models ->
-                    selectedModel = modelRepository.getSelectedModel()
-                        ?: models.firstOrNull { it.isSelected }
-                        ?: models.firstOrNull { it.downloadStatus == DownloadStatus.DOWNLOADED }
-                }
-            }
-            Timber.d("HomePresenter: Loading sessions")
-            sessionRepository
-                .getAllSessions()
-                .catch {
-                    Timber.e(it, "HomePresenter: Failed to load sessions")
-                    isLoading = false
-                }.collect { sessions ->
-                    Timber.d("HomePresenter: Loaded ${sessions.size} sessions")
-                    recentSessions = sessions.take(5)
-                    isLoading = false
-                }
-        }
 
         val eventSink: (HomeScreen.Event) -> Unit = { event ->
             when (event) {
@@ -94,11 +40,8 @@ class HomePresenter(
                     navigator.goTo(ChatScreen(topic = event.topic))
                 }
 
-                is HomeScreen.Event.SessionClicked -> {
-                    val session = recentSessions.find { it.id == event.sessionId }
-                    if (session != null) {
-                        navigator.goTo(ChatScreen(topic = session.topic, sessionId = session.id))
-                    }
+                is HomeScreen.Event.SessionSelected -> {
+                    navigator.goTo(ChatScreen(topic = event.topic, sessionId = event.sessionId))
                 }
 
                 is HomeScreen.Event.CourseClicked -> {
@@ -141,21 +84,7 @@ class HomePresenter(
             )
         }
 
-        return if (isLoading) {
-            HomeScreen.State.Loading
-        } else {
-            HomeScreen.State.Success(
-                recentSessions = recentSessions,
-                topics = CodingTopic.selectableEntries,
-                hasDownloadedModel = hasDownloadedModel,
-                selectedModelName = selectedModelName,
-                isModelInMemory = isModelInMemory,
-                memoryBackend = memoryBackend,
-                topicsWithCourses = topicsWithCourses,
-                availableCourses = availableCourses,
-                eventSink = eventSink,
-            )
-        }
+        return HomeScreen.State.Success(eventSink = eventSink)
     }
 
     @CircuitInject(HomeScreen::class, AppScope::class)
