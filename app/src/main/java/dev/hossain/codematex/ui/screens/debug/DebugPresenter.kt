@@ -18,10 +18,13 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryProvider
 import dev.hossain.codematex.system.DebugMemoryStats
 import dev.hossain.codematex.system.MemoryDelta
+import dev.hossain.codematex.system.NetworkMonitor
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -34,7 +37,8 @@ import timber.log.Timber
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Circuit Presenter for [DebugScreen], providing on-device LLM runtime profiling and memory diagnostics.
+ * Circuit Presenter for [DebugScreen], providing on-device LLM runtime profiling, edge code runner diagnostics,
+ * and memory diagnostics.
  *
  * This presenter manages:
  * - **Model Loading Diagnostics**: Measures initialization latency (TTFL in milliseconds) and memory growth
@@ -45,6 +49,8 @@ import kotlin.time.Duration.Companion.milliseconds
  *   every 750ms while the screen is active.
  * - **Inference Benchmarking**: Streams tokens on an isolated session to evaluate Time-to-First-Token (TTFT),
  *   decode throughput (tokens/second), and generation duration.
+ * - **Edge Code Runner Diagnostics**: Runs multi-language snippets (Kotlin, Go, Rust, Python, TypeScript) via
+ *   [PlaygroundCodeRunner] to evaluate Cloudflare Workers proxy health, roundtrip latency, and stdout/stderr.
  * - **Device & Storage Inspection**: Extracts hardware specifications and lists downloaded model files on disk.
  *
  * @param navigator Circuit navigator for screen transitions.
@@ -53,6 +59,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * @param llmEngine High-level on-device LiteRT-LM runtime engine.
  * @param configStore Model sampler and generation configuration store.
  * @param debugMemoryProvider Low-level memory sampler providing native heap, JVM heap, and system RAM metrics.
+ * @param codeRunner Edge playground code execution runner.
+ * @param networkMonitor Network connectivity monitor for online/offline mode.
  */
 @AssistedInject
 class DebugPresenter(
@@ -62,6 +70,8 @@ class DebugPresenter(
     private val llmEngine: LlmEngine,
     private val configStore: ModelConfigStore,
     private val debugMemoryProvider: DebugMemoryProvider,
+    private val codeRunner: PlaygroundCodeRunner,
+    private val networkMonitor: NetworkMonitor,
 ) : Presenter<DebugScreen.State> {
     /**
      * Assisted injection factory for [DebugPresenter].
@@ -102,6 +112,24 @@ class DebugPresenter(
         var benchmarkSpeedTps by rememberRetained { mutableStateOf<Float?>(null) }
         var benchmarkTotalTokens by rememberRetained { mutableIntStateOf(0) }
         var benchmarkDurationMs by rememberRetained { mutableStateOf<Long?>(null) }
+
+        var isOnline by rememberRetained { mutableStateOf(true) }
+        var runnerSelectedLang by rememberRetained { mutableStateOf(DEFAULT_RUNNER_LANGUAGE) }
+        var runnerSnippetCode by rememberRetained {
+            mutableStateOf(DEFAULT_RUNNER_SNIPPETS[DEFAULT_RUNNER_LANGUAGE] ?: "")
+        }
+        var isRunningSnippet by rememberRetained { mutableStateOf(false) }
+        var runnerResult by rememberRetained { mutableStateOf<PlaygroundExecutionResult?>(null) }
+        var runnerDurationMs by rememberRetained { mutableStateOf<Long?>(null) }
+        var isPingingProxy by rememberRetained { mutableStateOf(false) }
+        var proxyPingMs by rememberRetained { mutableStateOf<Long?>(null) }
+        var proxyPingError by rememberRetained { mutableStateOf<String?>(null) }
+
+        LaunchedEffect(Unit) {
+            networkMonitor.isOnline.collect { online ->
+                isOnline = online
+            }
+        }
 
         val deviceInfo =
             remember {
@@ -172,6 +200,15 @@ class DebugPresenter(
             benchmarkTotalTokens = benchmarkTotalTokens,
             benchmarkDurationMs = benchmarkDurationMs,
             deviceInfo = deviceInfo,
+            isOnline = isOnline,
+            runnerSelectedLang = runnerSelectedLang,
+            runnerSnippetCode = runnerSnippetCode,
+            isRunningSnippet = isRunningSnippet,
+            runnerResult = runnerResult,
+            runnerDurationMs = runnerDurationMs,
+            isPingingProxy = isPingingProxy,
+            proxyPingMs = proxyPingMs,
+            proxyPingError = proxyPingError,
         ) { event ->
             when (event) {
                 is DebugScreen.Event.SelectModel -> {
@@ -391,6 +428,108 @@ class DebugPresenter(
                     scope.launch {
                         modelRepository.deleteModel(event.model)
                         statusMessage = "Deleted weights for ${event.model.name}."
+                    }
+                }
+
+                is DebugScreen.Event.SelectRunnerLanguage -> {
+                    runnerSelectedLang = event.language
+                    runnerSnippetCode = DEFAULT_RUNNER_SNIPPETS[event.language] ?: ""
+                    runnerResult = null
+                    runnerDurationMs = null
+                    statusMessage = "Selected runner language: ${event.language.replaceFirstChar { it.uppercase() }}"
+                    Timber.d("DebugPresenter: Selected runner language: %s", event.language)
+                }
+
+                is DebugScreen.Event.UpdateRunnerSnippet -> {
+                    runnerSnippetCode = event.code
+                }
+
+                DebugScreen.Event.ResetRunnerSnippet -> {
+                    runnerSnippetCode = DEFAULT_RUNNER_SNIPPETS[runnerSelectedLang] ?: ""
+                    statusMessage = "Reset snippet for ${runnerSelectedLang.replaceFirstChar { it.uppercase() }}."
+                    Timber.d("DebugPresenter: Reset snippet for %s", runnerSelectedLang)
+                }
+
+                DebugScreen.Event.RunRunnerSnippet -> {
+                    scope.launch {
+                        isRunningSnippet = true
+                        runnerResult = null
+                        runnerDurationMs = null
+                        statusMessage = "Executing ${runnerSelectedLang.replaceFirstChar { it.uppercase() }} snippet at edge..."
+                        Timber.i(
+                            "DebugPresenter [RUNNER_START]: lang=%s, codeLength=%d",
+                            runnerSelectedLang,
+                            runnerSnippetCode.length,
+                        )
+                        val start = System.currentTimeMillis()
+                        try {
+                            val result = codeRunner.runSnippet(runnerSnippetCode, runnerSelectedLang)
+                            val duration = System.currentTimeMillis() - start
+                            runnerDurationMs = duration
+                            runnerResult = result
+                            statusMessage =
+                                when (result) {
+                                    is PlaygroundExecutionResult.Success -> {
+                                        "Snippet executed successfully in ${duration}ms via edge proxy."
+                                    }
+
+                                    is PlaygroundExecutionResult.CompilationError -> {
+                                        "Compilation error in ${duration}ms."
+                                    }
+
+                                    is PlaygroundExecutionResult.NetworkError -> {
+                                        "Network error in ${duration}ms: ${result.message}"
+                                    }
+                                }
+                            Timber.i(
+                                "DebugPresenter [RUNNER_RESULT]: lang=%s, durationMs=%d, result=%s",
+                                runnerSelectedLang,
+                                duration,
+                                result::class.simpleName,
+                            )
+                        } catch (e: Exception) {
+                            val duration = System.currentTimeMillis() - start
+                            runnerDurationMs = duration
+                            val err = PlaygroundExecutionResult.NetworkError(e.message ?: "Execution failed")
+                            runnerResult = err
+                            statusMessage = "Runner error: ${e.message}"
+                            Timber.e(e, "DebugPresenter [RUNNER_ERROR]: Execution failed")
+                        } finally {
+                            isRunningSnippet = false
+                        }
+                    }
+                }
+
+                DebugScreen.Event.PingProxy -> {
+                    scope.launch {
+                        isPingingProxy = true
+                        proxyPingMs = null
+                        proxyPingError = null
+                        statusMessage = "Testing Cloudflare edge proxy reachability..."
+                        val start = System.currentTimeMillis()
+                        try {
+                            val pingResult = codeRunner.runSnippet("println(\"ping\")", "kotlin")
+                            val duration = System.currentTimeMillis() - start
+                            when (pingResult) {
+                                is PlaygroundExecutionResult.Success, is PlaygroundExecutionResult.CompilationError -> {
+                                    proxyPingMs = duration
+                                    statusMessage = "Proxy reachable! Roundtrip latency: ${duration}ms."
+                                    Timber.i("DebugPresenter [PING_SUCCESS]: durationMs=%d", duration)
+                                }
+
+                                is PlaygroundExecutionResult.NetworkError -> {
+                                    proxyPingError = pingResult.message
+                                    statusMessage = "Proxy unreachable: ${pingResult.message}"
+                                    Timber.w("DebugPresenter [PING_FAIL]: error=%s", pingResult.message)
+                                }
+                            }
+                        } catch (e: Exception) {
+                            proxyPingError = e.message ?: "Ping request failed"
+                            statusMessage = "Ping failed: ${e.message}"
+                            Timber.e(e, "DebugPresenter [PING_ERROR]: Ping request failed")
+                        } finally {
+                            isPingingProxy = false
+                        }
                     }
                 }
 
