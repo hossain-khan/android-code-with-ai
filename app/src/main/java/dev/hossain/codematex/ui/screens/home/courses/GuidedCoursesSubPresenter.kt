@@ -15,6 +15,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * SubPresenter that loads available interactive courses for the guided courses section on the home screen.
+ */
 class GuidedCoursesSubPresenter(
     private val learningRepository: LearningRepository,
 ) : SubPresenter<GuidedCoursesOuterEvent, GuidedCoursesSubState> {
@@ -45,6 +48,9 @@ class GuidedCoursesSubPresenter(
     }
 }
 
+/**
+ * Factory providing [GuidedCoursesSubPresenter] for [GuidedCoursesSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class GuidedCoursesSubPresenterFactory(

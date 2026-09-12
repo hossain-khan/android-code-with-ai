@@ -52,6 +52,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * Composable rendering recent chat sessions on the home dashboard.
+ * Adapts between an inline Column in compact phones and an expanded LazyColumn in tablets.
+ */
 @Composable
 fun RecentSessionsSubUi(
     state: RecentSessionsSubState,
@@ -109,6 +113,9 @@ fun RecentSessionsSubUi(
     }
 }
 
+/**
+ * Card representing an existing chat session with topic accent, title, summary, and relative time.
+ */
 @Composable
 fun SessionCard(
     session: ChatSession,
@@ -202,6 +209,9 @@ fun SessionCard(
     }
 }
 
+/**
+ * Expressive empty state card encouraging the user to initiate their first AI tutor conversation.
+ */
 @Composable
 fun EmptySessionsCard(modifier: Modifier = Modifier) {
     Card(
@@ -257,6 +267,9 @@ fun EmptySessionsCard(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Factory creating [SubUi] instances for [RecentSessionsSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class RecentSessionsSubUiFactory : SubUiFactory {

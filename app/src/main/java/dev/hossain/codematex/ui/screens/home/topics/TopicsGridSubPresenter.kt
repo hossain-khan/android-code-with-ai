@@ -15,6 +15,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * SubPresenter providing selectable coding topics and identifying which topics have interactive courses.
+ */
 class TopicsGridSubPresenter(
     private val screen: TopicsGridSubScreen,
     private val learningRepository: LearningRepository,
@@ -42,6 +45,9 @@ class TopicsGridSubPresenter(
     }
 }
 
+/**
+ * Factory providing [TopicsGridSubPresenter] for [TopicsGridSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class TopicsGridSubPresenterFactory(

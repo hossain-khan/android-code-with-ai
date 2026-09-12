@@ -66,6 +66,12 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
 import java.util.Locale
 
+/**
+ * Circuit-injected UI content for [HomeScreen].
+ *
+ * Provides [LocalSharedElementTransitionScope] to the composition hierarchy so nested
+ * dashboard subcircuits can attach to the root navigation shared element transition.
+ */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalSharedTransitionApi::class)
 @CircuitInject(screen = HomeScreen::class, scope = AppScope::class)
 @Composable
@@ -100,6 +106,10 @@ private fun HomeScreenInnerContent(
     }
 }
 
+/**
+ * Expressive adaptive dashboard layout that renders autonomous CircuitX SubCircuits via [SubCircuitContent].
+ * Adapts dynamically between compact single-column feed and medium/expanded two-pane dashboard.
+ */
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class,
@@ -303,6 +313,10 @@ private fun HomeLayout(
     }
 }
 
+/**
+ * Fallback layout displayed when device hardware specifications (e.g., RAM, 64-bit support)
+ * do not meet minimum thresholds for stable on-device inference.
+ */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun IneligibleDeviceLayout(

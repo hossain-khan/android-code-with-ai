@@ -17,6 +17,9 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.catch
 import timber.log.Timber
 
+/**
+ * SubPresenter that observes stored chat sessions and emits the top 5 recent sessions for the dashboard.
+ */
 class RecentSessionsSubPresenter(
     private val screen: RecentSessionsSubScreen,
     private val sessionRepository: ChatSessionRepository,
@@ -52,6 +55,9 @@ class RecentSessionsSubPresenter(
     }
 }
 
+/**
+ * Factory providing [RecentSessionsSubPresenter] for [RecentSessionsSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class RecentSessionsSubPresenterFactory(

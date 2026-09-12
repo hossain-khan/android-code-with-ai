@@ -23,6 +23,12 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 
+/**
+ * Coordinator presenter for [HomeScreen].
+ *
+ * Verifies on-device hardware eligibility on startup and handles high-level navigation
+ * events forwarded by dashboard CircuitX SubCircuits.
+ */
 @AssistedInject
 class HomePresenter(
     @Assisted private val navigator: Navigator,
@@ -87,6 +93,9 @@ class HomePresenter(
         return HomeScreen.State.Success(eventSink = eventSink)
     }
 
+    /**
+     * Assisted injection factory for [HomePresenter].
+     */
     @CircuitInject(HomeScreen::class, AppScope::class)
     @AssistedFactory
     interface Factory {

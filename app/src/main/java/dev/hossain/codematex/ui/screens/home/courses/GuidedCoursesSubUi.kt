@@ -48,6 +48,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * Composable rendering the interactive guided courses section on the home dashboard.
+ */
 @Composable
 fun GuidedCoursesSubUi(
     state: GuidedCoursesSubState,
@@ -107,6 +110,9 @@ fun GuidedCoursesSubUi(
     }
 }
 
+/**
+ * Compact horizontal course card showing language badge, title, summary, and chapter metadata.
+ */
 @Composable
 internal fun CourseHomeCard(
     course: LearningCourse,
@@ -211,6 +217,9 @@ internal fun CourseHomeCard(
     }
 }
 
+/**
+ * Factory creating [SubUi] instances for [GuidedCoursesSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class GuidedCoursesSubUiFactory : SubUiFactory {

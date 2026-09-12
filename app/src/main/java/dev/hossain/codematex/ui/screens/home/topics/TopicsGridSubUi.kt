@@ -49,6 +49,11 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * Composable rendering selectable coding topics on the home dashboard.
+ * Switches between a horizontal scrollable row in compact phone layouts
+ * and an adaptive multi-column grid in medium/expanded tablet layouts.
+ */
 @Composable
 fun TopicsGridSubUi(
     state: TopicsGridSubState,
@@ -99,6 +104,9 @@ fun TopicsGridSubUi(
     }
 }
 
+/**
+ * Section header displaying "Chat with AI Tutor" and a chip indicating available topic count.
+ */
 @Composable
 private fun TopicsHeader(
     topicCount: Int,
@@ -128,6 +136,9 @@ private fun TopicsHeader(
     }
 }
 
+/**
+ * Card representing a coding topic in the expanded grid view with accent styling, glyph, and course badge.
+ */
 @Composable
 fun TopicCard(
     topic: CodingTopic,
@@ -229,6 +240,9 @@ fun TopicCard(
     }
 }
 
+/**
+ * Compact topic card for horizontal carousel presentation on compact screen sizes.
+ */
 @Composable
 fun TopicCompactCard(
     topic: CodingTopic,
@@ -324,6 +338,9 @@ fun TopicCompactCard(
     }
 }
 
+/**
+ * Factory creating [SubUi] instances for [TopicsGridSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class TopicsGridSubUiFactory : SubUiFactory {

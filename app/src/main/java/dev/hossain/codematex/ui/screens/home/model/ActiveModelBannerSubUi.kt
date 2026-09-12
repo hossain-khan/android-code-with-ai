@@ -43,6 +43,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * Composable rendering the active AI model hero banner on the home dashboard.
+ */
 @Composable
 fun ActiveModelBannerSubUi(
     state: ActiveModelBannerSubState,
@@ -54,6 +57,9 @@ fun ActiveModelBannerSubUi(
     )
 }
 
+/**
+ * Hero card presenting the local AI tutor branding and live on-device LLM runtime telemetry.
+ */
 @Composable
 internal fun HeroBanner(
     state: ActiveModelBannerSubState,
@@ -243,6 +249,9 @@ internal fun HeroBanner(
     }
 }
 
+/**
+ * Factory creating [SubUi] instances for [ActiveModelBannerSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class ActiveModelBannerSubUiFactory : SubUiFactory {

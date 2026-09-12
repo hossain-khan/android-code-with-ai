@@ -17,6 +17,10 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
+/**
+ * SubPresenter that monitors downloaded AI model state and memory engine lifecycle
+ * for the hero banner section on the dashboard.
+ */
 class ActiveModelBannerSubPresenter(
     private val modelRepository: ModelRepository,
     private val llmEngine: LlmEngine,
@@ -55,6 +59,9 @@ class ActiveModelBannerSubPresenter(
     }
 }
 
+/**
+ * Factory providing [ActiveModelBannerSubPresenter] for [ActiveModelBannerSubScreen].
+ */
 @ContributesIntoSet(AppScope::class)
 @Inject
 class ActiveModelBannerSubPresenterFactory(
