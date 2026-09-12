@@ -84,7 +84,7 @@ class LessonPresenterTest {
         runTest {
             val navigator =
                 FakeNavigator(
-                    LessonCatalogScreen,
+                    LessonCatalogScreen(),
                     LessonScreen("kotlin-hello-world"),
                 )
 

@@ -110,7 +110,7 @@ class HomePresenter(
                 }
 
                 HomeScreen.Event.GuidedLessons -> {
-                    navigator.goTo(LessonCatalogScreen)
+                    navigator.goTo(LessonCatalogScreen())
                 }
 
                 HomeScreen.Event.ViewAllSessions -> {
