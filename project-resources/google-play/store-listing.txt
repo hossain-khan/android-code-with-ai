@@ -8,14 +8,14 @@ CodeMateX - AI Coding Tutor
 --------------------------------------------------------------------------------
 SHORT DESCRIPTION (Max 80 characters)
 --------------------------------------------------------------------------------
-100% private, on-device AI coding tutor, interactive lessons & code runner.
+On-device AI coding tutor with offline lessons & interactive code runner.
 
 --------------------------------------------------------------------------------
 FULL DESCRIPTION (Max 4000 characters)
 --------------------------------------------------------------------------------
-CodeMateX is your intelligent, 100% on-device AI coding companion, tutor, and interactive learning platform. Built for mobile engineers, computer science students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
+CodeMateX is your intelligent, on-device AI coding companion, tutor, and interactive learning platform. Built for mobile engineers, computer science students, and software developers, CodeMateX runs optimized Large Language Models (LLMs) locally on your device hardware using Google's cutting-edge LiteRT runtime.
 
-No cloud subscriptions. No telemetry. No privacy compromises. CodeMateX delivers instant AI tutoring, code explanation, concept learning, and architecture guidance without sending a single byte of your code or queries over the internet.
+No cloud subscriptions. No telemetry. Your private prompts, learning queries, and AI chats are processed 100% on-device and never sent to cloud LLM servers.
 
 ✨ KEY HIGHLIGHTS & FEATURES
 
@@ -31,39 +31,41 @@ Master modern languages with structured, offline-first curriculum courses:
 
 ▶️ In-App Code Execution & Terminal Runner
 Run code snippets directly within guided lessons:
-• Execute interactive code snippets in Kotlin, Go, Rust, Python, and TypeScript
-• Real-time terminal console output for learning verification
-• Smart offline mode preserving 100% offline reading when disconnected
+• Execute interactive code snippets in Kotlin, Go, Rust, Python, and TypeScript via high-speed edge sandbox execution (requires internet connection).
+• Real-time terminal console output for instant verification.
+• Smart Offline Mode: When disconnected from Wi-Fi or data, CodeMateX automatically adapts to offline reading mode so you can study lessons, take quizzes, and chat with your local AI tutor anywhere.
 
 🧠 100% Local On-Device AI
-• Powered by Google LiteRT-LM (supporting Gemma 2 2B, Qwen 2.5 Coder, Qwen 3, and Phi-4 Mini)
-• Zero latency from network roundtrips
-• Context-Aware In-Lesson Chat: Ask AI Tutor questions directly about specific lesson snippets
-• Tunable AI Personas: Switch between Senior Architect, Beginner Tutor, and Interview Coach
-• Developer Profile: Inject your experience level and preferred stack into the AI's context
+• Powered by Google LiteRT-LM (supporting Gemma 2 2B, Qwen 2.5 Coder, Qwen 3, and Phi-4 Mini).
+• 100% Private: All AI chats, explanations, and debugging queries run entirely on your device hardware with zero cloud LLM calls.
+• Zero latency from network roundtrips.
+• Context-Aware In-Lesson Chat: Ask AI Tutor questions directly about specific lesson snippets.
+• Tunable AI Personas: Switch between Senior Architect, Beginner Tutor, and Interview Coach.
+• Developer Profile: Inject your experience level and preferred stack into the AI's context.
 
 🛡️ Complete Privacy & Security
-• Your code, prompts, and chat history never leave your device
-• No accounts, sign-ups, tracking, or cloud data collection
+• Your AI prompts, questions, and learning history never leave your device.
+• No accounts, sign-ups, tracking, or personal data collection.
+• Code snippet execution in the runner is sent over encrypted HTTPS solely to compile and execute, without user association or persistent storage.
 
 📊 Real-Time Hardware Telemetry & Benchmarking
 Inspect on-device LLM performance in real time:
-• Hardware Backend acceleration indicators (NPU, GPU OpenCL/Vulkan, and CPU)
-• Time-to-First-Token (TTFT) prefill latency in milliseconds
-• Active decode speed in tokens per second (t/s)
-• Real-time model memory footprint and hyperparameter tuning (Temp, Top-K, Top-P)
+• Hardware Backend acceleration indicators (NPU, GPU OpenCL/Vulkan, and CPU).
+• Time-to-First-Token (TTFT) prefill latency in milliseconds.
+• Active decode speed in tokens per second (t/s).
+• Real-time model memory footprint and hyperparameter tuning (Temp, Top-K, Top-P).
 
 🎨 Material 3 Expressive & Code Customization
-• Atmospheric ambient lighting and dynamic topic visual branding
-• Syntax highlighting powered by Highlight.js with themes: Tomorrow, Atom One, GitHub, Dracula
-• Configurable code view: line numbers, font sizing, and compact density presets
-• Material You adaptive layout optimized for phones, foldables, and tablets
+• Atmospheric ambient lighting and dynamic topic visual branding.
+• Syntax highlighting powered by Highlight.js with themes: Tomorrow, Atom One, GitHub, Dracula.
+• Configurable code view: line numbers, font sizing, and compact density presets.
+• Material You adaptive layout optimized for phones, foldables, and tablets.
 
 ⚙️ HARDWARE REQUIREMENTS
 To deliver responsive on-device LLM inference, CodeMateX is optimized for modern high-performance devices:
-• RAM: 8 GB RAM recommended (6 GB minimum)
-• Processor: 64-bit ARM architecture (ARM64-v8a)
-• Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration
+• RAM: 8 GB RAM recommended (6 GB minimum).
+• Processor: 64-bit ARM architecture (ARM64-v8a).
+• Graphics: Vulkan 1.1+ compute shaders or OpenCL GPU acceleration.
 
 Level up your programming skills today with a private, powerful AI tutor and interactive code lab right in your pocket.
 
