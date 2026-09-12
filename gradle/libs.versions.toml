@@ -9,26 +9,26 @@ activityCompose = "1.13.0"
 # https://developer.android.com/build/releases/gradle-plugin
 # AGP 9.4 requires Gradle 9.6.0 or higher
 agp = "9.4.0"
-circuit = "0.36.1"
-composeBom = "2026.08.00"
-material3 = "1.5.0-alpha27"
+circuit = "0.38.0"
+composeBom = "2026.09.00"
+material3 = "1.5.0-alpha28"
 material3Adaptive = "1.3.0"
 androidxDatastore = "1.2.1"
 coreKtx = "1.19.0"
 # https://github.com/Kotlin/kotlinx.coroutines/releases
 kotlinxCoroutines = "1.11.0"
 espressoCore = "3.7.0"
-googleFonts = "1.12.0"
+googleFonts = "1.12.1"
 accompanist = "0.37.3"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 truth = "1.4.5"
 
 # https://kotlinlang.org/docs/releases.html
-kotlin = "2.4.10"
+kotlin = "2.4.20"
 # The KSP (Kotlin Symbol Processing) plugin version is managed separately in this template.
 # When upgrading Kotlin or KSP, verify that the selected KSP release is compatible with the configured Kotlin version.
-ksp = "2.3.11"
+ksp = "2.3.12"
 
 # Networking
 # https://square.github.io/okhttp/
@@ -45,21 +45,21 @@ retrofitKotlinxSerializationConverter = "1.0.0"
 # https://github.com/pinterest/ktlint
 kotlinter = "5.7.0"
 lifecycleRuntimeKtx = "2.11.0"
-metro = "1.4.2"
+metro = "1.4.3"
 androidxWork = "2.11.2"
 
 # On-device AI
 # https://github.com/google-ai-edge/LiteRT-LM/releases
 # https://developers.google.com/edge/litert-lm/android
 # https://maven.google.com/web/index.html#com.google.ai.edge.litertlm:litertlm-android
-litertlm = "0.16.1"
+litertlm = "0.17.0"
 
 # https://github.com/mikepenz/multiplatform-markdown-renderer
 markdownRenderer = "0.45.0"
 
 # https://hossain-khan.github.io/android-compose-highlight/
 composeHighlight = "0.36.0"
-room = "2.8.4"
+room = "2.8.5"
 timber = "5.0.1"
 
 # Kover - Kotlin code coverage

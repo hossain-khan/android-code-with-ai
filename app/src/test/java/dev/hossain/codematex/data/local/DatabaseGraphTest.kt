@@ -8,12 +8,8 @@ class DatabaseGraphTest {
     fun `provideSessionDao returns dao from database`() {
         val fakeDao = FakeSessionDao()
         val fakeDatabase = FakeSessionDatabase(fakeDao)
-        val graph =
-            object : DatabaseGraph {
-                // No overrides needed for this test; default method bodies are used.
-            }
 
-        val dao = graph.provideSessionDao(fakeDatabase)
+        val dao = DatabaseGraph.provideSessionDao(fakeDatabase)
 
         assertThat(dao).isSameInstanceAs(fakeDao)
     }

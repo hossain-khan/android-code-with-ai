@@ -10,11 +10,9 @@ import kotlin.time.Duration.Companion.seconds
  * Unit tests for [NetworkingGraph].
  */
 class NetworkingGraphTest {
-    private val networkingGraph = object : NetworkingGraph {}
-
     @Test
     fun `provideOkHttpClient configures expected timeouts and logging level`() {
-        val client = networkingGraph.provideOkHttpClient()
+        val client = NetworkingGraph.provideOkHttpClient()
 
         assertThat(client.connectTimeoutMillis.toLong()).isEqualTo(30.seconds.inWholeMilliseconds)
         assertThat(client.readTimeoutMillis.toLong()).isEqualTo(30.seconds.inWholeMilliseconds)
@@ -30,7 +28,7 @@ class NetworkingGraphTest {
 
     @Test
     fun `provideJson is configured to be lenient, ignore unknown keys, and encode defaults`() {
-        val json = networkingGraph.provideJson()
+        val json = NetworkingGraph.provideJson()
 
         assertThat(json.configuration.ignoreUnknownKeys).isTrue()
         assertThat(json.configuration.isLenient).isTrue()
@@ -39,10 +37,10 @@ class NetworkingGraphTest {
 
     @Test
     fun `provideRetrofit creates Retrofit instance with correct baseUrl and converter`() {
-        val client = networkingGraph.provideOkHttpClient()
-        val json = networkingGraph.provideJson()
+        val client = NetworkingGraph.provideOkHttpClient()
+        val json = NetworkingGraph.provideJson()
 
-        val retrofit = networkingGraph.provideRetrofit(client, json)
+        val retrofit = NetworkingGraph.provideRetrofit(client, json)
 
         assertThat(retrofit.baseUrl().toString()).isEqualTo("https://example.com/")
         assertThat(retrofit.callFactory()).isEqualTo(client)
@@ -51,10 +49,10 @@ class NetworkingGraphTest {
 
     @Test
     fun `providePlaygroundProxyApi creates API instance with Cloudflare edge proxy baseUrl`() {
-        val client = networkingGraph.provideOkHttpClient()
-        val json = networkingGraph.provideJson()
+        val client = NetworkingGraph.provideOkHttpClient()
+        val json = NetworkingGraph.provideJson()
 
-        val api = networkingGraph.providePlaygroundProxyApi(client, json)
+        val api = NetworkingGraph.providePlaygroundProxyApi(client, json)
 
         assertThat(api).isNotNull()
     }
