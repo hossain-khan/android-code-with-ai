@@ -2,6 +2,7 @@ package dev.hossain.codematex.data.repository
 
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.LessonBlock
+import dev.hossain.codematex.data.repository.course.GoByExampleCourseContent
 import dev.hossain.codematex.data.repository.course.GoCourseContent
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
@@ -18,6 +19,7 @@ class CourseContentTest {
             PythonCourseContent.course,
             TypeScriptCourseContent.course,
             GoCourseContent.course,
+            GoByExampleCourseContent.course,
             RustCourseContent.course,
             RustByExampleCourseContent.course,
             SwiftCourseContent.course,
@@ -397,6 +399,27 @@ class CourseContentTest {
                 .flatMap { it.blocks }
                 .filterIsInstance<LessonBlock.Code>()
         assertThat(rbeBlocks.count { it.isPlaygroundRunnable }).isGreaterThan(280)
+
+        val gbeCourse = GoByExampleCourseContent.course
+        assertThat(gbeCourse.chapters).hasSize(7)
+        assertThat(gbeCourse.lessonCount).isEqualTo(85)
+        val gbeBlocks =
+            gbeCourse.chapters
+                .flatMap { it.lessons }
+                .flatMap { it.blocks }
+                .filterIsInstance<LessonBlock.Code>()
+        assertThat(gbeBlocks).hasSize(85)
+        assertThat(gbeBlocks.count { it.isPlaygroundRunnable }).isEqualTo(83)
+        val gbeNonRunnable =
+            gbeCourse.chapters
+                .flatMap { it.lessons }
+                .filter { lesson ->
+                    lesson.blocks.filterIsInstance<LessonBlock.Code>().any { !it.isPlaygroundRunnable }
+                }.map { it.id }
+        assertThat(gbeNonRunnable).containsExactly(
+            "gbe-testing-and-benchmarking",
+            "gbe-embed-directive",
+        )
     }
 
     private fun <T : Comparable<T>> isStrictlyIncreasing(values: List<T>): Boolean =
