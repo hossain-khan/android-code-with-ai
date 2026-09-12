@@ -3,6 +3,9 @@ package dev.hossain.codematex.di
 import com.slack.circuit.foundation.Circuit
 import com.slack.circuit.runtime.presenter.Presenter
 import com.slack.circuit.runtime.ui.Ui
+import com.slack.circuit.subcircuit.SubCircuit
+import com.slack.circuit.subcircuit.SubPresenterFactory
+import com.slack.circuit.subcircuit.SubUiFactory
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
@@ -49,6 +52,18 @@ interface CircuitProviders {
      */
     @Multibinds fun uiFactories(): Set<Ui.Factory>
 
+    /**
+     * Metro multi-binding method that provides a set of SubPresenterFactory instances.
+     */
+    @Multibinds(allowEmpty = true)
+    fun subPresenterFactories(): Set<SubPresenterFactory>
+
+    /**
+     * Metro multi-binding method that provides a set of SubUiFactory instances.
+     */
+    @Multibinds(allowEmpty = true)
+    fun subUiFactories(): Set<SubUiFactory>
+
     companion object {
         /**
          * Provides a singleton instance of Circuit with presenter and UI factories configured.
@@ -69,6 +84,21 @@ interface CircuitProviders {
                 .Builder()
                 .addPresenterFactories(presenterFactories)
                 .addUiFactories(uiFactories)
+                .build()
+
+        /**
+         * Provides a singleton instance of [SubCircuit] with sub-presenter and sub-UI factories configured.
+         */
+        @Provides
+        @SingleIn(AppScope::class)
+        fun provideSubCircuit(
+            subPresenterFactories: @JvmSuppressWildcards Set<SubPresenterFactory>,
+            subUiFactories: @JvmSuppressWildcards Set<SubUiFactory>,
+        ): SubCircuit =
+            SubCircuit
+                .builder()
+                .addPresenterFactories(subPresenterFactories)
+                .addUiFactories(subUiFactories)
                 .build()
     }
 }
