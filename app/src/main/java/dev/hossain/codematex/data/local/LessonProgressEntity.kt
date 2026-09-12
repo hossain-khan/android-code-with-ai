@@ -1,6 +1,7 @@
 package dev.hossain.codematex.data.local
 
 import androidx.room.Entity
+import dev.hossain.codematex.data.model.LessonProgress
 import dev.hossain.codematex.data.model.LessonStatus
 
 @Entity(
@@ -16,8 +17,8 @@ data class LessonProgressEntity(
 
 fun LessonProgressEntity.toLessonStatus(): LessonStatus = LessonStatus.entries.find { it.name == status } ?: LessonStatus.NOT_STARTED
 
-fun LessonProgressEntity.toLessonProgress(): dev.hossain.codematex.data.model.LessonProgress =
-    dev.hossain.codematex.data.model.LessonProgress(
+fun LessonProgressEntity.toLessonProgress(): LessonProgress =
+    LessonProgress(
         lessonId = lessonId,
         courseId = courseId,
         status = toLessonStatus(),

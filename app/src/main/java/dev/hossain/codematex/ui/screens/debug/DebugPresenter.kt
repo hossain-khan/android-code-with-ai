@@ -34,6 +34,7 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.system.MemoryCompatibilityPolicy
 import dev.hossain.codematex.system.MemoryDelta
 import dev.hossain.codematex.system.NetworkMonitor
+import dev.hossain.codematex.ui.screens.debug.DebugScreen.DebugDatabaseStats
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -225,7 +226,7 @@ class DebugPresenter(
             }
         }
 
-        var databaseStats by rememberRetained { mutableStateOf(DebugScreen.DebugDatabaseStats()) }
+        var databaseStats by rememberRetained { mutableStateOf(DebugDatabaseStats()) }
 
         LaunchedEffect(Unit) {
             combine(
@@ -254,7 +255,7 @@ class DebugPresenter(
                             }
                         }
                     }
-                DebugScreen.DebugDatabaseStats(
+                DebugDatabaseStats(
                     completedLessons = completedLessonIds.size,
                     inProgressLessons = progressList.count { it.status == LessonStatus.IN_PROGRESS },
                     totalBundledLessons = totalLessons,

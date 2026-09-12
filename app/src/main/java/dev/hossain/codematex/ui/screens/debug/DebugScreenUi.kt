@@ -94,6 +94,7 @@ import dev.hossain.codematex.system.HardwareEligibility
 import dev.hossain.codematex.system.MemoryDelta
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.screens.debug.DebugScreen.DebugDatabaseStats
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -1553,7 +1554,7 @@ private fun StorageInspectorCard(
 
 @Composable
 internal fun DatabaseDiagnosticsCard(
-    stats: DebugScreen.DebugDatabaseStats,
+    stats: DebugDatabaseStats,
     onResetProgress: () -> Unit,
     onSeedProgress: () -> Unit,
     onClearSessions: () -> Unit,
@@ -1900,7 +1901,7 @@ private fun DebugScreenPreview() {
                                 "CPU Cores" to "8 cores",
                             ),
                         databaseStats =
-                            DebugScreen.DebugDatabaseStats(
+                            DebugDatabaseStats(
                                 completedLessons = 42,
                                 inProgressLessons = 5,
                                 totalBundledLessons = 620,
@@ -2095,7 +2096,7 @@ private fun DatabaseDiagnosticsCardPreview() {
         Surface(modifier = Modifier.padding(16.dp)) {
             DatabaseDiagnosticsCard(
                 stats =
-                    DebugScreen.DebugDatabaseStats(
+                    DebugDatabaseStats(
                         completedLessons = 42,
                         inProgressLessons = 5,
                         totalBundledLessons = 620,
