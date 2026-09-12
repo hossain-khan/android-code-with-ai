@@ -200,7 +200,7 @@ class HomePresenterTest {
             presenter.test {
                 val state = expectMostRecentItem() as HomeScreen.State.Success
                 state.eventSink(HomeScreen.Event.GuidedLessons)
-                assertThat(navigator.awaitNextScreen()).isEqualTo(LessonCatalogScreen)
+                assertThat(navigator.awaitNextScreen()).isEqualTo(LessonCatalogScreen())
             }
         }
 

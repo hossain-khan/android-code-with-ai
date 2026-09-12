@@ -5,11 +5,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.CourseProgress
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.course.LearningRepository
@@ -32,6 +34,7 @@ class LessonCatalogPresenter(
     override fun present(): LessonCatalogScreen.State {
         var courses by rememberRetained { mutableStateOf<List<LearningCourse>>(emptyList()) }
         var progress by rememberRetained { mutableStateOf<Map<String, CourseProgress>>(emptyMap()) }
+        var selectedTopic by rememberRetained(screen.initialTopic) { mutableStateOf(screen.initialTopic) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
@@ -59,8 +62,31 @@ class LessonCatalogPresenter(
                 }
         }
 
+        val courseCountsByTopic =
+            remember(courses) {
+                courses.groupingBy { it.topic }.eachCount()
+            }
+
+        val availableTopics =
+            remember(courses) {
+                courses.map { it.topic }.distinct()
+            }
+
+        val filteredCourses =
+            remember(courses, selectedTopic) {
+                if (selectedTopic == null) {
+                    courses
+                } else {
+                    courses.filter { it.topic == selectedTopic }
+                }
+            }
+
         val eventSink: (LessonCatalogScreen.Event) -> Unit = { event ->
             when (event) {
+                is LessonCatalogScreen.Event.SelectTopic -> {
+                    selectedTopic = event.topic
+                }
+
                 is LessonCatalogScreen.Event.OpenCourse -> {
                     navigator.goTo(ChapterScreen(event.courseId))
                 }
@@ -76,9 +102,25 @@ class LessonCatalogPresenter(
         }
 
         return when {
-            isLoading -> LessonCatalogScreen.State.Loading
-            errorMessage != null -> LessonCatalogScreen.State.Error(errorMessage!!, eventSink)
-            else -> LessonCatalogScreen.State.Success(courses, progress, eventSink)
+            isLoading -> {
+                LessonCatalogScreen.State.Loading
+            }
+
+            errorMessage != null -> {
+                LessonCatalogScreen.State.Error(errorMessage!!, eventSink)
+            }
+
+            else -> {
+                LessonCatalogScreen.State.Success(
+                    allCourses = courses,
+                    courses = filteredCourses,
+                    availableTopics = availableTopics,
+                    courseCountsByTopic = courseCountsByTopic,
+                    selectedTopic = selectedTopic,
+                    progress = progress,
+                    eventSink = eventSink,
+                )
+            }
         }
     }
 
