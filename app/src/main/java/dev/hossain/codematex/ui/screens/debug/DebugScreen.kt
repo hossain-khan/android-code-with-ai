@@ -5,6 +5,7 @@ import com.slack.circuit.runtime.CircuitUiEvent
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
 import dev.hossain.codematex.system.MemoryDelta
@@ -37,6 +38,15 @@ data object DebugScreen : ParcelableScreen {
             val benchmarkTotalTokens: Int = 0,
             val benchmarkDurationMs: Long? = null,
             val deviceInfo: Map<String, String> = emptyMap(),
+            val isOnline: Boolean = true,
+            val runnerSelectedLang: String = DEFAULT_RUNNER_LANGUAGE,
+            val runnerSnippetCode: String = DEFAULT_RUNNER_SNIPPETS[DEFAULT_RUNNER_LANGUAGE] ?: "",
+            val isRunningSnippet: Boolean = false,
+            val runnerResult: PlaygroundExecutionResult? = null,
+            val runnerDurationMs: Long? = null,
+            val isPingingProxy: Boolean = false,
+            val proxyPingMs: Long? = null,
+            val proxyPingError: String? = null,
             val eventSink: (Event) -> Unit,
         ) : State
     }
@@ -69,9 +79,68 @@ data object DebugScreen : ParcelableScreen {
             val model: AiModel,
         ) : Event
 
+        data class SelectRunnerLanguage(
+            val language: String,
+        ) : Event
+
+        data class UpdateRunnerSnippet(
+            val code: String,
+        ) : Event
+
+        data object ResetRunnerSnippet : Event
+
+        data object RunRunnerSnippet : Event
+
+        data object PingProxy : Event
+
         data object Back : Event
     }
 }
 
 internal const val DEFAULT_BENCHMARK_PROMPT =
     "Write a concise Kotlin function that computes Fibonacci numbers using recursion with memoization."
+
+internal const val DEFAULT_RUNNER_LANGUAGE = "kotlin"
+
+internal val RUNNER_SUPPORTED_LANGUAGES = listOf("kotlin", "go", "rust", "python", "typescript")
+
+internal val DEFAULT_RUNNER_SNIPPETS =
+    mapOf(
+        "kotlin" to
+            """
+            fun main() {
+                println("Hello from CodeMateX Edge Runner (Kotlin)!")
+                val numbers = listOf(1, 2, 3, 4, 5)
+                println("Sum: ${'$'}{numbers.sum()}")
+            }
+            """.trimIndent(),
+        "go" to
+            """
+            package main
+            import "fmt"
+
+            func main() {
+                fmt.Println("Hello from CodeMateX Edge Runner (Go)!")
+            }
+            """.trimIndent(),
+        "rust" to
+            """
+            fn main() {
+                println!("Hello from CodeMateX Edge Runner (Rust)!");
+                let numbers = vec![1, 2, 3, 4, 5];
+                println!("Sum: {}", numbers.iter().sum::<i32>());
+            }
+            """.trimIndent(),
+        "python" to
+            """
+            print("Hello from CodeMateX Edge Runner (Python)!")
+            squares = [x**2 for x in range(1, 6)]
+            print("Squares:", squares)
+            """.trimIndent(),
+        "typescript" to
+            """
+            console.log("Hello from CodeMateX Edge Runner (TypeScript)!");
+            const greeting: string = "TypeScript executed at Cloudflare edge";
+            console.log(greeting);
+            """.trimIndent(),
+    )

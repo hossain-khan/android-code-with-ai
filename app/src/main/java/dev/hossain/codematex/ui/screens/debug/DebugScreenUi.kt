@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -49,6 +52,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
@@ -69,6 +73,7 @@ import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryStats
 import dev.hossain.codematex.system.MemoryDelta
@@ -158,6 +163,11 @@ fun DebugScreenContent(
             // Inference Performance & Benchmark Runner
             item {
                 InferenceBenchmarkCard(state)
+            }
+
+            // Edge Code Runner & Sandbox Diagnostics
+            item {
+                EdgeRunnerDiagnosticsCard(state)
             }
 
             // Hardware & Environment Diagnostics
@@ -725,6 +735,315 @@ private fun InferenceBenchmarkCard(state: DebugScreen.State.Success) {
 }
 
 @Composable
+private fun EdgeRunnerDiagnosticsCard(state: DebugScreen.State.Success) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            // Header Row with Title & Online Status Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Terminal,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Text(
+                        text = "Edge Code Runner & Sandbox",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color =
+                        if (state.isOnline) {
+                            MaterialTheme.colorScheme.primaryContainer
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHighest
+                        },
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Icon(
+                            imageVector = if (state.isOnline) Icons.Default.Wifi else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint =
+                                if (state.isOnline) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.error
+                                },
+                            modifier = Modifier.size(12.dp),
+                        )
+                        Text(
+                            text = if (state.isOnline) "Online" else "Offline",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color =
+                                if (state.isOnline) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onErrorContainer
+                                },
+                        )
+                    }
+                }
+            }
+
+            // Proxy Latency / Reachability Row
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Cloudflare Proxy Endpoint",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Text(
+                            text = "code-playground.gohk.xyz",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        if (state.proxyPingMs != null) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                            ) {
+                                Text(
+                                    text = "${state.proxyPingMs}ms",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = FontFamily.Monospace,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                )
+                            }
+                        } else if (state.proxyPingError != null) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.errorContainer,
+                            ) {
+                                Text(
+                                    text = "Failed",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                )
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = { state.eventSink(DebugScreen.Event.PingProxy) },
+                            enabled = !state.isPingingProxy && state.isOnline,
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp),
+                        ) {
+                            if (state.isPingingProxy) {
+                                CircularProgressIndicator(modifier = Modifier.size(12.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text("Ping", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Language Selector Chips
+            Text(text = "Target Language:", style = MaterialTheme.typography.labelMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                RUNNER_SUPPORTED_LANGUAGES.forEach { lang ->
+                    FilterChip(
+                        selected = state.runnerSelectedLang.equals(lang, ignoreCase = true),
+                        onClick = { state.eventSink(DebugScreen.Event.SelectRunnerLanguage(lang)) },
+                        label = { Text(lang.replaceFirstChar { it.uppercase() }) },
+                    )
+                }
+            }
+
+            // Code Snippet Editor
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "Test Snippet (${state.runnerSelectedLang}):",
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                TextButton(
+                    onClick = { state.eventSink(DebugScreen.Event.ResetRunnerSnippet) },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(28.dp),
+                ) {
+                    Text("Reset Snippet", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+
+            OutlinedTextField(
+                value = state.runnerSnippetCode,
+                onValueChange = { state.eventSink(DebugScreen.Event.UpdateRunnerSnippet(it)) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 4,
+                maxLines = 10,
+                textStyle =
+                    MaterialTheme.typography.bodySmall.copy(
+                        fontFamily = FontFamily.Monospace,
+                    ),
+            )
+
+            // Run Button
+            Button(
+                onClick = { state.eventSink(DebugScreen.Event.RunRunnerSnippet) },
+                enabled = !state.isRunningSnippet && state.isOnline,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (state.isRunningSnippet) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Executing at Edge...")
+                } else {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Run ${state.runnerSelectedLang.replaceFirstChar { it.uppercase() }} Snippet")
+                }
+            }
+
+            // Execution Result / Terminal View
+            state.runnerResult?.let { result ->
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val (badgeText, badgeBg, badgeFg) =
+                                when (result) {
+                                    is PlaygroundExecutionResult.Success -> {
+                                        Triple(
+                                            "Success",
+                                            MaterialTheme.colorScheme.primaryContainer,
+                                            MaterialTheme.colorScheme.onPrimaryContainer,
+                                        )
+                                    }
+
+                                    is PlaygroundExecutionResult.CompilationError -> {
+                                        Triple(
+                                            "Compilation Error",
+                                            MaterialTheme.colorScheme.errorContainer,
+                                            MaterialTheme.colorScheme.onErrorContainer,
+                                        )
+                                    }
+
+                                    is PlaygroundExecutionResult.NetworkError -> {
+                                        Triple(
+                                            "Network Error",
+                                            MaterialTheme.colorScheme.errorContainer,
+                                            MaterialTheme.colorScheme.onErrorContainer,
+                                        )
+                                    }
+                                }
+
+                            Surface(shape = CircleShape, color = badgeBg) {
+                                Text(
+                                    text = badgeText,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = badgeFg,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                )
+                            }
+
+                            state.runnerDurationMs?.let { ms ->
+                                Text(
+                                    text = "Roundtrip: ${ms}ms",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = FontFamily.Monospace,
+                                )
+                            }
+                        }
+
+                        val outputText =
+                            when (result) {
+                                is PlaygroundExecutionResult.Success -> result.output
+                                is PlaygroundExecutionResult.CompilationError -> result.diagnostic
+                                is PlaygroundExecutionResult.NetworkError -> result.message
+                            }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = outputText.ifEmpty { "(No output produced)" },
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = FontFamily.Monospace,
+                                modifier = Modifier.padding(10.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun HardwareDiagnosticsCard(deviceInfo: Map<String, String>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -899,6 +1218,67 @@ private fun DebugScreenPreview() {
                                 "Android OS" to "Android 15 (API 35)",
                                 "CPU Cores" to "8 cores",
                             ),
+                        eventSink = {},
+                    ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EdgeRunnerDiagnosticsCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            EdgeRunnerDiagnosticsCard(
+                state =
+                    DebugScreen.State.Success(
+                        models = emptyList(),
+                        selectedModel = null,
+                        selectedBackend = LlmEngine.Backend.GPU,
+                        isModelLoaded = false,
+                        loadedModelName = null,
+                        activeBackend = null,
+                        isLoadingModel = false,
+                        isUnloadingModel = false,
+                        isOnline = true,
+                        runnerSelectedLang = "kotlin",
+                        runnerSnippetCode = "fun main() {\n    println(\"Hello from CodeMateX!\")\n}",
+                        runnerResult = PlaygroundExecutionResult.Success("Hello from CodeMateX!\nSum: 15"),
+                        runnerDurationMs = 240L,
+                        proxyPingMs = 85L,
+                        eventSink = {},
+                    ),
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun EdgeRunnerDiagnosticsCardOfflinePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface(modifier = Modifier.padding(16.dp)) {
+            EdgeRunnerDiagnosticsCard(
+                state =
+                    DebugScreen.State.Success(
+                        models = emptyList(),
+                        selectedModel = null,
+                        selectedBackend = LlmEngine.Backend.GPU,
+                        isModelLoaded = false,
+                        loadedModelName = null,
+                        activeBackend = null,
+                        isLoadingModel = false,
+                        isUnloadingModel = false,
+                        isOnline = false,
+                        runnerSelectedLang = "rust",
+                        runnerSnippetCode = "fn main() {\n    println!(\"Hello Rust!\");\n}",
+                        runnerResult =
+                            PlaygroundExecutionResult.NetworkError(
+                                "Internet connection required to run code on the playground.",
+                            ),
+                        runnerDurationMs = 12L,
+                        proxyPingError = "No internet connectivity",
                         eventSink = {},
                     ),
             )
