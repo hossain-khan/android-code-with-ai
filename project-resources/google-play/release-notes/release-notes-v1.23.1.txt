@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.23.1:
+• Guided Lessons Language Filter: Added sticky filter chips to the lesson catalog, making it easy to filter courses by programming language (Kotlin, Rust, Python, Go, TypeScript, Swift).
+• Dynamic Atmospheric Accents: Selecting a language dynamically tints the filter chip and shifts the background ambient gradient glow to match the language theme.
+• Smooth Fade Transitions: Calibrated fade animations when filtering courses with zero motion bounce.
