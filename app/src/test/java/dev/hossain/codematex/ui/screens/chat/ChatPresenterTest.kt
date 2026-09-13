@@ -7,28 +7,22 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.ChatInferenceOrchestrator
 import dev.hossain.codematex.data.FakeChatInferenceOrchestrator
-import dev.hossain.codematex.data.FakeSystemStatsMonitor
 import dev.hossain.codematex.data.FakeTopicPromptProvider
-import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
-import dev.hossain.codematex.data.repository.FakeLearningRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
-import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.data.repository.testModel
-import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import kotlinx.coroutines.flow.first
@@ -42,23 +36,8 @@ class ChatPresenterTest {
     private val configStore: ModelConfigStore = FakeModelConfigStore()
     private val fakeSessionRepo = FakeChatSessionRepository()
     private val fakeChatInferenceOrchestrator = FakeChatInferenceOrchestrator()
-    private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
     private val fakeUserPreferencesStore = FakeUserPreferencesStore()
     private val fakeTopicPromptProvider = FakeTopicPromptProvider()
-    private val fakeLearningRepo =
-        FakeLearningRepository(
-            courses =
-                listOf(
-                    LearningCourse(
-                        id = "kotlin-foundations",
-                        language = "Kotlin",
-                        title = "Kotlin Foundations",
-                        description = "Learn Kotlin",
-                        version = 1,
-                        chapters = emptyList(),
-                    ),
-                ),
-        )
 
     private fun createPresenter(
         navigator: Navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN)),
@@ -68,9 +47,7 @@ class ChatPresenterTest {
         configStore: ModelConfigStore = this.configStore,
         userPreferencesStore: UserPreferencesStore = fakeUserPreferencesStore,
         chatInferenceOrchestrator: ChatInferenceOrchestrator = fakeChatInferenceOrchestrator,
-        systemStatsMonitor: SystemStatsMonitor = fakeSystemStatsMonitor,
         topicPromptProvider: TopicPromptProvider = fakeTopicPromptProvider,
-        learningRepository: LearningRepository = fakeLearningRepo,
     ): ChatPresenter =
         ChatPresenter(
             navigator = navigator,
@@ -80,9 +57,7 @@ class ChatPresenterTest {
             configStore = configStore,
             userPreferencesStore = userPreferencesStore,
             chatInferenceOrchestrator = chatInferenceOrchestrator,
-            systemStatsMonitor = systemStatsMonitor,
             topicPromptProvider = topicPromptProvider,
-            learningRepository = learningRepository,
         )
 
     @Test
@@ -233,49 +208,6 @@ class ChatPresenterTest {
                 assertThat(updatedState.persona).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
                 assertThat(preferencesStore.getSelectedPersona()).isEqualTo(TutorPersona.BEGINNER_FRIENDLY)
                 assertThat(fakeChatInferenceOrchestrator.resetConversationPersonas).contains(TutorPersona.BEGINNER_FRIENDLY)
-            }
-        }
-
-    @Test
-    fun `given system stats monitor emits metrics - emits active state with systemResourceStats`() =
-        runTest {
-            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val customStatsMonitor = FakeSystemStatsMonitor()
-            customStatsMonitor.resourceStatsToEmit =
-                listOf(
-                    SystemResourceStats(
-                        cpuPercent = 45f,
-                        ramUsedGb = 3.5f,
-                        ramTotalGb = 8.0f,
-                    ),
-                )
-
-            val fakeOrchestrator = FakeChatInferenceOrchestrator()
-            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Response"))
-            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
-
-            val presenter =
-                createPresenter(
-                    navigator = navigator,
-                    screen = ChatScreen(CodingTopic.KOTLIN),
-                    modelRepository = fakeModelRepo,
-                    chatInferenceOrchestrator = fakeOrchestrator,
-                    systemStatsMonitor = customStatsMonitor,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                state.eventSink(ChatScreen.Event.SendMessage("Explain ViewModel"))
-
-                val generatingState = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(generatingState.systemResourceStats?.cpuPercent ?: 0f).isWithin(0.01f).of(45f)
-                assertThat(generatingState.systemResourceStats?.ramUsedGb ?: 0f).isWithin(0.01f).of(3.5f)
-                assertThat(generatingState.systemResourceStats?.ramTotalGb ?: 0f).isWithin(0.01f).of(8.0f)
             }
         }
 
@@ -641,7 +573,7 @@ class ChatPresenterTest {
         }
 
     @Test
-    fun `given topic with course - resolves availableCourse in active state`() =
+    fun `given OpenCourse event - navigates to chapter screen`() =
         runTest {
             val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
             val fakeModelRepo =
@@ -649,120 +581,18 @@ class ChatPresenterTest {
                     availableModels = listOf(model),
                     selectedModel = model,
                 )
-            val presenter =
-                createPresenter(
-                    screen = ChatScreen(CodingTopic.KOTLIN),
-                    modelRepository = fakeModelRepo,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
-            }
-        }
-
-    @Test
-    fun `given OpenCourse event - navigates to chapter screen and dismisses course banner`() =
-        runTest {
-            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val fakePrefs = FakeUserPreferencesStore()
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
             val presenter =
                 createPresenter(
                     navigator = navigator,
                     screen = ChatScreen(CodingTopic.KOTLIN),
                     modelRepository = fakeModelRepo,
-                    userPreferencesStore = fakePrefs,
                 )
 
             presenter.test {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
-
                 state.eventSink(ChatScreen.Event.OpenCourse("kotlin-foundations"))
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
-
-                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(updatedState.availableCourse).isNull()
-                assertThat(fakePrefs.dismissedCourseBannerTopicsFlow.first()).contains("KOTLIN")
-            }
-        }
-
-    @Test
-    fun `given showCourseBanner is false - availableCourse is null`() =
-        runTest {
-            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val presenter =
-                createPresenter(
-                    screen = ChatScreen(CodingTopic.KOTLIN, showCourseBanner = false),
-                    modelRepository = fakeModelRepo,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(state.availableCourse).isNull()
-            }
-        }
-
-    @Test
-    fun `given topic is in dismissedCourseBannerTopics - availableCourse is null`() =
-        runTest {
-            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val fakePrefs = FakeUserPreferencesStore(initialDismissedTopics = setOf("KOTLIN"))
-            val presenter =
-                createPresenter(
-                    screen = ChatScreen(CodingTopic.KOTLIN),
-                    modelRepository = fakeModelRepo,
-                    userPreferencesStore = fakePrefs,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(state.availableCourse).isNull()
-            }
-        }
-
-    @Test
-    fun `given DismissCourseBanner event - dismisses banner in preferences and clears availableCourse`() =
-        runTest {
-            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
-            val fakeModelRepo =
-                FakeModelRepository(
-                    availableModels = listOf(model),
-                    selectedModel = model,
-                )
-            val fakePrefs = FakeUserPreferencesStore()
-            val presenter =
-                createPresenter(
-                    screen = ChatScreen(CodingTopic.KOTLIN),
-                    modelRepository = fakeModelRepo,
-                    userPreferencesStore = fakePrefs,
-                )
-
-            presenter.test {
-                val state = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(state.availableCourse?.id).isEqualTo("kotlin-foundations")
-
-                state.eventSink(ChatScreen.Event.DismissCourseBanner(CodingTopic.KOTLIN))
-
-                val updatedState = expectMostRecentItem() as ChatScreen.State.Active
-                assertThat(updatedState.availableCourse).isNull()
-                assertThat(fakePrefs.dismissedCourseBannerTopicsFlow.first()).contains("KOTLIN")
             }
         }
 }

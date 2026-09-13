@@ -1,4 +1,4 @@
-package dev.hossain.codematex.ui.screens.chat
+package dev.hossain.codematex.ui.screens.chat.benchmark
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -34,8 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
-import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.TutorPersona
+import com.slack.circuit.subcircuit.SubScreen
+import com.slack.circuit.subcircuit.SubUi
+import com.slack.circuit.subcircuit.SubUiFactory
 import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveContextTelemetryBar
@@ -43,10 +44,52 @@ import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.formatShortModelName
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesIntoSet
+import dev.zacsweers.metro.Inject
 
+/**
+ * Top-level Composable rendering technical benchmarking telemetry, routing to either
+ * the sidebar card (expanded) or sticky collapsible panel (compact).
+ */
+@Composable
+fun ChatBenchmarkSubUi(
+    state: ChatBenchmarkSubState,
+    modifier: Modifier = Modifier,
+) {
+    if (state.isExpanded) {
+        SupportingBenchmarkingCard(state = state, modifier = modifier)
+    } else {
+        ModelTechnicalInfoPanel(state = state, modifier = modifier)
+    }
+}
+
+/**
+ * SubUi factory contributing [ChatBenchmarkSubUi] into Metro DI [AppScope].
+ */
+@ContributesIntoSet(AppScope::class)
+@Inject
+class ChatBenchmarkSubUiFactory : SubUiFactory {
+    override fun create(screen: SubScreen<*>): SubUi<*>? =
+        when (screen) {
+            is ChatBenchmarkSubScreen -> {
+                SubUi<ChatBenchmarkSubState> { state, modifier ->
+                    ChatBenchmarkSubUi(state = state, modifier = modifier)
+                }
+            }
+
+            else -> {
+                null
+            }
+        }
+}
+
+/**
+ * Card displayed in the 360dp right sidebar on expanded tablets and foldables.
+ */
 @Composable
 internal fun SupportingBenchmarkingCard(
-    state: ChatScreen.State.Active,
+    state: ChatBenchmarkSubState,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -161,9 +204,12 @@ internal fun SupportingBenchmarkingCard(
     }
 }
 
+/**
+ * Sticky collapsible panel displayed directly below the top app bar in compact layout.
+ */
 @Composable
 internal fun ModelTechnicalInfoPanel(
-    state: ChatScreen.State.Active,
+    state: ChatBenchmarkSubState,
     modifier: Modifier = Modifier,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -358,9 +404,7 @@ internal fun ModelTechnicalInfoPanel(
     }
 }
 
-// ==========================================
-// Previews
-// ==========================================
+// region Previews
 
 @ThemePreviews
 @Composable
@@ -369,8 +413,8 @@ private fun ModelTechnicalInfoPanelPreview() {
         Surface {
             ModelTechnicalInfoPanel(
                 state =
-                    ChatScreen.State.Active(
-                        topic = CodingTopic.KOTLIN,
+                    ChatBenchmarkSubState(
+                        isExpanded = false,
                         modelName = "gemma-4-E2B-it-litert-lm",
                         activeBackend = "GPU",
                         modelSize = "2,588 MB",
@@ -380,13 +424,38 @@ private fun ModelTechnicalInfoPanelPreview() {
                         systemStatsInfo = null,
                         systemResourceStats = SystemResourceStats(cpuPercent = 42f, ramUsedGb = 3.8f, ramTotalGb = 8.0f),
                         contextStats = ContextUsageStats(usedTokens = 1420, maxTokens = 8192),
-                        persona = TutorPersona.SENIOR_ENGINEER,
                         isPreparing = false,
                         isGenerating = false,
-                        messages = emptyList(),
-                        eventSink = {},
                     ),
             )
         }
     }
 }
+
+@ThemePreviews
+@Composable
+private fun SupportingBenchmarkingCardPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            SupportingBenchmarkingCard(
+                state =
+                    ChatBenchmarkSubState(
+                        isExpanded = true,
+                        modelName = "gemma-4-E2B-it-litert-lm",
+                        activeBackend = "GPU",
+                        modelSize = "2,588 MB",
+                        modelMemory = "Requires 4GB RAM",
+                        configInfo = "Temp: 0.7 • Top-K: 40 • Top-P: 1.0",
+                        throughputInfo = "TTFT: 480ms • Speed: 14.2 t/s",
+                        systemStatsInfo = null,
+                        systemResourceStats = SystemResourceStats(cpuPercent = 42f, ramUsedGb = 3.8f, ramTotalGb = 8.0f),
+                        contextStats = ContextUsageStats(usedTokens = 1420, maxTokens = 8192),
+                        isPreparing = false,
+                        isGenerating = false,
+                    ),
+            )
+        }
+    }
+}
+
+// endregion

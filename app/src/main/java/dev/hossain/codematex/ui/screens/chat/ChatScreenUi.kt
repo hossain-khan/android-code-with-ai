@@ -48,6 +48,7 @@ import androidx.window.core.layout.WindowSizeClass
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.sharedelements.PreviewSharedElementTransitionLayout
 import com.slack.circuit.sharedelements.SharedElementTransitionScope
+import com.slack.circuit.subcircuit.SubCircuitContent
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
@@ -61,6 +62,7 @@ import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
+import dev.hossain.codematex.ui.screens.chat.benchmark.ChatBenchmarkSubScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
@@ -277,7 +279,7 @@ private fun ChatLayout(
                         EmptyChatTopicStarters(
                             visualInfo = visualInfo,
                             enabled = !state.isPreparing && !state.isGenerating,
-                            course = state.availableCourse,
+                            showCourseBanner = state.showCourseBanner,
                             onStartCourse = { courseId ->
                                 state.eventSink(ChatScreen.Event.OpenCourse(courseId))
                             },
@@ -339,7 +341,22 @@ private fun ChatLayout(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                         )
-                        SupportingBenchmarkingCard(state)
+                        SubCircuitContent(
+                            screen =
+                                ChatBenchmarkSubScreen(
+                                    isExpanded = true,
+                                    modelName = state.modelName,
+                                    activeBackend = state.activeBackend,
+                                    modelSize = state.modelSize,
+                                    modelMemory = state.modelMemory,
+                                    configInfo = state.configInfo,
+                                    throughputInfo = state.throughputInfo,
+                                    contextStats = state.contextStats,
+                                    isGenerating = state.isGenerating,
+                                    isPreparing = state.isPreparing,
+                                ),
+                            outerEventSink = {},
+                        )
                     }
                 }
             }
@@ -351,13 +368,28 @@ private fun ChatLayout(
                         .padding(innerPadding)
                         .imePadding(),
             ) {
-                ModelTechnicalInfoPanel(state)
+                SubCircuitContent(
+                    screen =
+                        ChatBenchmarkSubScreen(
+                            isExpanded = false,
+                            modelName = state.modelName,
+                            activeBackend = state.activeBackend,
+                            modelSize = state.modelSize,
+                            modelMemory = state.modelMemory,
+                            configInfo = state.configInfo,
+                            throughputInfo = state.throughputInfo,
+                            contextStats = state.contextStats,
+                            isGenerating = state.isGenerating,
+                            isPreparing = state.isPreparing,
+                        ),
+                    outerEventSink = {},
+                )
 
                 if (state.messages.isEmpty()) {
                     EmptyChatTopicStarters(
                         visualInfo = visualInfo,
                         enabled = !state.isPreparing && !state.isGenerating,
-                        course = state.availableCourse,
+                        showCourseBanner = state.showCourseBanner,
                         onStartCourse = { courseId ->
                             state.eventSink(ChatScreen.Event.OpenCourse(courseId))
                         },
@@ -418,7 +450,6 @@ private val sampleActiveChatState =
         modelMemory = "Requires 4GB RAM",
         configInfo = "Temp: 0.7 • Top-K: 40 • Top-P: 1.0",
         throughputInfo = "TTFT: 480ms • Speed: 14.2 t/s",
-        systemStatsInfo = null,
         persona = TutorPersona.SENIOR_ENGINEER,
         isPreparing = false,
         isGenerating = false,
