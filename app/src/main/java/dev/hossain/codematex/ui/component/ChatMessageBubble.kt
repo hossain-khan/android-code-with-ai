@@ -50,13 +50,43 @@ import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 /**
  * Unified chat message bubble composable supporting user, agent, error, and system messages.
  *
- * Used across both active inference chat sessions and historical session inspection.
- * Provides consistent styling, Markdown rendering, syntax-highlighted code blocks,
- * tutor persona branding, and clipboard copying with haptic feedback.
+ * Used across both active inference chat sessions ([dev.hossain.codematex.ui.screens.chat.ChatMessageList])
+ * and historical session inspection ([dev.hossain.codematex.ui.screens.chatsessions.SessionDetailContent]).
+ * Provides consistent Material 3 styling, Markdown rendering, syntax-highlighted code blocks,
+ * tutor persona branding, streaming status indications, and clipboard copying with haptic feedback.
+ *
+ * ### Architecture & Hierarchy:
+ * Dispatches dynamically based on the sealed [ChatMessage] subtype:
+ * - [ChatMessage.User] -> [UserMessageBubble] (right-aligned, primary container, long-press copy)
+ * - [ChatMessage.Agent] -> [AgentMessageBubble] (left-aligned, surface card, markdown + code highlight, copy action, streaming badge)
+ * - [ChatMessage.Error] -> [ErrorMessageBubble] (left-aligned, error container, warning glyph, copy action)
+ * - [ChatMessage.System] -> [SystemMessageBubble] (centered, surfaceContainerHighest pill)
+ *
+ * ### Prerequisites:
+ * Because [AgentMessageBubble] renders rich code blocks via [MarkdownMessage], callers should ensure
+ * that a [dev.hossain.highlight.ui.HighlightThemeProvider] wraps the parent screen or composition hierarchy.
+ *
+ * ### Usage Example:
+ * ```kotlin
+ * LazyColumn(
+ *     verticalArrangement = Arrangement.spacedBy(12.dp),
+ *     contentPadding = PaddingValues(16.dp),
+ * ) {
+ *     items(messages, key = { it.id }) { message ->
+ *         ChatMessageBubble(
+ *             message = message,
+ *             visualAccent = topicVisualInfo.accentColor,
+ *             onCopy = { copiedText ->
+ *                 // Optional analytics or notification hook
+ *             },
+ *         )
+ *     }
+ * }
+ * ```
  *
  * @param message The [ChatMessage] instance to render.
  * @param visualAccent The topic visual accent color used for tutor branding icons and badges.
- * @param modifier The modifier to apply to the message container.
+ * @param modifier The modifier to apply to the outermost row container.
  * @param onCopy Optional callback triggered when message text is copied to clipboard.
  */
 @Composable
@@ -102,8 +132,17 @@ fun ChatMessageBubble(
 }
 
 /**
- * Renders user message text in a primary-container colored pill aligned to the right.
- * Long-pressing the bubble triggers haptic feedback and copies the message text to the clipboard.
+ * Renders user prompt messages in a right-aligned [MaterialTheme.colorScheme.primaryContainer] bubble.
+ *
+ * ### Interactions:
+ * - Long-pressing the bubble triggers haptic feedback via [LocalHapticFeedback], copies the
+ *   message content to the system clipboard, and invokes the optional [onCopy] callback.
+ * - On Android 12 and below (< API 33), displays a brief "Message copied" [Toast]. On Android 13+,
+ *   the system automatically presents its native clipboard preview notification.
+ *
+ * @param message The [ChatMessage.User] instance containing the text prompt.
+ * @param modifier The modifier to apply to the outer alignment container.
+ * @param onCopy Optional callback triggered when message text is copied to clipboard.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -151,9 +190,21 @@ fun UserMessageBubble(
 }
 
 /**
- * Renders agent/tutor responses aligned to the left in a surface-container card.
- * Features tutor persona glyph and header, an explicit copy action button,
- * and markdown-formatted content with code syntax highlighting.
+ * Renders AI tutor responses in a left-aligned [MaterialTheme.colorScheme.surfaceContainerLow] card.
+ *
+ * ### Features:
+ * - **Tutor Persona Header**: Displays the topic accent colored "CodeMateX" badge and [Icons.Default.AutoAwesome] glyph.
+ * - **Streaming Status**: When [ChatMessage.Agent.isStreaming] is true, displays a subtle "• Generating…"
+ *   indicator next to the persona title.
+ * - **Rich Markdown & Code Rendering**: Uses [MarkdownMessage] to render formatted markdown, headings,
+ *   bullet lists, and syntax-highlighted code blocks.
+ * - **Message Copy Action**: Includes a dedicated [Icons.Default.ContentCopy] icon button in the header
+ *   that copies the entire response text with haptic feedback.
+ *
+ * @param message The [ChatMessage.Agent] containing the response markdown and optional streaming state.
+ * @param visualAccent Topic visual accent color used to tint tutor branding and glyphs.
+ * @param modifier The modifier to apply to the outer layout container.
+ * @param onCopy Optional callback triggered when the response text is copied.
  */
 @Composable
 fun AgentMessageBubble(
@@ -240,7 +291,14 @@ fun AgentMessageBubble(
 }
 
 /**
- * Renders error messages with error-container styling and a warning icon.
+ * Renders inference or engine error messages in an error-container card.
+ *
+ * Displays a [Icons.Default.Warning] glyph, the error message text in [MaterialTheme.colorScheme.onErrorContainer],
+ * and provides an explicit copy action button for debugging or reporting issues.
+ *
+ * @param message The [ChatMessage.Error] instance containing the failure description.
+ * @param modifier The modifier to apply to the outer layout container.
+ * @param onCopy Optional callback triggered when error text is copied to clipboard.
  */
 @Composable
 fun ErrorMessageBubble(
@@ -303,7 +361,13 @@ fun ErrorMessageBubble(
 }
 
 /**
- * Renders subtle system notices as centered pills.
+ * Renders subtle, centered informational pills for conversation lifecycle notices
+ * (e.g. "Session restored from local database").
+ *
+ * Styled with [MaterialTheme.colorScheme.surfaceContainerHighest] and a subtle outline border.
+ *
+ * @param message The [ChatMessage.System] instance containing lifecycle info text.
+ * @param modifier The modifier to apply to the outer layout container.
  */
 @Composable
 fun SystemMessageBubble(
