@@ -1,8 +1,5 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,8 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.PlayArrow
@@ -54,7 +49,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -65,7 +59,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.ui.component.MarkdownMessage
+import dev.hossain.codematex.ui.component.ChatMessageBubble
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -394,7 +388,7 @@ private fun SessionDetailLayout(
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(state.messages, key = { it.id }) { message ->
-                                SessionMessageBubble(
+                                ChatMessageBubble(
                                     message = message,
                                     visualAccent = visualInfo.accentColor,
                                 )
@@ -427,7 +421,7 @@ private fun SessionDetailLayout(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
                         items(state.messages, key = { it.id }) { message ->
-                            SessionMessageBubble(
+                            ChatMessageBubble(
                                 message = message,
                                 visualAccent = visualInfo.accentColor,
                             )
@@ -591,151 +585,6 @@ private fun SessionInfoCard(
         }
     }
 }
-
-@Composable
-private fun SessionMessageBubble(
-    message: ChatMessage,
-    visualAccent: Color,
-) {
-    val context = LocalContext.current
-
-    when (message) {
-        is ChatMessage.User -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.padding(start = 48.dp),
-                ) {
-                    Text(
-                        text = message.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                    )
-                }
-            }
-        }
-
-        is ChatMessage.Agent -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-                    shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
-                    colors =
-                        CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                        ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Icon(
-                                    Icons.Default.AutoAwesome,
-                                    contentDescription = null,
-                                    tint = visualAccent,
-                                    modifier = Modifier.size(14.dp),
-                                )
-                                Text(
-                                    text = "CodeMateX",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = visualAccent,
-                                )
-                            }
-
-                            IconButton(
-                                modifier = Modifier.size(24.dp),
-                                onClick = {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("Chat message", message.content))
-                                },
-                            ) {
-                                Icon(
-                                    Icons.Default.ContentCopy,
-                                    contentDescription = "Copy message",
-                                    modifier = Modifier.size(14.dp),
-                                    tint = MaterialTheme.colorScheme.outline,
-                                )
-                            }
-                        }
-
-                        MarkdownMessage(
-                            content = message.content.ifEmpty { "..." },
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                    }
-                }
-            }
-        }
-
-        is ChatMessage.Error -> {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.errorContainer,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                    modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Text(
-                            text = message.message,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                    }
-                }
-            }
-        }
-
-        is ChatMessage.System -> {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                ) {
-                    Text(
-                        text = message.info,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
 // ==========================================
 // Previews
 // ==========================================
@@ -807,31 +656,6 @@ private fun SessionInfoCardPreview() {
             session = sampleSession,
             modifier = Modifier.padding(16.dp),
         )
-    }
-}
-
-@ThemePreviews
-@Composable
-private fun SessionMessageBubblePreview() {
-    val accent = sampleSession.topic.visualInfo.accentColor
-    CodeWithAIAppTheme(dynamicColor = false) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            SessionMessageBubble(
-                message = sampleDetailMessages[0],
-                visualAccent = accent,
-            )
-            SessionMessageBubble(
-                message = sampleDetailMessages[1],
-                visualAccent = accent,
-            )
-            SessionMessageBubble(
-                message = sampleDetailMessages[2],
-                visualAccent = accent,
-            )
-        }
     }
 }
 
