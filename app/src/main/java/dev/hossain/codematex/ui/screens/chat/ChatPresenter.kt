@@ -13,22 +13,18 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.ChatInferenceEvent
 import dev.hossain.codematex.data.ChatInferenceOrchestrator
-import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.data.ThroughputTracker
 import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
-import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.data.repository.UserPreferencesStore
-import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.system.ContextUsageStats
-import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import dev.hossain.codematex.util.TokenEstimator
@@ -49,9 +45,7 @@ class ChatPresenter(
     private val configStore: ModelConfigStore,
     private val userPreferencesStore: UserPreferencesStore,
     private val chatInferenceOrchestrator: ChatInferenceOrchestrator,
-    private val systemStatsMonitor: SystemStatsMonitor,
     private val topicPromptProvider: TopicPromptProvider,
-    private val learningRepository: LearningRepository,
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
@@ -65,25 +59,12 @@ class ChatPresenter(
         var saveErrorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var initTrigger by rememberRetained { mutableIntStateOf(0) }
         var throughputInfo by rememberRetained { mutableStateOf<String?>(null) }
-        var systemStatsInfo by rememberRetained { mutableStateOf<String?>(null) }
-        var systemResourceStats by rememberRetained { mutableStateOf<SystemResourceStats?>(null) }
         var availableModels by rememberRetained { mutableStateOf<List<AiModel>>(emptyList()) }
         // Initialize activeModel directly on frame 0 to prevent the asynchronous null -> initial -> selected
         // mutation cycle that triggers unnecessary LaunchedEffect cancellations and in-flight restarts (fixes #285).
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
-        var availableCourse by rememberRetained { mutableStateOf<LearningCourse?>(null) }
-        var dismissedCourseBannerTopics by rememberRetained { mutableStateOf<Set<String>>(emptySet()) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
-
-        LaunchedEffect(screen.topic, screen.showCourseBanner, dismissedCourseBannerTopics) {
-            val isDismissed = dismissedCourseBannerTopics.contains(screen.topic.name)
-            if (screen.showCourseBanner && !isDismissed) {
-                availableCourse = learningRepository.getCourseForTopic(screen.topic)
-            } else {
-                availableCourse = null
-            }
-        }
 
         LaunchedEffect(Unit) {
             launch {
@@ -98,11 +79,6 @@ class ChatPresenter(
             launch {
                 userPreferencesStore.selectedPersonaFlow.collect { storedPersona ->
                     persona = storedPersona
-                }
-            }
-            launch {
-                userPreferencesStore.dismissedCourseBannerTopicsFlow.collect { dismissed ->
-                    dismissedCourseBannerTopics = dismissed
                 }
             }
         }
@@ -165,21 +141,6 @@ class ChatPresenter(
                 throw e
             } finally {
                 isPreparing = false
-            }
-        }
-
-        LaunchedEffect(isGenerating, isPreparing) {
-            if (isGenerating || isPreparing) {
-                systemStatsMonitor.monitorMetricsWhileActive(
-                    isActive = { isGenerating || isPreparing },
-                    onMetrics = { stats ->
-                        systemResourceStats = stats
-                        systemStatsInfo = stats.formattedSummary
-                    },
-                )
-            } else {
-                systemResourceStats = null
-                systemStatsInfo = null
             }
         }
 
@@ -354,8 +315,6 @@ class ChatPresenter(
                         currentSessionId = null
                         saveErrorMessage = null
                         throughputInfo = null
-                        systemStatsInfo = null
-                        systemResourceStats = null
                         scope.launch {
                             isPreparing = true
                             try {
@@ -404,18 +363,7 @@ class ChatPresenter(
                 }
 
                 is ChatScreen.Event.OpenCourse -> {
-                    scope.launch {
-                        userPreferencesStore.dismissCourseBanner(screen.topic)
-                        availableCourse = null
-                    }
                     navigator.goTo(ChapterScreen(event.courseId))
-                }
-
-                is ChatScreen.Event.DismissCourseBanner -> {
-                    scope.launch {
-                        userPreferencesStore.dismissCourseBanner(event.topic)
-                        availableCourse = null
-                    }
                 }
 
                 ChatScreen.Event.Back -> {
@@ -488,14 +436,12 @@ class ChatPresenter(
                     modelMemory = memoryText,
                     configInfo = configText,
                     throughputInfo = throughputInfo,
-                    systemStatsInfo = systemStatsInfo,
-                    systemResourceStats = systemResourceStats,
                     contextStats = contextStats,
                     saveErrorMessage = saveErrorMessage,
                     topic = screen.topic,
                     saveToHistory = screen.saveToHistory,
                     sessionId = screen.sessionId,
-                    availableCourse = availableCourse,
+                    showCourseBanner = screen.showCourseBanner,
                     eventSink = eventSink,
                 )
             }

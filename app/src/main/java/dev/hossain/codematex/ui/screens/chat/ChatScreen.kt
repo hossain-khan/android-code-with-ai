@@ -6,10 +6,8 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.system.ContextUsageStats
-import dev.hossain.codematex.system.SystemResourceStats
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -43,14 +41,12 @@ data class ChatScreen(
             val modelMemory: String?,
             val configInfo: String?,
             val throughputInfo: String?,
-            val systemStatsInfo: String?,
-            val systemResourceStats: SystemResourceStats? = null,
             val contextStats: ContextUsageStats? = null,
             val saveErrorMessage: String? = null,
             val topic: CodingTopic,
             val saveToHistory: Boolean = true,
             val sessionId: String? = null,
-            val availableCourse: LearningCourse? = null,
+            val showCourseBanner: Boolean = true,
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -87,10 +83,6 @@ data class ChatScreen(
 
         data class OpenCourse(
             val courseId: String,
-        ) : Event
-
-        data class DismissCourseBanner(
-            val topic: CodingTopic,
         ) : Event
 
         data object Back : Event

@@ -43,8 +43,6 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
-import dev.hossain.codematex.system.SystemResourceStats
-import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
@@ -172,14 +170,6 @@ internal fun ChatInputField(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-
-                    state.systemResourceStats?.let { stats ->
-                        LiveHardwareTelemetryBars(
-                            stats = stats,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 2.dp, bottom = 6.dp),
-                            cpuColor = state.topic.visualInfo.accentColor,
-                        )
-                    }
                 }
             }
 
@@ -286,7 +276,6 @@ private val sampleInputDockState =
         modelMemory = "Requires 4GB RAM",
         configInfo = "Temp: 0.7 • Top-K: 40 • Top-P: 1.0",
         throughputInfo = "TTFT: 480ms • Speed: 14.2 t/s",
-        systemStatsInfo = null,
         persona = TutorPersona.SENIOR_ENGINEER,
         isPreparing = false,
         isGenerating = false,
@@ -340,12 +329,6 @@ private fun ChatInputFieldPreparingPreview() {
                 state =
                     sampleInputDockState.copy(
                         isPreparing = true,
-                        systemResourceStats =
-                            SystemResourceStats(
-                                cpuPercent = 42f,
-                                ramUsedGb = 3.8f,
-                                ramTotalGb = 8.0f,
-                            ),
                     ),
                 inputText = "",
                 onInputTextChanged = {},
