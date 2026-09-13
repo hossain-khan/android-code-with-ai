@@ -4,23 +4,16 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -28,40 +21,23 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.OpenInNew
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.CloudDownload
-import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -72,7 +48,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -88,25 +63,20 @@ import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
-import dev.hossain.codematex.data.model.formattedContextWindow
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
-import dev.hossain.codematex.ui.animation.ActiveModelBadgeSharedKey
-import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
-import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
-import dev.hossain.codematex.ui.animation.sharedBoundsNav
-import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
+import dev.hossain.codematex.ui.screens.aimodels.components.DeviceMemoryBanner
+import dev.hossain.codematex.ui.screens.aimodels.components.ModelCard
+import dev.hossain.codematex.ui.screens.aimodels.components.NotificationRationaleDialog
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
-import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
 import timber.log.Timber
-import java.text.DecimalFormat
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -252,7 +222,6 @@ private fun ModelPickerErrorLayout(
 
 @OptIn(
     ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3AdaptiveApi::class,
     ExperimentalPermissionsApi::class,
 )
 @Composable
@@ -283,74 +252,22 @@ private fun ModelPickerLayout(
 
     if (showPermissionRationale && pendingDownloadModel != null) {
         val modelToDownload = pendingDownloadModel!!
-        AlertDialog(
-            onDismissRequest = {
-                Timber.d("ModelPicker: Notification rationale dismissed, proceeding with download of ${modelToDownload.displayName}")
+        NotificationRationaleDialog(
+            modelSize = modelToDownload.formattedSize,
+            onEnableNotifications = {
+                Timber.d("ModelPicker: User agreed to enable notifications for ${modelToDownload.displayName}")
+                showPermissionRationale = false
+                pendingDownloadModel = null
+                prefs.edit { putBoolean("has_prompted_notifications", true) }
+                notificationPermissionState?.launchPermissionRequest()
+                triggerDownload(modelToDownload)
+            },
+            onDismiss = {
+                Timber.d("ModelPicker: User opted out of notifications for ${modelToDownload.displayName}")
                 showPermissionRationale = false
                 pendingDownloadModel = null
                 prefs.edit { putBoolean("has_prompted_notifications", true) }
                 triggerDownload(modelToDownload)
-            },
-            icon = {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(48.dp),
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.NotificationsActive,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            },
-            title = {
-                Text(
-                    text = "Stay Updated on Downloads",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                )
-            },
-            text = {
-                Text(
-                    text =
-                        "CodeMateX downloads multi-gigabyte on-device AI models " +
-                            "(${modelToDownload.formattedSize}) to run locally on your phone.\n\n" +
-                            "Enable notifications to track real-time download progress and get alerted when your offline AI tutor is ready.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        Timber.d("ModelPicker: User agreed to enable notifications for ${modelToDownload.displayName}")
-                        showPermissionRationale = false
-                        pendingDownloadModel = null
-                        prefs.edit { putBoolean("has_prompted_notifications", true) }
-                        notificationPermissionState?.launchPermissionRequest()
-                        triggerDownload(modelToDownload)
-                    },
-                ) {
-                    Text("Enable Notifications")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        Timber.d("ModelPicker: User opted out of notifications for ${modelToDownload.displayName}")
-                        showPermissionRationale = false
-                        pendingDownloadModel = null
-                        prefs.edit { putBoolean("has_prompted_notifications", true) }
-                        triggerDownload(modelToDownload)
-                    },
-                ) {
-                    Text("Not Now")
-                }
             },
         )
     }
@@ -432,7 +349,9 @@ private fun ModelPickerLayout(
                 }
             } else {
                 items(state.models) { model ->
-                    val compatibility = state.modelCompatibility[model.id] ?: ModelCompatibility.Incompatible("Unknown compatibility")
+                    val compatibility =
+                        state.modelCompatibility[model.id]
+                            ?: ModelCompatibility.Incompatible("Unknown compatibility")
                     val isCompatible = compatibility is ModelCompatibility.Compatible
                     ModelCard(
                         model = model,
@@ -475,507 +394,6 @@ private fun ModelPickerLayout(
                             state.eventSink(ModelPickerScreen.Event.OpenModelConfig(model))
                         },
                     )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DeviceMemoryBanner(
-    deviceMemoryInfo: DeviceMemoryInfo,
-    modifier: Modifier = Modifier,
-) {
-    val ramFormatter = remember { DecimalFormat("#,##0.0") }
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ),
-        shape = MaterialTheme.shapes.extraLarge,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(44.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Memory,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp),
-                    )
-                }
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Device Memory",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "${ramFormatter.format(deviceMemoryInfo.displayTotalGb)} ${deviceMemoryInfo.displayLabel} Total RAM",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "Models requiring more RAM than available may be disabled for stability.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalMaterial3ExpressiveApi::class)
-@Composable
-private fun ModelCard(
-    model: AiModel,
-    compatibility: ModelCompatibility,
-    transitionScope: SharedElementTransitionScope? = null,
-    onDownload: () -> Unit,
-    onCancel: () -> Unit,
-    onSelect: () -> Unit,
-    onDelete: () -> Unit,
-    onConfigure: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val isCompatible = compatibility is ModelCompatibility.Compatible
-    val uriHandler = LocalUriHandler.current
-    var showDeleteConfirmation by remember { mutableStateOf(false) }
-
-    if (showDeleteConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirmation = false },
-            icon = {
-                Icon(
-                    imageVector = Icons.Default.DeleteOutline,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                )
-            },
-            title = {
-                Text(
-                    text = "Delete ${formatShortModelName(model.displayName)}?",
-                    style = MaterialTheme.typography.headlineSmall,
-                )
-            },
-            text = {
-                Text(
-                    text =
-                        "Are you sure you want to delete this model? " +
-                            "This will permanently remove the model file from your device and free up ${model.formattedSize} of storage space.",
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        showDeleteConfirmation = false
-                        onDelete()
-                    },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError,
-                        ),
-                ) {
-                    Text("Delete")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showDeleteConfirmation = false },
-                ) {
-                    Text("Cancel")
-                }
-            },
-        )
-    }
-
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .then(
-                    if (model.isSelected) {
-                        Modifier.sharedBoundsNav(transitionScope, ActiveModelCardSharedKey)
-                    } else {
-                        Modifier
-                    },
-                ),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        shape = MaterialTheme.shapes.large,
-        border =
-            if (model.isSelected) {
-                BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
-            } else {
-                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
-            },
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
-            // Header Row: Model Title + Size Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = model.displayName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier =
-                        Modifier
-                            .weight(1f, fill = false)
-                            .then(
-                                if (model.isSelected) {
-                                    Modifier.sharedBoundsNav(transitionScope, ActiveModelTitleSharedKey)
-                                } else {
-                                    Modifier
-                                },
-                            ),
-                )
-
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                ) {
-                    Text(
-                        text = model.formattedSize,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-
-            // Model Description
-            if (model.description.isNotBlank()) {
-                Text(
-                    text = model.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            // Specs & Badges Row
-            FlowRow(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    Text(
-                        text = "Requires ${model.minDeviceMemoryInGb}GB RAM",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                if (model.quantization.isNotBlank()) {
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ) {
-                        Text(
-                            text = model.quantization,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
-                }
-
-                model.formattedContextWindow?.let { contextWindow ->
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                    ) {
-                        Text(
-                            text = contextWindow,
-                            style = MaterialTheme.typography.labelSmall,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    Text(
-                        text = "LiteRT-LM",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                ) {
-                    Text(
-                        text = model.license,
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-
-            // Source & Provenance Link
-            Surface(
-                shape = MaterialTheme.shapes.small,
-                color = MaterialTheme.colorScheme.surfaceContainer,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            uriHandler.openUri(model.modelRepoUrl)
-                        },
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Source:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline,
-                        )
-                        Text(
-                            text = "Hugging Face (${model.publisher})",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = "Open in browser",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(14.dp),
-                    )
-                }
-            }
-
-            if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
-                val animatedProgress by animateFloatAsState(
-                    targetValue = model.downloadProgress.coerceIn(0, 100) / 100f,
-                    animationSpec = tween(durationMillis = 350, easing = LinearOutSlowInEasing),
-                    label = "DownloadProgressAnimation",
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    LinearWavyProgressIndicator(
-                        progress = { animatedProgress },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        val statusText =
-                            if (model.downloadProgress == 0) {
-                                "Queued (Waiting for Wi-Fi or network)..."
-                            } else {
-                                "Downloading model weights..."
-                            }
-                        Text(
-                            statusText,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Text(
-                            "${model.downloadProgress}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
-
-            if (!isCompatible) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
-                    shape = MaterialTheme.shapes.small,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        val reason = (compatibility as? ModelCompatibility.Incompatible)?.reason ?: "Insufficient RAM"
-                        Text(
-                            reason,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                    }
-                }
-            } else if (model.downloadStatus == DownloadStatus.FAILED) {
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f),
-                    shape = MaterialTheme.shapes.small,
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.3f)),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(
-                            Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        Text(
-                            model.downloadErrorMessage?.takeIf { it.isNotBlank() }
-                                ?: "Download failed. Check your network or disk space and try again.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (model.downloadStatus == DownloadStatus.DOWNLOADING) {
-                    OutlinedButton(
-                        onClick = onCancel,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Cancel Download")
-                    }
-                } else if (model.downloadStatus == DownloadStatus.DOWNLOADED) {
-                    Box(modifier = Modifier.weight(1f)) {
-                        if (model.isSelected) {
-                            FilledTonalButton(
-                                onClick = onSelect,
-                                enabled = false,
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .sharedElementNav(transitionScope, ActiveModelBadgeSharedKey),
-                            ) {
-                                Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Active Model")
-                            }
-                        } else {
-                            Button(
-                                onClick = onSelect,
-                                enabled = isCompatible,
-                                modifier = Modifier.fillMaxWidth(),
-                            ) {
-                                Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Select Model")
-                            }
-                        }
-                    }
-
-                    OutlinedIconButton(
-                        onClick = onConfigure,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Configure ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-
-                    OutlinedIconButton(
-                        onClick = { showDeleteConfirmation = true },
-                        colors =
-                            IconButtonDefaults.outlinedIconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error,
-                            ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Delete ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                } else {
-                    Button(
-                        onClick = {
-                            when {
-                                isCompatible && model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> onDownload()
-                                isCompatible && model.downloadStatus == DownloadStatus.FAILED -> onDownload()
-                            }
-                        },
-                        enabled = isCompatible,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        val icon =
-                            when {
-                                model.downloadStatus == DownloadStatus.FAILED -> Icons.Default.CloudDownload
-                                else -> Icons.Default.CloudDownload
-                            }
-                        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            when {
-                                !isCompatible -> "Insufficient RAM"
-                                model.downloadStatus == DownloadStatus.NOT_DOWNLOADED -> "Download Model"
-                                model.downloadStatus == DownloadStatus.FAILED -> "Retry Download"
-                                else -> "Download Model"
-                            },
-                        )
-                    }
                 }
             }
         }
@@ -1085,54 +503,6 @@ private fun ModelPickerScreenPreview() {
                         ),
                     transitionScope = this,
                 )
-            }
-        }
-    }
-}
-
-@ThemePreviews
-@Composable
-private fun DeviceMemoryBannerPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        DeviceMemoryBanner(
-            deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
-            modifier = Modifier.padding(16.dp),
-        )
-    }
-}
-
-@OptIn(ExperimentalSharedTransitionApi::class)
-@ThemePreviews
-@Composable
-private fun ModelCardPreview() {
-    CodeWithAIAppTheme(dynamicColor = false) {
-        PreviewSharedElementTransitionLayout {
-            SharedElementTransitionScope {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    ModelCard(
-                        model = sampleModels[0],
-                        compatibility = ModelCompatibility.Compatible,
-                        transitionScope = this@SharedElementTransitionScope,
-                        onDownload = {},
-                        onCancel = {},
-                        onSelect = {},
-                        onDelete = {},
-                        onConfigure = {},
-                    )
-                    ModelCard(
-                        model = sampleModels[1],
-                        compatibility = ModelCompatibility.Incompatible("Requires 3GB RAM (Device has 12GB)"),
-                        transitionScope = this@SharedElementTransitionScope,
-                        onDownload = {},
-                        onCancel = {},
-                        onSelect = {},
-                        onDelete = {},
-                        onConfigure = {},
-                    )
-                }
             }
         }
     }
