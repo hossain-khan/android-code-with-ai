@@ -10,29 +10,21 @@ import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.data.repository.course.PythonCourseContent
 import dev.hossain.codematex.data.repository.course.RustCourseContent
 import dev.hossain.codematex.data.repository.course.TypeScriptCourseContent
-import dev.hossain.codematex.domain.runner.FakePlaygroundCodeRunner
-import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
-import dev.hossain.codematex.system.FakeNetworkMonitor
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
 class LessonPresenterTest {
     private val fakeLearningRepository = FakeLearningRepository()
-    private val fakePlaygroundRunner = FakePlaygroundCodeRunner()
-    private val fakeNetworkMonitor = FakeNetworkMonitor()
 
     private fun createPresenter(
         navigator: FakeNavigator,
         screen: LessonScreen,
-        networkMonitor: FakeNetworkMonitor = fakeNetworkMonitor,
     ): LessonPresenter =
         LessonPresenter(
             navigator = navigator,
             screen = screen,
             learningRepository = fakeLearningRepository,
-            playgroundCodeRunner = fakePlaygroundRunner,
-            networkMonitor = networkMonitor,
         )
 
     @Test
@@ -217,119 +209,6 @@ class LessonPresenterTest {
             presenter.test {
                 val state = expectMostRecentItem()
                 assertThat(state).isInstanceOf(LessonScreen.State.NotFound::class.java)
-            }
-        }
-
-    @Test
-    fun `given run snippet event with success - updates snippet execution state to success`() =
-        runTest {
-            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("Hello from playground!\n")
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val state = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(state.snippetExecutionStates).isEmpty()
-
-                state.eventSink(LessonScreen.Event.RunSnippet(0, "println!(\"hi\")", "rust"))
-
-                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
-                val snippetState = updatedState.snippetExecutionStates[0]
-                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Success::class.java)
-                val success = snippetState as SnippetExecutionState.Success
-                assertThat(success.output).isEqualTo("Hello from playground!\n")
-            }
-        }
-
-    @Test
-    fun `given run snippet event with compilation error - updates state to compilation error`() =
-        runTest {
-            fakePlaygroundRunner.resultToReturn =
-                PlaygroundExecutionResult.CompilationError("error[E0308]: mismatched types")
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val state = expectMostRecentItem() as LessonScreen.State.Success
-                state.eventSink(LessonScreen.Event.RunSnippet(1, "bad code", "rust"))
-
-                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
-                val snippetState = updatedState.snippetExecutionStates[1]
-                assertThat(snippetState).isInstanceOf(SnippetExecutionState.CompilationError::class.java)
-                val compError = snippetState as SnippetExecutionState.CompilationError
-                assertThat(compError.diagnostic).contains("error[E0308]")
-            }
-        }
-
-    @Test
-    fun `given run snippet event with network error - updates state to error`() =
-        runTest {
-            fakePlaygroundRunner.resultToReturn =
-                PlaygroundExecutionResult.NetworkError("Internet connection required")
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val state = expectMostRecentItem() as LessonScreen.State.Success
-                state.eventSink(LessonScreen.Event.RunSnippet(0, "code", "rust"))
-
-                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
-                val snippetState = updatedState.snippetExecutionStates[0]
-                assertThat(snippetState).isInstanceOf(SnippetExecutionState.Error::class.java)
-                val error = snippetState as SnippetExecutionState.Error
-                assertThat(error.message).contains("Internet connection required")
-            }
-        }
-
-    @Test
-    fun `given dismiss snippet output event - clears snippet execution state`() =
-        runTest {
-            fakePlaygroundRunner.resultToReturn = PlaygroundExecutionResult.Success("Output")
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val state = expectMostRecentItem() as LessonScreen.State.Success
-                state.eventSink(LessonScreen.Event.RunSnippet(0, "code", "rust"))
-
-                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(updatedState.snippetExecutionStates[0]).isNotNull()
-
-                updatedState.eventSink(LessonScreen.Event.DismissSnippetOutput(0))
-
-                val finalState = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(finalState.snippetExecutionStates[0]).isNull()
-            }
-        }
-
-    @Test
-    fun `given initial state - emits isOnline as true`() =
-        runTest {
-            fakeNetworkMonitor.setOnline(true)
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val state = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(state.isOnline).isTrue()
-            }
-        }
-
-    @Test
-    fun `given network goes offline - emits state with isOnline false`() =
-        runTest {
-            fakeNetworkMonitor.setOnline(true)
-            val navigator = FakeNavigator(LessonScreen("kotlin-hello-world"))
-            val presenter = createPresenter(navigator, LessonScreen("kotlin-hello-world"))
-
-            presenter.test {
-                val initial = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(initial.isOnline).isTrue()
-
-                fakeNetworkMonitor.setOnline(false)
-
-                val updatedState = expectMostRecentItem() as LessonScreen.State.Success
-                assertThat(updatedState.isOnline).isFalse()
             }
         }
 }
