@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.24.0` | `48` | 2026-09-24 | On-device AI engine lifecycle & memory leak fixes (clean GPU close before CPU fallback, conversation handle reset on cancel, in-memory context restoration indicator); CircuitX SubCircuits modularization; Room DB & course progress inspector debug tools. |
 | `1.23.1` | `47` | 2026-09-12 | Sticky language filter chips in Guided Lessons course catalog screen with dynamic topic accent tinting, atmospheric radial background glow interpolation across languages, and smooth fade transitions without motion bounce. |
 | `1.23.0` | `46` | 2026-09-12 | Bundled official 'Kotlin Tour: Beginner' and 'Kotlin Tour: Intermediate' interactive courses (16 chapters, 250+ snippets) with Kotlin Playground execution; bundled official 'Go by Example' comprehensive course (85 runnable lessons); upgraded Circuit 0.38.0, Metro 1.4.3 (@BindingContainer), LiteRT-LM 0.17.0, Compose BOM 2026.09, and Room 2.8.5. |
 | `1.22.4` | `45` | 2026-09-08 | Reactive network connectivity monitoring with Android ConnectivityManager; smart offline mode automatically hiding "Run Code" playground buttons when disconnected; pre-flight network validation check for code runner. |
