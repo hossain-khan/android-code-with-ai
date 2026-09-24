@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flow
 class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
     var initializeResult: Result<List<ChatMessage>> = Result.success(emptyList())
     var messageEvents: List<ChatInferenceEvent> = emptyList()
+    var messageFlow: Flow<ChatInferenceEvent>? = null
     var activeBackendValue: LlmEngine.Backend? = null
 
     var initializeCalls = mutableListOf<InitializeCall>()
@@ -77,6 +78,6 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
 
     override suspend fun sendMessage(input: String): Flow<ChatInferenceEvent> {
         sendMessageInputs += input
-        return flow { messageEvents.forEach { emit(it) } }
+        return messageFlow ?: flow { messageEvents.forEach { emit(it) } }
     }
 }
