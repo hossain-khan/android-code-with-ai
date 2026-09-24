@@ -190,6 +190,8 @@ class DefaultLlmEngineFactory
 
                             inferenceConversation = inferenceEngine.createConversation(conversationConfig)
 
+                            currentCoroutineContext().ensureActive()
+
                             Timber.d("LlmEngineFactory: Engine initialized successfully with backend=$actualBackend")
                             session =
                                 LlmEngineSession(
