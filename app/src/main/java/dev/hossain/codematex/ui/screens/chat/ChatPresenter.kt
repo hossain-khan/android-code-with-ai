@@ -178,7 +178,8 @@ class ChatPresenter(
                         val input = event.text
                         Timber.d("ChatPresenter: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
 
-                        messages = messages + ChatMessage.User(input)
+                        val priorMessages = messages
+                        messages = priorMessages + ChatMessage.User(input)
                         messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
                         throughputInfo = "Prefilling..."
 
@@ -192,7 +193,7 @@ class ChatPresenter(
 
                                 val throughputTracker = ThroughputTracker()
                                 try {
-                                    chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
+                                    chatInferenceOrchestrator.sendMessage(input, priorMessages).collect { inferenceEvent ->
                                         when (inferenceEvent) {
                                             is ChatInferenceEvent.Token -> {
                                                 val isFirstToken =

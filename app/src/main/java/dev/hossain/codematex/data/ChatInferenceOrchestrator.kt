@@ -112,8 +112,14 @@ interface ChatInferenceOrchestrator {
      * [ChatInferenceEvent.BackendFailed] when a hardware backend fails and a
      * fallback attempt is starting, and [ChatInferenceEvent.Done] once generation
      * completes. Errors terminate the flow with an exception.
+     *
+     * @param existingMessages prior messages in the conversation to restore into fallback
+     *        sessions if hardware failure triggers engine fallback.
      */
-    suspend fun sendMessage(input: String): Flow<ChatInferenceEvent>
+    suspend fun sendMessage(
+        input: String,
+        existingMessages: List<ChatMessage> = emptyList(),
+    ): Flow<ChatInferenceEvent>
 }
 
 @SingleIn(AppScope::class)
@@ -128,6 +134,9 @@ class DefaultChatInferenceOrchestrator
         private val systemMemoryManager: SystemMemoryManager,
         private val userPreferencesStore: UserPreferencesStore,
     ) : ChatInferenceOrchestrator {
+        private var activeSessionId: String? = null
+        private var activeMessages: List<ChatMessage> = emptyList()
+
         override suspend fun initialize(
             model: AiModel,
             topic: CodingTopic,
@@ -189,6 +198,7 @@ class DefaultChatInferenceOrchestrator
                 )
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
 
+                activeSessionId = sessionId
                 val messagesToDisplay =
                     if (sessionId != null) {
                         val sessionMessages =
@@ -200,6 +210,7 @@ class DefaultChatInferenceOrchestrator
                     } else {
                         existingMessages
                     }
+                activeMessages = messagesToDisplay
 
                 Result.success(messagesToDisplay)
             } catch (e: CancellationException) {
@@ -219,6 +230,7 @@ class DefaultChatInferenceOrchestrator
             persona: TutorPersona,
         ) {
             Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
+            activeMessages = emptyList()
             val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
                 topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
@@ -232,6 +244,7 @@ class DefaultChatInferenceOrchestrator
             messages: List<ChatMessage>,
         ) {
             Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
+            activeMessages = messages
             val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
                 topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
@@ -244,9 +257,19 @@ class DefaultChatInferenceOrchestrator
 
         override fun getActiveBackend(): Backend? = llmEngine.getActiveBackend()
 
-        override suspend fun sendMessage(input: String): Flow<ChatInferenceEvent> =
+        override suspend fun sendMessage(
+            input: String,
+            existingMessages: List<ChatMessage>,
+        ): Flow<ChatInferenceEvent> =
             callbackFlow {
                 Timber.d("ChatInferenceOrchestrator: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
+
+                val historyToRestore =
+                    existingMessages.ifEmpty {
+                        activeMessages.ifEmpty {
+                            activeSessionId?.let { sessionRepository.getMessages(it) } ?: emptyList()
+                        }
+                    }
 
                 suspend fun runAndEmit(input: String) {
                     llmEngine.runInference(input) { partialToken, done ->
@@ -272,6 +295,13 @@ class DefaultChatInferenceOrchestrator
                         }
                         Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
                         send(ChatInferenceEvent.BackendFailed(e.failedBackend))
+
+                        if (historyToRestore.isNotEmpty()) {
+                            Timber.d(
+                                "ChatInferenceOrchestrator: Restoring ${historyToRestore.size} messages to fallback session before retry",
+                            )
+                            llmEngine.restoreHistory(historyToRestore)
+                        }
                     }
                 }
 

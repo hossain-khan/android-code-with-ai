@@ -214,6 +214,14 @@ class LlmEngineImpl(
     private suspend fun recreateSessionAfterFailure(failedBackend: LlmEngine.Backend) {
         val engineToClose = engine
         val conversationToClose = conversation
+        // Immediately release the failed hardware engine and conversation before allocating
+        // the fallback session so memory-constrained devices do not spike to 2x model RAM.
+        engine = null
+        conversation = null
+        activeBackend = null
+        closeQuietly(conversationToClose)
+        closeQuietly(engineToClose)
+
         try {
             val session =
                 llmEngineFactory.createFallbackSession(
@@ -226,17 +234,11 @@ class LlmEngineImpl(
             conversation = session.conversation
             activeBackend = session.backend
         } catch (e: Throwable) {
-            // The failed hardware session is no longer usable. Clear it out before rethrowing
-            // so we do not leave multi-gigabyte native allocations pinned.
             engine = null
             conversation = null
             activeBackend = null
-            closeQuietly(conversationToClose)
-            closeQuietly(engineToClose)
             throw e
         }
-        closeQuietly(conversationToClose)
-        closeQuietly(engineToClose)
     }
 
     private suspend fun executeInference(
