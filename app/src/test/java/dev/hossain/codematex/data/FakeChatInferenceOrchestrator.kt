@@ -33,6 +33,8 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         val persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
     )
 
+    var onInitialize: (suspend () -> Unit)? = null
+
     override suspend fun initialize(
         model: AiModel,
         topic: CodingTopic,
@@ -41,6 +43,7 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         persona: TutorPersona,
     ): Result<List<ChatMessage>> {
         initializeCalls += InitializeCall(model, topic, sessionId, existingMessages, persona)
+        onInitialize?.invoke()
         return initializeResult
     }
 
@@ -73,6 +76,10 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
         resetConversationTopics += topic
         resetConversationPersonas += persona
     }
+
+    var isModelLoadedValue: Boolean = false
+
+    override fun isModelLoaded(modelPath: String): Boolean = isModelLoadedValue
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackendValue
 

@@ -26,6 +26,7 @@ import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
@@ -302,6 +303,87 @@ class ChatPresenterTest {
                 val reInitCall = fakeOrchestrator.initializeCalls.last()
                 assertThat(reInitCall.sessionId).isNotNull()
                 assertThat(reInitCall.existingMessages).hasSize(2)
+            }
+        }
+
+    @Test
+    fun `given resumed session with model already loaded - sets isRestoringHistory true while initializing and false after`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val sessionRepo = FakeChatSessionRepository(messages = listOf(ChatMessage.User("Prior question")))
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.isModelLoadedValue = true
+            val initDeferred = CompletableDeferred<Unit>()
+            fakeOrchestrator.onInitialize = {
+                initDeferred.await()
+            }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                // While initialization is running (suspended on initDeferred)
+                val preparingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(preparingState.isPreparing).isTrue()
+                assertThat(preparingState.isRestoringHistory).isTrue()
+
+                // Allow initialization to complete
+                initDeferred.complete(Unit)
+
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.isPreparing).isFalse()
+                assertThat(completedState.isRestoringHistory).isFalse()
+            }
+        }
+
+    @Test
+    fun `given new chat session with model not loaded - keeps isRestoringHistory false while initializing`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.isModelLoadedValue = false
+            val initDeferred = CompletableDeferred<Unit>()
+            fakeOrchestrator.onInitialize = {
+                initDeferred.await()
+            }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                // While initialization is running (cold engine load)
+                val preparingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(preparingState.isPreparing).isTrue()
+                assertThat(preparingState.isRestoringHistory).isFalse()
+
+                initDeferred.complete(Unit)
+
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.isPreparing).isFalse()
+                assertThat(completedState.isRestoringHistory).isFalse()
             }
         }
 

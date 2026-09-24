@@ -106,6 +106,11 @@ interface ChatInferenceOrchestrator {
     fun getActiveBackend(): Backend?
 
     /**
+     * Returns true if the model at [modelPath] is already loaded in RAM.
+     */
+    fun isModelLoaded(modelPath: String): Boolean = false
+
+    /**
      * Sends [input] to the LLM and returns a [Flow] of inference events.
      *
      * The flow emits [ChatInferenceEvent.Token] for each partial token,
@@ -136,6 +141,8 @@ class DefaultChatInferenceOrchestrator
     ) : ChatInferenceOrchestrator {
         private var activeSessionId: String? = null
         private var activeMessages: List<ChatMessage> = emptyList()
+
+        override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
 
         override suspend fun initialize(
             model: AiModel,
