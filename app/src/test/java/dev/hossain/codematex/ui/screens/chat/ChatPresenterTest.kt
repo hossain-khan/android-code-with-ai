@@ -260,6 +260,52 @@ class ChatPresenterTest {
         }
 
     @Test
+    fun `given new chat session - re-initialization passes assigned sessionId and conversation messages`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val sessionRepo = FakeChatSessionRepository()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Bot answer"), ChatInferenceEvent.Done)
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(fakeOrchestrator.initializeCalls).hasSize(1)
+                val initialInitCall = fakeOrchestrator.initializeCalls.first()
+                assertThat(initialInitCall.sessionId).isNull()
+                assertThat(initialInitCall.existingMessages).isEmpty()
+
+                initialState.eventSink(ChatScreen.Event.SendMessage("User question"))
+                val activeState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(activeState.isGenerating).isFalse()
+                assertThat(activeState.messages).hasSize(2)
+
+                // Trigger re-initialization (e.g. rotation, retry)
+                activeState.eventSink(ChatScreen.Event.Retry)
+                expectMostRecentItem()
+
+                assertThat(fakeOrchestrator.initializeCalls).hasSize(2)
+                val reInitCall = fakeOrchestrator.initializeCalls.last()
+                assertThat(reInitCall.sessionId).isNotNull()
+                assertThat(reInitCall.existingMessages).hasSize(2)
+            }
+        }
+
+    @Test
     fun `given persona switch with existing messages - calls switchPersona with history and updates persona`() =
         runTest {
             val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)

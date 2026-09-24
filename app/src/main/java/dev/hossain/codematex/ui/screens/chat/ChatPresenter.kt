@@ -136,7 +136,7 @@ class ChatPresenter(
                     chatInferenceOrchestrator.initialize(
                         model = model,
                         topic = screen.topic,
-                        sessionId = screen.sessionId,
+                        sessionId = currentSessionId,
                         existingMessages = messages,
                         persona = persona,
                     )
