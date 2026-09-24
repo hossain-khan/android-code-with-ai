@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -33,6 +34,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -51,7 +53,7 @@ class ChatPresenter(
     override fun present(): ChatScreen.State {
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
-        var isGenerating by rememberRetained { mutableStateOf(false) }
+        var isGenerating by remember { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
         var modelConfig by rememberRetained { mutableStateOf(configStore.config) }
@@ -65,8 +67,14 @@ class ChatPresenter(
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
+        var inferenceJob by remember { mutableStateOf<Job?>(null) }
 
         LaunchedEffect(Unit) {
+            // Defensively clear any stale streaming state if messages were retained from a cancelled session
+            val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+            if (lastAgent != null && lastAgent.isStreaming) {
+                messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+            }
             launch {
                 modelRepository.getAvailableModels().collect { models ->
                     availableModels = models
@@ -100,7 +108,15 @@ class ChatPresenter(
         LaunchedEffect(screen.sessionId) {
             if (screen.sessionId != null && messages.isEmpty()) {
                 Timber.d("ChatPresenter: Instantly loading messages for session=${screen.sessionId}")
-                messages = sessionRepository.getMessages(screen.sessionId)
+                val loaded = sessionRepository.getMessages(screen.sessionId)
+                val sanitized =
+                    if (loaded.isNotEmpty() && (loaded.last() as? ChatMessage.Agent)?.isStreaming == true) {
+                        val lastAgent = loaded.last() as ChatMessage.Agent
+                        loaded.dropLast(1) + lastAgent.copy(isStreaming = false)
+                    } else {
+                        loaded
+                    }
+                messages = sanitized
             }
         }
 
@@ -127,7 +143,14 @@ class ChatPresenter(
                 result
                     .onSuccess { loadedMessages ->
                         if (loadedMessages.isNotEmpty()) {
-                            messages = loadedMessages
+                            val sanitized =
+                                if ((loadedMessages.last() as? ChatMessage.Agent)?.isStreaming == true) {
+                                    val lastAgent = loadedMessages.last() as ChatMessage.Agent
+                                    loadedMessages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                                } else {
+                                    loadedMessages
+                                }
+                            messages = sanitized
                         }
                         isModelInitialized = true
                         Timber.d("ChatPresenter: Model initialized successfully")
@@ -159,113 +182,132 @@ class ChatPresenter(
                         messages = messages + ChatMessage.Agent(content = "", isStreaming = true)
                         throughputInfo = "Prefilling..."
 
-                        scope.launch {
-                            // Capture the active model at inference start so the saved session
-                            // is tagged with the model that actually generated the response.
-                            val currentModel = activeModel
-                            val modelName = currentModel?.name ?: "Unknown"
+                        inferenceJob?.cancel()
+                        val job =
+                            scope.launch {
+                                // Capture the active model at inference start so the saved session
+                                // is tagged with the model that actually generated the response.
+                                val currentModel = activeModel
+                                val modelName = currentModel?.name ?: "Unknown"
 
-                            val throughputTracker = ThroughputTracker()
-                            try {
-                                chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
-                                    when (inferenceEvent) {
-                                        is ChatInferenceEvent.Token -> {
-                                            val isFirstToken =
-                                                throughputTracker.currentTokenCount == 0 &&
-                                                    inferenceEvent.partialToken.isNotEmpty()
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages =
-                                                    messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content + inferenceEvent.partialToken,
-                                                        isStreaming = true,
-                                                    )
-                                            }
-                                            throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
-                                            if (isFirstToken) {
-                                                val ttftText = throughputTracker.ttftMs?.let { "${it}ms" } ?: "--"
-                                                Timber.d(
-                                                    "ChatPresenter: First token received (TTFT: $ttftText). Streaming response started...",
-                                                )
-                                            }
-                                        }
-
-                                        ChatInferenceEvent.Done -> {
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null) {
-                                                messages =
-                                                    messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = lastAgent.content,
-                                                        isStreaming = false,
-                                                    )
-                                            }
-                                            val finalThroughput = throughputTracker.finalize()
-                                            throughputInfo = finalThroughput
-                                            isGenerating = false
-                                            Timber.d(
-                                                "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
-                                            )
-
-                                            if (screen.saveToHistory) {
-                                                // Save session message history in an independent try-catch block
-                                                // so persistence failures do not discard or overwrite the generated response.
-                                                Timber.d("ChatPresenter: Saving session message history...")
-                                                try {
-                                                    currentSessionId =
-                                                        sessionRepository.saveSession(
-                                                            topic = screen.topic,
-                                                            messages = messages,
-                                                            sessionId = currentSessionId,
-                                                            modelUsed = modelName,
+                                val throughputTracker = ThroughputTracker()
+                                try {
+                                    chatInferenceOrchestrator.sendMessage(input).collect { inferenceEvent ->
+                                        when (inferenceEvent) {
+                                            is ChatInferenceEvent.Token -> {
+                                                val isFirstToken =
+                                                    throughputTracker.currentTokenCount == 0 &&
+                                                        inferenceEvent.partialToken.isNotEmpty()
+                                                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                                                if (lastAgent != null) {
+                                                    messages =
+                                                        messages.dropLast(1) +
+                                                        lastAgent.copy(
+                                                            content = lastAgent.content + inferenceEvent.partialToken,
+                                                            isStreaming = true,
                                                         )
-                                                    Timber.d(
-                                                        "ChatPresenter: Message history saved for session '%s' (%d messages)",
-                                                        currentSessionId,
-                                                        messages.size,
-                                                    )
-                                                    saveErrorMessage = null
-                                                } catch (e: CancellationException) {
-                                                    throw e
-                                                } catch (e: Exception) {
-                                                    Timber.e(e, "ChatPresenter: Failed to save session history")
-                                                    saveErrorMessage = e.message ?: "Failed to save conversation"
                                                 }
-                                            } else {
-                                                Timber.d("ChatPresenter: Ephemeral session active, skipping persistence.")
-                                                saveErrorMessage = null
-                                            }
-                                        }
-
-                                        is ChatInferenceEvent.BackendFailed -> {
-                                            Timber.w(
-                                                "ChatPresenter: Backend ${inferenceEvent.backend} failed, clearing partial output for fallback",
-                                            )
-                                            val lastAgent = messages.last() as? ChatMessage.Agent
-                                            if (lastAgent != null && lastAgent.isStreaming) {
-                                                messages =
-                                                    messages.dropLast(1) +
-                                                    lastAgent.copy(
-                                                        content = "",
-                                                        isStreaming = true,
+                                                throughputInfo = throughputTracker.recordToken(inferenceEvent.partialToken)
+                                                if (isFirstToken) {
+                                                    val ttftText = throughputTracker.ttftMs?.let { "${it}ms" } ?: "--"
+                                                    Timber.d(
+                                                        "ChatPresenter: First token received (TTFT: $ttftText). Streaming response started...",
                                                     )
+                                                }
                                             }
-                                            throughputInfo = "Falling back from ${inferenceEvent.backend}..."
+
+                                            ChatInferenceEvent.Done -> {
+                                                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                                                if (lastAgent != null) {
+                                                    messages =
+                                                        messages.dropLast(1) +
+                                                        lastAgent.copy(
+                                                            content = lastAgent.content,
+                                                            isStreaming = false,
+                                                        )
+                                                }
+                                                val finalThroughput = throughputTracker.finalize()
+                                                throughputInfo = finalThroughput
+                                                isGenerating = false
+                                                Timber.d(
+                                                    "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
+                                                )
+
+                                                if (screen.saveToHistory) {
+                                                    // Save session message history in an independent try-catch block
+                                                    // so persistence failures do not discard or overwrite the generated response.
+                                                    Timber.d("ChatPresenter: Saving session message history...")
+                                                    try {
+                                                        currentSessionId =
+                                                            sessionRepository.saveSession(
+                                                                topic = screen.topic,
+                                                                messages = messages,
+                                                                sessionId = currentSessionId,
+                                                                modelUsed = modelName,
+                                                            )
+                                                        Timber.d(
+                                                            "ChatPresenter: Message history saved for session '%s' (%d messages)",
+                                                            currentSessionId,
+                                                            messages.size,
+                                                        )
+                                                        saveErrorMessage = null
+                                                    } catch (e: CancellationException) {
+                                                        throw e
+                                                    } catch (e: Exception) {
+                                                        Timber.e(e, "ChatPresenter: Failed to save session history")
+                                                        saveErrorMessage = e.message ?: "Failed to save conversation"
+                                                    }
+                                                } else {
+                                                    Timber.d("ChatPresenter: Ephemeral session active, skipping persistence.")
+                                                    saveErrorMessage = null
+                                                }
+                                            }
+
+                                            is ChatInferenceEvent.BackendFailed -> {
+                                                Timber.w(
+                                                    "ChatPresenter: Backend ${inferenceEvent.backend} failed, clearing partial output for fallback",
+                                                )
+                                                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                                                if (lastAgent != null && lastAgent.isStreaming) {
+                                                    messages =
+                                                        messages.dropLast(1) +
+                                                        lastAgent.copy(
+                                                            content = "",
+                                                            isStreaming = true,
+                                                        )
+                                                }
+                                                throughputInfo = "Falling back from ${inferenceEvent.backend}..."
+                                            }
                                         }
                                     }
+                                } catch (e: CancellationException) {
+                                    if (isGenerating) {
+                                        isGenerating = false
+                                        chatInferenceOrchestrator.stop()
+                                    }
+                                    val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                                    if (lastAgent != null && lastAgent.isStreaming) {
+                                        messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                                    }
+                                    throw e
+                                } catch (e: Throwable) {
+                                    Timber.e(
+                                        e,
+                                        "ChatPresenter: Inference failed after ${throughputTracker.currentTokenCount} tokens",
+                                    )
+                                    isGenerating = false
+                                    chatInferenceOrchestrator.stop()
+                                    throughputInfo = "Error: ${e.message}"
+                                    messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
+                                    initTrigger++
                                 }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.e(
-                                    e,
-                                    "ChatPresenter: Inference failed after ${throughputTracker.currentTokenCount} tokens",
-                                )
-                                isGenerating = false
-                                throughputInfo = "Error: ${e.message}"
-                                messages = messages.dropLast(1) + ChatMessage.Error(e.message ?: "Inference failed")
-                                initTrigger++
+                            }
+                        inferenceJob = job
+                        if (job.isCancelled) {
+                            isGenerating = false
+                            val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                            if (lastAgent != null && lastAgent.isStreaming) {
+                                messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
                             }
                         }
                     }
@@ -299,6 +341,7 @@ class ChatPresenter(
                 ChatScreen.Event.StopGeneration -> {
                     if (isGenerating) {
                         Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
+                        inferenceJob?.cancel()
                         chatInferenceOrchestrator.stop()
                         isGenerating = false
                         val lastAgent = messages.lastOrNull() as? ChatMessage.Agent

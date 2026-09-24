@@ -25,7 +25,9 @@ import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.lessons.ChapterScreen
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -593,6 +595,151 @@ class ChatPresenterTest {
                 val state = expectMostRecentItem() as ChatScreen.State.Active
                 state.eventSink(ChatScreen.Event.OpenCourse("kotlin-foundations"))
                 assertThat(navigator.awaitNextScreen()).isEqualTo(ChapterScreen("kotlin-foundations"))
+            }
+        }
+
+    @Test
+    fun `given inference cancelled - resets isGenerating and allows subsequent message sending`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Partial output before cancel"))
+                    throw CancellationException("Simulated coroutine scope cancellation")
+                }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SendMessage("First question"))
+
+                // Cancellation resets isGenerating and clears isStreaming on the last agent bubble
+                val cancelledState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(cancelledState.isGenerating).isFalse()
+                val lastMessage = cancelledState.messages.lastOrNull() as? ChatMessage.Agent
+                assertThat(lastMessage).isNotNull()
+                assertThat(lastMessage?.isStreaming).isFalse()
+                assertThat(lastMessage?.content).isEqualTo("Partial output before cancel")
+                assertThat(fakeOrchestrator.stopCalls).isAtLeast(1)
+
+                // Subsequent message sending must NOT be blocked
+                fakeOrchestrator.messageFlow = null
+                fakeOrchestrator.messageEvents =
+                    listOf(
+                        ChatInferenceEvent.Token("Subsequent answer"),
+                        ChatInferenceEvent.Done,
+                    )
+
+                cancelledState.eventSink(ChatScreen.Event.SendMessage("Second question"))
+
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.isGenerating).isFalse()
+                val subsequentAgent = completedState.messages.lastOrNull() as? ChatMessage.Agent
+                assertThat(subsequentAgent).isNotNull()
+                assertThat(subsequentAgent?.isStreaming).isFalse()
+                assertThat(subsequentAgent?.content).isEqualTo("Subsequent answer")
+            }
+        }
+
+    @Test
+    fun `given inference native error or Throwable - resets isGenerating, stops engine, and allows recovery`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Partial token"))
+                    throw RuntimeException("Simulated native JNI crash")
+                }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ChatScreen.State.Active
+                initialState.eventSink(ChatScreen.Event.SendMessage("Trigger crash"))
+
+                val errorState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(errorState.isGenerating).isFalse()
+                val lastError = errorState.messages.lastOrNull() as? ChatMessage.Error
+                assertThat(lastError).isNotNull()
+                assertThat(lastError?.message).isEqualTo("Simulated native JNI crash")
+                assertThat(fakeOrchestrator.stopCalls).isAtLeast(1)
+
+                // Subsequent message sending must succeed after error
+                fakeOrchestrator.messageFlow = null
+                fakeOrchestrator.messageEvents =
+                    listOf(
+                        ChatInferenceEvent.Token("Recovered answer"),
+                        ChatInferenceEvent.Done,
+                    )
+
+                errorState.eventSink(ChatScreen.Event.SendMessage("Recovered question"))
+
+                val recoveredState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(recoveredState.isGenerating).isFalse()
+                val recoveredAgent = recoveredState.messages.lastOrNull() as? ChatMessage.Agent
+                assertThat(recoveredAgent).isNotNull()
+                assertThat(recoveredAgent?.content).isEqualTo("Recovered answer")
+            }
+        }
+
+    @Test
+    fun `given retained messages with stale streaming state - sanitizes streaming flag on composition`() =
+        runTest {
+            val model = testModel(downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeSessionRepo =
+                FakeChatSessionRepository(
+                    messages =
+                        listOf(
+                            ChatMessage.User("User question"),
+                            ChatMessage.Agent(content = "Interrupted response", isStreaming = true),
+                        ),
+                )
+
+            val presenter =
+                createPresenter(
+                    screen = ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = fakeSessionRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                val lastMessage = state.messages.lastOrNull() as? ChatMessage.Agent
+                assertThat(lastMessage).isNotNull()
+                assertThat(lastMessage?.isStreaming).isFalse()
+                assertThat(lastMessage?.content).isEqualTo("Interrupted response")
             }
         }
 }
