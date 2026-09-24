@@ -7,8 +7,11 @@ import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -112,22 +115,32 @@ class LlmEngineImpl(
         currentSystemInstruction = systemInstruction
         currentConfig = config
 
-        val session =
-            llmEngineFactory.createSession(
-                modelPath = modelPath,
-                preferredBackend = backend,
-                systemInstruction = systemInstruction,
-                config = config,
-            )
+        var session: LlmEngineSession? = null
+        try {
+            session =
+                llmEngineFactory.createSession(
+                    modelPath = modelPath,
+                    preferredBackend = backend,
+                    systemInstruction = systemInstruction,
+                    config = config,
+                )
 
-        engine = session.engine
-        conversation = session.conversation
-        activeBackend = session.backend
-        Timber.d(
-            "LlmEngineImpl [INIT_COMPLETE]: Successfully initialized model '%s' with activeBackend=%s",
-            modelPath,
-            activeBackend,
-        )
+            currentCoroutineContext().ensureActive()
+
+            engine = session.engine
+            conversation = session.conversation
+            activeBackend = session.backend
+            Timber.d(
+                "LlmEngineImpl [INIT_COMPLETE]: Successfully initialized model '%s' with activeBackend=%s",
+                modelPath,
+                activeBackend,
+            )
+        } catch (e: CancellationException) {
+            Timber.i("LlmEngineImpl [INIT_CANCELLED]: Model initialization was cancelled for '%s'", modelPath)
+            session?.close()
+            cleanupLocked()
+            throw e
+        }
     }
 
     override suspend fun runInference(
