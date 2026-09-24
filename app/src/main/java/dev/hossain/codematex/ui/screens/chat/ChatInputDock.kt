@@ -140,7 +140,9 @@ internal fun ChatInputField(
             if (state.isPreparing) {
                 val shortModelName = formatShortModelName(state.modelName)
                 val labelText =
-                    if (shortModelName.isNotBlank()) {
+                    if (state.isRestoringHistory) {
+                        "Restoring conversation context..."
+                    } else if (shortModelName.isNotBlank()) {
                         "Initializing $shortModelName model..."
                     } else {
                         "Initializing model..."
@@ -329,6 +331,26 @@ private fun ChatInputFieldPreparingPreview() {
                 state =
                     sampleInputDockState.copy(
                         isPreparing = true,
+                        isRestoringHistory = false,
+                    ),
+                inputText = "",
+                onInputTextChanged = {},
+                onSendMessage = {},
+            )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ChatInputFieldRestoringHistoryPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            ChatInputField(
+                state =
+                    sampleInputDockState.copy(
+                        isPreparing = true,
+                        isRestoringHistory = true,
                     ),
                 inputText = "",
                 onInputTextChanged = {},

@@ -34,6 +34,7 @@ data class ChatScreen(
             val messages: List<ChatMessage>,
             val isGenerating: Boolean,
             val isPreparing: Boolean,
+            val isRestoringHistory: Boolean = false,
             val modelName: String,
             val persona: TutorPersona = TutorPersona.SENIOR_ENGINEER,
             val activeBackend: String?,

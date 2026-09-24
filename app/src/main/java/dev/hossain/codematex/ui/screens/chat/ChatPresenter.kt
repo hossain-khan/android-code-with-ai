@@ -55,6 +55,7 @@ class ChatPresenter(
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
         var isGenerating by remember { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
+        var isRestoringHistory by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
         var modelConfig by rememberRetained { mutableStateOf(configStore.config) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
@@ -128,6 +129,10 @@ class ChatPresenter(
                 return@LaunchedEffect
             }
             Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
+            val modelPath = model.localPath
+            val isModelAlreadyLoaded = modelPath != null && chatInferenceOrchestrator.isModelLoaded(modelPath)
+            val hasHistoryToRestore = currentSessionId != null || messages.isNotEmpty()
+            isRestoringHistory = isModelAlreadyLoaded && hasHistoryToRestore
             isPreparing = true
             isModelInitialized = false
             errorMessage = null
@@ -136,7 +141,7 @@ class ChatPresenter(
                     chatInferenceOrchestrator.initialize(
                         model = model,
                         topic = screen.topic,
-                        sessionId = screen.sessionId,
+                        sessionId = currentSessionId,
                         existingMessages = messages,
                         persona = persona,
                     )
@@ -164,6 +169,7 @@ class ChatPresenter(
                 throw e
             } finally {
                 isPreparing = false
+                isRestoringHistory = false
             }
         }
 
@@ -326,6 +332,7 @@ class ChatPresenter(
                         scope.launch {
                             userPreferencesStore.setSelectedPersona(newPersona)
                             isPreparing = true
+                            isRestoringHistory = updatedMessages.isNotEmpty()
                             try {
                                 chatInferenceOrchestrator.switchPersona(screen.topic, newPersona, updatedMessages)
                             } catch (e: CancellationException) {
@@ -334,6 +341,7 @@ class ChatPresenter(
                                 Timber.e(e, "ChatPresenter: Error switching persona")
                             } finally {
                                 isPreparing = false
+                                isRestoringHistory = false
                             }
                         }
                     }
@@ -473,6 +481,7 @@ class ChatPresenter(
                     messages = messages,
                     isGenerating = isGenerating,
                     isPreparing = isPreparing,
+                    isRestoringHistory = isRestoringHistory,
                     modelName = model.displayName,
                     persona = persona,
                     activeBackend = chatInferenceOrchestrator.getActiveBackend()?.name,

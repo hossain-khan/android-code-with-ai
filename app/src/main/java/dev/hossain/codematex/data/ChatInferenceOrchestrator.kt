@@ -106,6 +106,11 @@ interface ChatInferenceOrchestrator {
     fun getActiveBackend(): Backend?
 
     /**
+     * Returns true if the model at [modelPath] is already loaded in RAM.
+     */
+    fun isModelLoaded(modelPath: String): Boolean = false
+
+    /**
      * Sends [input] to the LLM and returns a [Flow] of inference events.
      *
      * The flow emits [ChatInferenceEvent.Token] for each partial token,
@@ -136,6 +141,8 @@ class DefaultChatInferenceOrchestrator
     ) : ChatInferenceOrchestrator {
         private var activeSessionId: String? = null
         private var activeMessages: List<ChatMessage> = emptyList()
+
+        override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
 
         override suspend fun initialize(
             model: AiModel,
@@ -199,17 +206,24 @@ class DefaultChatInferenceOrchestrator
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
 
                 activeSessionId = sessionId
-                val messagesToDisplay =
+                val rawMessages =
                     if (sessionId != null) {
-                        val sessionMessages =
-                            existingMessages.ifEmpty {
-                                sessionRepository.getMessages(sessionId)
-                            }
-                        llmEngine.restoreHistory(sessionMessages)
-                        sessionMessages
+                        existingMessages.ifEmpty {
+                            sessionRepository.getMessages(sessionId)
+                        }
                     } else {
                         existingMessages
                     }
+                val messagesToDisplay =
+                    if (rawMessages.isNotEmpty() && (rawMessages.last() as? ChatMessage.Agent)?.isStreaming == true) {
+                        val lastAgent = rawMessages.last() as ChatMessage.Agent
+                        rawMessages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                    } else {
+                        rawMessages
+                    }
+                if (messagesToDisplay.isNotEmpty()) {
+                    llmEngine.restoreHistory(messagesToDisplay)
+                }
                 activeMessages = messagesToDisplay
 
                 Result.success(messagesToDisplay)
@@ -231,6 +245,7 @@ class DefaultChatInferenceOrchestrator
         ) {
             Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
             activeMessages = emptyList()
+            activeSessionId = null
             val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
                 topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),

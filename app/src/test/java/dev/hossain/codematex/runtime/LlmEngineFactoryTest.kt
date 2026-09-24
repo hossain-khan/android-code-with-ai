@@ -5,6 +5,7 @@ package dev.hossain.codematex.runtime
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -110,10 +111,10 @@ class LlmEngineFactoryTest {
     fun `createSession closes native engine when cancelled during engine initialization`() =
         runTest(UnconfinedTestDispatcher()) {
             val fakeEngine = FakeInferenceEngine()
-            var sessionJob: Job? = null
+            lateinit var sessionJob: Job
             fakeEngine.onInitialize = {
                 // Simulate caller coroutine cancellation while native initialize() is executing
-                sessionJob?.cancel()
+                sessionJob.cancel()
             }
 
             val factory =
@@ -127,7 +128,7 @@ class LlmEngineFactoryTest {
                 )
 
             sessionJob =
-                launch {
+                launch(start = CoroutineStart.LAZY) {
                     factory.createSession(
                         modelPath = "/data/model.bin",
                         preferredBackend = LlmEngine.Backend.GPU,
@@ -136,6 +137,7 @@ class LlmEngineFactoryTest {
                     )
                 }
 
+            sessionJob.start()
             sessionJob.join()
 
             assertThat(sessionJob.isCancelled).isTrue()
@@ -147,10 +149,10 @@ class LlmEngineFactoryTest {
     fun `createSession closes conversation and engine when cancelled during conversation creation`() =
         runTest(UnconfinedTestDispatcher()) {
             val fakeEngine = FakeInferenceEngine()
-            var sessionJob: Job? = null
+            lateinit var sessionJob: Job
             fakeEngine.onCreateConversation = {
                 // Simulate caller coroutine cancellation while conversation creation is executing
-                sessionJob?.cancel()
+                sessionJob.cancel()
             }
 
             val factory =
@@ -164,7 +166,7 @@ class LlmEngineFactoryTest {
                 )
 
             sessionJob =
-                launch {
+                launch(start = CoroutineStart.LAZY) {
                     factory.createSession(
                         modelPath = "/data/model.bin",
                         preferredBackend = LlmEngine.Backend.GPU,
@@ -173,6 +175,7 @@ class LlmEngineFactoryTest {
                     )
                 }
 
+            sessionJob.start()
             sessionJob.join()
 
             assertThat(sessionJob.isCancelled).isTrue()

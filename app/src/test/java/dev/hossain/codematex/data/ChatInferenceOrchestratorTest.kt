@@ -50,9 +50,10 @@ class ChatInferenceOrchestratorTest {
     @Test
     fun `initialize returns success and loads messages when session exists`() =
         runTest {
+            val sessionMessages = listOf(ChatMessage.User("Hi"), ChatMessage.Agent("Hello"))
             val result =
                 createOrchestrator(
-                    messages = listOf(ChatMessage.User("Hi"), ChatMessage.Agent("Hello")),
+                    messages = sessionMessages,
                 ).initialize(
                     model = testModel(),
                     topic = CodingTopic.KOTLIN,
@@ -62,6 +63,8 @@ class ChatInferenceOrchestratorTest {
 
             assertThat(result.isSuccess).isTrue()
             assertThat(result.getOrThrow()).hasSize(2)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoredMessages).containsExactly(sessionMessages)
         }
 
     @Test
@@ -78,6 +81,69 @@ class ChatInferenceOrchestratorTest {
                 )
 
             assertThat(result.getOrThrow()).containsExactlyElementsIn(existing).inOrder()
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoredMessages).containsExactly(existing)
+        }
+
+    @Test
+    fun `initialize with sessionId null and non-empty existingMessages restores history to engine`() =
+        runTest {
+            val existing = listOf(ChatMessage.User("Question"), ChatMessage.Agent("Answer"))
+
+            val result =
+                createOrchestrator().initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = existing,
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            assertThat(result.getOrThrow()).containsExactlyElementsIn(existing).inOrder()
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoredMessages).containsExactly(existing)
+        }
+
+    @Test
+    fun `initialize with sessionId null and empty existingMessages does not restore history`() =
+        runTest {
+            val result =
+                createOrchestrator().initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = emptyList(),
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            assertThat(result.getOrThrow()).isEmpty()
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(0)
+        }
+
+    @Test
+    fun `initialize with in-flight streaming message sanitizes streaming state before restoring history`() =
+        runTest {
+            val existing =
+                listOf(
+                    ChatMessage.User("Write code"),
+                    ChatMessage.Agent("Here is the", isStreaming = true),
+                )
+
+            val result =
+                createOrchestrator().initialize(
+                    model = testModel(),
+                    topic = CodingTopic.KOTLIN,
+                    sessionId = null,
+                    existingMessages = existing,
+                )
+
+            assertThat(result.isSuccess).isTrue()
+            val loaded = result.getOrThrow()
+            assertThat(loaded).hasSize(2)
+            assertThat((loaded.last() as ChatMessage.Agent).isStreaming).isFalse()
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            val restored = fakeEngine.restoredMessages.single()
+            assertThat((restored.last() as ChatMessage.Agent).isStreaming).isFalse()
         }
 
     @Test
