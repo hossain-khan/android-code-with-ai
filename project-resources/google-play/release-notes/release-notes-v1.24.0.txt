@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.24.0:
+• On-Device AI Engine Stability: Fixed LiteRT-LM memory leaks during cancelled initialization and safe GPU-to-CPU fallback recovery.
+• Seamless Chat Continuity: Preserves and restores ongoing conversation turns across screen rotations, re-entry, and session resumption.
+• Modular UI Architecture: Decomposed screens into CircuitX SubCircuits for enhanced responsiveness.
+• Course Progress Inspector: Added QA database inspection and diagnostics in debug tools.
