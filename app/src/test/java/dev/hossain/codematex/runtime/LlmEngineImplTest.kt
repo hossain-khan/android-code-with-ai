@@ -5,6 +5,8 @@ package dev.hossain.codematex.runtime
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ModelConfig
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -129,6 +131,37 @@ class LlmEngineImplTest {
             assertThat(engine.isModelLoaded("/data/other.bin")).isFalse()
 
             engine.cleanup()
+            assertThat(engine.isModelLoaded("/data/model.bin")).isFalse()
+        }
+
+    @Test
+    fun `initialize cleans up state when cancelled during session creation`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+
+            val initJob =
+                launch {
+                    factory.onCreateSession = {
+                        coroutineContext.job.cancel()
+                    }
+                    engine.initialize(
+                        modelPath = "/data/model.bin",
+                        backend = LlmEngine.Backend.GPU,
+                    )
+                }
+
+            initJob.join()
+
+            assertThat(initJob.isCancelled).isTrue()
+            assertThat(engine.isInitialized()).isFalse()
             assertThat(engine.isModelLoaded("/data/model.bin")).isFalse()
         }
 

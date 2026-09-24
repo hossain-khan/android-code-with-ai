@@ -1,6 +1,8 @@
 package dev.hossain.codematex.runtime
 
 import dev.hossain.codematex.data.model.ModelConfig
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 
 class FakeLlmEngineFactory : LlmEngineFactory {
     data class CreateSessionRequest(
@@ -16,6 +18,7 @@ class FakeLlmEngineFactory : LlmEngineFactory {
         private set
     var fallbackSessionRequests = mutableListOf<LlmEngine.Backend>()
         private set
+    var onCreateSession: (suspend () -> Unit)? = null
 
     fun addSession(session: LlmEngineSession) {
         sessions.add(session)
@@ -35,6 +38,8 @@ class FakeLlmEngineFactory : LlmEngineFactory {
                 config = config,
             ),
         )
+        onCreateSession?.invoke()
+        currentCoroutineContext().ensureActive()
         if (sessionIndex >= sessions.size) {
             throw IllegalStateException("No fake session configured for index $sessionIndex")
         }

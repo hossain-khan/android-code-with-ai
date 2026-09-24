@@ -5,6 +5,8 @@ package dev.hossain.codematex.runtime
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -102,6 +104,81 @@ class LlmEngineFactoryTest {
 
             assertThat(session.backend).isEqualTo(LlmEngine.Backend.GPU)
             assertThat(fallbackStrategy.isUnsupported(LlmEngine.Backend.NPU)).isTrue()
+        }
+
+    @Test
+    fun `createSession closes native engine when cancelled during engine initialization`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val fakeEngine = FakeInferenceEngine()
+            var sessionJob: Job? = null
+            fakeEngine.onInitialize = {
+                // Simulate caller coroutine cancellation while native initialize() is executing
+                sessionJob?.cancel()
+            }
+
+            val factory =
+                DefaultLlmEngineFactory(
+                    context = FakeContext(),
+                    backendFallbackStrategy = DefaultBackendFallbackStrategy(),
+                    nativeEngineFactory =
+                        object : NativeEngineFactory {
+                            override fun create(config: EngineConfig): InferenceEngine = fakeEngine
+                        },
+                )
+
+            sessionJob =
+                launch {
+                    factory.createSession(
+                        modelPath = "/data/model.bin",
+                        preferredBackend = LlmEngine.Backend.GPU,
+                        systemInstruction = systemInstruction,
+                        config = config,
+                    )
+                }
+
+            sessionJob.join()
+
+            assertThat(sessionJob.isCancelled).isTrue()
+            assertThat(fakeEngine.initialized).isTrue()
+            assertThat(fakeEngine.closed).isTrue()
+        }
+
+    @Test
+    fun `createSession closes conversation and engine when cancelled during conversation creation`() =
+        runTest(UnconfinedTestDispatcher()) {
+            val fakeEngine = FakeInferenceEngine()
+            var sessionJob: Job? = null
+            fakeEngine.onCreateConversation = {
+                // Simulate caller coroutine cancellation while conversation creation is executing
+                sessionJob?.cancel()
+            }
+
+            val factory =
+                DefaultLlmEngineFactory(
+                    context = FakeContext(),
+                    backendFallbackStrategy = DefaultBackendFallbackStrategy(),
+                    nativeEngineFactory =
+                        object : NativeEngineFactory {
+                            override fun create(config: EngineConfig): InferenceEngine = fakeEngine
+                        },
+                )
+
+            sessionJob =
+                launch {
+                    factory.createSession(
+                        modelPath = "/data/model.bin",
+                        preferredBackend = LlmEngine.Backend.GPU,
+                        systemInstruction = systemInstruction,
+                        config = config,
+                    )
+                }
+
+            sessionJob.join()
+
+            assertThat(sessionJob.isCancelled).isTrue()
+            assertThat(fakeEngine.closed).isTrue()
+            assertThat(fakeEngine.createdConversations).isNotEmpty()
+            assertThat(fakeEngine.createdConversations.all { it.closed }).isTrue()
         }
 
     /**
