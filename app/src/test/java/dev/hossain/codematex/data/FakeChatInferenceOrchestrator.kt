@@ -76,7 +76,10 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
 
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackendValue
 
-    override suspend fun sendMessage(input: String): Flow<ChatInferenceEvent> {
+    override suspend fun sendMessage(
+        input: String,
+        existingMessages: List<ChatMessage>,
+    ): Flow<ChatInferenceEvent> {
         sendMessageInputs += input
         return messageFlow ?: flow { messageEvents.forEach { emit(it) } }
     }

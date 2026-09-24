@@ -202,6 +202,70 @@ class ChatInferenceOrchestratorTest {
         }
 
     @Test
+    fun `sendMessage restores existing conversation history on fallback session when backend fails`() =
+        runTest {
+            fakeEngine.backendFailureBackend = LlmEngine.Backend.GPU
+            fakeEngine.responseTokens = listOf("CPU ", "response", "")
+
+            val priorMessages =
+                listOf(
+                    ChatMessage.User("First turn"),
+                    ChatMessage.Agent("First reply"),
+                )
+
+            val orchestrator = createOrchestrator()
+            val events = orchestrator.sendMessage("Second turn", priorMessages).toList()
+
+            assertThat(events)
+                .containsExactly(
+                    ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
+                    ChatInferenceEvent.Token("CPU "),
+                    ChatInferenceEvent.Token("response"),
+                    ChatInferenceEvent.Done,
+                ).inOrder()
+            assertThat(fakeEngine.runInferenceCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoredMessages).containsExactly(priorMessages)
+        }
+
+    @Test
+    fun `sendMessage restores activeMessages from initialize on fallback session when backend fails`() =
+        runTest {
+            fakeEngine.backendFailureBackend = LlmEngine.Backend.GPU
+            fakeEngine.responseTokens = listOf("CPU ", "response", "")
+
+            val initialMessages =
+                listOf(
+                    ChatMessage.User("Loaded turn"),
+                    ChatMessage.Agent("Loaded reply"),
+                )
+
+            val orchestrator = createOrchestrator()
+            orchestrator.initialize(
+                model = testModel(),
+                topic = CodingTopic.KOTLIN,
+                sessionId = "test-session",
+                existingMessages = initialMessages,
+            )
+
+            // Initial history restore during initialize
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+
+            val events = orchestrator.sendMessage("Follow up").toList()
+
+            assertThat(events)
+                .containsExactly(
+                    ChatInferenceEvent.BackendFailed(LlmEngine.Backend.GPU),
+                    ChatInferenceEvent.Token("CPU "),
+                    ChatInferenceEvent.Token("response"),
+                    ChatInferenceEvent.Done,
+                ).inOrder()
+            // Second history restore should happen during backend failure fallback
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoredMessages.last()).isEqualTo(initialMessages)
+        }
+
+    @Test
     fun `initialize retrieves and uses model-specific configuration`() =
         runTest {
             val customConfig = ModelConfig(temperature = 1.4f, topK = 75, topP = 0.85f, maxTokens = 1024)

@@ -1106,6 +1106,65 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `runInference closes failed GPU engine before creating CPU fallback session`() =
+        runEngineTest {
+            val gpuEngine = FakeInferenceEngine()
+            val gpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = gpuEngine,
+                    conversation = gpuConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            val cpuEngine = FakeInferenceEngine()
+            val cpuConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = cpuEngine,
+                    conversation = cpuConversation,
+                    backend = LlmEngine.Backend.CPU,
+                ),
+            )
+
+            var gpuClosedDuringFallbackCreation: Boolean? = null
+            factory.onCreateSession = {
+                // When fallback session creation starts, the old GPU engine/conversation must already be closed
+                if (factory.fallbackSessionRequests.isNotEmpty()) {
+                    gpuClosedDuringFallbackCreation = gpuEngine.closed && gpuConversation.closed
+                }
+            }
+
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            val job =
+                launch {
+                    try {
+                        engine.runInference("Hello") { _, _ -> }
+                    } catch (e: BackendFailureException) {
+                        // Expected: hardware failure triggers fallback recreation and rethrows
+                    }
+                }
+
+            gpuConversation.sentMessages
+                .single()
+                .callback
+                .onError(
+                    com.google.ai.edge.litertlm
+                        .LiteRtLmJniException("GPU failed"),
+                )
+            job.join()
+
+            assertThat(gpuClosedDuringFallbackCreation).isTrue()
+            assertThat(gpuEngine.closed).isTrue()
+            assertThat(gpuConversation.closed).isTrue()
+            assertThat(engine.getActiveBackend()).isEqualTo(LlmEngine.Backend.CPU)
+        }
+
+    @Test
     fun `runInferenceIsolated uses a separate conversation from active chat`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()

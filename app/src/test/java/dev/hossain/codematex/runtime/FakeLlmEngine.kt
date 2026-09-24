@@ -74,8 +74,12 @@ class FakeLlmEngine : LlmEngine {
         resetCalls++
     }
 
+    var restoredMessages = mutableListOf<List<ChatMessage>>()
+        private set
+
     override suspend fun restoreHistory(messages: List<ChatMessage>) {
         restoreHistoryCalls++
+        restoredMessages.add(messages)
     }
 
     var activeBackendValue: LlmEngine.Backend? = LlmEngine.Backend.CPU
