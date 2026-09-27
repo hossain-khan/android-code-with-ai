@@ -467,9 +467,9 @@ private fun LessonBlockContent(
                         } else {
                             null
                         },
-                    copyButton =
+                    actions =
                         if (settings.showCopyButton) {
-                            { onClick -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onClick) }
+                            { onCopy -> SyntaxHighlightedCodeDefaults.CopyButton(onClick = onCopy) }
                         } else {
                             null
                         },

@@ -58,7 +58,7 @@ litertlm = "0.17.0"
 markdownRenderer = "0.45.0"
 
 # https://hossain-khan.github.io/android-compose-highlight/
-composeHighlight = "0.38.0"
+composeHighlight = "0.39.0"
 room = "2.8.5"
 timber = "5.0.1"
 
