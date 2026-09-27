@@ -1,0 +1,3 @@
+What's New in CodeMateX 1.26.0:
+• Upgraded Syntax Engine: Upgraded to compose-highlight 0.39.0 with optimized token recomposition, faster code rendering, and modern slot architecture.
+• Performance & Stability: Enhanced code block rendering performance and reliability across guided courses, interactive snippets, and AI tutor chat.

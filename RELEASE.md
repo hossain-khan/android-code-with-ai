@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.26.0` | `50` | 2026-09-27 | Upgraded compose-highlight to 0.39.0 with optimized token recomposition, faster code rendering, and modern slot architecture across guided courses, interactive snippets, and AI tutor chat. |
 | `1.25.0` | `49` | 2026-09-26 | Upgraded compose-highlight to 0.38.0; adopted HighlightThemeDescriptor with singleton caching and live syntax theme palette color swatches in Code Block Display settings; synchronous language alias normalization via HighlightLanguage across Markdown and course lessons. |
 | `1.24.0` | `48` | 2026-09-24 | On-device AI engine lifecycle & memory leak fixes (clean GPU close before CPU fallback, conversation handle reset on cancel, in-memory context restoration indicator); CircuitX SubCircuits modularization; Room DB & course progress inspector debug tools. |
 | `1.23.1` | `47` | 2026-09-12 | Sticky language filter chips in Guided Lessons course catalog screen with dynamic topic accent tinting, atmospheric radial background glow interpolation across languages, and smooth fade transitions without motion bounce. |
