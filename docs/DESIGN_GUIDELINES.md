@@ -170,7 +170,7 @@ Every screen with dynamic lists MUST include an expressive empty state:
 - Interactive prompt chips or primary action button.
 
 ### E. Syntax Highlighting & Code Blocks
-CodeMateX uses **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) (`dev.hossain:compose-highlight:0.34.0`):
+CodeMateX uses **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) (`dev.hossain:compose-highlight:0.38.0`):
 - **Streaming Chat Messages**: LLM responses are parsed with `multiplatform-markdown-renderer-m3` (`v0.44.0`) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt) using `StreamingSyntaxHighlightedCode`. It retains token spans during live inference to eliminate streaming flicker.
 - **Static Lesson Blocks**: Rendered directly with `SyntaxHighlightedCode` in [`LessonScreenUi`](../app/src/main/java/dev/hossain/codematex/ui/screens/lessons/LessonScreenUi.kt) for lightweight, zero-recalculation static syntax highlighting with line numbers.
 
