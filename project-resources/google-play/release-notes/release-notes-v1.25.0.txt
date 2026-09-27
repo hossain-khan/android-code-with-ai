@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.25.0:
+• Upgraded Syntax Engine: Upgraded to compose-highlight 0.38.0 with hardened WebView security and performance optimizations.
+• Live Theme Palette Swatches: Visual color swatches in Code Block Display settings to preview syntax themes in light/dark mode.
+• Language Normalization: Synchronous alias resolution (kt, py, ts, sh) across chat markdown and lesson code blocks.
+• Code Block Fixes: Prevented scroll jumps and fixed large-file line number alignment.
