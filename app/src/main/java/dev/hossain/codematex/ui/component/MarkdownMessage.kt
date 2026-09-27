@@ -19,6 +19,7 @@ import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import dev.hossain.highlight.engine.HighlightLanguage
 import dev.hossain.highlight.ui.CodeBlockStyle
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
@@ -153,7 +154,7 @@ private fun ChatMarkdownCodeFence(
             )
         }
 
-    val resolvedLanguage = language.ifEmpty { "text" }
+    val resolvedLanguage = remember(language) { resolveCodeBlockLanguage(language) }
 
     StreamingSyntaxHighlightedCode(
         code = code,
@@ -174,6 +175,17 @@ private fun ChatMarkdownCodeFence(
             },
         modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
     )
+}
+
+/**
+ * Normalizes code block language identifiers.
+ * Resolves short aliases (e.g. "kt" -> "kotlin", "py" -> "python", "ts" -> "typescript")
+ * to canonical Highlight.js grammar names, defaulting to "text" if empty.
+ */
+internal fun resolveCodeBlockLanguage(rawLanguage: String): String {
+    val trimmed = rawLanguage.trim()
+    if (trimmed.isEmpty()) return "text"
+    return HighlightLanguage.canonicalName(trimmed) ?: trimmed
 }
 
 /**

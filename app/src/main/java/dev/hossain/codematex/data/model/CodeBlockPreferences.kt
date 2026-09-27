@@ -2,6 +2,7 @@ package dev.hossain.codematex.data.model
 
 import androidx.compose.runtime.Immutable
 import dev.hossain.highlight.engine.HighlightTheme
+import dev.hossain.highlight.engine.HighlightThemeDescriptor
 import kotlinx.serialization.Serializable
 
 /**
@@ -11,35 +12,58 @@ import kotlinx.serialization.Serializable
 enum class CodeTheme(
     val displayName: String,
     val description: String,
+    val lightThemeId: String,
+    val darkThemeId: String,
 ) {
     TOMORROW(
         displayName = "Tomorrow",
         description = "Balanced pastel syntax palette with comfortable contrast.",
+        lightThemeId = "tomorrow",
+        darkThemeId = "tomorrow-night",
     ),
     ATOM_ONE(
         displayName = "Atom One",
         description = "Vibrant syntax colors inspired by the iconic Atom editor.",
+        lightThemeId = "atom-one-light",
+        darkThemeId = "atom-one-dark",
     ),
     GITHUB(
         displayName = "GitHub",
         description = "Crisp, familiar syntax palette matching GitHub's web interface.",
+        lightThemeId = "github",
+        darkThemeId = "github-dark",
     ),
     DRACULA(
         displayName = "Dracula",
         description = "High-contrast dark palette with distinctive purple & pink accents.",
+        lightThemeId = "alucard",
+        darkThemeId = "dracula",
     ),
     ;
 
     /**
-     * Resolves the pair of (Light HighlightTheme, Dark HighlightTheme) for this theme preset.
+     * The [HighlightThemeDescriptor] for the light theme variant.
      */
-    fun resolveHighlightThemes(): Pair<HighlightTheme, HighlightTheme> =
-        when (this) {
-            TOMORROW -> HighlightTheme.tomorrow() to HighlightTheme.tomorrowNight()
-            ATOM_ONE -> HighlightTheme.atomOneLight() to HighlightTheme.atomOneDark()
-            GITHUB -> HighlightTheme.githubLight() to HighlightTheme.githubDark()
-            DRACULA -> HighlightTheme.alucardLight() to HighlightTheme.draculaDark()
-        }
+    val lightDescriptor: HighlightThemeDescriptor
+        get() =
+            requireNotNull(HighlightTheme.findBundledById(lightThemeId)) {
+                "Bundled light theme not found for ID: $lightThemeId"
+            }
+
+    /**
+     * The [HighlightThemeDescriptor] for the dark theme variant.
+     */
+    val darkDescriptor: HighlightThemeDescriptor
+        get() =
+            requireNotNull(HighlightTheme.findBundledById(darkThemeId)) {
+                "Bundled dark theme not found for ID: $darkThemeId"
+            }
+
+    /**
+     * Resolves the pair of (Light HighlightTheme, Dark HighlightTheme) for this theme preset.
+     * Uses cached singletons from the descriptors to avoid re-allocating themes.
+     */
+    fun resolveHighlightThemes(): Pair<HighlightTheme, HighlightTheme> = lightDescriptor.theme to darkDescriptor.theme
 }
 
 /**
