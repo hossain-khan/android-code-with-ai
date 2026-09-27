@@ -94,4 +94,27 @@ class MarkdownMessageTest {
 
         assertThat(code).isEqualTo("val x = 10\nval y = 20\nprintln(x + y)")
     }
+
+    @Test
+    fun `resolveCodeBlockLanguage normalizes common language aliases to canonical names`() {
+        assertThat(resolveCodeBlockLanguage("kt")).isEqualTo("kotlin")
+        assertThat(resolveCodeBlockLanguage("py")).isEqualTo("python")
+        assertThat(resolveCodeBlockLanguage("ts")).isEqualTo("typescript")
+        assertThat(resolveCodeBlockLanguage("js")).isEqualTo("javascript")
+        assertThat(resolveCodeBlockLanguage("sh")).isEqualTo("bash")
+        assertThat(resolveCodeBlockLanguage("golang")).isEqualTo("go")
+        assertThat(resolveCodeBlockLanguage("rs")).isEqualTo("rust")
+    }
+
+    @Test
+    fun `resolveCodeBlockLanguage falls back to text for empty or blank languages`() {
+        assertThat(resolveCodeBlockLanguage("")).isEqualTo("text")
+        assertThat(resolveCodeBlockLanguage("   ")).isEqualTo("text")
+    }
+
+    @Test
+    fun `resolveCodeBlockLanguage preserves canonical and unrecognized languages`() {
+        assertThat(resolveCodeBlockLanguage("kotlin")).isEqualTo("kotlin")
+        assertThat(resolveCodeBlockLanguage("customlang")).isEqualTo("customlang")
+    }
 }

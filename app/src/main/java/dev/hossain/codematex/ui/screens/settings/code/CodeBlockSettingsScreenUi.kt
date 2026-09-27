@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -53,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
@@ -70,6 +73,7 @@ import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.highlight.engine.HighlightTheme
+import dev.hossain.highlight.engine.HljsSelectors
 import dev.hossain.highlight.ui.CodeBlockStyle
 import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.HighlightThemeProvider
@@ -370,6 +374,8 @@ private fun ThemeSelectionCard(
     state: CodeBlockSettingsScreen.State.Content,
     modifier: Modifier = Modifier,
 ) {
+    val isDark = isSystemInDarkTheme()
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -379,6 +385,9 @@ private fun ThemeSelectionCard(
         Column {
             CodeTheme.entries.forEachIndexed { index, theme ->
                 val isSelected = theme == state.settings.theme
+                val activeDescriptor = if (isDark) theme.darkDescriptor else theme.lightDescriptor
+                val highlightTheme = activeDescriptor.theme
+
                 Row(
                     modifier =
                         Modifier
@@ -393,12 +402,19 @@ private fun ThemeSelectionCard(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = theme.displayName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Text(
+                                text = theme.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            )
+                            ThemePalettePreview(theme = highlightTheme)
+                        }
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = theme.description,
@@ -416,6 +432,54 @@ private fun ThemeSelectionCard(
             }
         }
     }
+}
+
+@Composable
+private fun ThemePalettePreview(
+    theme: HighlightTheme,
+    modifier: Modifier = Modifier,
+) {
+    val keywordColor = theme.colorMap[HljsSelectors.KEYWORD]?.color?.takeIf { it != Color.Unspecified }
+    val stringColor = theme.colorMap[HljsSelectors.STRING]?.color?.takeIf { it != Color.Unspecified }
+    val commentColor = theme.colorMap[HljsSelectors.COMMENT]?.color?.takeIf { it != Color.Unspecified }
+
+    Surface(
+        shape = RoundedCornerShape(6.dp),
+        color =
+            theme.backgroundColor.takeIf { it != Color.Unspecified }
+                ?: MaterialTheme.colorScheme.surfaceContainerHighest,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+        modifier = modifier,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            ThemeColorDot(
+                color =
+                    theme.defaultTextColor.takeIf { it != Color.Unspecified }
+                        ?: MaterialTheme.colorScheme.onSurface,
+            )
+            keywordColor?.let { ThemeColorDot(color = it) }
+            stringColor?.let { ThemeColorDot(color = it) }
+            commentColor?.let { ThemeColorDot(color = it) }
+        }
+    }
+}
+
+@Composable
+private fun ThemeColorDot(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier =
+            modifier
+                .size(8.dp)
+                .clip(CircleShape)
+                .background(color),
+    )
 }
 
 @Composable
@@ -673,6 +737,23 @@ private fun CodeBlockSettingsScreenUiExpandedPreview() {
                         eventSink = {},
                     ),
             )
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun ThemePalettePreviewItemPreview() {
+    CodeWithAIAppTheme {
+        Surface {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                CodeTheme.entries.forEach { theme ->
+                    ThemePalettePreview(theme = theme.lightDescriptor.theme)
+                }
+            }
         }
     }
 }

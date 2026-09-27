@@ -65,6 +65,7 @@ import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.component.resolveCodeBlockLanguage
 import dev.hossain.codematex.ui.screens.lessons.quiz.LessonQuizSubScreen
 import dev.hossain.codematex.ui.screens.lessons.snippet.InteractiveSnippetSubScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -441,7 +442,7 @@ private fun LessonBlockContent(
         }
 
         is LessonBlock.Code -> {
-            val resolvedLanguage = block.language.ifEmpty { "text" }
+            val resolvedLanguage = remember(block.language) { resolveCodeBlockLanguage(block.language) }
             if (block.isPlaygroundRunnable) {
                 SubCircuitContent(
                     screen =

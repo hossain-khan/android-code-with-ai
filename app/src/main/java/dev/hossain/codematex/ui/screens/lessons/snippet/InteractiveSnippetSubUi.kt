@@ -55,6 +55,7 @@ import com.slack.circuit.subcircuit.SubUiFactory
 import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
+import dev.hossain.codematex.ui.component.resolveCodeBlockLanguage
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
@@ -77,7 +78,7 @@ fun InteractiveSnippetSubUi(
     modifier: Modifier = Modifier,
 ) {
     val visualInfo = state.topic.visualInfo
-    val resolvedLanguage = state.language.ifEmpty { "text" }
+    val resolvedLanguage = remember(state.language) { resolveCodeBlockLanguage(state.language) }
     val settings = LocalCodeBlockSettings.current
     val baseStyle =
         if (settings.preset == CodeBlockPreset.COMPACT) {

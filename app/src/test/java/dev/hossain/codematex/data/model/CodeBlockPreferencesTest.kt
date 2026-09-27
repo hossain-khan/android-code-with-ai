@@ -16,6 +16,29 @@ class CodeBlockPreferencesTest {
     }
 
     @Test
+    fun `all CodeTheme entries map to valid light and dark HighlightThemeDescriptors`() {
+        CodeTheme.entries.forEach { theme ->
+            val lightDesc = theme.lightDescriptor
+            val darkDesc = theme.darkDescriptor
+
+            assertThat(lightDesc.id).isEqualTo(theme.lightThemeId)
+            assertThat(darkDesc.id).isEqualTo(theme.darkThemeId)
+
+            assertThat(lightDesc.isLight).isTrue()
+            assertThat(lightDesc.isDark).isFalse()
+
+            assertThat(darkDesc.isDark).isTrue()
+            assertThat(darkDesc.isLight).isFalse()
+
+            // Verify referential caching
+            val (light1, dark1) = theme.resolveHighlightThemes()
+            val (light2, dark2) = theme.resolveHighlightThemes()
+            assertThat(light1).isSameInstanceAs(light2)
+            assertThat(dark1).isSameInstanceAs(dark2)
+        }
+    }
+
+    @Test
     fun `all CodeBlockPreset entries have valid configurations`() {
         CodeBlockPreset.entries.forEach { preset ->
             assertThat(preset.displayName).isNotEmpty()
