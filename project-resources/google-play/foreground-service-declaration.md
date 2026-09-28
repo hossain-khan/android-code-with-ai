@@ -18,8 +18,8 @@ This document contains the exact declaration details and policy justifications r
 | :--- | :--- |
 | **Foreground Service Type** | `DATA_SYNC` (`FOREGROUND_SERVICE_TYPE_DATA_SYNC`) |
 | **Use Case Category** | **Data transfer / File download initiated by user** *(Ensure "Network Backup" or background sync is NOT selected)* |
-| **Is the service user-initiated?** | **Yes** — Explicitly triggered when the user taps "Download" on an on-device AI model in the AI Models picker. |
-| **Is an ongoing notification shown?** | **Yes** — Displays a persistent, user-perceptible notification in the notification shade showing live download progress (MB downloaded / total MB), percentage, and a "Cancel" action button. |
+| **Is the service user-initiated?** | **Yes** - Explicitly triggered when the user taps "Download" on an on-device AI model in the AI Models picker. |
+| **Is an ongoing notification shown?** | **Yes** - Displays a persistent, user-perceptible notification in the notification shade showing live download progress (MB downloaded / total MB), percentage, and a "Cancel" action button. |
 | **Why can't WorkManager standard background jobs be used?** | *See Justification Statement below* |
 
 ### Policy Justification Statement (Copy & Paste to Play Console):

@@ -203,5 +203,12 @@ Whenever creating pull requests:
 * **Manual Review**: All pull requests must remain open for the repository owner to review and merge manually.
 * **Verification Before PR**: Always verify that `./gradlew formatKotlin && ./gradlew check` passes before submitting pull requests.
 
+---
+
+## 9. Typography & Punctuation Rules
+
+* **No Em-Dash:** Never use em-dash (`—`); always use regular dash (`-`) across all code, comments, documentation, release notes, commit messages, and UI strings.
+
+
 
 
