@@ -23,21 +23,21 @@ Room lesson progress
 
 Important existing files:
 
-- `data/model/LearningModels.kt` — Course, chapter, lesson, block, and progress models.
-- `data/repository/course/KotlinCourseContent.kt` — Bundled Kotlin Foundations course.
-- `data/repository/course/PythonCourseContent.kt` — Bundled Python Foundations course.
-- `data/repository/course/TypeScriptCourseContent.kt` — Bundled TypeScript Foundations course.
-- `data/repository/course/GoCourseContent.kt` — Bundled Go Foundations course.
-- `data/repository/course/RustCourseContent.kt` — Bundled Rust Foundations course.
-- `data/repository/course/RustByExampleCourseContent.kt` — Bundled Rust by Example course.
-- `data/repository/course/SwiftCourseContent.kt` — Bundled Swift Foundations course.
-- `data/repository/course/LearningRepository.kt` — Course/progress repository contract.
-- `data/repository/course/LearningRepositoryImpl.kt` — Bundled content lookup and progress behavior.
-- `data/local/LessonProgressEntity.kt` — Room progress entity.
-- `data/local/LessonProgressDao.kt` — Progress DAO.
-- `ui/screens/lessons/` — Catalog, chapter, and lesson screens.
-- `data/local/SessionDatabase.kt` — Shared Room database and migrations.
-- `docs/DESIGN_GUIDELINES.md` — Required UI/UX rules.
+- `data/model/LearningModels.kt` - Course, chapter, lesson, block, and progress models.
+- `data/repository/course/KotlinCourseContent.kt` - Bundled Kotlin Foundations course.
+- `data/repository/course/PythonCourseContent.kt` - Bundled Python Foundations course.
+- `data/repository/course/TypeScriptCourseContent.kt` - Bundled TypeScript Foundations course.
+- `data/repository/course/GoCourseContent.kt` - Bundled Go Foundations course.
+- `data/repository/course/RustCourseContent.kt` - Bundled Rust Foundations course.
+- `data/repository/course/RustByExampleCourseContent.kt` - Bundled Rust by Example course.
+- `data/repository/course/SwiftCourseContent.kt` - Bundled Swift Foundations course.
+- `data/repository/course/LearningRepository.kt` - Course/progress repository contract.
+- `data/repository/course/LearningRepositoryImpl.kt` - Bundled content lookup and progress behavior.
+- `data/local/LessonProgressEntity.kt` - Room progress entity.
+- `data/local/LessonProgressDao.kt` - Progress DAO.
+- `ui/screens/lessons/` - Catalog, chapter, and lesson screens.
+- `data/local/SessionDatabase.kt` - Shared Room database and migrations.
+- `docs/DESIGN_GUIDELINES.md` - Required UI/UX rules.
 
 ## Course content model
 
@@ -53,7 +53,7 @@ Course
 Supported lesson blocks currently are:
 
 - `LessonBlock.Markdown`
-- `LessonBlock.Code` — carries a `runnable` flag (default `true`)
+- `LessonBlock.Code` - carries a `runnable` flag (default `true`)
 - `LessonBlock.Quiz`
 
 Keep lessons focused. A good lesson should teach one concept, show a small example,
@@ -479,7 +479,7 @@ The workflow runs one job per language, and the jobs run in parallel:
 | `validate-rust` | Rust (`stable` + clippy) | `cargo build` + `cargo clippy -- -D warnings` |
 | `validate-typescript` | Node + TypeScript 5 | `tsc --noEmit --strict --moduleDetection force` |
 | `validate-python` | Python + `ruff` | `ruff check --select E9,F` (syntax + pyflakes) |
-| `validate-kotlin` | `kotlinc` (downloaded) | `kotlinc` — compile raw, else wrapped in `fun main` |
+| `validate-kotlin` | `kotlinc` (downloaded) | `kotlinc` - compile raw, else wrapped in `fun main` |
 
 ### How it works
 

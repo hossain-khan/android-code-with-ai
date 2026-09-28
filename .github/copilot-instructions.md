@@ -224,11 +224,11 @@ All dependency versions are centralized in `gradle/libs.versions.toml`:
 
 This project has been migrated to AGP 9.1.0 with **built-in Kotlin support**. Key points:
 
-1. **No `kotlin-android` plugin needed** — AGP 9.1+ includes native Kotlin compilation support
-2. **KAPT is incompatible** — Built-in Kotlin doesn't support `kotlin-kapt`. This project uses Metro with KSP instead
-3. **Gradle 9.3.1+ required** — Ensure your Gradle version is 9.3.1 or higher
-4. **kotlin.compilerOptions{} DSL** — Use for Kotlin compiler options (not `android.kotlinOptions{}`)
-5. **android.sourceSets.kotlin{}** — The only supported way to add custom Kotlin source directories
+1. **No `kotlin-android` plugin needed** - AGP 9.1+ includes native Kotlin compilation support
+2. **KAPT is incompatible** - Built-in Kotlin doesn't support `kotlin-kapt`. This project uses Metro with KSP instead
+3. **Gradle 9.3.1+ required** - Ensure your Gradle version is 9.3.1 or higher
+4. **kotlin.compilerOptions{} DSL** - Use for Kotlin compiler options (not `android.kotlinOptions{}`)
+5. **android.sourceSets.kotlin{}** - The only supported way to add custom Kotlin source directories
 
 For more info: https://developer.android.com/build/migrate-to-built-in-kotlin
 

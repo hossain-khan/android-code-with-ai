@@ -1,6 +1,6 @@
-# On-Device AI Android App — Architecture Blueprint
+# On-Device AI Android App - Architecture Blueprint
 
-> **Target App: "Code with AI"** — An on-device AI learning companion where users download
+> **Target App: "Code with AI"** - An on-device AI learning companion where users download
 > LLM models and chat about coding languages/concepts. Sessions are saved and summarized
 > for revisiting past learning.
 
@@ -8,7 +8,7 @@
 
 > **IMPORTANT: This document has two parts.**
 >
-> - **Part 1 (Sections 1-24):** Reference analysis of Google AI Edge Gallery — documents how
+> - **Part 1 (Sections 1-24):** Reference analysis of Google AI Edge Gallery - documents how
 >   on-device LLM inference, model download, streaming, and chat persistence work. This part
 >   uses Gallery's original patterns (Hilt DI, ViewModel, Jetpack Navigation) for reference only.
 >   **Do NOT use these patterns in the actual "Code with AI" app.**
@@ -23,10 +23,10 @@
 
 ---
 
-# Part 1: Reference — Google AI Edge Gallery Internals
+# Part 1: Reference - Google AI Edge Gallery Internals
 
 *Use this section to understand how on-device LLM inference works. Do not copy the
-architectural patterns (Hilt, ViewModel, Jetpack Navigation) — those are replaced by
+architectural patterns (Hilt, ViewModel, Jetpack Navigation) - those are replaced by
 Metro DI + Circuit UDF in Part 2.*
 
 ---
@@ -657,14 +657,14 @@ A `LazyColumn` for messages + a `TextField` with send button.
 
 *These are Gallery's decisions for reference. For "Code with AI", see Section 35 comparison table.*
 
-1. **Single Activity + Circuit Navigation** — type-safe Screen objects, no string routes.
-2. **Model.instance holds live runtime** — avoids a separate registry; the model IS the session.
-3. **Per-model message lists** — enables switching models without losing context.
-4. **Plugin via `@CircuitInject`** — zero-touch feature registration; new screens auto-register.
-5. **Interface-based runtime dispatch** — swap LiteRT-LM for any other engine without UI changes.
-6. **WorkManager for downloads** — survives process death, shows progress notifications.
-7. **Circuit UDF + `rememberRetained`** — unidirectional data flow, survives config changes and back-stack.
-8. **Room DB** — relational persistence for sessions + messages with Flow-based observation.
+1. **Single Activity + Circuit Navigation** - type-safe Screen objects, no string routes.
+2. **Model.instance holds live runtime** - avoids a separate registry; the model IS the session.
+3. **Per-model message lists** - enables switching models without losing context.
+4. **Plugin via `@CircuitInject`** - zero-touch feature registration; new screens auto-register.
+5. **Interface-based runtime dispatch** - swap LiteRT-LM for any other engine without UI changes.
+6. **WorkManager for downloads** - survives process death, shows progress notifications.
+7. **Circuit UDF + `rememberRetained`** - unidirectional data flow, survives config changes and back-stack.
+8. **Room DB** - relational persistence for sessions + messages with Flow-based observation.
 
 ---
 
@@ -708,7 +708,7 @@ Without `tools:node="merge"` and `foregroundServiceType="dataSync"`, download wo
 
 ---
 
-## 15. DI Setup (Gallery uses Hilt — we use Metro instead, see Part 2 Section 26)
+## 15. DI Setup (Gallery uses Hilt - we use Metro instead, see Part 2 Section 26)
 
 ```kotlin
 @Module
@@ -731,7 +731,7 @@ object AppModule {
 }
 ```
 
-WorkManager is NOT provided via Hilt — obtain it directly:
+WorkManager is NOT provided via Hilt - obtain it directly:
 ```kotlin
 val workManager = WorkManager.getInstance(context)
 ```
@@ -791,7 +791,7 @@ class DownloadWorker(
 
 **Key details:**
 - Uses `HttpURLConnection` (not OkHttp)
-- `Accept-Encoding: identity` is critical — gzip responses don't support byte-range resume
+- `Accept-Encoding: identity` is critical - gzip responses don't support byte-range resume
 - Temp file extension: `.gallerytmp`
 - Progress reported via `setProgress()` with `workDataOf`
 - Foreground service type must be `ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC`
@@ -972,14 +972,14 @@ fun getEffectiveSystemPrompt(taskId: String, defaultPrompt: String): String {
 ```
 
 Applied at two points:
-1. **Model initialization** — passed to `ConversationConfig`
-2. **Session reset** — when user edits the system prompt, conversation is reset with new instruction
+1. **Model initialization** - passed to `ConversationConfig`
+2. **Session reset** - when user edits the system prompt, conversation is reset with new instruction
 
 ---
 
 ## 23. Streaming Text Rendering (BufferedFadingMarkdownText)
 
-The most interesting UI component — smooth token-by-token text appearance:
+The most interesting UI component - smooth token-by-token text appearance:
 
 ```kotlin
 @Composable
@@ -1009,7 +1009,7 @@ fun BufferedFadingMarkdownText(text: String, inProgress: Boolean) {
 ```
 
 **Why this works:**
-- `.conflate()` buffers rapid tokens — if tokens arrive faster than 120ms, intermediate states are skipped
+- `.conflate()` buffers rapid tokens - if tokens arrive faster than 120ms, intermediate states are skipped
 - Crossfade hides Markdown re-layout jumps (partial `**bold` → complete `**bold**`)
 - `BlendMode.Plus` ensures colors add correctly during transition
 
@@ -1043,7 +1043,7 @@ Only sent when app is in **background** (checked via `AppLifecycleProvider.isApp
 ---
 ---
 
-# Part 2: "Code with AI" — Implementation with Metro DI + Circuit UDF
+# Part 2: "Code with AI" - Implementation with Metro DI + Circuit UDF
 
 Adapted from the `android-compose-app-template` architecture.
 
@@ -1084,7 +1084,7 @@ code-with-ai/
 │       │       └── DatabaseGraph.kt            # @ContributesTo with @Provides
 │       ├── runtime/
 │       │   ├── LlmEngine.kt                   # Interface: init, infer, stop, cleanup
-│       │   ├── LlmEngineImpl.kt               # @ContributesBinding — LiteRT-LM wrapper
+│       │   ├── LlmEngineImpl.kt               # @ContributesBinding - LiteRT-LM wrapper
 │       │   └── RuntimeGraph.kt                 # @ContributesTo
 │       ├── worker/
 │       │   └── ModelDownloadWorker.kt          # @AssistedInject CoroutineWorker
@@ -1743,7 +1743,7 @@ class FakeLlmEngine : LlmEngine {
 
 | Aspect | Gallery App | Code with AI (Template) |
 |---|---|---|
-| DI | Hilt (kapt) | Metro (KSP) — faster builds |
+| DI | Hilt (kapt) | Metro (KSP) - faster builds |
 | Navigation | Jetpack Compose Navigation (string routes) | Circuit (type-safe Screen objects) |
 | State management | ViewModel + MutableStateFlow | Circuit Presenter + `rememberRetained` |
 | UI pattern | Composables observe StateFlow | `@CircuitInject` composable receives `State` |
