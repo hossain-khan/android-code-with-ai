@@ -13,13 +13,20 @@ permissions:
 
 jobs:
   review:
-    timeout-minutes: 5
     # Pin to immutable commit SHA for supply-chain security (prevents code tampering
     # since workflow has pull-requests write permission and sensitive secret access)
     uses: antongulin/robin/.github/workflows/review.yml@f97948f909c068017298de5e4b0b839ede5003dc # v2.9.0
     with:
       review-instructions-file: .github/code-reviewer.md
       request-changes: false
+      # Enable Agent Mode: multi-turn reviews with repository context (reads files, callers, definitions)
+      # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#agent-mode-multi-turn-review-with-repository-context
+      agent-mode: auto
+      # LLM request timeout in milliseconds (10 minutes = 600000 ms)
+      # Note: Reusable workflow jobs cannot declare 'timeout-minutes' directly in caller YAML;
+      # Robin internally sets runner job timeout to 45m and default investigation deadline to 30m.
+      # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#available-inputs
+      llm-timeout-ms: "600000"
     secrets:
       LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
