@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   review:
+    timeout-minutes: 5
     uses: antongulin/robin/.github/workflows/review.yml@v2.9.0
     with:
       review-instructions-file: .github/code-reviewer.md
