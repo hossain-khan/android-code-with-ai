@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentCopy
@@ -144,15 +145,12 @@ fun ChatMessageBubble(
  * @param modifier The modifier to apply to the outer alignment container.
  * @param onCopy Optional callback triggered when message text is copied to clipboard.
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserMessageBubble(
     message: ChatMessage.User,
     modifier: Modifier = Modifier,
     onCopy: ((String) -> Unit)? = null,
 ) {
-    val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val bubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
 
     Row(
@@ -165,26 +163,16 @@ fun UserMessageBubble(
             modifier =
                 Modifier
                     .padding(start = 48.dp)
-                    .clip(bubbleShape)
-                    .combinedClickable(
-                        onClick = {},
-                        onLongClick = {
-                            copyMessageToClipboard(
-                                context = context,
-                                haptic = haptic,
-                                label = "User message",
-                                content = message.content,
-                                onCopy = onCopy,
-                            )
-                        },
-                    ),
+                    .clip(bubbleShape),
         ) {
-            Text(
-                text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            )
+            SelectionContainer {
+                Text(
+                    text = message.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+            }
         }
     }
 }
@@ -281,10 +269,12 @@ fun AgentMessageBubble(
                     }
                 }
 
-                MarkdownMessage(
-                    content = message.content.ifEmpty { "..." },
-                    modifier = Modifier.padding(top = 4.dp),
-                )
+                SelectionContainer {
+                    MarkdownMessage(
+                        content = message.content.ifEmpty { "..." },
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
             }
         }
     }
@@ -330,12 +320,13 @@ fun ErrorMessageBubble(
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(18.dp),
                 )
-                Text(
-                    text = message.message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onErrorContainer,
-                    modifier = Modifier.weight(1f),
-                )
+                SelectionContainer(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = message.message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                    )
+                }
                 IconButton(
                     modifier = Modifier.size(24.dp),
                     onClick = {
