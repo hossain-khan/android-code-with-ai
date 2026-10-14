@@ -76,6 +76,7 @@ import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
 import java.util.Locale
@@ -698,6 +699,7 @@ private fun formatStorageSize(
 }
 
 @ThemePreviews
+@DevicePreviews
 @Composable
 private fun SettingsScreenUiPreview() {
     CodeWithAIAppTheme {

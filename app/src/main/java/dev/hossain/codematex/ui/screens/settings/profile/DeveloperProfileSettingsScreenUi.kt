@@ -69,6 +69,7 @@ import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
 
@@ -530,6 +531,7 @@ private fun SectionHeader(
 }
 
 @ThemePreviews
+@DevicePreviews
 @Composable
 private fun DeveloperProfileSettingsScreenUiPreview() {
     CodeWithAIAppTheme {

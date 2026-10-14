@@ -72,6 +72,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
+import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
 import kotlinx.coroutines.launch
@@ -608,6 +609,7 @@ private fun getOnboardingPages(): List<OnboardingPageData> =
     )
 
 @ThemePreviews
+@DevicePreviews
 @Composable
 private fun OnboardingScreenUiPage0PrivacyPreview() {
     CodeWithAIAppTheme {

@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.selection.DisableSelection
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -249,159 +251,165 @@ private fun LessonBody(
     state: LessonScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
-        modifier = modifier.widthIn(max = 900.dp),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        item {
-            Text(state.lesson.summary, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                "${state.lesson.estimatedMinutes} minutes",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
-        if (state.lesson.blocks.isEmpty()) {
+    SelectionContainer(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier.widthIn(max = 900.dp),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.MenuBook,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.padding(16.dp),
-                        )
-                    }
-                    Text("Lesson content is coming soon", fontWeight = FontWeight.Bold)
-                    Text(
-                        "This lesson has not been authored yet.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        } else {
-            val visualInfo = state.course.topic.visualInfo
-            itemsIndexed(state.lesson.blocks.toList()) { index, block ->
-                LessonBlockContent(
-                    lessonId = state.lesson.id,
-                    blockIndex = index,
-                    block = block,
-                    topic = state.course.topic,
-                    visualInfo = visualInfo,
+                Text(state.lesson.summary, style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "${state.lesson.estimatedMinutes} minutes",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
-        }
-        item {
-            val visualInfo = state.course.topic.visualInfo
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                onClick = { state.eventSink(LessonScreen.Event.AskAi) },
-            ) {
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
-                            .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(14.dp),
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = visualInfo.accentColor.copy(alpha = 0.15f),
+            if (state.lesson.blocks.isEmpty()) {
+                item {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = "Ask AI Tutor",
-                            tint = visualInfo.accentColor,
-                            modifier = Modifier.padding(10.dp),
-                        )
-                    }
-                    Column(modifier = Modifier.weight(1f)) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.MenuBook,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(16.dp),
+                            )
+                        }
+                        Text("Lesson content is coming soon", fontWeight = FontWeight.Bold)
                         Text(
-                            text = "Ask AI about this lesson",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Text(
-                            text = "Chat with the on-device tutor for deep explanations, code walkthroughs, or custom exercises.",
-                            style = MaterialTheme.typography.bodySmall,
+                            "This lesson has not been authored yet.",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = visualInfo.accentColor,
+                }
+            } else {
+                val visualInfo = state.course.topic.visualInfo
+                itemsIndexed(state.lesson.blocks.toList()) { index, block ->
+                    LessonBlockContent(
+                        lessonId = state.lesson.id,
+                        blockIndex = index,
+                        block = block,
+                        topic = state.course.topic,
+                        visualInfo = visualInfo,
                     )
                 }
             }
-        }
-        item {
-            val visualInfo = state.course.topic.visualInfo
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (!state.isCompleted) {
-                    OutlinedButton(
-                        onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) },
-                        modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
-                    ) {
-                        Icon(Icons.Default.Check, contentDescription = null)
-                        Spacer(Modifier.width(6.dp))
-                        Text("Mark complete")
-                    }
-                } else {
-                    Surface(
-                        shape = MaterialTheme.shapes.medium,
-                        color = visualInfo.accentColor.copy(alpha = 0.15f),
+            item {
+                val visualInfo = state.course.topic.visualInfo
+                DisableSelection {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
                         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-                        modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                        onClick = { state.eventSink(LessonScreen.Event.AskAi) },
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
+                                    .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
                         ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = visualInfo.accentColor.copy(alpha = 0.15f),
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = "Ask AI Tutor",
+                                    tint = visualInfo.accentColor,
+                                    modifier = Modifier.padding(10.dp),
+                                )
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Ask AI about this lesson",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = "Chat with the on-device tutor for deep explanations, code walkthroughs, or custom exercises.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                             Icon(
-                                Icons.Default.CheckCircle,
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                                 contentDescription = null,
                                 tint = visualInfo.accentColor,
-                                modifier = Modifier.size(18.dp),
-                            )
-                            Spacer(Modifier.width(6.dp))
-                            Text(
-                                "Completed",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = visualInfo.accentColor,
                             )
                         }
                     }
                 }
-                state.nextLessonId?.let {
-                    Button(
-                        onClick = { state.eventSink(LessonScreen.Event.NextLesson) },
-                        modifier = Modifier.weight(1f),
+            }
+            item {
+                val visualInfo = state.course.topic.visualInfo
+                DisableSelection {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("Next lesson")
-                        Spacer(Modifier.width(6.dp))
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                        if (!state.isCompleted) {
+                            OutlinedButton(
+                                onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) },
+                                modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                            ) {
+                                Icon(Icons.Default.Check, contentDescription = null)
+                                Spacer(Modifier.width(6.dp))
+                                Text("Mark complete")
+                            }
+                        } else {
+                            Surface(
+                                shape = MaterialTheme.shapes.medium,
+                                color = visualInfo.accentColor.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
+                                modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    Icon(
+                                        Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = visualInfo.accentColor,
+                                        modifier = Modifier.size(18.dp),
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(
+                                        "Completed",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = visualInfo.accentColor,
+                                    )
+                                }
+                            }
+                        }
+                        state.nextLessonId?.let {
+                            Button(
+                                onClick = { state.eventSink(LessonScreen.Event.NextLesson) },
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Text("Next lesson")
+                                Spacer(Modifier.width(6.dp))
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null)
+                            }
+                        }
                     }
                 }
             }
