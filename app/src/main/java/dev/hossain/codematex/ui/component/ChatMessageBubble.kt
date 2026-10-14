@@ -145,12 +145,15 @@ fun ChatMessageBubble(
  * @param modifier The modifier to apply to the outer alignment container.
  * @param onCopy Optional callback triggered when message text is copied to clipboard.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun UserMessageBubble(
     message: ChatMessage.User,
     modifier: Modifier = Modifier,
     onCopy: ((String) -> Unit)? = null,
 ) {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val bubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
 
     Row(
@@ -163,7 +166,19 @@ fun UserMessageBubble(
             modifier =
                 Modifier
                     .padding(start = 48.dp)
-                    .clip(bubbleShape),
+                    .clip(bubbleShape)
+                    .combinedClickable(
+                        onClick = {},
+                        onLongClick = {
+                            copyMessageToClipboard(
+                                context = context,
+                                haptic = haptic,
+                                label = "User message",
+                                content = message.content,
+                                onCopy = onCopy,
+                            )
+                        },
+                    ),
         ) {
             SelectionContainer {
                 Text(
