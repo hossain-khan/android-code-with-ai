@@ -107,6 +107,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|keyboard|navigation|smallestScreenSize"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.App"
