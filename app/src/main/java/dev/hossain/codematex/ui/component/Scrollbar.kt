@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListLayoutInfo
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridLayoutInfo
@@ -82,13 +83,30 @@ internal fun calculateScrollbarMetrics(
     state: ScrollState,
     viewportLength: Float,
     minThumbLength: Float,
+): ScrollbarMetrics? =
+    calculateScrollbarMetrics(
+        scrollValue = state.value,
+        maxScrollValue = state.maxValue,
+        viewportLength = viewportLength,
+        minThumbLength = minThumbLength,
+    )
+
+/**
+ * Calculates thumb offset and length for arbitrary scroll positions and boundaries.
+ */
+internal fun calculateScrollbarMetrics(
+    scrollValue: Int,
+    maxScrollValue: Int,
+    viewportLength: Float,
+    minThumbLength: Float,
 ): ScrollbarMetrics? {
-    if (state.maxValue <= 0 || state.maxValue == Int.MAX_VALUE || viewportLength <= 0f) return null
-    val totalLength = viewportLength + state.maxValue.toFloat()
+    if (maxScrollValue <= 0 || maxScrollValue == Int.MAX_VALUE || viewportLength <= 0f) return null
+    val totalLength = viewportLength + maxScrollValue.toFloat()
     val ratio = (viewportLength / totalLength).coerceIn(0.05f, 1f)
-    val thumbLength = (viewportLength * ratio).coerceIn(minThumbLength, viewportLength)
+    val safeMinThumb = minThumbLength.coerceIn(0f, viewportLength)
+    val thumbLength = (viewportLength * ratio).coerceIn(safeMinThumb, viewportLength)
     val availableTrack = viewportLength - thumbLength
-    val progress = (state.value.toFloat() / state.maxValue.toFloat()).coerceIn(0f, 1f)
+    val progress = (scrollValue.toFloat() / maxScrollValue.toFloat()).coerceIn(0f, 1f)
     val thumbOffset = progress * availableTrack
     return ScrollbarMetrics(offset = thumbOffset, length = thumbLength)
 }
@@ -111,7 +129,8 @@ internal fun calculateScrollbarMetrics(
 
     val estimatedTotalHeight = (info.firstItemSize.toFloat() * info.totalItemsCount).coerceAtLeast(viewportLength)
     val ratio = (viewportLength / estimatedTotalHeight).coerceIn(0.05f, 1f)
-    val thumbLength = (viewportLength * ratio).coerceIn(minThumbLength, viewportLength)
+    val safeMinThumb = minThumbLength.coerceIn(0f, viewportLength)
+    val thumbLength = (viewportLength * ratio).coerceIn(safeMinThumb, viewportLength)
 
     val firstItemSize = info.firstItemSize.toFloat().coerceAtLeast(1f)
     val decimalIndex = info.firstVisibleItemIndex.toFloat() + (-info.firstVisibleItemOffset.toFloat() / firstItemSize).coerceAtLeast(0f)
@@ -140,7 +159,8 @@ internal fun calculateScrollbarMetrics(
     }
 
     val ratio = (info.visibleRowCount.toFloat() / info.totalRows.toFloat()).coerceIn(0.05f, 1f)
-    val thumbLength = (viewportLength * ratio).coerceIn(minThumbLength, viewportLength)
+    val safeMinThumb = minThumbLength.coerceIn(0f, viewportLength)
+    val thumbLength = (viewportLength * ratio).coerceIn(safeMinThumb, viewportLength)
 
     val firstItemHeight = info.firstItemHeight.toFloat().coerceAtLeast(1f)
     val decimalRow = info.firstRow.toFloat() + (-info.firstItemOffsetY.toFloat() / firstItemHeight).coerceAtLeast(0f)
@@ -222,12 +242,25 @@ internal fun calculateScrollbarMetrics(
     val lastRow = lastItem.row
     val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
 
-    val itemsPerRow =
-        visibleItems
-            .groupBy { it.row }
-            .values
-            .maxOfOrNull { it.size }
-            ?.coerceAtLeast(1) ?: 1
+    var maxItemsInRow = 1
+    var currentRow = -1
+    var countInCurrentRow = 0
+    for (i in visibleItems.indices) {
+        val row = visibleItems[i].row
+        if (row == currentRow) {
+            countInCurrentRow++
+        } else {
+            if (countInCurrentRow > maxItemsInRow) {
+                maxItemsInRow = countInCurrentRow
+            }
+            currentRow = row
+            countInCurrentRow = 1
+        }
+    }
+    if (countInCurrentRow > maxItemsInRow) {
+        maxItemsInRow = countInCurrentRow
+    }
+    val itemsPerRow = maxItemsInRow.coerceAtLeast(1)
     val totalRows = ((totalItems + itemsPerRow - 1) / itemsPerRow).coerceAtLeast(1)
 
     return calculateScrollbarMetrics(
@@ -251,11 +284,16 @@ internal fun calculateScrollbarMetrics(
 /**
  * Remembers an animated alpha value that fades in quickly when scrolling starts and
  * fades out smoothly after scrolling ends.
+ *
+ * @param isScrollInProgress Whether scrolling is currently active.
+ * @param alwaysShow Whether to keep the scrollbar permanently visible.
+ * @param autoHideDelayMs Delay in milliseconds before starting fade-out after scrolling stops.
  */
 @Composable
 private fun rememberScrollbarAlpha(
     isScrollInProgress: Boolean,
     alwaysShow: Boolean,
+    autoHideDelayMs: Long,
 ): State<Float> =
     animateFloatAsState(
         targetValue = if (isScrollInProgress || alwaysShow) 1f else 0f,
@@ -263,10 +301,64 @@ private fun rememberScrollbarAlpha(
             if (isScrollInProgress || alwaysShow) {
                 tween(durationMillis = 150)
             } else {
-                tween(durationMillis = 500, delayMillis = 500)
+                tween(durationMillis = 500, delayMillis = autoHideDelayMs.toInt())
             },
         label = "ScrollbarAlpha",
     )
+
+/**
+ * Shared drawing modifier for rendering an adaptive scrollbar across list, grid, and scroll states.
+ */
+private fun Modifier.drawAdaptiveScrollbar(
+    isScrollInProgress: Boolean,
+    alwaysShow: Boolean,
+    color: Color,
+    width: Dp,
+    padding: Dp,
+    minThumbLength: Dp,
+    autoHideDelayMs: Long,
+    calculateMetrics: (viewportLength: Float, minThumbPx: Float) -> ScrollbarMetrics?,
+): Modifier =
+    composed {
+        val alpha by rememberScrollbarAlpha(
+            isScrollInProgress = isScrollInProgress,
+            alwaysShow = alwaysShow,
+            autoHideDelayMs = autoHideDelayMs,
+        )
+
+        val resolvedColor =
+            if (color != Color.Unspecified) {
+                color
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+            }
+
+        drawWithContent {
+            drawContent()
+
+            if (alpha > 0f) {
+                val minThumbPx = minThumbLength.toPx()
+                val metrics = calculateMetrics(size.height, minThumbPx) ?: return@drawWithContent
+
+                val widthPx = width.toPx()
+                val paddingPx = padding.toPx()
+                val xPos =
+                    if (layoutDirection == LayoutDirection.Ltr) {
+                        size.width - widthPx - paddingPx
+                    } else {
+                        paddingPx
+                    }
+
+                drawRoundRect(
+                    color = resolvedColor,
+                    topLeft = Offset(x = xPos, y = metrics.offset),
+                    size = Size(width = widthPx, height = metrics.length),
+                    cornerRadius = CornerRadius(widthPx / 2f, widthPx / 2f),
+                    alpha = alpha,
+                )
+            }
+        }
+    }
 
 /**
  * Draws an adaptive vertical scrollbar on a [LazyListState] container (e.g. `LazyColumn`).
@@ -278,7 +370,8 @@ private fun rememberScrollbarAlpha(
  * @param color The thumb color. Defaults to `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)`.
  * @param width Thickness of the scrollbar thumb.
  * @param padding Inset from the outer edge.
- * @param minThumbLength Minimum thumb height to ensure visibility.
+ * @param minThumbLength Minimum thumb height to ensure visibility. Defaults to 24.dp.
+ * @param autoHideDelayMs Delay in milliseconds before fade-out begins after scrolling ceases. Defaults to 1500ms.
  * @param alwaysShow Whether to keep the scrollbar permanently visible.
  */
 fun Modifier.adaptiveScrollbar(
@@ -286,52 +379,26 @@ fun Modifier.adaptiveScrollbar(
     color: Color = Color.Unspecified,
     width: Dp = 4.dp,
     padding: Dp = 4.dp,
-    minThumbLength: Dp = 32.dp,
+    minThumbLength: Dp = 24.dp,
+    autoHideDelayMs: Long = 1500L,
     alwaysShow: Boolean = false,
 ): Modifier =
-    composed {
-        val alpha by rememberScrollbarAlpha(
-            isScrollInProgress = state.isScrollInProgress,
-            alwaysShow = alwaysShow,
-        )
-
-        val resolvedColor =
-            if (color != Color.Unspecified) {
-                color
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            }
-
-        drawWithContent {
-            drawContent()
-
-            if (alpha > 0f) {
-                val metrics =
-                    calculateScrollbarMetrics(
-                        state = state,
-                        viewportLength = size.height,
-                        minThumbLength = minThumbLength.toPx(),
-                    ) ?: return@drawWithContent
-
-                val widthPx = width.toPx()
-                val paddingPx = padding.toPx()
-                val xPos =
-                    if (layoutDirection == LayoutDirection.Ltr) {
-                        size.width - widthPx - paddingPx
-                    } else {
-                        paddingPx
-                    }
-
-                drawRoundRect(
-                    color = resolvedColor,
-                    topLeft = Offset(x = xPos, y = metrics.offset),
-                    size = Size(width = widthPx, height = metrics.length),
-                    cornerRadius = CornerRadius(widthPx / 2f, widthPx / 2f),
-                    alpha = alpha,
-                )
-            }
-        }
-    }
+    drawAdaptiveScrollbar(
+        isScrollInProgress = state.isScrollInProgress,
+        alwaysShow = alwaysShow,
+        color = color,
+        width = width,
+        padding = padding,
+        minThumbLength = minThumbLength,
+        autoHideDelayMs = autoHideDelayMs,
+        calculateMetrics = { viewportLength, minThumbPx ->
+            calculateScrollbarMetrics(
+                state = state,
+                viewportLength = viewportLength,
+                minThumbLength = minThumbPx,
+            )
+        },
+    )
 
 /**
  * Draws an adaptive vertical scrollbar on a [LazyGridState] container (e.g. `LazyVerticalGrid`).
@@ -343,7 +410,8 @@ fun Modifier.adaptiveScrollbar(
  * @param color The thumb color. Defaults to `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)`.
  * @param width Thickness of the scrollbar thumb.
  * @param padding Inset from the outer edge.
- * @param minThumbLength Minimum thumb height to ensure visibility.
+ * @param minThumbLength Minimum thumb height to ensure visibility. Defaults to 24.dp.
+ * @param autoHideDelayMs Delay in milliseconds before fade-out begins after scrolling ceases. Defaults to 1500ms.
  * @param alwaysShow Whether to keep the scrollbar permanently visible.
  */
 fun Modifier.adaptiveScrollbar(
@@ -351,52 +419,26 @@ fun Modifier.adaptiveScrollbar(
     color: Color = Color.Unspecified,
     width: Dp = 4.dp,
     padding: Dp = 4.dp,
-    minThumbLength: Dp = 32.dp,
+    minThumbLength: Dp = 24.dp,
+    autoHideDelayMs: Long = 1500L,
     alwaysShow: Boolean = false,
 ): Modifier =
-    composed {
-        val alpha by rememberScrollbarAlpha(
-            isScrollInProgress = state.isScrollInProgress,
-            alwaysShow = alwaysShow,
-        )
-
-        val resolvedColor =
-            if (color != Color.Unspecified) {
-                color
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            }
-
-        drawWithContent {
-            drawContent()
-
-            if (alpha > 0f) {
-                val metrics =
-                    calculateScrollbarMetrics(
-                        state = state,
-                        viewportLength = size.height,
-                        minThumbLength = minThumbLength.toPx(),
-                    ) ?: return@drawWithContent
-
-                val widthPx = width.toPx()
-                val paddingPx = padding.toPx()
-                val xPos =
-                    if (layoutDirection == LayoutDirection.Ltr) {
-                        size.width - widthPx - paddingPx
-                    } else {
-                        paddingPx
-                    }
-
-                drawRoundRect(
-                    color = resolvedColor,
-                    topLeft = Offset(x = xPos, y = metrics.offset),
-                    size = Size(width = widthPx, height = metrics.length),
-                    cornerRadius = CornerRadius(widthPx / 2f, widthPx / 2f),
-                    alpha = alpha,
-                )
-            }
-        }
-    }
+    drawAdaptiveScrollbar(
+        isScrollInProgress = state.isScrollInProgress,
+        alwaysShow = alwaysShow,
+        color = color,
+        width = width,
+        padding = padding,
+        minThumbLength = minThumbLength,
+        autoHideDelayMs = autoHideDelayMs,
+        calculateMetrics = { viewportLength, minThumbPx ->
+            calculateScrollbarMetrics(
+                state = state,
+                viewportLength = viewportLength,
+                minThumbLength = minThumbPx,
+            )
+        },
+    )
 
 /**
  * Draws an adaptive vertical scrollbar on a [ScrollState] container (e.g. `Column(Modifier.verticalScroll(state))`).
@@ -404,11 +446,17 @@ fun Modifier.adaptiveScrollbar(
  * Automatically fades in when scrolling with a mouse, trackpad, or touch gesture,
  * and fades out after scrolling finishes. Does not consume layout space or cause content shifting.
  *
+ * Note: When applying this modifier to a scrollable container with [Modifier.verticalScroll], always
+ * chain [adaptiveScrollbar] before [Modifier.verticalScroll] (e.g. `Modifier.adaptiveScrollbar(state).verticalScroll(state)`).
+ * This ensures the scrollbar is measured and positioned within the viewport rather than scrolling along
+ * with the inner content.
+ *
  * @param state The [ScrollState] to observe.
  * @param color The thumb color. Defaults to `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)`.
  * @param width Thickness of the scrollbar thumb.
  * @param padding Inset from the outer edge.
- * @param minThumbLength Minimum thumb height to ensure visibility.
+ * @param minThumbLength Minimum thumb height to ensure visibility. Defaults to 24.dp.
+ * @param autoHideDelayMs Delay in milliseconds before fade-out begins after scrolling ceases. Defaults to 1500ms.
  * @param alwaysShow Whether to keep the scrollbar permanently visible.
  */
 fun Modifier.adaptiveScrollbar(
@@ -416,52 +464,26 @@ fun Modifier.adaptiveScrollbar(
     color: Color = Color.Unspecified,
     width: Dp = 4.dp,
     padding: Dp = 4.dp,
-    minThumbLength: Dp = 32.dp,
+    minThumbLength: Dp = 24.dp,
+    autoHideDelayMs: Long = 1500L,
     alwaysShow: Boolean = false,
 ): Modifier =
-    composed {
-        val alpha by rememberScrollbarAlpha(
-            isScrollInProgress = state.isScrollInProgress,
-            alwaysShow = alwaysShow,
-        )
-
-        val resolvedColor =
-            if (color != Color.Unspecified) {
-                color
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            }
-
-        drawWithContent {
-            drawContent()
-
-            if (alpha > 0f) {
-                val metrics =
-                    calculateScrollbarMetrics(
-                        state = state,
-                        viewportLength = size.height,
-                        minThumbLength = minThumbLength.toPx(),
-                    ) ?: return@drawWithContent
-
-                val widthPx = width.toPx()
-                val paddingPx = padding.toPx()
-                val xPos =
-                    if (layoutDirection == LayoutDirection.Ltr) {
-                        size.width - widthPx - paddingPx
-                    } else {
-                        paddingPx
-                    }
-
-                drawRoundRect(
-                    color = resolvedColor,
-                    topLeft = Offset(x = xPos, y = metrics.offset),
-                    size = Size(width = widthPx, height = metrics.length),
-                    cornerRadius = CornerRadius(widthPx / 2f, widthPx / 2f),
-                    alpha = alpha,
-                )
-            }
-        }
-    }
+    drawAdaptiveScrollbar(
+        isScrollInProgress = state.isScrollInProgress,
+        alwaysShow = alwaysShow,
+        color = color,
+        width = width,
+        padding = padding,
+        minThumbLength = minThumbLength,
+        autoHideDelayMs = autoHideDelayMs,
+        calculateMetrics = { viewportLength, minThumbPx ->
+            calculateScrollbarMetrics(
+                state = state,
+                viewportLength = viewportLength,
+                minThumbLength = minThumbPx,
+            )
+        },
+    )
 
 @ThemePreviews
 @Composable
@@ -476,14 +498,15 @@ private fun AdaptiveScrollbarPreview() {
                         .padding(16.dp),
             ) {
                 val listState = rememberLazyListState()
-                Column(
+                LazyColumn(
+                    state = listState,
                     modifier =
                         Modifier
                             .fillMaxSize()
                             .adaptiveScrollbar(state = listState, alwaysShow = true),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    repeat(10) { index ->
+                    items(20) { index ->
                         Text(
                             text = "Scrollable preview item #$index",
                             style = MaterialTheme.typography.bodyMedium,

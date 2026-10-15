@@ -5,21 +5,73 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
 class ScrollbarTest {
-    // --- ScrollState Tests ---
+    // --- ScrollState & Scroll Value Tests ---
 
     @Test
-    fun `calculateScrollbarMetrics with ScrollState returns null when content fits in viewport`() {
+    fun `calculateScrollbarMetrics with ScrollState returns null when unlaid-out`() {
         val state = ScrollState(initial = 0)
-        // maxValue defaults to 0 when not laid out or content fits
-        val metrics = calculateScrollbarMetrics(state, viewportLength = 1000f, minThumbLength = 32f)
+        // maxValue defaults to Int.MAX_VALUE before initial layout measurement
+        assertThat(state.maxValue).isEqualTo(Int.MAX_VALUE)
+        val metrics = calculateScrollbarMetrics(state, viewportLength = 1000f, minThumbLength = 24f)
 
         assertThat(metrics).isNull()
     }
 
     @Test
-    fun `calculateScrollbarMetrics with ScrollState returns null when viewport is zero or negative`() {
-        val state = ScrollState(initial = 0)
-        val metrics = calculateScrollbarMetrics(state, viewportLength = 0f, minThumbLength = 32f)
+    fun `calculateScrollbarMetrics returns null when content fits in viewport`() {
+        // maxScrollValue <= 0 means entire content fits in viewport
+        val metrics =
+            calculateScrollbarMetrics(
+                scrollValue = 0,
+                maxScrollValue = 0,
+                viewportLength = 1000f,
+                minThumbLength = 24f,
+            )
+
+        assertThat(metrics).isNull()
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics returns valid metrics when scrollable`() {
+        // scrollValue = 250 with maxScrollValue = 500 represents 50% scroll progress
+        val metrics =
+            calculateScrollbarMetrics(
+                scrollValue = 250,
+                maxScrollValue = 500,
+                viewportLength = 500f,
+                minThumbLength = 24f,
+            )
+
+        assertThat(metrics).isNotNull()
+        val availableTrack = 500f - metrics!!.length
+        assertThat(metrics.offset).isWithin(1f).of(0.5f * availableTrack)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics safely clamps when minThumbLength exceeds viewport`() {
+        // Viewport is 20f, but minThumbLength is 50f - ensures no coerceIn crash
+        val metrics =
+            calculateScrollbarMetrics(
+                scrollValue = 100,
+                maxScrollValue = 500,
+                viewportLength = 20f,
+                minThumbLength = 50f,
+            )
+
+        assertThat(metrics).isNotNull()
+        assertThat(metrics!!.length).isEqualTo(20f)
+        assertThat(metrics.offset).isEqualTo(0f)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics returns null when viewport is zero or negative`() {
+        val metrics =
+            calculateScrollbarMetrics(
+                scrollValue = 0,
+                maxScrollValue = 100,
+                viewportLength = 0f,
+                minThumbLength = 24f,
+            )
 
         assertThat(metrics).isNull()
     }
@@ -217,5 +269,67 @@ class ScrollbarTest {
         assertThat(endMetrics).isNotNull()
         val expectedOffset = 300f - endMetrics!!.length
         assertThat(endMetrics.offset).isWithin(1f).of(expectedOffset)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics with ListScrollInfo safely clamps when minThumbLength exceeds viewport`() {
+        val info =
+            ListScrollInfo(
+                totalItemsCount = 20,
+                visibleItemsCount = 5,
+                firstVisibleItemIndex = 2,
+                firstVisibleItemOffset = 0,
+                firstItemSize = 100,
+                lastItemOffset = 400,
+                lastItemSize = 100,
+            )
+        val metrics = calculateScrollbarMetrics(info, viewportLength = 20f, minThumbLength = 50f)
+
+        assertThat(metrics).isNotNull()
+        assertThat(metrics!!.length).isEqualTo(20f)
+        assertThat(metrics.offset).isEqualTo(0f)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics with ListScrollInfo in reverseLayout handles fractional offset smoothly`() {
+        // Scrolled partially into item 0: firstVisibleItemOffset = -50 (halfway through item 0)
+        val info =
+            ListScrollInfo(
+                totalItemsCount = 10,
+                visibleItemsCount = 3,
+                firstVisibleItemIndex = 0,
+                firstVisibleItemOffset = -50,
+                firstItemSize = 100,
+                lastItemOffset = 250,
+                lastItemSize = 100,
+                reverseLayout = true,
+            )
+        val metrics = calculateScrollbarMetrics(info, viewportLength = 300f, minThumbLength = 24f)
+
+        assertThat(metrics).isNotNull()
+        val availableTrack = 300f - metrics!!.length
+        // decimalIndex = 0 + 0.5 = 0.5. maxDecimalIndex = 10 - 3 = 7. progress = 0.5 / 7. effectiveProgress = 1 - (0.5 / 7)
+        val expectedOffset = (1f - (0.5f / 7f)) * availableTrack
+        assertThat(metrics.offset).isWithin(1f).of(expectedOffset)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics with GridScrollInfo safely clamps when minThumbLength exceeds viewport`() {
+        val info =
+            GridScrollInfo(
+                totalItemsCount = 20,
+                visibleRowCount = 3,
+                totalRows = 10,
+                firstRow = 2,
+                firstItemOffsetY = 0,
+                firstItemHeight = 100,
+                lastItemOffsetY = 200,
+                lastItemHeight = 100,
+            )
+        val metrics = calculateScrollbarMetrics(info, viewportLength = 20f, minThumbLength = 50f)
+
+        assertThat(metrics).isNotNull()
+        assertThat(metrics!!.length).isEqualTo(20f)
+        assertThat(metrics.offset).isEqualTo(0f)
     }
 }

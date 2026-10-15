@@ -177,8 +177,8 @@ private fun SettingsContent(
                         .fillMaxHeight()
                         .widthIn(max = 720.dp)
                         .fillMaxWidth()
-                        .verticalScroll(scrollState)
                         .adaptiveScrollbar(scrollState)
+                        .verticalScroll(scrollState)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
