@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -49,6 +50,7 @@ import dev.hossain.codematex.ui.animation.SessionCardSharedKey
 import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -96,8 +98,10 @@ fun RecentSessionsSubUi(
         if (state.recentSessions.isEmpty()) {
             EmptySessionsCard(modifier = Modifier.fillMaxWidth())
         } else if (state.isExpanded) {
+            val listState = rememberLazyListState()
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                state = listState,
+                modifier = Modifier.fillMaxSize().adaptiveScrollbar(listState),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(state.recentSessions) { session ->

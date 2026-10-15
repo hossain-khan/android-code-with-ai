@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -67,6 +69,7 @@ import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -208,9 +211,13 @@ internal fun ChapterScreenInnerContent(
             is ChapterScreen.State.Success -> {
                 val course = state.course
                 if (isExpanded) {
+                    // Expanded layout uses an adaptive multi-column grid; state is intentionally scoped
+                    // to this layout branch rather than shared with the compact single-column list.
+                    val gridState = rememberLazyGridState()
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 340.dp),
-                        modifier = Modifier.fillMaxSize().padding(padding),
+                        state = gridState,
+                        modifier = Modifier.fillMaxSize().padding(padding).adaptiveScrollbar(gridState),
                         contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(14.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -242,8 +249,12 @@ internal fun ChapterScreenInnerContent(
                         }
                     }
                 } else {
+                    // Compact layout uses a single vertical list; state is intentionally scoped
+                    // to this layout branch rather than shared with the expanded multi-column grid.
+                    val listState = rememberLazyListState()
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(padding),
+                        state = listState,
+                        modifier = Modifier.fillMaxSize().padding(padding).adaptiveScrollbar(listState),
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp),
                     ) {

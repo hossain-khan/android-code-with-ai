@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
@@ -127,7 +128,7 @@ internal fun ChatMessageList(
 
     Box(modifier = modifier.fillMaxWidth()) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().adaptiveScrollbar(listState),
             state = listState,
             reverseLayout = true,
             contentPadding = PaddingValues(16.dp),

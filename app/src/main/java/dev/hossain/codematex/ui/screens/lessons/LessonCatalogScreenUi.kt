@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -71,6 +72,7 @@ import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -203,9 +205,11 @@ private fun LessonCatalogInnerContent(
                             onRetry = { state.eventSink(LessonCatalogScreen.Event.Retry) },
                         )
                     } else {
+                        val gridState = rememberLazyGridState()
                         LazyVerticalGrid(
                             columns = GridCells.Adaptive(minSize = 340.dp),
-                            modifier = Modifier.fillMaxSize(),
+                            state = gridState,
+                            modifier = Modifier.fillMaxSize().adaptiveScrollbar(gridState),
                             contentPadding = PaddingValues(16.dp),
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp),

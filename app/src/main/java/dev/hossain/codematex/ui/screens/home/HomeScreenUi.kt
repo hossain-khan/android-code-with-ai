@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -51,6 +52,7 @@ import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import com.slack.circuit.subcircuit.SubCircuitContent
 import dev.hossain.codematex.ui.animation.LocalSharedElementTransitionScope
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesOuterEvent
 import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesSubScreen
@@ -250,8 +252,10 @@ private fun HomeLayout(
             }
         } else {
             // Compact Single Column Layout
+            val listState = rememberLazyListState()
             LazyColumn(
-                modifier = Modifier.padding(innerPadding),
+                state = listState,
+                modifier = Modifier.padding(innerPadding).adaptiveScrollbar(listState),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {

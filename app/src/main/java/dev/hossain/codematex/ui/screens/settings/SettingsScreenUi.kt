@@ -75,6 +75,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
@@ -169,13 +170,16 @@ private fun SettingsContent(
                     .padding(innerPadding),
             contentAlignment = Alignment.TopCenter,
         ) {
+            val scrollState = rememberScrollState()
             Column(
                 modifier =
                     Modifier
                         .fillMaxHeight()
                         .widthIn(max = 720.dp)
                         .fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
+                        // adaptiveScrollbar must precede verticalScroll so the thumb is drawn in viewport coordinates
+                        .adaptiveScrollbar(scrollState)
+                        .verticalScroll(scrollState)
                         .navigationBarsPadding()
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),

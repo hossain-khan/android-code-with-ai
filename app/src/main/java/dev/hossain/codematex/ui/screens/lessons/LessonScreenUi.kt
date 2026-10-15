@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -66,6 +67,7 @@ import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.component.resolveCodeBlockLanguage
 import dev.hossain.codematex.ui.screens.lessons.quiz.LessonQuizSubScreen
@@ -254,9 +256,11 @@ private fun LessonBody(
     state: LessonScreen.State.Success,
     modifier: Modifier = Modifier,
 ) {
+    val listState = rememberLazyListState()
     SelectionContainer(modifier = modifier) {
         LazyColumn(
-            modifier = Modifier.widthIn(max = 900.dp),
+            state = listState,
+            modifier = Modifier.widthIn(max = 900.dp).adaptiveScrollbar(listState),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
