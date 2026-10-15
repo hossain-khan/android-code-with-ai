@@ -7,7 +7,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
 import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 
 /**
@@ -51,53 +51,17 @@ internal fun evaluateGlobalShortcut(
     }
 
 /**
- * Pure evaluation function that determines if a key combination corresponds to
- * the session history screen filter shortcut (Ctrl / Cmd + F).
+ * Dispatches a [GlobalShortcutCommand] to the appropriate navigation callback.
  *
- * @param keyCode Key code corresponding to [android.view.KeyEvent.getKeyCode].
- * @param isCtrlOrMetaPressed Whether Ctrl or Meta (Cmd) modifier is active.
- * @return True if the key combination matches Ctrl/Cmd + F, false otherwise.
+ * @return True if a command was handled, false otherwise.
  */
-internal fun evaluateSessionHistoryShortcut(
-    keyCode: Int,
-    isCtrlOrMetaPressed: Boolean,
-): Boolean = isCtrlOrMetaPressed && keyCode == android.view.KeyEvent.KEYCODE_F
-
-/**
- * Handles global application keyboard shortcuts.
- *
- * Supported shortcuts:
- * - [Key.Escape]: Navigates back if [canPopBack] is true.
- * - Ctrl / Cmd + [Key.N]: Navigates to HomeScreen / new chat via [onNewChatOrHome].
- * - Ctrl / Cmd + [Key.Comma]: Navigates to Settings via [onOpenSettings].
- *
- * Normal typing (unmodified keys like 'n', ',', etc.) is never intercepted and passes through.
- *
- * @param event The key event to evaluate.
- * @param canPopBack Whether back navigation is currently possible (e.g. backstack size > 1).
- * @param onNavigateBack Invoked when [Key.Escape] is pressed and [canPopBack] is true.
- * @param onNewChatOrHome Invoked when Ctrl / Cmd + [Key.N] is pressed.
- * @param onOpenSettings Invoked when Ctrl / Cmd + [Key.Comma] is pressed.
- * @return True if the key event was consumed as a global shortcut, false otherwise.
- */
-internal fun handleGlobalKeyEvent(
-    event: KeyEvent,
-    canPopBack: Boolean,
+internal fun dispatchGlobalShortcutCommand(
+    command: GlobalShortcutCommand?,
     onNavigateBack: () -> Unit,
     onNewChatOrHome: () -> Unit,
     onOpenSettings: () -> Unit,
-): Boolean {
-    if (event.type != KeyEventType.KeyDown) return false
-
-    val isModifierActive = event.isCtrlPressed || event.isMetaPressed
-    val command =
-        evaluateGlobalShortcut(
-            keyCode = event.nativeKeyEvent.keyCode,
-            isCtrlOrMetaPressed = isModifierActive,
-            canPopBack = canPopBack,
-        ) ?: return false
-
-    return when (command) {
+): Boolean =
+    when (command) {
         GlobalShortcutCommand.NavigateBack -> {
             onNavigateBack()
             true
@@ -112,12 +76,84 @@ internal fun handleGlobalKeyEvent(
             onOpenSettings()
             true
         }
+
+        null -> {
+            false
+        }
     }
+
+/**
+ * Evaluates and dispatches global shortcuts using primitive parameters.
+ *
+ * Normal typing (unmodified keys like 'n', ',', etc.) is never intercepted.
+ * Repeated key down events (repeatCount > 0) are ignored to prevent rapid multi-pop or repeated navigation loops.
+ */
+internal fun handleGlobalKeyEvent(
+    type: KeyEventType,
+    repeatCount: Int,
+    keyCode: Int,
+    isCtrlOrMetaPressed: Boolean,
+    canPopBack: Boolean,
+    onNavigateBack: () -> Unit,
+    onNewChatOrHome: () -> Unit,
+    onOpenSettings: () -> Unit,
+): Boolean {
+    if (type != KeyEventType.KeyDown || repeatCount > 0) return false
+
+    val command =
+        evaluateGlobalShortcut(
+            keyCode = keyCode,
+            isCtrlOrMetaPressed = isCtrlOrMetaPressed,
+            canPopBack = canPopBack,
+        )
+
+    return dispatchGlobalShortcutCommand(
+        command = command,
+        onNavigateBack = onNavigateBack,
+        onNewChatOrHome = onNewChatOrHome,
+        onOpenSettings = onOpenSettings,
+    )
 }
 
 /**
+ * Handles global application keyboard shortcuts.
+ *
+ * Supported shortcuts:
+ * - [Key.Escape]: Navigates back if [canPopBack] is true.
+ * - Ctrl / Cmd + [Key.N]: Navigates to HomeScreen / new chat via [onNewChatOrHome].
+ * - Ctrl / Cmd + [Key.Comma]: Navigates to Settings via [onOpenSettings].
+ *
+ * Normal typing (unmodified keys like 'n', ',', etc.) is never intercepted and passes through.
+ * Repeated key down events (repeatCount > 0) are ignored to prevent multi-pop or repeated navigation loops.
+ *
+ * @param event The key event to evaluate.
+ * @param canPopBack Whether back navigation is currently possible (e.g. backstack size > 1).
+ * @param onNavigateBack Invoked when [Key.Escape] is pressed and [canPopBack] is true.
+ * @param onNewChatOrHome Invoked when Ctrl / Cmd + [Key.N] is pressed.
+ * @param onOpenSettings Invoked when Ctrl / Cmd + [Key.Comma] is pressed.
+ * @return True if the key event was consumed as a global shortcut, false otherwise.
+ */
+internal fun handleGlobalKeyEvent(
+    event: KeyEvent,
+    canPopBack: Boolean,
+    onNavigateBack: () -> Unit,
+    onNewChatOrHome: () -> Unit,
+    onOpenSettings: () -> Unit,
+): Boolean =
+    handleGlobalKeyEvent(
+        type = event.type,
+        repeatCount = event.nativeKeyEvent.repeatCount,
+        keyCode = event.nativeKeyEvent.keyCode,
+        isCtrlOrMetaPressed = event.isCtrlPressed || event.isMetaPressed,
+        canPopBack = canPopBack,
+        onNavigateBack = onNavigateBack,
+        onNewChatOrHome = onNewChatOrHome,
+        onOpenSettings = onOpenSettings,
+    )
+
+/**
  * Modifier that intercepts global keyboard shortcuts (Ctrl / Cmd + N, Ctrl / Cmd + Comma, Escape)
- * and dispatches them to navigation handlers.
+ * during the bubble phase and dispatches them to navigation handlers.
  */
 internal fun Modifier.globalKeyboardShortcuts(
     canPopBack: Boolean,
@@ -125,7 +161,7 @@ internal fun Modifier.globalKeyboardShortcuts(
     onNewChatOrHome: () -> Unit,
     onOpenSettings: () -> Unit,
 ): Modifier =
-    onPreviewKeyEvent { event ->
+    onKeyEvent { event ->
         handleGlobalKeyEvent(
             event = event,
             canPopBack = canPopBack,
@@ -134,3 +170,8 @@ internal fun Modifier.globalKeyboardShortcuts(
             onOpenSettings = onOpenSettings,
         )
     }
+
+/**
+ * Modifier that intercepts global keyboard shortcuts using a pre-constructed key event handler.
+ */
+internal fun Modifier.globalKeyboardShortcuts(onKeyEvent: (KeyEvent) -> Boolean): Modifier = onKeyEvent(onKeyEvent)

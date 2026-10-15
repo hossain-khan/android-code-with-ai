@@ -118,24 +118,41 @@ class MainActivity
 
                                 // Global keyboard shortcuts: Esc to pop, Ctrl/Cmd+N for new chat/home, Ctrl/Cmd+, for settings.
                                 val canPopBack = navStack.size > 1
-                                DisposableEffect(navigator, navStack, canPopBack) {
+                                val onNavigateBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+                                val onNewChatOrHome =
+                                    remember(navigator, navStack) {
+                                        {
+                                            if (navStack.topRecord?.screen != HomeScreen) {
+                                                navigator.goTo(HomeScreen)
+                                            }
+                                        }
+                                    }
+                                val onOpenSettings =
+                                    remember(navigator, navStack) {
+                                        {
+                                            if (navStack.topRecord?.screen != SettingsScreen) {
+                                                navigator.goTo(SettingsScreen)
+                                            }
+                                        }
+                                    }
+                                val handleShortcut =
+                                    remember(canPopBack, onNavigateBack, onNewChatOrHome, onOpenSettings) {
+                                        { event: androidx.compose.ui.input.key.KeyEvent ->
+                                            handleGlobalKeyEvent(
+                                                event = event,
+                                                canPopBack = canPopBack,
+                                                onNavigateBack = onNavigateBack,
+                                                onNewChatOrHome = onNewChatOrHome,
+                                                onOpenSettings = onOpenSettings,
+                                            )
+                                        }
+                                    }
+
+                                DisposableEffect(handleShortcut) {
                                     globalKeyHandler = { nativeEvent ->
-                                        handleGlobalKeyEvent(
-                                            event =
-                                                androidx.compose.ui.input.key
-                                                    .KeyEvent(nativeEvent),
-                                            canPopBack = canPopBack,
-                                            onNavigateBack = { navigator.pop() },
-                                            onNewChatOrHome = {
-                                                if (navStack.topRecord?.screen != HomeScreen) {
-                                                    navigator.goTo(HomeScreen)
-                                                }
-                                            },
-                                            onOpenSettings = {
-                                                if (navStack.topRecord?.screen != SettingsScreen) {
-                                                    navigator.goTo(SettingsScreen)
-                                                }
-                                            },
+                                        handleShortcut(
+                                            androidx.compose.ui.input.key
+                                                .KeyEvent(nativeEvent),
                                         )
                                     }
                                     onDispose {
@@ -175,20 +192,7 @@ class MainActivity
                                                 modifier =
                                                     Modifier
                                                         .fillMaxSize()
-                                                        .globalKeyboardShortcuts(
-                                                            canPopBack = canPopBack,
-                                                            onNavigateBack = { navigator.pop() },
-                                                            onNewChatOrHome = {
-                                                                if (navStack.topRecord?.screen != HomeScreen) {
-                                                                    navigator.goTo(HomeScreen)
-                                                                }
-                                                            },
-                                                            onOpenSettings = {
-                                                                if (navStack.topRecord?.screen != SettingsScreen) {
-                                                                    navigator.goTo(SettingsScreen)
-                                                                }
-                                                            },
-                                                        ),
+                                                        .globalKeyboardShortcuts(handleShortcut),
                                             ) {
                                                 // See https://slackhq.github.io/circuit/overlays/
                                                 ContentWithOverlays {
@@ -212,6 +216,8 @@ class MainActivity
             }
         }
 
+        // AndroidX ComponentActivity restricts dispatchKeyEvent to LIBRARY_GROUP_PREFIX via KeyEventDispatcher,
+        // but overriding dispatchKeyEvent in this Activity subclass is required to catch unhandled physical keyboard shortcuts.
         @SuppressLint("RestrictedApi")
         override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
             // Let focused Compose components (e.g. text fields, bottom sheets) process key events first.
