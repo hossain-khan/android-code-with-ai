@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -63,6 +65,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
@@ -112,10 +115,13 @@ private fun SettingsContent(
         )
     }
 
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+
     Scaffold(
         modifier =
             modifier
                 .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f)),
         topBar = {
             TopAppBar(
@@ -145,186 +151,198 @@ private fun SettingsContent(
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
                     ),
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { innerPadding ->
-        Column(
+        Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                    .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            // Section 1: AI Persona & Tutoring Style
-            SettingsSectionHeader(title = "AI Persona & Tutoring Style")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column {
-                    SettingsClickableRow(
-                        icon = Icons.Default.Person,
-                        title = "Active Persona",
-                        subtitle =
-                            "${state.selectedPersona.iconGlyph} ${state.selectedPersona.displayName} • " +
-                                state.selectedPersona.tagline,
-                        onClick = { state.eventSink(SettingsScreen.Event.ShowPersonaDialog(true)) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    )
-                    SettingsClickableRow(
-                        icon = Icons.Default.Psychology,
-                        title = "Developer Profile & Context",
-                        subtitle = state.developerProfile.getDisplaySummary(),
-                        onClick = { state.eventSink(SettingsScreen.Event.DeveloperProfileClicked) },
-                    )
-                }
-            }
-
-            // Section 2: Performance & Hardware
-            SettingsSectionHeader(title = "Performance & Hardware")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column {
-                    SettingsClickableRow(
-                        icon = Icons.Default.Speed,
-                        title = "Background RAM Eviction Timeout",
-                        subtitle = getRamEvictionSubtitle(state.ramEvictionMinutes),
-                        onClick = { state.eventSink(SettingsScreen.Event.ShowRamEvictionDialog(true)) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    )
-                    SettingsSwitchRow(
-                        icon = Icons.Default.Wifi,
-                        title = "Download over Wi-Fi Only",
-                        subtitle = "Prevents downloading 1.5–2.5 GB model files over mobile data networks",
-                        checked = state.isWifiOnlyDownload,
-                        onCheckedChange = { state.eventSink(SettingsScreen.Event.WifiOnlyToggled(it)) },
-                    )
-                }
-            }
-
-            // Section 3: Code & Tactile Feedback
-            SettingsSectionHeader(title = "Code Display & Interactions")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column {
-                    SettingsClickableRow(
-                        icon = Icons.Default.Code,
-                        title = "Code Block Display & Themes",
-                        subtitle = "Theme: ${state.codeTheme.displayName} • Line numbers: ${if (state.showLineNumbers) "On" else "Off"}",
-                        onClick = { state.eventSink(SettingsScreen.Event.CodeBlockSettingsClicked) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    )
-                    SettingsSwitchRow(
-                        icon = Icons.Default.Vibration,
-                        title = "Haptic Feedback",
-                        subtitle = "Vibrate on copy, quiz selections, and key actions",
-                        checked = state.hapticFeedbackEnabled,
-                        onCheckedChange = { state.eventSink(SettingsScreen.Event.HapticsToggled(it)) },
-                    )
-                }
-            }
-
-            // Section 4: Data & Storage
-            SettingsSectionHeader(title = "Storage & Data Management")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column {
-                    SettingsClickableRow(
-                        icon = Icons.Default.Memory,
-                        title = "Downloaded Models Storage",
-                        subtitle = formatStorageSize(state.storageUsedBytes, state.downloadedModelCount),
-                        onClick = { state.eventSink(SettingsScreen.Event.ManageModelsClicked) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    )
-                    SettingsClickableRow(
-                        icon = Icons.Default.DeleteOutline,
-                        title = "Clear Chat History",
-                        subtitle = "${state.sessionCount} saved session(s) in local storage",
-                        iconTint = MaterialTheme.colorScheme.error,
-                        titleColor = MaterialTheme.colorScheme.error,
-                        onClick = { state.eventSink(SettingsScreen.Event.ShowClearHistoryDialog(true)) },
-                    )
-                }
-            }
-
-            // Section 5: App & Feedback
-            SettingsSectionHeader(title = "About & Feedback")
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column {
-                    SettingsClickableRow(
-                        icon = Icons.AutoMirrored.Filled.HelpOutline,
-                        title = "Replay App Onboarding Tour",
-                        subtitle = "View the 4-slide orientation guide anytime",
-                        onClick = { state.eventSink(SettingsScreen.Event.ReplayTourClicked) },
-                    )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-                    )
-                    SettingsClickableRowWithCustomIcon(
-                        iconRes = R.drawable.github_logo,
-                        title = "Share Feedback on GitHub",
-                        subtitle = "Report bugs, request models, and join discussions",
-                        onClick = { uriHandler.openUri(OnboardingScreen.GITHUB_ISSUES_URL) },
-                    )
-                }
-            }
-
-            // Footer version
             Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier =
+                    Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 720.dp)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Text(
-                    text = "CodeMateX ${state.appVersion}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = FontFamily.Monospace,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "100% Private On-Device AI • Powered by Google LiteRT-LM",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    textAlign = TextAlign.Center,
-                )
-            }
+                // Section 1: AI Persona & Tutoring Style
+                SettingsSectionHeader(title = "AI Persona & Tutoring Style")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column {
+                        SettingsClickableRow(
+                            icon = Icons.Default.Person,
+                            title = "Active Persona",
+                            subtitle =
+                                "${state.selectedPersona.iconGlyph} ${state.selectedPersona.displayName} • " +
+                                    state.selectedPersona.tagline,
+                            onClick = { state.eventSink(SettingsScreen.Event.ShowPersonaDialog(true)) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        )
+                        SettingsClickableRow(
+                            icon = Icons.Default.Psychology,
+                            title = "Developer Profile & Context",
+                            subtitle = state.developerProfile.getDisplaySummary(),
+                            onClick = { state.eventSink(SettingsScreen.Event.DeveloperProfileClicked) },
+                        )
+                    }
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                // Section 2: Performance & Hardware
+                SettingsSectionHeader(title = "Performance & Hardware")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column {
+                        SettingsClickableRow(
+                            icon = Icons.Default.Speed,
+                            title = "Background RAM Eviction Timeout",
+                            subtitle = getRamEvictionSubtitle(state.ramEvictionMinutes),
+                            onClick = { state.eventSink(SettingsScreen.Event.ShowRamEvictionDialog(true)) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        )
+                        SettingsSwitchRow(
+                            icon = Icons.Default.Wifi,
+                            title = "Download over Wi-Fi Only",
+                            subtitle = "Prevents downloading 1.5–2.5 GB model files over mobile data networks",
+                            checked = state.isWifiOnlyDownload,
+                            onCheckedChange = { state.eventSink(SettingsScreen.Event.WifiOnlyToggled(it)) },
+                        )
+                    }
+                }
+
+                // Section 3: Code & Tactile Feedback
+                SettingsSectionHeader(title = "Code Display & Interactions")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column {
+                        SettingsClickableRow(
+                            icon = Icons.Default.Code,
+                            title = "Code Block Display & Themes",
+                            subtitle =
+                                "Theme: ${state.codeTheme.displayName} • Line numbers: " +
+                                    if (state.showLineNumbers) "On" else "Off",
+                            onClick = { state.eventSink(SettingsScreen.Event.CodeBlockSettingsClicked) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        )
+                        SettingsSwitchRow(
+                            icon = Icons.Default.Vibration,
+                            title = "Haptic Feedback",
+                            subtitle = "Vibrate on copy, quiz selections, and key actions",
+                            checked = state.hapticFeedbackEnabled,
+                            onCheckedChange = { state.eventSink(SettingsScreen.Event.HapticsToggled(it)) },
+                        )
+                    }
+                }
+
+                // Section 4: Data & Storage
+                SettingsSectionHeader(title = "Storage & Data Management")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column {
+                        SettingsClickableRow(
+                            icon = Icons.Default.Memory,
+                            title = "Downloaded Models Storage",
+                            subtitle = formatStorageSize(state.storageUsedBytes, state.downloadedModelCount),
+                            onClick = { state.eventSink(SettingsScreen.Event.ManageModelsClicked) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        )
+                        SettingsClickableRow(
+                            icon = Icons.Default.DeleteOutline,
+                            title = "Clear Chat History",
+                            subtitle = "${state.sessionCount} saved session(s) in local storage",
+                            iconTint = MaterialTheme.colorScheme.error,
+                            titleColor = MaterialTheme.colorScheme.error,
+                            onClick = { state.eventSink(SettingsScreen.Event.ShowClearHistoryDialog(true)) },
+                        )
+                    }
+                }
+
+                // Section 5: App & Feedback
+                SettingsSectionHeader(title = "About & Feedback")
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column {
+                        SettingsClickableRow(
+                            icon = Icons.AutoMirrored.Filled.HelpOutline,
+                            title = "Replay App Onboarding Tour",
+                            subtitle = "View the 4-slide orientation guide anytime",
+                            onClick = { state.eventSink(SettingsScreen.Event.ReplayTourClicked) },
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                        )
+                        SettingsClickableRowWithCustomIcon(
+                            iconRes = R.drawable.github_logo,
+                            title = "Share Feedback on GitHub",
+                            subtitle = "Report bugs, request models, and join discussions",
+                            onClick = { uriHandler.openUri(OnboardingScreen.GITHUB_ISSUES_URL) },
+                        )
+                    }
+                }
+
+                // Footer version
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        text = "CodeMateX ${state.appVersion}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = FontFamily.Monospace,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "100% Private On-Device AI • Powered by Google LiteRT-LM",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 

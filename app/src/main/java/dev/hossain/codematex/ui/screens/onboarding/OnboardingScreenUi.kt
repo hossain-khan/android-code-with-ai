@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -223,104 +225,111 @@ private fun OnboardingPageSlide(
     onOpenFeedback: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Hero Icon with Atmospheric Container
-        Box(
+        Column(
             modifier =
                 Modifier
-                    .size(96.dp)
-                    .clip(CircleShape)
-                    .background(pageData.accentColor.copy(alpha = 0.18f)),
-            contentAlignment = Alignment.Center,
+                    .fillMaxHeight()
+                    .widthIn(max = 640.dp)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Icon(
-                imageVector = pageData.heroIcon,
-                contentDescription = null,
-                tint = pageData.accentColor,
-                modifier = Modifier.size(48.dp),
-            )
-        }
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Title
-        Text(
-            text = pageData.title,
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.ExtraBold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Subtitle
-        Text(
-            text = pageData.subtitle,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp),
-        )
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // Feature cards
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            pageData.features.forEach { feature ->
-                FeatureCard(
-                    feature = feature,
-                    accentColor = pageData.accentColor,
-                )
-            }
-        }
-
-        // Optional Feedback / Issues CTA Button on Slide 4
-        if (pageData.showFeedbackAction) {
-            Spacer(modifier = Modifier.height(20.dp))
-            OutlinedButton(
-                onClick = onOpenFeedback,
-                modifier = Modifier.fillMaxWidth(),
-                colors =
-                    ButtonDefaults.outlinedButtonColors(
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    ),
-                border = BorderStroke(1.dp, pageData.accentColor.copy(alpha = 0.5f)),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            // Hero Icon with Atmospheric Container
+            Box(
+                modifier =
+                    Modifier
+                        .size(96.dp)
+                        .clip(CircleShape)
+                        .background(pageData.accentColor.copy(alpha = 0.18f)),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    painter = painterResource(R.drawable.github_logo),
+                    imageVector = pageData.heroIcon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Share Feedback on GitHub",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                )
-                Spacer(modifier = Modifier.width(6.dp))
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                    contentDescription = null,
-                    modifier = Modifier.size(14.dp),
+                    tint = pageData.accentColor,
+                    modifier = Modifier.size(48.dp),
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Title
+            Text(
+                text = pageData.title,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Subtitle
+            Text(
+                text = pageData.subtitle,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // Feature cards
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                pageData.features.forEach { feature ->
+                    FeatureCard(
+                        feature = feature,
+                        accentColor = pageData.accentColor,
+                    )
+                }
+            }
+
+            // Optional Feedback / Issues CTA Button on Slide 4
+            if (pageData.showFeedbackAction) {
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedButton(
+                    onClick = onOpenFeedback,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary,
+                        ),
+                    border = BorderStroke(1.dp, pageData.accentColor.copy(alpha = 0.5f)),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.github_logo),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Share Feedback on GitHub",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }
 
@@ -406,96 +415,102 @@ private fun OnboardingBottomBar(
         color = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.95f),
         tonalElevation = 4.dp,
     ) {
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
         ) {
-            // Animated Dots Indicator
             Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                modifier =
+                    Modifier
+                        .widthIn(max = 720.dp)
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                repeat(pageCount) { index ->
-                    val isSelected = currentPage == index
-                    val width by animateDpAsState(
-                        targetValue = if (isSelected) 24.dp else 8.dp,
-                        animationSpec = tween(300),
-                        label = "dot_width",
-                    )
-                    val color by animateColorAsState(
-                        targetValue =
-                            if (isSelected) {
-                                accentColor
-                            } else {
-                                MaterialTheme.colorScheme.outlineVariant.copy(
-                                    alpha = 0.6f,
-                                )
-                            },
-                        animationSpec = tween(300),
-                        label = "dot_color",
-                    )
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .height(8.dp)
-                                .width(width)
-                                .clip(CircleShape)
-                                .background(color),
-                    )
-                }
-            }
-
-            // Action Button (Next or Get Started)
-            if (currentPage < pageCount - 1) {
-                FilledTonalButton(
-                    onClick = onNext,
-                    shape = MaterialTheme.shapes.large,
-                    colors =
-                        ButtonDefaults.filledTonalButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                        ),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                // Animated Dots Indicator
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = "Next",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
+                    repeat(pageCount) { index ->
+                        val isSelected = currentPage == index
+                        val width by animateDpAsState(
+                            targetValue = if (isSelected) 24.dp else 8.dp,
+                            animationSpec = tween(300),
+                            label = "dot_width",
+                        )
+                        val color by animateColorAsState(
+                            targetValue =
+                                if (isSelected) {
+                                    accentColor
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant.copy(
+                                        alpha = 0.6f,
+                                    )
+                                },
+                            animationSpec = tween(300),
+                            label = "dot_color",
+                        )
+
+                        Box(
+                            modifier =
+                                Modifier
+                                    .height(8.dp)
+                                    .width(width)
+                                    .clip(CircleShape)
+                                    .background(color),
+                        )
+                    }
                 }
-            } else {
-                Button(
-                    onClick = onGetStarted,
-                    shape = MaterialTheme.shapes.large,
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = accentColor,
-                            contentColor = Color.White,
-                        ),
-                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
-                ) {
-                    Text(
-                        text = "Get Started",
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                    )
+
+                // Action Button (Next or Get Started)
+                if (currentPage < pageCount - 1) {
+                    FilledTonalButton(
+                        onClick = onNext,
+                        shape = MaterialTheme.shapes.large,
+                        colors =
+                            ButtonDefaults.filledTonalButtonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                            ),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            text = "Next",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
+                } else {
+                    Button(
+                        onClick = onGetStarted,
+                        shape = MaterialTheme.shapes.large,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = accentColor,
+                                contentColor = Color.White,
+                            ),
+                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
+                    ) {
+                        Text(
+                            text = "Get Started",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                        )
+                    }
                 }
             }
         }
@@ -646,6 +661,7 @@ private fun OnboardingScreenUiPage1CoursesPreview() {
 }
 
 @ThemePreviews
+@DevicePreviews
 @Composable
 private fun OnboardingScreenUiPage2HardwarePreview() {
     CodeWithAIAppTheme {
