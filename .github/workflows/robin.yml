@@ -54,6 +54,9 @@ jobs:
           review-instructions-file: .github/code-reviewer.md
           request-changes: false
           # Enable Agent Mode: multi-turn reviews with repository context (reads files, callers, definitions)
+          # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#agent-mode-multi-turn-review-with-repository-context
           agent-mode: auto
           # LLM request timeout in milliseconds (10 minutes = 600000 ms)
+          # Robin internally sets default investigation deadline to 30m.
+          # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#available-inputs
           llm-timeout-ms: "600000"
