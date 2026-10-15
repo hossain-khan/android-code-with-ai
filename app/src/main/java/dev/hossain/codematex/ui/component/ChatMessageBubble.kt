@@ -9,6 +9,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,12 +24,18 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,8 +43,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
@@ -154,38 +163,73 @@ fun UserMessageBubble(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    var showContextMenu by remember { mutableStateOf(false) }
+    var contextMenuOffset by remember { mutableStateOf(DpOffset.Zero) }
     val bubbleShape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 18.dp, bottomEnd = 4.dp)
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Surface(
-            shape = bubbleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier =
-                Modifier
-                    .padding(start = 48.dp)
-                    .clip(bubbleShape)
-                    .combinedClickable(
-                        onClick = {},
-                        onLongClick = {
-                            copyMessageToClipboard(
-                                context = context,
-                                haptic = haptic,
-                                label = "User message",
-                                content = message.content,
-                                onCopy = onCopy,
-                            )
+        Box {
+            Surface(
+                shape = bubbleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier =
+                    Modifier
+                        .padding(start = 48.dp)
+                        .clip(bubbleShape)
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = {
+                                copyMessageToClipboard(
+                                    context = context,
+                                    haptic = haptic,
+                                    label = "User message",
+                                    content = message.content,
+                                    onCopy = onCopy,
+                                )
+                            },
+                        ).onSecondaryClick { offset ->
+                            contextMenuOffset = with(density) { DpOffset(offset.x.toDp(), offset.y.toDp()) }
+                            showContextMenu = true
                         },
-                    ),
-        ) {
-            SelectionContainer {
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                SelectionContainer {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
+            }
+
+            DropdownMenu(
+                expanded = showContextMenu,
+                onDismissRequest = { showContextMenu = false },
+                offset = contextMenuOffset,
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Copy Message") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        showContextMenu = false
+                        copyMessageToClipboard(
+                            context = context,
+                            haptic = haptic,
+                            label = "User message",
+                            content = message.content,
+                            onCopy = onCopy,
+                        )
+                    },
                 )
             }
         }
@@ -218,78 +262,117 @@ fun AgentMessageBubble(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    var showContextMenu by remember { mutableStateOf(false) }
+    var contextMenuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
     ) {
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-            shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+        Box {
+            Card(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = 24.dp)
+                        .onSecondaryClick { offset ->
+                            contextMenuOffset = with(density) { DpOffset(offset.x.toDp(), offset.y.toDp()) }
+                            showContextMenu = true
+                        },
+                shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = visualAccent,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Text(
-                            text = "CodeMateX",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = visualAccent,
-                        )
-                        if (message.isStreaming) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = visualAccent,
+                                modifier = Modifier.size(14.dp),
+                            )
                             Text(
-                                text = "• Generating…",
+                                text = "CodeMateX",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = visualAccent.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                color = visualAccent,
+                            )
+                            if (message.isStreaming) {
+                                Text(
+                                    text = "• Generating…",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = visualAccent.copy(alpha = 0.7f),
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            modifier = Modifier.size(24.dp),
+                            onClick = {
+                                copyMessageToClipboard(
+                                    context = context,
+                                    haptic = haptic,
+                                    label = "Chat message",
+                                    content = message.content,
+                                    onCopy = onCopy,
+                                )
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy message",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline,
                             )
                         }
                     }
 
-                    IconButton(
-                        modifier = Modifier.size(24.dp),
-                        onClick = {
-                            copyMessageToClipboard(
-                                context = context,
-                                haptic = haptic,
-                                label = "Chat message",
-                                content = message.content,
-                                onCopy = onCopy,
-                            )
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy message",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.outline,
+                    SelectionContainer {
+                        MarkdownMessage(
+                            content = message.content.ifEmpty { "..." },
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
                 }
+            }
 
-                SelectionContainer {
-                    MarkdownMessage(
-                        content = message.content.ifEmpty { "..." },
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
-                }
+            DropdownMenu(
+                expanded = showContextMenu,
+                onDismissRequest = { showContextMenu = false },
+                offset = contextMenuOffset,
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Copy Response") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        showContextMenu = false
+                        copyMessageToClipboard(
+                            context = context,
+                            haptic = haptic,
+                            label = "Chat message",
+                            content = message.content,
+                            onCopy = onCopy,
+                        )
+                    },
+                )
             }
         }
     }
@@ -313,38 +396,84 @@ fun ErrorMessageBubble(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    var showContextMenu by remember { mutableStateOf(false) }
+    var contextMenuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.errorContainer,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-            modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-        ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Box {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.errorContainer,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(end = 24.dp)
+                        .onSecondaryClick { offset ->
+                            contextMenuOffset = with(density) { DpOffset(offset.x.toDp(), offset.y.toDp()) }
+                            showContextMenu = true
+                        },
             ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp),
-                )
-                SelectionContainer(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = message.message,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp),
                     )
+                    SelectionContainer(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = message.message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                    IconButton(
+                        modifier = Modifier.size(24.dp),
+                        onClick = {
+                            copyMessageToClipboard(
+                                context = context,
+                                haptic = haptic,
+                                label = "Error message",
+                                content = message.message,
+                                onCopy = onCopy,
+                            )
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copy error message",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
-                IconButton(
-                    modifier = Modifier.size(24.dp),
+            }
+
+            DropdownMenu(
+                expanded = showContextMenu,
+                onDismissRequest = { showContextMenu = false },
+                offset = contextMenuOffset,
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Copy Error Details") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
                     onClick = {
+                        showContextMenu = false
                         copyMessageToClipboard(
                             context = context,
                             haptic = haptic,
@@ -353,14 +482,7 @@ fun ErrorMessageBubble(
                             onCopy = onCopy,
                         )
                     },
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = "Copy error message",
-                        modifier = Modifier.size(14.dp),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                }
+                )
             }
         }
     }
@@ -403,7 +525,7 @@ fun SystemMessageBubble(
  * Internal helper to copy message content to the clipboard, trigger haptic feedback,
  * invoke the [onCopy] callback if provided, and show a toast on Android < 13.
  */
-private fun copyMessageToClipboard(
+internal fun copyMessageToClipboard(
     context: Context,
     haptic: HapticFeedback?,
     label: String,
