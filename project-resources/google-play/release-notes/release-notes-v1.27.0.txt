@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.27.0:
+• Adaptive Input: Full Tier 2 large screen optimization for tablets, foldables, and desktop windowing.
+• Hardware Keyboard Shortcuts: Esc to navigate back, Ctrl/Cmd+N for new chat, Ctrl/Cmd+, for settings, and Ctrl/Cmd+F to focus session filters.
+• Mouse & Trackpad Support: Secondary click (right-click) context menus, interactive hover states, and dynamic visual scrollbars across lists and lesson catalogs.
