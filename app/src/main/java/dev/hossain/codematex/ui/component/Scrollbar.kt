@@ -117,6 +117,8 @@ internal fun calculateScrollbarMetrics(
     viewportLength: Float,
     minThumbLength: Float,
 ): ScrollbarMetrics? {
+    // In Compose Foundation, ScrollState initializes maxValue to Int.MAX_VALUE before layout measurement.
+    // Suppress scrollbar rendering when unmeasured, non-scrollable, or with an invalid viewport.
     if (maxScrollValue <= 0 || maxScrollValue == Int.MAX_VALUE || viewportLength <= 0f) return null
     val totalLength = viewportLength + maxScrollValue.toFloat()
     val ratio = (viewportLength / totalLength).coerceIn(0.05f, 1f)
@@ -205,7 +207,6 @@ internal fun calculateScrollbarMetrics(
     val totalItems = layoutInfo.totalItemsCount
     if (visibleItems.isEmpty() || totalItems <= 0 || viewportLength <= 0f) return null
 
-    val firstItem = visibleItems.first()
     val lastItem = visibleItems.last()
     val avgSize = (visibleItems.sumOf { it.size } / visibleItems.size).coerceAtLeast(1)
 

@@ -177,6 +177,7 @@ private fun SettingsContent(
                         .fillMaxHeight()
                         .widthIn(max = 720.dp)
                         .fillMaxWidth()
+                        // adaptiveScrollbar must precede verticalScroll so the thumb is drawn in viewport coordinates
                         .adaptiveScrollbar(scrollState)
                         .verticalScroll(scrollState)
                         .navigationBarsPadding()
