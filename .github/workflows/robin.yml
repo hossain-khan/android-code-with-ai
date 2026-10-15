@@ -13,21 +13,50 @@ permissions:
 
 jobs:
   review:
-    # Pin to immutable commit SHA for supply-chain security (prevents code tampering
-    # since workflow has pull-requests write permission and sensitive secret access)
-    uses: antongulin/robin/.github/workflows/review.yml@58947b398ff5aa0912c018f18bcebd89c2902093 # v2.10.2
-    with:
-      review-instructions-file: .github/code-reviewer.md
-      request-changes: false
-      # Enable Agent Mode: multi-turn reviews with repository context (reads files, callers, definitions)
-      # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#agent-mode-multi-turn-review-with-repository-context
-      agent-mode: auto
-      # LLM request timeout in milliseconds (10 minutes = 600000 ms)
-      # Note: Reusable workflow jobs cannot declare 'timeout-minutes' directly in caller YAML;
-      # Robin internally sets runner job timeout to 45m and default investigation deadline to 30m.
-      # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#available-inputs
-      llm-timeout-ms: "600000"
-    secrets:
-      LLM_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
-      LLM_MODEL: ${{ secrets.LLM_MODEL }}
+    # Only run on pull requests or maintainer slash commands on pull requests
+    if: |
+      github.event_name == 'pull_request' ||
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association) &&
+        (
+          startsWith(github.event.comment.body, '/review') ||
+          startsWith(github.event.comment.body, '/robin') ||
+          startsWith(github.event.comment.body, '/summary') ||
+          startsWith(github.event.comment.body, '/help')
+        )
+      )
+    concurrency:
+      group: robin-${{ github.event.pull_request.number || github.event.issue.number }}-${{ github.workflow }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          client-id: ${{ vars.ROBIN_APP_CLIENT_ID }}
+          private-key: ${{ secrets.ROBIN_APP_PRIVATE_KEY }}
+          permission-contents: read
+          permission-pull-requests: write
+          permission-actions: read
+
+      - name: Robin Code Review
+        # Pin to immutable commit SHA for supply-chain security
+        uses: antongulin/robin@58947b398ff5aa0912c018f18bcebd89c2902093 # v2.10.2
+        with:
+          github-token: ${{ steps.app-token.outputs.token }}
+          llm-api-key: ${{ secrets.OPENROUTER_API_KEY }}
+          llm-base-url: ${{ secrets.LLM_BASE_URL }}
+          model: ${{ secrets.LLM_MODEL }}
+          review-instructions-file: .github/code-reviewer.md
+          request-changes: false
+          # Enable Agent Mode: multi-turn reviews with repository context (reads files, callers, definitions)
+          # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#agent-mode-multi-turn-review-with-repository-context
+          agent-mode: auto
+          # LLM request timeout in milliseconds (10 minutes = 600000 ms)
+          # Robin internally sets default investigation deadline to 30m.
+          # Documentation: https://github.com/antongulin/robin/blob/main/docs/ADVANCED.md#available-inputs
+          llm-timeout-ms: "600000"
