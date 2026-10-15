@@ -252,7 +252,12 @@ internal fun ChatInputField(
                     } else {
                         val isSendEnabled = inputText.isNotBlank() && !state.isPreparing
                         ComponentTooltip(
-                            tooltip = if (state.isPreparing) "Model is initializing" else "Send message",
+                            tooltip =
+                                when {
+                                    state.isPreparing -> "Model is initializing"
+                                    inputText.isBlank() -> "Enter a message to send"
+                                    else -> "Send message"
+                                },
                         ) {
                             FilledIconButton(
                                 enabled = isSendEnabled,

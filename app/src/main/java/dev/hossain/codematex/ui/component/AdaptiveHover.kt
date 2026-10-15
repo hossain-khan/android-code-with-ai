@@ -56,13 +56,10 @@ enum class TooltipPosition {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TooltipIconButton(
+private fun AnchoredTooltip(
     tooltip: String,
-    onClick: () -> Unit,
+    position: TooltipPosition,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true,
-    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
-    position: TooltipPosition = TooltipPosition.Below,
     content: @Composable () -> Unit,
 ) {
     val anchorPosition =
@@ -79,6 +76,39 @@ fun TooltipIconButton(
             }
         },
         state = rememberTooltipState(),
+        modifier = modifier,
+    ) {
+        content()
+    }
+}
+
+/**
+ * An [IconButton] wrapped in a Material 3 [TooltipBox] that displays a plain tooltip
+ * on mouse/trackpad hover or long-press.
+ *
+ * Automatically displays [PointerIcon.Hand] when hovered.
+ *
+ * @param tooltip The text to display inside the tooltip.
+ * @param onClick Callback invoked when the button is clicked.
+ * @param modifier Modifier applied to the outer [TooltipBox].
+ * @param enabled Whether the icon button is interactive.
+ * @param colors The colors to use for the [IconButton].
+ * @param position The preferred tooltip anchor placement relative to the icon button. Defaults to [TooltipPosition.Below].
+ * @param content The icon or content to display inside the icon button.
+ */
+@Composable
+fun TooltipIconButton(
+    tooltip: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
+    position: TooltipPosition = TooltipPosition.Below,
+    content: @Composable () -> Unit,
+) {
+    AnchoredTooltip(
+        tooltip = tooltip,
+        position = position,
         modifier = modifier,
     ) {
         IconButton(
@@ -101,7 +131,6 @@ fun TooltipIconButton(
  * @param position The preferred tooltip anchor placement. Defaults to [TooltipPosition.Below].
  * @param content The composable content to display inside the tooltip box.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ComponentTooltip(
     tooltip: String,
@@ -109,24 +138,12 @@ fun ComponentTooltip(
     position: TooltipPosition = TooltipPosition.Below,
     content: @Composable () -> Unit,
 ) {
-    val anchorPosition =
-        when (position) {
-            TooltipPosition.Above -> TooltipAnchorPosition.Above
-            TooltipPosition.Below -> TooltipAnchorPosition.Below
-        }
-
-    TooltipBox(
-        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(positioning = anchorPosition),
-        tooltip = {
-            PlainTooltip {
-                Text(tooltip)
-            }
-        },
-        state = rememberTooltipState(),
+    AnchoredTooltip(
+        tooltip = tooltip,
+        position = position,
         modifier = modifier,
-    ) {
-        content()
-    }
+        content = content,
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
