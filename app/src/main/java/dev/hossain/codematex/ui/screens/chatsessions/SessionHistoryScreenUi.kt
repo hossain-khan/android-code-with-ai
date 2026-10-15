@@ -51,8 +51,16 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -76,6 +84,7 @@ import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
 import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.copyToClipboard
+import dev.hossain.codematex.ui.component.evaluateSessionHistoryShortcut
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -239,12 +248,30 @@ private fun SessionHistoryLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    val filterFocusRequester = remember { FocusRequester() }
 
     Scaffold(
         modifier =
             modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                .onPreviewKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown &&
+                        evaluateSessionHistoryShortcut(
+                            keyCode = event.nativeKeyEvent.keyCode,
+                            isCtrlOrMetaPressed = event.isCtrlPressed || event.isMetaPressed,
+                        )
+                    ) {
+                        try {
+                            filterFocusRequester.requestFocus()
+                            true
+                        } catch (_: IllegalStateException) {
+                            false
+                        }
+                    } else {
+                        false
+                    }
+                },
         topBar = {
             TopAppBar(
                 title = { Text("Session History", fontWeight = FontWeight.Bold) },
@@ -285,7 +312,10 @@ private fun SessionHistoryLayout(
                             label = {
                                 Text("All (${state.allSessions.size})")
                             },
-                            modifier = Modifier.handHoverIcon(),
+                            modifier =
+                                Modifier
+                                    .focusRequester(filterFocusRequester)
+                                    .handHoverIcon(),
                             leadingIcon =
                                 if (state.selectedTopic == null) {
                                     {
