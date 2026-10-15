@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.screens.chatsessions
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -51,8 +53,19 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -83,6 +96,7 @@ import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
+import kotlinx.coroutines.launch
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -239,12 +253,52 @@ private fun SessionHistoryLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    val coroutineScope = rememberCoroutineScope()
+    val filterListState = rememberLazyListState()
+    val screenFocusRequester = remember { FocusRequester() }
+    val filterChipFocusRequester = remember { FocusRequester() }
+
+    // Request keyboard focus for the screen upon entry so hardware shortcuts work before Tab navigation
+    LaunchedEffect(Unit) {
+        try {
+            screenFocusRequester.requestFocus()
+        } catch (_: IllegalStateException) {
+            // Screen root view not yet attached
+        }
+    }
 
     Scaffold(
         modifier =
             modifier
+                .focusRequester(screenFocusRequester)
+                .focusProperties { canFocus = true }
+                .focusable()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
+                .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                .onKeyEvent { event ->
+                    if (event.type == KeyEventType.KeyDown &&
+                        event.nativeKeyEvent.repeatCount == 0 &&
+                        evaluateSessionHistoryShortcut(
+                            keyCode = event.nativeKeyEvent.keyCode,
+                            isCtrlOrMetaPressed = event.isCtrlPressed || event.isMetaPressed,
+                        )
+                    ) {
+                        coroutineScope.launch {
+                            // Ensure the first filter chip is scrolled into composition if user scrolled horizontally
+                            if (filterListState.firstVisibleItemIndex > 0 || filterListState.firstVisibleItemScrollOffset > 0) {
+                                filterListState.scrollToItem(0)
+                            }
+                            try {
+                                filterChipFocusRequester.requestFocus()
+                            } catch (_: IllegalStateException) {
+                                // Filter chip row may not be composed (e.g. fewer than 2 available topics) or detached
+                            }
+                        }
+                        true
+                    } else {
+                        false
+                    }
+                },
         topBar = {
             TopAppBar(
                 title = { Text("Session History", fontWeight = FontWeight.Bold) },
@@ -272,6 +326,7 @@ private fun SessionHistoryLayout(
             // Display horizontal filter chips if there are 2 or more unique topic categories
             if (state.availableTopics.size >= 2) {
                 LazyRow(
+                    state = filterListState,
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -285,7 +340,10 @@ private fun SessionHistoryLayout(
                             label = {
                                 Text("All (${state.allSessions.size})")
                             },
-                            modifier = Modifier.handHoverIcon(),
+                            modifier =
+                                Modifier
+                                    .focusRequester(filterChipFocusRequester)
+                                    .handHoverIcon(),
                             leadingIcon =
                                 if (state.selectedTopic == null) {
                                     {

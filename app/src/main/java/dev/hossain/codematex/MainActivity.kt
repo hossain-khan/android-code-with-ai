@@ -1,5 +1,6 @@
 package dev.hossain.codematex
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,9 +36,12 @@ import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.di.ActivityKey
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
+import dev.hossain.codematex.ui.component.globalKeyboardShortcuts
+import dev.hossain.codematex.ui.component.handleGlobalKeyEvent
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
 import dev.hossain.codematex.ui.screens.home.HomeScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
+import dev.hossain.codematex.ui.screens.settings.SettingsScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.zacsweers.metro.AppScope
@@ -74,6 +79,7 @@ class MainActivity
         private val userPreferencesStore: UserPreferencesStore,
     ) : ComponentActivity() {
         private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
+        private var globalKeyHandler: ((android.view.KeyEvent) -> Boolean)? = null
 
         @OptIn(ExperimentalSharedTransitionApi::class)
         override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,6 +116,50 @@ class MainActivity
                                 val navStack = rememberSaveableNavStack(initialStack)
                                 val navigator = rememberCircuitNavigator(navStack)
 
+                                // Global keyboard shortcuts: Esc to pop, Ctrl/Cmd+N for new chat/home, Ctrl/Cmd+, for settings.
+                                val canPopBack = navStack.size > 1
+                                val onNavigateBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+                                val onNewChatOrHome =
+                                    remember(navigator, navStack) {
+                                        {
+                                            if (navStack.topRecord?.screen != HomeScreen) {
+                                                navigator.goTo(HomeScreen)
+                                            }
+                                        }
+                                    }
+                                val onOpenSettings =
+                                    remember(navigator, navStack) {
+                                        {
+                                            if (navStack.topRecord?.screen != SettingsScreen) {
+                                                navigator.goTo(SettingsScreen)
+                                            }
+                                        }
+                                    }
+                                val handleShortcut =
+                                    remember(canPopBack, onNavigateBack, onNewChatOrHome, onOpenSettings) {
+                                        { event: androidx.compose.ui.input.key.KeyEvent ->
+                                            handleGlobalKeyEvent(
+                                                event = event,
+                                                canPopBack = canPopBack,
+                                                onNavigateBack = onNavigateBack,
+                                                onNewChatOrHome = onNewChatOrHome,
+                                                onOpenSettings = onOpenSettings,
+                                            )
+                                        }
+                                    }
+
+                                DisposableEffect(handleShortcut) {
+                                    globalKeyHandler = { nativeEvent ->
+                                        handleShortcut(
+                                            androidx.compose.ui.input.key
+                                                .KeyEvent(nativeEvent),
+                                        )
+                                    }
+                                    onDispose {
+                                        globalKeyHandler = null
+                                    }
+                                }
+
                                 // Warm-start deep link handling: navigate to the deep-linked screen if already running
                                 LaunchedEffect(pendingDeepLinkScreen) {
                                     val target = pendingDeepLinkScreen
@@ -138,16 +188,23 @@ class MainActivity
                                     ) {
                                         // See https://slackhq.github.io/circuit/shared-elements/
                                         SharedElementTransitionLayout {
-                                            // See https://slackhq.github.io/circuit/overlays/
-                                            ContentWithOverlays {
-                                                NavigableCircuitContent(
-                                                    navigator = navigator,
-                                                    navStack = navStack,
-                                                    decoratorFactory =
-                                                        remember {
-                                                            GestureNavigationDecorationFactory()
-                                                        },
-                                                )
+                                            Box(
+                                                modifier =
+                                                    Modifier
+                                                        .fillMaxSize()
+                                                        .globalKeyboardShortcuts(handleShortcut),
+                                            ) {
+                                                // See https://slackhq.github.io/circuit/overlays/
+                                                ContentWithOverlays {
+                                                    NavigableCircuitContent(
+                                                        navigator = navigator,
+                                                        navStack = navStack,
+                                                        decoratorFactory =
+                                                            remember {
+                                                                GestureNavigationDecorationFactory()
+                                                            },
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -157,6 +214,19 @@ class MainActivity
                     }
                 }
             }
+        }
+
+        // AndroidX ComponentActivity restricts dispatchKeyEvent to LIBRARY_GROUP_PREFIX via KeyEventDispatcher,
+        // but overriding dispatchKeyEvent in this Activity subclass is required to catch unhandled physical keyboard shortcuts.
+        @SuppressLint("RestrictedApi")
+        override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+            // Let focused Compose components (e.g. text fields, bottom sheets) process key events first.
+            if (super.dispatchKeyEvent(event)) {
+                return true
+            }
+
+            // Fall back to top-level global shortcuts (Escape, Ctrl/Cmd+N, Ctrl/Cmd+,) if unhandled.
+            return globalKeyHandler?.invoke(event) == true
         }
 
         override fun onNewIntent(intent: Intent) {
