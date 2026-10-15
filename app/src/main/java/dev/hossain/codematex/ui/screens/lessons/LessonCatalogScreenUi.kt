@@ -39,7 +39,6 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -71,6 +70,8 @@ import dev.hossain.codematex.ui.animation.CourseProgressSharedKey
 import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -137,7 +138,10 @@ private fun LessonCatalogInnerContent(
                 TopAppBar(
                     title = { Text("Guided Lessons", fontWeight = FontWeight.Bold) },
                     navigationIcon = {
-                        IconButton(onClick = { state.eventSinkOrNull(LessonCatalogScreen.Event.Back) }) {
+                        TooltipIconButton(
+                            tooltip = "Back",
+                            onClick = { state.eventSinkOrNull(LessonCatalogScreen.Event.Back) },
+                        ) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         }
                     },
@@ -251,7 +255,8 @@ private fun CourseCard(
             modifier
                 .fillMaxWidth()
                 .sharedBoundsNav(transitionScope, CourseCardSharedKey(course.id))
-                .clickable(onClick = onClick),
+                .clickable(onClick = onClick)
+                .handHoverIcon(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
         border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
     ) {
@@ -343,6 +348,7 @@ private fun LanguageFilterChipRow(
             selected = isAllSelected,
             onClick = { onTopicSelected(null) },
             label = { Text("All ($allCount)") },
+            modifier = Modifier.handHoverIcon(),
         )
 
         availableTopics.forEach { topic ->
@@ -353,6 +359,7 @@ private fun LanguageFilterChipRow(
                 selected = isSelected,
                 onClick = { onTopicSelected(if (isSelected) null else topic) },
                 label = { Text("${topic.displayName} ($count)") },
+                modifier = Modifier.handHoverIcon(),
                 colors =
                     FilterChipDefaults.filterChipColors(
                         selectedContainerColor = accentColor.copy(alpha = 0.2f),

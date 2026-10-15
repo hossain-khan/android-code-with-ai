@@ -32,7 +32,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -66,6 +65,7 @@ import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.component.resolveCodeBlockLanguage
 import dev.hossain.codematex.ui.screens.lessons.quiz.LessonQuizSubScreen
@@ -149,13 +149,16 @@ internal fun LessonScreenInnerContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        when (state) {
-                            is LessonScreen.State.Success -> state.eventSink(LessonScreen.Event.Back)
-                            is LessonScreen.State.NotFound -> state.eventSink(LessonScreen.Event.Back)
-                            LessonScreen.State.Loading -> Unit
-                        }
-                    }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = {
+                            when (state) {
+                                is LessonScreen.State.Success -> state.eventSink(LessonScreen.Event.Back)
+                                is LessonScreen.State.NotFound -> state.eventSink(LessonScreen.Event.Back)
+                                LessonScreen.State.Loading -> Unit
+                            }
+                        },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

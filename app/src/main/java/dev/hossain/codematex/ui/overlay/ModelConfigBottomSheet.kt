@@ -29,7 +29,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -55,6 +54,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlinx.coroutines.launch
@@ -306,7 +306,8 @@ private fun ConfigSliderItem(
                 color = MaterialTheme.colorScheme.onSurface,
             )
 
-            IconButton(
+            TooltipIconButton(
+                tooltip = "Explain $title",
                 onClick = { showDescription = !showDescription },
                 modifier = Modifier.size(24.dp),
             ) {

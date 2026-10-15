@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubCircuitContent
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.screens.chat.course.CourseRecommendationOuterEvent
 import dev.hossain.codematex.ui.screens.chat.course.CourseRecommendationSubScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -138,7 +139,8 @@ internal fun EmptyChatTopicStarters(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable(enabled = enabled) { onPromptSelected(prompt) },
+                            .clickable(enabled = enabled) { onPromptSelected(prompt) }
+                            .handHoverIcon(enabled = enabled),
                     shape = MaterialTheme.shapes.medium,
                     border =
                         BorderStroke(

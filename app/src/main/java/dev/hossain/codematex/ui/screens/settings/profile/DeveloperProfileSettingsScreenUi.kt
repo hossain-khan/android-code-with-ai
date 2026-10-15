@@ -41,7 +41,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -67,6 +66,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.DeveloperExperienceLevel
 import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -105,7 +105,10 @@ private fun DeveloperProfileSettingsContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.BackClicked) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.BackClicked) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

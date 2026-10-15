@@ -25,7 +25,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -314,7 +313,8 @@ fun AgentMessageBubble(
                             }
                         }
 
-                        IconButton(
+                        TooltipIconButton(
+                            tooltip = "Copy message",
                             modifier = Modifier.size(24.dp),
                             onClick = {
                                 copyToClipboard(
@@ -419,7 +419,8 @@ fun ErrorMessageBubble(
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
                     }
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = "Copy error message",
                         modifier = Modifier.size(24.dp),
                         onClick = {
                             copyToClipboard(

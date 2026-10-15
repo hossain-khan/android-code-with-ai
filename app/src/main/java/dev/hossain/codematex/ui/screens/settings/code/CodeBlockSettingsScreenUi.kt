@@ -40,7 +40,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -68,6 +67,7 @@ import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.model.CodeFontSize
 import dev.hossain.codematex.data.model.CodeTheme
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -142,7 +142,10 @@ private fun CodeBlockSettingsContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(CodeBlockSettingsScreen.Event.BackClicked) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(CodeBlockSettingsScreen.Event.BackClicked) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

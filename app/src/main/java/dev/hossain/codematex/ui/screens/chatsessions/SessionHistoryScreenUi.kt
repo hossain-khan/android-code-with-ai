@@ -40,7 +40,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -73,7 +72,9 @@ import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.copyToClipboard
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -138,7 +139,10 @@ private fun SessionHistoryErrorLayout(
             TopAppBar(
                 title = { Text("Chat History") },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SessionHistoryScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SessionHistoryScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -243,7 +247,10 @@ private fun SessionHistoryLayout(
             TopAppBar(
                 title = { Text("Session History", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SessionHistoryScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SessionHistoryScreen.Event.Back) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -276,6 +283,7 @@ private fun SessionHistoryLayout(
                             label = {
                                 Text("All (${state.allSessions.size})")
                             },
+                            modifier = Modifier.handHoverIcon(),
                             leadingIcon =
                                 if (state.selectedTopic == null) {
                                     {
@@ -304,6 +312,7 @@ private fun SessionHistoryLayout(
                             label = {
                                 Text("${topic.displayName} ($count)")
                             },
+                            modifier = Modifier.handHoverIcon(),
                             leadingIcon = {
                                 Surface(
                                     shape = CircleShape,
@@ -525,7 +534,8 @@ private fun SessionCard(
                 Modifier
                     .fillMaxWidth()
                     .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
-                    .clickable(onClick = onClick),
+                    .clickable(onClick = onClick)
+                    .handHoverIcon(),
             shape = MaterialTheme.shapes.large,
             colors =
                 CardDefaults.cardColors(
@@ -570,7 +580,10 @@ private fun SessionCard(
                         )
                     }
 
-                    IconButton(onClick = onDelete) {
+                    TooltipIconButton(
+                        tooltip = "Delete session",
+                        onClick = onDelete,
+                    ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete session",

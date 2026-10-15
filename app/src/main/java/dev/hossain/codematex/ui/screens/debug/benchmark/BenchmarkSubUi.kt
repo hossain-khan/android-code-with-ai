@@ -30,7 +30,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -56,6 +55,8 @@ import com.slack.circuit.subcircuit.SubUi
 import com.slack.circuit.subcircuit.SubUiFactory
 import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.ui.component.MarkdownMessage
+import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_BENCHMARK_CONFIG
 import dev.hossain.codematex.ui.screens.debug.DebugScreen.BenchmarkSamplerPreset
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -130,6 +131,7 @@ internal fun InferenceBenchmarkCard(
                         )
                     },
                     label = { Text("Hello World (Warmup)") },
+                    modifier = Modifier.handHoverIcon(),
                 )
                 SuggestionChip(
                     onClick = {
@@ -140,6 +142,7 @@ internal fun InferenceBenchmarkCard(
                         )
                     },
                     label = { Text("Fibonacci") },
+                    modifier = Modifier.handHoverIcon(),
                 )
                 SuggestionChip(
                     onClick = {
@@ -150,6 +153,7 @@ internal fun InferenceBenchmarkCard(
                         )
                     },
                     label = { Text("Merge Sort") },
+                    modifier = Modifier.handHoverIcon(),
                 )
             }
 
@@ -177,6 +181,7 @@ internal fun InferenceBenchmarkCard(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
+                                .handHoverIcon()
                                 .clickable { isSamplerExpanded = !isSamplerExpanded },
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
@@ -216,12 +221,14 @@ internal fun InferenceBenchmarkCard(
                                 TextButton(
                                     onClick = { state.eventSink(BenchmarkUiEvent.ResetConfig) },
                                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                    modifier = Modifier.height(28.dp),
+                                    modifier = Modifier.height(28.dp).handHoverIcon(),
                                 ) {
                                     Text("Reset", style = MaterialTheme.typography.labelSmall)
                                 }
                             }
-                            IconButton(
+                            TooltipIconButton(
+                                tooltip =
+                                    if (isSamplerExpanded) "Collapse sampler settings" else "Expand sampler settings",
                                 onClick = { isSamplerExpanded = !isSamplerExpanded },
                                 modifier = Modifier.size(28.dp),
                             ) {
@@ -261,6 +268,7 @@ internal fun InferenceBenchmarkCard(
                                             state.eventSink(BenchmarkUiEvent.ApplyPreset(preset))
                                         },
                                         label = { Text("${preset.label} (${preset.description})") },
+                                        modifier = Modifier.handHoverIcon(),
                                     )
                                 }
                             }

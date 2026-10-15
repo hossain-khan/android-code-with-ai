@@ -62,6 +62,8 @@ import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
 import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.ComponentTooltip
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 
@@ -251,7 +253,7 @@ fun ModelCard(
                         .fillMaxWidth()
                         .clickable {
                             uriHandler.openUri(model.modelRepoUrl)
-                        },
+                        }.handHoverIcon(),
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
@@ -415,30 +417,36 @@ fun ModelCard(
                         }
                     }
 
-                    OutlinedIconButton(
-                        onClick = onConfigure,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Tune,
-                            contentDescription = "Configure ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
+                    ComponentTooltip(tooltip = "Configure ${model.displayName}") {
+                        OutlinedIconButton(
+                            onClick = onConfigure,
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.handHoverIcon(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "Configure ${model.displayName}",
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
                     }
 
-                    OutlinedIconButton(
-                        onClick = { showDeleteConfirmation = true },
-                        colors =
-                            IconButtonDefaults.outlinedIconButtonColors(
-                                contentColor = MaterialTheme.colorScheme.error,
-                            ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "Delete ${model.displayName}",
-                            tint = MaterialTheme.colorScheme.error,
-                        )
+                    ComponentTooltip(tooltip = "Delete ${model.displayName}") {
+                        OutlinedIconButton(
+                            onClick = { showDeleteConfirmation = true },
+                            colors =
+                                IconButtonDefaults.outlinedIconButtonColors(
+                                    contentColor = MaterialTheme.colorScheme.error,
+                                ),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                            modifier = Modifier.handHoverIcon(),
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.DeleteOutline,
+                                contentDescription = "Delete ${model.displayName}",
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 } else {
                     Button(

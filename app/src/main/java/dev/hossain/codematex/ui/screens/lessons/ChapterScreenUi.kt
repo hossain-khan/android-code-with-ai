@@ -28,7 +28,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -67,6 +66,8 @@ import dev.hossain.codematex.ui.animation.LessonCardSharedKey
 import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -164,13 +165,16 @@ internal fun ChapterScreenInnerContent(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        when (state) {
-                            is ChapterScreen.State.Success -> state.eventSink(ChapterScreen.Event.Back)
-                            is ChapterScreen.State.NotFound -> state.eventSink(ChapterScreen.Event.Back)
-                            ChapterScreen.State.Loading -> Unit
-                        }
-                    }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = {
+                            when (state) {
+                                is ChapterScreen.State.Success -> state.eventSink(ChapterScreen.Event.Back)
+                                is ChapterScreen.State.NotFound -> state.eventSink(ChapterScreen.Event.Back)
+                                ChapterScreen.State.Loading -> Unit
+                            }
+                        },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -383,7 +387,8 @@ private fun ChapterCard(
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.medium)
                             .sharedBoundsNav(transitionScope, LessonCardSharedKey(lesson.id))
-                            .clickable { onLessonClick(lesson) },
+                            .clickable { onLessonClick(lesson) }
+                            .handHoverIcon(),
                     shape = MaterialTheme.shapes.medium,
                     color =
                         when {
