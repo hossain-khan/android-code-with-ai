@@ -41,6 +41,7 @@ import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.MemoryDelta
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
@@ -312,7 +313,10 @@ internal fun StorageInspectorCard(
                                     overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            IconButton(onClick = { onDeleteModel(model) }) {
+                            TooltipIconButton(
+                                tooltip = "Delete Model Weights",
+                                onClick = { onDeleteModel(model) },
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Delete Model Weights",

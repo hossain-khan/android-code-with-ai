@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.subcircuit.SubCircuitContent
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.screens.debug.benchmark.BenchmarkOuterEvent
 import dev.hossain.codematex.ui.screens.debug.benchmark.BenchmarkSubScreen
@@ -101,7 +102,10 @@ fun DebugScreenContent(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(DebugScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(DebugScreen.Event.Back) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

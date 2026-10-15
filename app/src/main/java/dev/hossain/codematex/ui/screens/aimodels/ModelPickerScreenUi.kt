@@ -67,6 +67,7 @@ import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
 import dev.hossain.codematex.ui.screens.aimodels.components.DeviceMemoryBanner
@@ -135,7 +136,10 @@ private fun ModelPickerErrorLayout(
             TopAppBar(
                 title = { Text("AI Models") },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(ModelPickerScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(ModelPickerScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -312,7 +316,10 @@ private fun ModelPickerLayout(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(ModelPickerScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(ModelPickerScreen.Event.Back) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

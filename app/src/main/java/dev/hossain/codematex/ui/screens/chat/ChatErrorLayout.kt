@@ -45,6 +45,7 @@ import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -93,7 +94,10 @@ internal fun ChatErrorLayout(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(ChatScreen.Event.Back) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

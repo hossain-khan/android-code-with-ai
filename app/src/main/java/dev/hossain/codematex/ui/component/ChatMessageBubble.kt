@@ -42,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
@@ -314,7 +315,8 @@ fun AgentMessageBubble(
                             }
                         }
 
-                        IconButton(
+                        TooltipIconButton(
+                            tooltip = "Copy message",
                             modifier = Modifier.size(24.dp),
                             onClick = {
                                 copyToClipboard(
@@ -419,7 +421,8 @@ fun ErrorMessageBubble(
                             color = MaterialTheme.colorScheme.onErrorContainer,
                         )
                     }
-                    IconButton(
+                    TooltipIconButton(
+                        tooltip = "Copy error message",
                         modifier = Modifier.size(24.dp),
                         onClick = {
                             copyToClipboard(

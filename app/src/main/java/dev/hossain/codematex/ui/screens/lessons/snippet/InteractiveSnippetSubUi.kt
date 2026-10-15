@@ -55,6 +55,7 @@ import com.slack.circuit.subcircuit.SubUiFactory
 import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.resolveCodeBlockLanguage
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -319,7 +320,11 @@ internal fun PlaygroundSnippetControls(
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier.weight(1f),
                             )
-                            IconButton(onClick = onDismiss, modifier = Modifier.size(24.dp)) {
+                            TooltipIconButton(
+                                tooltip = "Dismiss error",
+                                onClick = onDismiss,
+                                modifier = Modifier.size(24.dp),
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "Dismiss error",
@@ -382,7 +387,8 @@ internal fun TerminalOutputCard(
                     )
                 }
 
-                IconButton(
+                TooltipIconButton(
+                    tooltip = "Dismiss output",
                     onClick = onDismiss,
                     modifier = Modifier.size(24.dp),
                 ) {

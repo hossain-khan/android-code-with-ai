@@ -61,6 +61,9 @@ import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.ComponentTooltip
+import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.TutorPersonaBottomSheet
 import dev.hossain.codematex.ui.screens.chat.benchmark.ChatBenchmarkSubScreen
@@ -208,54 +211,67 @@ private fun ChatLayout(
                     }
                 },
                 actions = {
-                    Surface(
-                        shape = CircleShape,
-                        color =
+                    ComponentTooltip(
+                        tooltip =
                             if (isPersonaSelectionEnabled) {
-                                MaterialTheme.colorScheme.surfaceContainerHigh
+                                "Switch tutor persona"
                             } else {
-                                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                                "Persona locked for active session"
                             },
-                        border =
-                            BorderStroke(
-                                1.dp,
-                                if (isPersonaSelectionEnabled) {
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-                                },
-                            ),
-                        modifier =
-                            Modifier
-                                .padding(end = 8.dp)
-                                .clickable(enabled = isPersonaSelectionEnabled) { showPersonaPicker = true },
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            Text(
-                                text = state.persona.iconGlyph,
-                                style = MaterialTheme.typography.labelMedium,
-                            )
-                            Text(
-                                text = state.persona.shortName,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color =
+                        Surface(
+                            shape = CircleShape,
+                            color =
+                                if (isPersonaSelectionEnabled) {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                                },
+                            border =
+                                BorderStroke(
+                                    1.dp,
                                     if (isPersonaSelectionEnabled) {
-                                        MaterialTheme.colorScheme.onSurface
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                                     } else {
-                                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
                                     },
-                            )
+                                ),
+                            modifier =
+                                Modifier
+                                    .padding(end = 8.dp)
+                                    .clickable(enabled = isPersonaSelectionEnabled) { showPersonaPicker = true }
+                                    .handHoverIcon(enabled = isPersonaSelectionEnabled),
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(
+                                    text = state.persona.iconGlyph,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
+                                Text(
+                                    text = state.persona.shortName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color =
+                                        if (isPersonaSelectionEnabled) {
+                                            MaterialTheme.colorScheme.onSurface
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                        },
+                                )
+                            }
                         }
                     }
                 },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(ChatScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(ChatScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },

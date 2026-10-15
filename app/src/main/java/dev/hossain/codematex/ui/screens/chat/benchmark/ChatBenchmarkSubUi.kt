@@ -41,6 +41,7 @@ import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveContextTelemetryBar
 import dev.hossain.codematex.ui.component.LiveHardwareTelemetryBars
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.formatShortModelName
@@ -238,6 +239,7 @@ internal fun ModelTechnicalInfoPanel(
         modifier =
             modifier
                 .fillMaxWidth()
+                .handHoverIcon()
                 .clickable { isExpanded = !isExpanded },
         color = surfaceColor,
         tonalElevation = if (isExpanded) 2.dp else 1.dp,

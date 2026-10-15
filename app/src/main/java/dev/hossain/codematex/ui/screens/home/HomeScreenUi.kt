@@ -51,6 +51,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import com.slack.circuit.subcircuit.SubCircuitContent
 import dev.hossain.codematex.ui.animation.LocalSharedElementTransitionScope
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesOuterEvent
 import dev.hossain.codematex.ui.screens.home.courses.GuidedCoursesSubScreen
@@ -152,10 +153,16 @@ private fun HomeLayout(
                 },
                 scrollBehavior = scrollBehavior,
                 actions = {
-                    IconButton(onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) }) {
+                    TooltipIconButton(
+                        tooltip = "Session History",
+                        onClick = { state.eventSink(HomeScreen.Event.ViewAllSessions) },
+                    ) {
                         Icon(Icons.Default.History, contentDescription = "Session History")
                     }
-                    IconButton(onClick = { state.eventSink(HomeScreen.Event.OpenSettings) }) {
+                    TooltipIconButton(
+                        tooltip = "Settings",
+                        onClick = { state.eventSink(HomeScreen.Event.OpenSettings) },
+                    ) {
                         Icon(Icons.Default.Settings, contentDescription = "Settings")
                     }
                 },

@@ -75,6 +75,8 @@ import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.AppInfoBottomSheet
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
@@ -132,7 +134,10 @@ private fun SettingsContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SettingsScreen.Event.BackClicked) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SettingsScreen.Event.BackClicked) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
@@ -140,7 +145,10 @@ private fun SettingsContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showAppInfo = true }) {
+                    TooltipIconButton(
+                        tooltip = "About CodeMateX",
+                        onClick = { showAppInfo = true },
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Info,
                             contentDescription = "About CodeMateX",
@@ -480,6 +488,7 @@ private fun SettingsClickableRowWithCustomIcon(
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
+                .handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -541,6 +550,7 @@ private fun SettingsSwitchRow(
             modifier
                 .fillMaxWidth()
                 .clickable { onCheckedChange(!checked) }
+                .handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

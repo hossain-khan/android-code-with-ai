@@ -67,6 +67,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.data.model.DeveloperExperienceLevel
 import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -105,7 +106,10 @@ private fun DeveloperProfileSettingsContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.BackClicked) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.BackClicked) },
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",

@@ -60,6 +60,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
+import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -110,7 +111,10 @@ private fun SessionDetailNotFoundLayout(
             TopAppBar(
                 title = { Text("Session Not Found") },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SessionDetailScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SessionDetailScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -192,7 +196,10 @@ private fun SessionDetailErrorLayout(
             TopAppBar(
                 title = { Text("Error Loading Session") },
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SessionDetailScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SessionDetailScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
@@ -298,12 +305,18 @@ private fun SessionDetailLayout(
                 title = { Text("Session Details", fontWeight = FontWeight.Bold) },
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
-                    IconButton(onClick = { state.eventSink(SessionDetailScreen.Event.Back) }) {
+                    TooltipIconButton(
+                        tooltip = "Back",
+                        onClick = { state.eventSink(SessionDetailScreen.Event.Back) },
+                    ) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = { state.eventSink(SessionDetailScreen.Event.DeleteSession) }) {
+                    TooltipIconButton(
+                        tooltip = "Delete session",
+                        onClick = { state.eventSink(SessionDetailScreen.Event.DeleteSession) },
+                    ) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = "Delete",

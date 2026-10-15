@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.component.ComponentTooltip
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
@@ -232,32 +234,45 @@ internal fun ChatInputField(
                     ),
                 trailingIcon = {
                     if (state.isGenerating) {
-                        FilledIconButton(
-                            onClick = { state.eventSink(ChatScreen.Event.StopGeneration) },
-                            colors =
-                                IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.error,
-                                ),
-                            modifier = Modifier.size(36.dp),
-                        ) {
-                            Icon(Icons.Default.Stop, contentDescription = "Stop", modifier = Modifier.size(18.dp))
+                        ComponentTooltip(tooltip = "Stop generating") {
+                            FilledIconButton(
+                                onClick = { state.eventSink(ChatScreen.Event.StopGeneration) },
+                                colors =
+                                    IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .size(36.dp)
+                                        .handHoverIcon(),
+                            ) {
+                                Icon(Icons.Default.Stop, contentDescription = "Stop", modifier = Modifier.size(18.dp))
+                            }
                         }
                     } else {
-                        FilledIconButton(
-                            enabled = inputText.isNotBlank() && !state.isPreparing,
-                            onClick = onSendMessage,
-                            colors =
-                                IconButtonDefaults.filledIconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                                ),
-                            modifier = Modifier.size(36.dp),
+                        val isSendEnabled = inputText.isNotBlank() && !state.isPreparing
+                        ComponentTooltip(
+                            tooltip = if (state.isPreparing) "Model is initializing" else "Send message",
                         ) {
-                            Icon(
-                                Icons.AutoMirrored.Default.Send,
-                                contentDescription = "Send",
-                                modifier = Modifier.size(18.dp),
-                            )
+                            FilledIconButton(
+                                enabled = isSendEnabled,
+                                onClick = onSendMessage,
+                                colors =
+                                    IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                                    ),
+                                modifier =
+                                    Modifier
+                                        .size(36.dp)
+                                        .handHoverIcon(enabled = isSendEnabled),
+                            ) {
+                                Icon(
+                                    Icons.AutoMirrored.Default.Send,
+                                    contentDescription = "Send",
+                                    modifier = Modifier.size(18.dp),
+                                )
+                            }
                         }
                     }
                 },
