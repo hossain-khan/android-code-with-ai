@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.subcircuit.SubCircuitContent
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.screens.debug.benchmark.BenchmarkOuterEvent
 import dev.hossain.codematex.ui.screens.debug.benchmark.BenchmarkSubScreen
@@ -116,8 +118,10 @@ fun DebugScreenContent(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { innerPadding ->
+        val listState = rememberLazyListState()
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            state = listState,
+            modifier = Modifier.fillMaxSize().padding(innerPadding).adaptiveScrollbar(listState),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

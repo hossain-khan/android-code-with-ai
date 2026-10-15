@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +42,7 @@ import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -87,9 +89,11 @@ fun TopicsGridSubUi(
         ) {
             TopicsHeader(topicCount = state.topics.size)
 
+            val gridState = rememberLazyGridState()
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(minSize = 220.dp),
-                modifier = Modifier.fillMaxWidth(),
+                state = gridState,
+                modifier = Modifier.fillMaxWidth().adaptiveScrollbar(gridState),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

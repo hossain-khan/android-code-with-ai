@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -60,6 +61,7 @@ import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -395,8 +397,10 @@ private fun SessionDetailLayout(
                     if (state.messages.isEmpty()) {
                         EmptyDetailMessagesView(visualInfo = visualInfo, modifier = Modifier.fillMaxSize())
                     } else {
+                        val messagesListState = rememberLazyListState()
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
+                            state = messagesListState,
+                            modifier = Modifier.fillMaxSize().adaptiveScrollbar(messagesListState),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             items(state.messages, key = { it.id }) { message ->
@@ -427,8 +431,10 @@ private fun SessionDetailLayout(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
 
+                    val compactMessagesListState = rememberLazyListState()
                     LazyColumn(
-                        modifier = Modifier.weight(1f),
+                        state = compactMessagesListState,
+                        modifier = Modifier.weight(1f).adaptiveScrollbar(compactMessagesListState),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {

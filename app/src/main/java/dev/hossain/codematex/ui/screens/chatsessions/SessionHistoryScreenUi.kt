@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -73,6 +74,7 @@ import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -347,9 +349,11 @@ private fun SessionHistoryLayout(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 )
             } else {
+                val gridState = rememberLazyGridState()
                 LazyVerticalGrid(
                     columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
-                    modifier = Modifier.fillMaxSize(),
+                    state = gridState,
+                    modifier = Modifier.fillMaxSize().adaptiveScrollbar(gridState),
                     contentPadding = PaddingValues(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),

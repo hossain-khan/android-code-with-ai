@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -67,6 +68,7 @@ import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.overlay.ModelConfigBottomSheet
 import dev.hossain.codematex.ui.screens.aimodels.components.DeviceMemoryBanner
@@ -329,9 +331,11 @@ private fun ModelPickerLayout(
             )
         },
     ) { innerPadding ->
+        val gridState = rememberLazyGridState()
         LazyVerticalGrid(
             columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
-            modifier = Modifier.padding(innerPadding),
+            state = gridState,
+            modifier = Modifier.padding(innerPadding).adaptiveScrollbar(gridState),
             contentPadding = PaddingValues(16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
