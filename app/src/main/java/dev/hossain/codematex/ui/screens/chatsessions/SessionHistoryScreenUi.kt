@@ -20,7 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Refresh
@@ -30,11 +32,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularWavyProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +54,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -66,6 +72,8 @@ import dev.hossain.codematex.ui.animation.SessionGlyphSharedKey
 import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -449,107 +457,171 @@ private fun SessionCard(
     transitionScope: SharedElementTransitionScope? = null,
 ) {
     val visualInfo = session.topic.visualInfo
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
-                .clickable(onClick = onClick),
-        shape = MaterialTheme.shapes.large,
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+
+    SecondaryClickContextMenuBox(
+        modifier = modifier.fillMaxWidth(),
+        menuContent = { dismiss ->
+            DropdownMenuItem(
+                text = { Text("Open Session") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    onClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Copy Title") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    copyToClipboard(
+                        context = context,
+                        haptic = haptic,
+                        label = "Session title",
+                        content = session.title,
+                        onCopy = null,
+                    )
+                },
+            )
+            HorizontalDivider()
+            DropdownMenuItem(
+                text = {
+                    Text(
+                        "Delete Session",
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    onDelete()
+                },
+            )
+        },
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+        Card(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .sharedBoundsNav(transitionScope, SessionCardSharedKey(session.id))
+                    .clickable(onClick = onClick),
+            shape = MaterialTheme.shapes.large,
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f),
                 ) {
-                    Surface(
-                        shape = MaterialTheme.shapes.extraSmall,
-                        color = visualInfo.accentColor.copy(alpha = 0.15f),
-                        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
-                        modifier = Modifier.sharedElementNav(transitionScope, SessionGlyphSharedKey(session.id)),
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f),
                     ) {
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = visualInfo.accentColor.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.4f)),
+                            modifier = Modifier.sharedElementNav(transitionScope, SessionGlyphSharedKey(session.id)),
+                        ) {
+                            Text(
+                                text = visualInfo.iconGlyph,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                color = visualInfo.accentColor,
+                            )
+                        }
+
                         Text(
-                            text = visualInfo.iconGlyph,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = FontFamily.Monospace,
+                            text = session.title,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = visualInfo.accentColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(session.id)),
                         )
                     }
 
-                    Text(
-                        text = session.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.sharedBoundsNav(transitionScope, SessionTitleSharedKey(session.id)),
-                    )
+                    IconButton(onClick = onDelete) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = "Delete session",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
 
-                IconButton(onClick = onDelete) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = "Delete session",
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-
-            Text(
-                session.summary,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 4.dp),
-            )
-
-            Row(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
                 Text(
-                    session.topic.displayName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = visualInfo.accentColor,
-                    fontWeight = FontWeight.SemiBold,
+                    session.summary,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp),
                 )
+
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    val relativeTime =
-                        dev.hossain.codematex.util
-                            .formatRelativeTime(session.lastActiveAt)
-                    val metadataText =
-                        if (relativeTime.isNotEmpty()) {
-                            "${session.messageCount} messages • $relativeTime"
-                        } else {
-                            "${session.messageCount} messages"
-                        }
                     Text(
-                        metadataText,
+                        session.topic.displayName,
                         style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        color = visualInfo.accentColor,
+                        fontWeight = FontWeight.SemiBold,
                     )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        val relativeTime =
+                            dev.hossain.codematex.util
+                                .formatRelativeTime(session.lastActiveAt)
+                        val metadataText =
+                            if (relativeTime.isNotEmpty()) {
+                                "${session.messageCount} messages • $relativeTime"
+                            } else {
+                                "${session.messageCount} messages"
+                            }
+                        Text(
+                            metadataText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
                 }
             }
         }

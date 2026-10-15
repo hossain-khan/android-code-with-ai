@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -160,33 +161,58 @@ fun UserMessageBubble(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Surface(
-            shape = bubbleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            modifier =
-                Modifier
-                    .padding(start = 48.dp)
-                    .clip(bubbleShape)
-                    .combinedClickable(
-                        onClick = {},
-                        onLongClick = {
-                            copyMessageToClipboard(
-                                context = context,
-                                haptic = haptic,
-                                label = "User message",
-                                content = message.content,
-                                onCopy = onCopy,
-                            )
-                        },
-                    ),
-        ) {
-            SelectionContainer {
-                Text(
-                    text = message.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        SecondaryClickContextMenuBox(
+            modifier = Modifier.padding(start = 48.dp),
+            menuContent = { dismiss ->
+                DropdownMenuItem(
+                    text = { Text("Copy Message") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        dismiss()
+                        copyToClipboard(
+                            context = context,
+                            haptic = haptic,
+                            label = "User message",
+                            content = message.content,
+                            onCopy = onCopy,
+                        )
+                    },
                 )
+            },
+        ) {
+            Surface(
+                shape = bubbleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier =
+                    Modifier
+                        .clip(bubbleShape)
+                        .combinedClickable(
+                            onClick = {},
+                            onLongClick = {
+                                copyToClipboard(
+                                    context = context,
+                                    haptic = haptic,
+                                    label = "User message",
+                                    content = message.content,
+                                    onCopy = onCopy,
+                                )
+                            },
+                        ),
+            ) {
+                SelectionContainer {
+                    Text(
+                        text = message.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                    )
+                }
             }
         }
     }
@@ -223,72 +249,98 @@ fun AgentMessageBubble(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
     ) {
-        Card(
+        SecondaryClickContextMenuBox(
             modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-            shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-                ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            menuContent = { dismiss ->
+                DropdownMenuItem(
+                    text = { Text("Copy Response") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
+                    onClick = {
+                        dismiss()
+                        copyToClipboard(
+                            context = context,
+                            haptic = haptic,
+                            label = "Agent response",
+                            content = message.content,
+                            onCopy = onCopy,
+                        )
+                    },
+                )
+            },
         ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomStart = 4.dp, bottomEnd = 18.dp),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                    ),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = visualAccent,
-                            modifier = Modifier.size(14.dp),
-                        )
-                        Text(
-                            text = "CodeMateX",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = visualAccent,
-                        )
-                        if (message.isStreaming) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = visualAccent,
+                                modifier = Modifier.size(14.dp),
+                            )
                             Text(
-                                text = "• Generating…",
+                                text = "CodeMateX",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = visualAccent.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                color = visualAccent,
+                            )
+                            if (message.isStreaming) {
+                                Text(
+                                    text = "• Generating…",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = visualAccent.copy(alpha = 0.7f),
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            modifier = Modifier.size(24.dp),
+                            onClick = {
+                                copyToClipboard(
+                                    context = context,
+                                    haptic = haptic,
+                                    label = "Agent response",
+                                    content = message.content,
+                                    onCopy = onCopy,
+                                )
+                            },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy message",
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline,
                             )
                         }
                     }
 
-                    IconButton(
-                        modifier = Modifier.size(24.dp),
-                        onClick = {
-                            copyMessageToClipboard(
-                                context = context,
-                                haptic = haptic,
-                                label = "Chat message",
-                                content = message.content,
-                                onCopy = onCopy,
-                            )
-                        },
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = "Copy message",
-                            modifier = Modifier.size(14.dp),
-                            tint = MaterialTheme.colorScheme.outline,
+                    SelectionContainer {
+                        MarkdownMessage(
+                            content = message.content.ifEmpty { "..." },
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
-                }
-
-                SelectionContainer {
-                    MarkdownMessage(
-                        content = message.content.ifEmpty { "..." },
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
                 }
             }
         }
@@ -318,34 +370,21 @@ fun ErrorMessageBubble(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.errorContainer,
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+        SecondaryClickContextMenuBox(
             modifier = Modifier.fillMaxWidth().padding(end = 24.dp),
-        ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp),
-                )
-                SelectionContainer(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = message.message,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                    )
-                }
-                IconButton(
-                    modifier = Modifier.size(24.dp),
+            menuContent = { dismiss ->
+                DropdownMenuItem(
+                    text = { Text("Copy Error Details") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                    },
                     onClick = {
-                        copyMessageToClipboard(
+                        dismiss()
+                        copyToClipboard(
                             context = context,
                             haptic = haptic,
                             label = "Error message",
@@ -353,13 +392,52 @@ fun ErrorMessageBubble(
                             onCopy = onCopy,
                         )
                     },
+                )
+            },
+        ) {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = MaterialTheme.colorScheme.errorContainer,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = "Copy error message",
-                        modifier = Modifier.size(14.dp),
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(18.dp),
                     )
+                    SelectionContainer(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = message.message,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                    IconButton(
+                        modifier = Modifier.size(24.dp),
+                        onClick = {
+                            copyToClipboard(
+                                context = context,
+                                haptic = haptic,
+                                label = "Error message",
+                                content = message.message,
+                                onCopy = onCopy,
+                            )
+                        },
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "Copy error message",
+                            modifier = Modifier.size(14.dp),
+                            tint = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
         }
@@ -400,22 +478,31 @@ fun SystemMessageBubble(
 }
 
 /**
- * Internal helper to copy message content to the clipboard, trigger haptic feedback,
+ * Helper to copy text content to the clipboard, trigger haptic feedback,
  * invoke the [onCopy] callback if provided, and show a toast on Android < 13.
+ *
+ * @param context Android context for clipboard and toast services.
+ * @param haptic Optional haptic feedback instance.
+ * @param label The user-readable label for the clipboard entry (e.g. "User message", "Session title").
+ * @param content The text content to copy.
+ * @param onCopy Optional callback invoked with the copied string.
+ * @param toastMessage Optional override for the confirmation toast on Android < 13. Defaults to "$label copied".
  */
-private fun copyMessageToClipboard(
+internal fun copyToClipboard(
     context: Context,
     haptic: HapticFeedback?,
     label: String,
     content: String,
-    onCopy: ((String) -> Unit)?,
+    onCopy: ((String) -> Unit)? = null,
+    toastMessage: String? = null,
 ) {
     haptic?.performHapticFeedback(HapticFeedbackType.LongPress)
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
     clipboard?.setPrimaryClip(ClipData.newPlainText(label, content))
     onCopy?.invoke(content)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-        Toast.makeText(context, "Message copied", Toast.LENGTH_SHORT).show()
+        val message = toastMessage ?: "$label copied"
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 }
 

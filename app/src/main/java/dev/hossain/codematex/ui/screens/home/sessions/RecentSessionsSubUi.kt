@@ -19,9 +19,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +34,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +48,8 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.animation.SessionCardSharedKey
 import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -123,88 +130,131 @@ fun SessionCard(
     onClick: () -> Unit,
 ) {
     val visualInfo = session.topic.visualInfo
-    Card(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .sharedBoundsNav(SessionCardSharedKey(session.id))
-                .clickable(onClick = onClick),
-        colors =
-            CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            ),
-        shape = MaterialTheme.shapes.large,
-        border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+
+    SecondaryClickContextMenuBox(
+        modifier = modifier.fillMaxWidth(),
+        menuContent = { dismiss ->
+            DropdownMenuItem(
+                text = { Text("Open Session") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    onClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Copy Title") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    copyToClipboard(
+                        context = context,
+                        haptic = haptic,
+                        label = "Session title",
+                        content = session.title,
+                        onCopy = null,
+                    )
+                },
+            )
+        },
     ) {
-        Row(
+        Card(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
-                    .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                    .sharedBoundsNav(SessionCardSharedKey(session.id))
+                    .clickable(onClick = onClick),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                ),
+            shape = MaterialTheme.shapes.large,
+            border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.25f)),
         ) {
-            // Topic accent vertical strip
-            Box(
+            Row(
                 modifier =
                     Modifier
-                        .width(4.dp)
-                        .height(44.dp)
-                        .clip(CircleShape)
-                        .background(visualInfo.accentColor),
-            )
-
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
+                        .fillMaxWidth()
+                        .radialGradientScrim(visualInfo.accentColor.copy(alpha = 0.12f))
+                        .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = session.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.sharedBoundsNav(SessionTitleSharedKey(session.id)),
+                // Topic accent vertical strip
+                Box(
+                    modifier =
+                        Modifier
+                            .width(4.dp)
+                            .height(44.dp)
+                            .clip(CircleShape)
+                            .background(visualInfo.accentColor),
                 )
-                Text(
-                    session.summary,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(
-                        session.topic.displayName,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = visualInfo.accentColor,
-                        fontWeight = FontWeight.Medium,
+                        text = session.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.sharedBoundsNav(SessionTitleSharedKey(session.id)),
                     )
-                    val relativeTime = formatRelativeTime(session.lastActiveAt)
-                    val metadataText =
-                        if (relativeTime.isNotEmpty()) {
-                            "${session.messageCount} messages • $relativeTime"
-                        } else {
-                            "${session.messageCount} messages"
-                        }
                     Text(
-                        metadataText,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline,
+                        session.summary,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            session.topic.displayName,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = visualInfo.accentColor,
+                            fontWeight = FontWeight.Medium,
+                        )
+                        val relativeTime = formatRelativeTime(session.lastActiveAt)
+                        val metadataText =
+                            if (relativeTime.isNotEmpty()) {
+                                "${session.messageCount} messages • $relativeTime"
+                            } else {
+                                "${session.messageCount} messages"
+                            }
+                        Text(
+                            metadataText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline,
+                        )
+                    }
                 }
-            }
 
-            Icon(
-                Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(16.dp),
-            )
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowForward,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(16.dp),
+                )
+            }
         }
     }
 }
