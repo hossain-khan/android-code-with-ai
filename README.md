@@ -113,6 +113,7 @@ app/src/main/java/dev/hossain/codematex/
 - 📖 **[Adding Courses Guide](docs/ADDING_COURSES.md)** - Step-by-step guide for authoring, structuring, and verifying new language courses.
 - 🚢 **[Release Process Guide](RELEASE.md)** - Step-by-step release lifecycle, versioning rules, and CI/CD cryptographic validation.
 - 🤖 **[AI Agent Guide](AGENTS.md)** - Project overview, JNI memory safety constraints, and core workflows for autonomous developers.
+- 🔍 **[Robin AI Code Review Guide](docs/ROBIN_CODE_REVIEW.md)** - GitHub App identity configuration, required permissions, and automated review workflow.
 
 ---
 

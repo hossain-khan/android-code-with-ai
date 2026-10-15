@@ -11,6 +11,7 @@ permissions:
   contents: read
   pull-requests: write
 
+# Documentation & GitHub App setup guide: docs/ROBIN_CODE_REVIEW.md
 jobs:
   review:
     # Only run on pull requests or maintainer slash commands on pull requests

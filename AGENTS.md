@@ -202,6 +202,7 @@ Whenever creating pull requests:
 * **Never Enable Auto-Merge**: **DO NOT create or update PRs with auto-merge enabled** (never run `gh pr merge --auto` or enable automatic merging).
 * **Manual Review**: All pull requests must remain open for the repository owner to review and merge manually.
 * **Verification Before PR**: Always verify that `./gradlew formatKotlin && ./gradlew check` passes before submitting pull requests.
+* **Automated AI Code Review**: Pull requests automatically trigger the Robin AI code review workflow running under the `reviewmatex[bot]` GitHub App identity. Refer to [docs/ROBIN_CODE_REVIEW.md](docs/ROBIN_CODE_REVIEW.md) for required credentials and setup.
 
 ---
 
