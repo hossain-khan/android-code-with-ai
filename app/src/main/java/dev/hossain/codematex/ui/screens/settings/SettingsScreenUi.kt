@@ -428,6 +428,7 @@ private fun SettingsClickableRow(
             modifier
                 .fillMaxWidth()
                 .clickable(onClick = onClick)
+                .handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

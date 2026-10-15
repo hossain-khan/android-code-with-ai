@@ -42,7 +42,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
-import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo

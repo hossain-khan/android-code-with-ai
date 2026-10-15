@@ -1,6 +1,5 @@
 package dev.hossain.codematex.ui.component
 
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -52,7 +51,6 @@ enum class TooltipPosition {
  * @param modifier Modifier applied to the outer [TooltipBox].
  * @param enabled Whether the icon button is interactive.
  * @param colors The colors to use for the [IconButton].
- * @param interactionSource Optional [MutableInteractionSource] for observing interactions.
  * @param position The preferred tooltip anchor placement relative to the icon button. Defaults to [TooltipPosition.Below].
  * @param content The icon or content to display inside the icon button.
  */
@@ -64,7 +62,6 @@ fun TooltipIconButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     colors: IconButtonColors = IconButtonDefaults.iconButtonColors(),
-    interactionSource: MutableInteractionSource? = null,
     position: TooltipPosition = TooltipPosition.Below,
     content: @Composable () -> Unit,
 ) {
@@ -88,7 +85,6 @@ fun TooltipIconButton(
             onClick = onClick,
             enabled = enabled,
             colors = colors,
-            interactionSource = interactionSource,
             modifier = Modifier.handHoverIcon(enabled = enabled),
         ) {
             content()
