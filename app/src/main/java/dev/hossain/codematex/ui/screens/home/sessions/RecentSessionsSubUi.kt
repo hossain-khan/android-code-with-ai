@@ -40,12 +40,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubScreen
 import com.slack.circuit.subcircuit.SubUi
@@ -55,8 +53,8 @@ import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.animation.SessionCardSharedKey
 import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
-import dev.hossain.codematex.ui.component.copyMessageToClipboard
-import dev.hossain.codematex.ui.component.onSecondaryClick
+import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -139,21 +137,52 @@ fun SessionCard(
     val visualInfo = session.topic.visualInfo
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val density = LocalDensity.current
-    var showContextMenu by remember { mutableStateOf(false) }
-    var contextMenuOffset by remember { mutableStateOf(DpOffset.Zero) }
 
-    Box(modifier = modifier) {
+    SecondaryClickContextMenuBox(
+        modifier = modifier.fillMaxWidth(),
+        menuContent = { dismiss ->
+            DropdownMenuItem(
+                text = { Text("Open Session") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    onClick()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text("Copy Title") },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                },
+                onClick = {
+                    dismiss()
+                    copyToClipboard(
+                        context = context,
+                        haptic = haptic,
+                        label = "Session title",
+                        content = session.title,
+                        onCopy = null,
+                    )
+                },
+            )
+        },
+    ) {
         Card(
             modifier =
                 Modifier
                     .fillMaxWidth()
                     .sharedBoundsNav(SessionCardSharedKey(session.id))
-                    .clickable(onClick = onClick)
-                    .onSecondaryClick { offset ->
-                        contextMenuOffset = with(density) { DpOffset(offset.x.toDp(), offset.y.toDp()) }
-                        showContextMenu = true
-                    },
+                    .clickable(onClick = onClick),
             colors =
                 CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -231,47 +260,6 @@ fun SessionCard(
                     modifier = Modifier.size(16.dp),
                 )
             }
-        }
-
-        DropdownMenu(
-            expanded = showContextMenu,
-            onDismissRequest = { showContextMenu = false },
-            offset = contextMenuOffset,
-        ) {
-            DropdownMenuItem(
-                text = { Text("Open Session") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.OpenInNew,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                },
-                onClick = {
-                    showContextMenu = false
-                    onClick()
-                },
-            )
-            DropdownMenuItem(
-                text = { Text("Copy Title") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                },
-                onClick = {
-                    showContextMenu = false
-                    copyMessageToClipboard(
-                        context = context,
-                        haptic = haptic,
-                        label = "Session title",
-                        content = session.title,
-                        onCopy = null,
-                    )
-                },
-            )
         }
     }
 }
