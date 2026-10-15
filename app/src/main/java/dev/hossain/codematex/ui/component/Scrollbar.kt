@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
+import kotlin.math.ceil
 
 /**
  * Calculated metrics for drawing a scrollbar thumb.
@@ -54,7 +55,7 @@ internal data class ListScrollInfo(
     val totalItemsCount: Int,
     val visibleItemsCount: Int,
     val firstVisibleItemIndex: Int,
-    val firstVisibleItemOffset: Int,
+    val firstVisibleItemScrollOffset: Int = 0,
     val firstItemSize: Int,
     val lastItemOffset: Int,
     val lastItemSize: Int,
@@ -69,7 +70,7 @@ internal data class GridScrollInfo(
     val visibleRowCount: Int,
     val totalRows: Int,
     val firstRow: Int,
-    val firstItemOffsetY: Int,
+    val firstItemScrollOffset: Int = 0,
     val firstItemHeight: Int,
     val lastItemOffsetY: Int,
     val lastItemHeight: Int,
@@ -122,8 +123,8 @@ internal fun calculateScrollbarMetrics(
     if (info.visibleItemsCount <= 0 || info.totalItemsCount <= 0 || viewportLength <= 0f) return null
 
     // Check if entire content fits into viewport
-    if (info.visibleItemsCount == info.totalItemsCount && info.firstVisibleItemOffset >= 0) {
-        val totalMeasuredHeight = (info.lastItemOffset + info.lastItemSize) - info.firstVisibleItemOffset
+    if (info.visibleItemsCount == info.totalItemsCount && info.firstVisibleItemScrollOffset <= 0) {
+        val totalMeasuredHeight = (info.lastItemOffset + info.lastItemSize)
         if (totalMeasuredHeight <= viewportLength) return null
     }
 
@@ -133,7 +134,8 @@ internal fun calculateScrollbarMetrics(
     val thumbLength = (viewportLength * ratio).coerceIn(safeMinThumb, viewportLength)
 
     val firstItemSize = info.firstItemSize.toFloat().coerceAtLeast(1f)
-    val decimalIndex = info.firstVisibleItemIndex.toFloat() + (-info.firstVisibleItemOffset.toFloat() / firstItemSize).coerceAtLeast(0f)
+    val scrollFraction = (info.firstVisibleItemScrollOffset.toFloat() / firstItemSize).coerceIn(0f, 1f)
+    val decimalIndex = info.firstVisibleItemIndex.toFloat() + scrollFraction
     val maxDecimalIndex = (info.totalItemsCount - info.visibleItemsCount).coerceAtLeast(1).toFloat()
     val progress = (decimalIndex / maxDecimalIndex).coerceIn(0f, 1f)
     val effectiveProgress = if (info.reverseLayout) 1f - progress else progress
@@ -153,8 +155,8 @@ internal fun calculateScrollbarMetrics(
 ): ScrollbarMetrics? {
     if (info.visibleRowCount <= 0 || info.totalItemsCount <= 0 || viewportLength <= 0f) return null
 
-    if (info.visibleRowCount >= info.totalRows && info.firstItemOffsetY >= 0) {
-        val totalMeasuredHeight = (info.lastItemOffsetY + info.lastItemHeight) - info.firstItemOffsetY
+    if (info.visibleRowCount >= info.totalRows && info.firstItemScrollOffset <= 0) {
+        val totalMeasuredHeight = (info.lastItemOffsetY + info.lastItemHeight)
         if (totalMeasuredHeight <= viewportLength) return null
     }
 
@@ -163,7 +165,8 @@ internal fun calculateScrollbarMetrics(
     val thumbLength = (viewportLength * ratio).coerceIn(safeMinThumb, viewportLength)
 
     val firstItemHeight = info.firstItemHeight.toFloat().coerceAtLeast(1f)
-    val decimalRow = info.firstRow.toFloat() + (-info.firstItemOffsetY.toFloat() / firstItemHeight).coerceAtLeast(0f)
+    val scrollFraction = (info.firstItemScrollOffset.toFloat() / firstItemHeight).coerceIn(0f, 1f)
+    val decimalRow = info.firstRow.toFloat() + scrollFraction
     val maxDecimalRow = (info.totalRows - info.visibleRowCount).coerceAtLeast(1).toFloat()
     val progress = (decimalRow / maxDecimalRow).coerceIn(0f, 1f)
     val effectiveProgress = if (info.reverseLayout) 1f - progress else progress
@@ -180,7 +183,32 @@ internal fun calculateScrollbarMetrics(
     state: LazyListState,
     viewportLength: Float,
     minThumbLength: Float,
-): ScrollbarMetrics? = calculateScrollbarMetrics(state.layoutInfo, viewportLength, minThumbLength)
+): ScrollbarMetrics? {
+    val layoutInfo = state.layoutInfo
+    val visibleItems = layoutInfo.visibleItemsInfo
+    val totalItems = layoutInfo.totalItemsCount
+    if (visibleItems.isEmpty() || totalItems <= 0 || viewportLength <= 0f) return null
+
+    val firstItem = visibleItems.first()
+    val lastItem = visibleItems.last()
+    val avgSize = (visibleItems.sumOf { it.size } / visibleItems.size).coerceAtLeast(1)
+
+    return calculateScrollbarMetrics(
+        info =
+            ListScrollInfo(
+                totalItemsCount = totalItems,
+                visibleItemsCount = visibleItems.size,
+                firstVisibleItemIndex = state.firstVisibleItemIndex,
+                firstVisibleItemScrollOffset = state.firstVisibleItemScrollOffset,
+                firstItemSize = avgSize,
+                lastItemOffset = lastItem.offset,
+                lastItemSize = lastItem.size,
+                reverseLayout = layoutInfo.reverseLayout,
+            ),
+        viewportLength = viewportLength,
+        minThumbLength = minThumbLength,
+    )
+}
 
 /**
  * Calculates thumb offset and length for a [LazyListLayoutInfo].
@@ -197,6 +225,12 @@ internal fun calculateScrollbarMetrics(
     val firstItem = visibleItems.first()
     val lastItem = visibleItems.last()
     val avgSize = (visibleItems.sumOf { it.size } / visibleItems.size).coerceAtLeast(1)
+    val scrollOffset =
+        if (layoutInfo.reverseLayout) {
+            (firstItem.offset + firstItem.size - layoutInfo.viewportEndOffset).coerceAtLeast(0)
+        } else {
+            (-firstItem.offset).coerceAtLeast(0)
+        }
 
     return calculateScrollbarMetrics(
         info =
@@ -204,7 +238,7 @@ internal fun calculateScrollbarMetrics(
                 totalItemsCount = totalItems,
                 visibleItemsCount = visibleItems.size,
                 firstVisibleItemIndex = firstItem.index,
-                firstVisibleItemOffset = firstItem.offset,
+                firstVisibleItemScrollOffset = scrollOffset,
                 firstItemSize = avgSize,
                 lastItemOffset = lastItem.offset,
                 lastItemSize = lastItem.size,
@@ -222,7 +256,45 @@ internal fun calculateScrollbarMetrics(
     state: LazyGridState,
     viewportLength: Float,
     minThumbLength: Float,
-): ScrollbarMetrics? = calculateScrollbarMetrics(state.layoutInfo, viewportLength, minThumbLength)
+): ScrollbarMetrics? {
+    val layoutInfo = state.layoutInfo
+    val visibleItems = layoutInfo.visibleItemsInfo
+    val totalItems = layoutInfo.totalItemsCount
+    if (visibleItems.isEmpty() || totalItems <= 0 || viewportLength <= 0f) return null
+
+    val firstItem = visibleItems.first()
+    val lastItem = visibleItems.last()
+    val firstRow = firstItem.row
+    val lastRow = lastItem.row
+    val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
+
+    val totalRows =
+        if (lastItem.index == totalItems - 1) {
+            lastRow + 1
+        } else {
+            val itemsInSpan = (lastItem.index - firstItem.index + 1).coerceAtLeast(1)
+            val rowsInSpan = (lastRow - firstRow + 1).coerceAtLeast(1)
+            val avgItemsPerRow = (itemsInSpan.toFloat() / rowsInSpan.toFloat()).coerceAtLeast(1f)
+            ceil(totalItems.toFloat() / avgItemsPerRow).toInt().coerceAtLeast(lastRow + 1)
+        }
+
+    return calculateScrollbarMetrics(
+        info =
+            GridScrollInfo(
+                totalItemsCount = totalItems,
+                visibleRowCount = visibleRowCount,
+                totalRows = totalRows,
+                firstRow = firstRow,
+                firstItemScrollOffset = state.firstVisibleItemScrollOffset,
+                firstItemHeight = firstItem.size.height.coerceAtLeast(1),
+                lastItemOffsetY = lastItem.offset.y,
+                lastItemHeight = lastItem.size.height,
+                reverseLayout = layoutInfo.reverseLayout,
+            ),
+        viewportLength = viewportLength,
+        minThumbLength = minThumbLength,
+    )
+}
 
 /**
  * Calculates thumb offset and length for a [LazyGridLayoutInfo].
@@ -242,26 +314,22 @@ internal fun calculateScrollbarMetrics(
     val lastRow = lastItem.row
     val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
 
-    var maxItemsInRow = 1
-    var currentRow = -1
-    var countInCurrentRow = 0
-    for (i in visibleItems.indices) {
-        val row = visibleItems[i].row
-        if (row == currentRow) {
-            countInCurrentRow++
+    val totalRows =
+        if (lastItem.index == totalItems - 1) {
+            lastRow + 1
         } else {
-            if (countInCurrentRow > maxItemsInRow) {
-                maxItemsInRow = countInCurrentRow
-            }
-            currentRow = row
-            countInCurrentRow = 1
+            val itemsInSpan = (lastItem.index - firstItem.index + 1).coerceAtLeast(1)
+            val rowsInSpan = (lastRow - firstRow + 1).coerceAtLeast(1)
+            val avgItemsPerRow = (itemsInSpan.toFloat() / rowsInSpan.toFloat()).coerceAtLeast(1f)
+            ceil(totalItems.toFloat() / avgItemsPerRow).toInt().coerceAtLeast(lastRow + 1)
         }
-    }
-    if (countInCurrentRow > maxItemsInRow) {
-        maxItemsInRow = countInCurrentRow
-    }
-    val itemsPerRow = maxItemsInRow.coerceAtLeast(1)
-    val totalRows = ((totalItems + itemsPerRow - 1) / itemsPerRow).coerceAtLeast(1)
+
+    val scrollOffset =
+        if (layoutInfo.reverseLayout) {
+            (firstItem.offset.y + firstItem.size.height - layoutInfo.viewportEndOffset).coerceAtLeast(0)
+        } else {
+            (-firstItem.offset.y).coerceAtLeast(0)
+        }
 
     return calculateScrollbarMetrics(
         info =
@@ -270,7 +338,7 @@ internal fun calculateScrollbarMetrics(
                 visibleRowCount = visibleRowCount,
                 totalRows = totalRows,
                 firstRow = firstRow,
-                firstItemOffsetY = firstItem.offset.y,
+                firstItemScrollOffset = scrollOffset,
                 firstItemHeight = firstItem.size.height.coerceAtLeast(1),
                 lastItemOffsetY = lastItem.offset.y,
                 lastItemHeight = lastItem.size.height,
@@ -366,6 +434,9 @@ private fun Modifier.drawAdaptiveScrollbar(
  * Automatically fades in when scrolling with a mouse, trackpad, or touch gesture,
  * and fades out after scrolling finishes. Does not consume layout space or cause content shifting.
  *
+ * Note: Because [LazyColumn] only measures currently visible items, scrollbar thumb length
+ * and scroll progress are estimated based on visible item statistics.
+ *
  * @param state The [LazyListState] to observe.
  * @param color The thumb color. Defaults to `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)`.
  * @param width Thickness of the scrollbar thumb.
@@ -405,6 +476,9 @@ fun Modifier.adaptiveScrollbar(
  *
  * Automatically fades in when scrolling with a mouse, trackpad, or touch gesture,
  * and fades out after scrolling finishes. Does not consume layout space or cause content shifting.
+ *
+ * Note: Because [LazyVerticalGrid] only measures currently visible items, scrollbar thumb length
+ * and scroll progress are estimated based on visible item statistics and row spans.
  *
  * @param state The [LazyGridState] to observe.
  * @param color The thumb color. Defaults to `MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)`.
