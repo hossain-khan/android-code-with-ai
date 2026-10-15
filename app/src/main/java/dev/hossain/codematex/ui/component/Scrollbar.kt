@@ -6,7 +6,6 @@ import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,6 +35,23 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlin.math.ceil
+
+/**
+ * Default visual and animation parameters for [adaptiveScrollbar].
+ */
+object ScrollbarDefaults {
+    /** Default thickness of the scrollbar thumb. */
+    val Width: Dp = 4.dp
+
+    /** Default inset padding from the outer edge. */
+    val Padding: Dp = 4.dp
+
+    /** Default minimum thumb height to ensure visibility. */
+    val MinThumbLength: Dp = 24.dp
+
+    /** Default inactivity delay in milliseconds before fade-out begins. */
+    val AutoHideDelayMs: Long = 1500L
+}
 
 /**
  * Calculated metrics for drawing a scrollbar thumb.
@@ -268,15 +284,16 @@ internal fun calculateScrollbarMetrics(
     val lastRow = lastItem.row
     val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
 
+    val maxColumn = visibleItems.maxOfOrNull { it.column } ?: 0
     val totalRows =
-        if (lastItem.index == totalItems - 1) {
-            lastRow + 1
-        } else {
-            val itemsInSpan = (lastItem.index - firstItem.index + 1).coerceAtLeast(1)
-            val rowsInSpan = (lastRow - firstRow + 1).coerceAtLeast(1)
-            val avgItemsPerRow = (itemsInSpan.toFloat() / rowsInSpan.toFloat()).coerceAtLeast(1f)
-            ceil(totalItems.toFloat() / avgItemsPerRow).toInt().coerceAtLeast(lastRow + 1)
-        }
+        estimateGridTotalRows(
+            totalItems = totalItems,
+            firstIndex = firstItem.index,
+            lastIndex = lastItem.index,
+            firstRow = firstRow,
+            lastRow = lastRow,
+            maxVisibleColumnIndex = maxColumn,
+        )
 
     return calculateScrollbarMetrics(
         info =
@@ -314,15 +331,16 @@ internal fun calculateScrollbarMetrics(
     val lastRow = lastItem.row
     val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
 
+    val maxColumn = visibleItems.maxOfOrNull { it.column } ?: 0
     val totalRows =
-        if (lastItem.index == totalItems - 1) {
-            lastRow + 1
-        } else {
-            val itemsInSpan = (lastItem.index - firstItem.index + 1).coerceAtLeast(1)
-            val rowsInSpan = (lastRow - firstRow + 1).coerceAtLeast(1)
-            val avgItemsPerRow = (itemsInSpan.toFloat() / rowsInSpan.toFloat()).coerceAtLeast(1f)
-            ceil(totalItems.toFloat() / avgItemsPerRow).toInt().coerceAtLeast(lastRow + 1)
-        }
+        estimateGridTotalRows(
+            totalItems = totalItems,
+            firstIndex = firstItem.index,
+            lastIndex = lastItem.index,
+            firstRow = firstRow,
+            lastRow = lastRow,
+            maxVisibleColumnIndex = maxColumn,
+        )
 
     val scrollOffset =
         if (layoutInfo.reverseLayout) {
@@ -347,6 +365,30 @@ internal fun calculateScrollbarMetrics(
         viewportLength = viewportLength,
         minThumbLength = minThumbLength,
     )
+}
+
+/**
+ * Estimates total number of rows in a grid based on visible item indices, row indices,
+ * and the maximum visible column index observed.
+ */
+internal fun estimateGridTotalRows(
+    totalItems: Int,
+    firstIndex: Int,
+    lastIndex: Int,
+    firstRow: Int,
+    lastRow: Int,
+    maxVisibleColumnIndex: Int,
+): Int {
+    if (lastIndex == totalItems - 1) {
+        return lastRow + 1
+    }
+    val observedColumns = (maxVisibleColumnIndex + 1).coerceAtLeast(1)
+    val itemsInSpan = (lastIndex - firstIndex + 1).coerceAtLeast(1)
+    val rowsInSpan = (lastRow - firstRow + 1).coerceAtLeast(1)
+    val avgItemsPerRow = (itemsInSpan.toFloat() / rowsInSpan.toFloat()).coerceAtLeast(1f)
+    val columns = maxOf(observedColumns.toFloat(), avgItemsPerRow)
+
+    return ceil(totalItems.toFloat() / columns).toInt().coerceAtLeast(lastRow + 1)
 }
 
 /**
@@ -448,10 +490,10 @@ private fun Modifier.drawAdaptiveScrollbar(
 fun Modifier.adaptiveScrollbar(
     state: LazyListState,
     color: Color = Color.Unspecified,
-    width: Dp = 4.dp,
-    padding: Dp = 4.dp,
-    minThumbLength: Dp = 24.dp,
-    autoHideDelayMs: Long = 1500L,
+    width: Dp = ScrollbarDefaults.Width,
+    padding: Dp = ScrollbarDefaults.Padding,
+    minThumbLength: Dp = ScrollbarDefaults.MinThumbLength,
+    autoHideDelayMs: Long = ScrollbarDefaults.AutoHideDelayMs,
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(
@@ -491,10 +533,10 @@ fun Modifier.adaptiveScrollbar(
 fun Modifier.adaptiveScrollbar(
     state: LazyGridState,
     color: Color = Color.Unspecified,
-    width: Dp = 4.dp,
-    padding: Dp = 4.dp,
-    minThumbLength: Dp = 24.dp,
-    autoHideDelayMs: Long = 1500L,
+    width: Dp = ScrollbarDefaults.Width,
+    padding: Dp = ScrollbarDefaults.Padding,
+    minThumbLength: Dp = ScrollbarDefaults.MinThumbLength,
+    autoHideDelayMs: Long = ScrollbarDefaults.AutoHideDelayMs,
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(
@@ -536,10 +578,10 @@ fun Modifier.adaptiveScrollbar(
 fun Modifier.adaptiveScrollbar(
     state: ScrollState,
     color: Color = Color.Unspecified,
-    width: Dp = 4.dp,
-    padding: Dp = 4.dp,
-    minThumbLength: Dp = 24.dp,
-    autoHideDelayMs: Long = 1500L,
+    width: Dp = ScrollbarDefaults.Width,
+    padding: Dp = ScrollbarDefaults.Padding,
+    minThumbLength: Dp = ScrollbarDefaults.MinThumbLength,
+    autoHideDelayMs: Long = ScrollbarDefaults.AutoHideDelayMs,
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(

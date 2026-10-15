@@ -387,6 +387,8 @@ private fun SessionDetailLayout(
                             .weight(1f)
                             .fillMaxHeight(),
                 ) {
+                    val messagesListState = rememberLazyListState()
+
                     Text(
                         text = "Conversation History",
                         style = MaterialTheme.typography.titleMedium,
@@ -397,7 +399,6 @@ private fun SessionDetailLayout(
                     if (state.messages.isEmpty()) {
                         EmptyDetailMessagesView(visualInfo = visualInfo, modifier = Modifier.fillMaxSize())
                     } else {
-                        val messagesListState = rememberLazyListState()
                         LazyColumn(
                             state = messagesListState,
                             modifier = Modifier.fillMaxSize().adaptiveScrollbar(messagesListState),
@@ -421,6 +422,8 @@ private fun SessionDetailLayout(
                         .padding(innerPadding)
                         .fillMaxSize(),
             ) {
+                val compactMessagesListState = rememberLazyListState()
+
                 SessionInfoCard(state.session, modifier = Modifier.padding(16.dp))
 
                 if (state.messages.isNotEmpty()) {
@@ -431,7 +434,6 @@ private fun SessionDetailLayout(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     )
 
-                    val compactMessagesListState = rememberLazyListState()
                     LazyColumn(
                         state = compactMessagesListState,
                         modifier = Modifier.weight(1f).adaptiveScrollbar(compactMessagesListState),

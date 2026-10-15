@@ -335,4 +335,115 @@ class ScrollbarTest {
         assertThat(metrics!!.length).isEqualTo(20f)
         assertThat(metrics.offset).isEqualTo(0f)
     }
+
+    // --- ScrollbarDefaults Tests ---
+
+    @Test
+    fun `ScrollbarDefaults exposes expected standard dimensions and auto-hide timing`() {
+        assertThat(ScrollbarDefaults.AutoHideDelayMs).isEqualTo(1500L)
+    }
+
+    // --- estimateGridTotalRows Tests ---
+
+    @Test
+    fun `estimateGridTotalRows with single visible row and partial columns calculates correct total rows`() {
+        val totalRows =
+            estimateGridTotalRows(
+                totalItems = 20,
+                firstIndex = 0,
+                lastIndex = 1,
+                firstRow = 0,
+                lastRow = 0,
+                maxVisibleColumnIndex = 1,
+            )
+        // 2 columns observed, 20 items -> 10 rows
+        assertThat(totalRows).isEqualTo(10)
+    }
+
+    @Test
+    fun `estimateGridTotalRows with multiple visible rows and higher column index uses max observed columns`() {
+        val totalRows =
+            estimateGridTotalRows(
+                totalItems = 20,
+                firstIndex = 0,
+                lastIndex = 7,
+                firstRow = 0,
+                lastRow = 1,
+                maxVisibleColumnIndex = 3,
+            )
+        // 4 columns observed (0..3), 20 items -> 5 rows
+        assertThat(totalRows).isEqualTo(5)
+    }
+
+    @Test
+    fun `estimateGridTotalRows with last item visible returns exact lastRow plus one`() {
+        val totalRows =
+            estimateGridTotalRows(
+                totalItems = 20,
+                firstIndex = 16,
+                lastIndex = 19,
+                firstRow = 4,
+                lastRow = 4,
+                maxVisibleColumnIndex = 3,
+            )
+        assertThat(totalRows).isEqualTo(5)
+    }
+
+    @Test
+    fun `estimateGridTotalRows with uneven row spans uses average items per row when higher than column index`() {
+        val totalRows =
+            estimateGridTotalRows(
+                totalItems = 30,
+                firstIndex = 0,
+                lastIndex = 9,
+                firstRow = 0,
+                lastRow = 1,
+                maxVisibleColumnIndex = 1,
+            )
+        // 10 items across 2 rows = 5 items/row, higher than observed column index (2) -> 30 / 5 = 6 rows
+        assertThat(totalRows).isEqualTo(6)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics with GridScrollInfo with single visible row calculates correct ratio and bounds`() {
+        val info =
+            GridScrollInfo(
+                totalItemsCount = 20,
+                visibleRowCount = 1,
+                totalRows = 10,
+                firstRow = 0,
+                firstItemScrollOffset = 0,
+                firstItemHeight = 100,
+                lastItemOffsetY = 0,
+                lastItemHeight = 100,
+            )
+        val metrics = calculateScrollbarMetrics(info, viewportLength = 300f, minThumbLength = 24f)
+
+        assertThat(metrics).isNotNull()
+        // 1 / 10 rows visible = 10% thumb ratio -> 30px thumb length
+        assertThat(metrics!!.length).isEqualTo(30f)
+        assertThat(metrics.offset).isEqualTo(0f)
+    }
+
+    @Test
+    fun `calculateScrollbarMetrics with GridScrollInfo with uneven rows calculates correct bounds`() {
+        // First item is 150px tall, last item is 50px tall across 2 visible rows in 300px viewport
+        val info =
+            GridScrollInfo(
+                totalItemsCount = 15,
+                visibleRowCount = 2,
+                totalRows = 8,
+                firstRow = 3,
+                firstItemScrollOffset = 50,
+                firstItemHeight = 150,
+                lastItemOffsetY = 150,
+                lastItemHeight = 50,
+            )
+        val metrics = calculateScrollbarMetrics(info, viewportLength = 300f, minThumbLength = 24f)
+
+        assertThat(metrics).isNotNull()
+        assertThat(metrics!!.length).isAtLeast(24f)
+        assertThat(metrics.offset).isAtLeast(0f)
+        assertThat(metrics.offset + metrics.length).isAtMost(300f)
+    }
 }
