@@ -1,6 +1,7 @@
 package dev.hossain.codematex.ui.component
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.ui.unit.dp
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 
@@ -340,6 +341,9 @@ class ScrollbarTest {
 
     @Test
     fun `ScrollbarDefaults exposes expected standard dimensions and auto-hide timing`() {
+        assertThat(ScrollbarDefaults.Width).isEqualTo(4.dp)
+        assertThat(ScrollbarDefaults.Padding).isEqualTo(4.dp)
+        assertThat(ScrollbarDefaults.MinThumbLength).isEqualTo(24.dp)
         assertThat(ScrollbarDefaults.AutoHideDelayMs).isEqualTo(1500L)
     }
 

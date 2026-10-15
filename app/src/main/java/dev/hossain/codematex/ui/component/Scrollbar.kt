@@ -201,31 +201,12 @@ internal fun calculateScrollbarMetrics(
     state: LazyListState,
     viewportLength: Float,
     minThumbLength: Float,
-): ScrollbarMetrics? {
-    val layoutInfo = state.layoutInfo
-    val visibleItems = layoutInfo.visibleItemsInfo
-    val totalItems = layoutInfo.totalItemsCount
-    if (visibleItems.isEmpty() || totalItems <= 0 || viewportLength <= 0f) return null
-
-    val lastItem = visibleItems.last()
-    val avgSize = (visibleItems.sumOf { it.size } / visibleItems.size).coerceAtLeast(1)
-
-    return calculateScrollbarMetrics(
-        info =
-            ListScrollInfo(
-                totalItemsCount = totalItems,
-                visibleItemsCount = visibleItems.size,
-                firstVisibleItemIndex = state.firstVisibleItemIndex,
-                firstVisibleItemScrollOffset = state.firstVisibleItemScrollOffset,
-                firstItemSize = avgSize,
-                lastItemOffset = lastItem.offset,
-                lastItemSize = lastItem.size,
-                reverseLayout = layoutInfo.reverseLayout,
-            ),
+): ScrollbarMetrics? =
+    calculateScrollbarMetrics(
+        layoutInfo = state.layoutInfo,
         viewportLength = viewportLength,
         minThumbLength = minThumbLength,
     )
-}
 
 /**
  * Calculates thumb offset and length for a [LazyListLayoutInfo].
@@ -273,46 +254,12 @@ internal fun calculateScrollbarMetrics(
     state: LazyGridState,
     viewportLength: Float,
     minThumbLength: Float,
-): ScrollbarMetrics? {
-    val layoutInfo = state.layoutInfo
-    val visibleItems = layoutInfo.visibleItemsInfo
-    val totalItems = layoutInfo.totalItemsCount
-    if (visibleItems.isEmpty() || totalItems <= 0 || viewportLength <= 0f) return null
-
-    val firstItem = visibleItems.first()
-    val lastItem = visibleItems.last()
-    val firstRow = firstItem.row
-    val lastRow = lastItem.row
-    val visibleRowCount = (lastRow - firstRow + 1).coerceAtLeast(1)
-
-    val maxColumn = visibleItems.maxOfOrNull { it.column } ?: 0
-    val totalRows =
-        estimateGridTotalRows(
-            totalItems = totalItems,
-            firstIndex = firstItem.index,
-            lastIndex = lastItem.index,
-            firstRow = firstRow,
-            lastRow = lastRow,
-            maxVisibleColumnIndex = maxColumn,
-        )
-
-    return calculateScrollbarMetrics(
-        info =
-            GridScrollInfo(
-                totalItemsCount = totalItems,
-                visibleRowCount = visibleRowCount,
-                totalRows = totalRows,
-                firstRow = firstRow,
-                firstItemScrollOffset = state.firstVisibleItemScrollOffset,
-                firstItemHeight = firstItem.size.height.coerceAtLeast(1),
-                lastItemOffsetY = lastItem.offset.y,
-                lastItemHeight = lastItem.size.height,
-                reverseLayout = layoutInfo.reverseLayout,
-            ),
+): ScrollbarMetrics? =
+    calculateScrollbarMetrics(
+        layoutInfo = state.layoutInfo,
         viewportLength = viewportLength,
         minThumbLength = minThumbLength,
     )
-}
 
 /**
  * Calculates thumb offset and length for a [LazyGridLayoutInfo].
@@ -421,7 +368,7 @@ private fun rememberScrollbarAlpha(
  * Shared drawing modifier for rendering an adaptive scrollbar across list, grid, and scroll states.
  */
 private fun Modifier.drawAdaptiveScrollbar(
-    isScrollInProgress: Boolean,
+    isScrollInProgress: () -> Boolean,
     alwaysShow: Boolean,
     color: Color,
     width: Dp,
@@ -432,7 +379,7 @@ private fun Modifier.drawAdaptiveScrollbar(
 ): Modifier =
     composed {
         val alpha by rememberScrollbarAlpha(
-            isScrollInProgress = isScrollInProgress,
+            isScrollInProgress = isScrollInProgress(),
             alwaysShow = alwaysShow,
             autoHideDelayMs = autoHideDelayMs,
         )
@@ -498,7 +445,7 @@ fun Modifier.adaptiveScrollbar(
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(
-        isScrollInProgress = state.isScrollInProgress,
+        isScrollInProgress = { state.isScrollInProgress },
         alwaysShow = alwaysShow,
         color = color,
         width = width,
@@ -541,7 +488,7 @@ fun Modifier.adaptiveScrollbar(
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(
-        isScrollInProgress = state.isScrollInProgress,
+        isScrollInProgress = { state.isScrollInProgress },
         alwaysShow = alwaysShow,
         color = color,
         width = width,
@@ -586,7 +533,7 @@ fun Modifier.adaptiveScrollbar(
     alwaysShow: Boolean = false,
 ): Modifier =
     drawAdaptiveScrollbar(
-        isScrollInProgress = state.isScrollInProgress,
+        isScrollInProgress = { state.isScrollInProgress },
         alwaysShow = alwaysShow,
         color = color,
         width = width,

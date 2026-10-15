@@ -211,6 +211,8 @@ internal fun ChapterScreenInnerContent(
             is ChapterScreen.State.Success -> {
                 val course = state.course
                 if (isExpanded) {
+                    // Expanded layout uses an adaptive multi-column grid; state is intentionally scoped
+                    // to this layout branch rather than shared with the compact single-column list.
                     val gridState = rememberLazyGridState()
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 340.dp),
@@ -247,6 +249,8 @@ internal fun ChapterScreenInnerContent(
                         }
                     }
                 } else {
+                    // Compact layout uses a single vertical list; state is intentionally scoped
+                    // to this layout branch rather than shared with the expanded multi-column grid.
                     val listState = rememberLazyListState()
                     LazyColumn(
                         state = listState,
