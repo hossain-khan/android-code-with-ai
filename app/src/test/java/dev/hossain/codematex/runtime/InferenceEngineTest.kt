@@ -6,6 +6,13 @@ import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertThrows
 import org.junit.Test
 
+/**
+ * Unit tests for [DefaultInferenceEngine] and [DefaultInferenceConversation].
+ *
+ * LiteRT-LM [com.google.ai.edge.litertlm.Engine] and [com.google.ai.edge.litertlm.Conversation] are final native JNI
+ * classes that load shared libraries (liblitertlm_jni.so) and cannot be instantiated or mocked in a host JVM unit test
+ * environment. The internal constructors provide test seams verifying state transition, fast-fail checks, and idempotency.
+ */
 class InferenceEngineTest {
     @Test
     fun `DefaultInferenceConversation forwards sendMessageAsync when open`() {

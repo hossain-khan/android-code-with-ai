@@ -303,9 +303,9 @@ class LlmEngineImpl(
         currentSystemInstruction = systemInstruction
         currentConfig = config
         val oldConversation = conversation
-        // Nullify conversation before closing old handle so that if recreation throws,
-        // no stale reference is retained. The next runInference or restoreHistory will
-        // detect conversation == null and recreate it with the updated settings.
+        // Clear the field before closing so that a Throwable escaping close() (closeQuietly only
+        // catches Exception) cannot leave a dangling reference. If recreation subsequently throws,
+        // the conversation remains null and will be recreated on the next request.
         conversation = null
         closeQuietly(oldConversation)
         conversation = createConversationLocked(systemInstruction, config)
