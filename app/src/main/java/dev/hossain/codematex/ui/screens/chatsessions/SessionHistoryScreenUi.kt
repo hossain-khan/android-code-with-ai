@@ -91,6 +91,7 @@ import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
+import dev.hossain.codematex.ui.screens.chatsessions.components.DeleteSessionConfirmationDialog
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -267,6 +268,18 @@ private fun SessionHistoryLayout(
         }
     }
 
+    if (state.sessionPendingDeletion != null) {
+        DeleteSessionConfirmationDialog(
+            sessionTitle = state.sessionPendingDeletion.title,
+            onConfirm = {
+                state.eventSink(SessionHistoryScreen.Event.ConfirmDeleteSession)
+            },
+            onDismiss = {
+                state.eventSink(SessionHistoryScreen.Event.DismissDeleteSession)
+            },
+        )
+    }
+
     Scaffold(
         modifier =
             modifier
@@ -423,7 +436,7 @@ private fun SessionHistoryLayout(
                                 state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
                             },
                             onDelete = {
-                                state.eventSink(SessionHistoryScreen.Event.DeleteSession(session.id))
+                                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session))
                             },
                             transitionScope = transitionScope,
                             modifier = Modifier.animateItem(),
@@ -805,5 +818,29 @@ private fun SessionHistoryErrorPreview() {
                     eventSink = {},
                 ),
         )
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@ThemePreviews
+@Composable
+private fun SessionHistoryDeleteConfirmationPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        PreviewSharedElementTransitionLayout {
+            SharedElementTransitionScope {
+                SessionHistoryLayout(
+                    state =
+                        SessionHistoryScreen.State.Success(
+                            allSessions = sampleHistorySessions,
+                            sessions = sampleHistorySessions,
+                            selectedTopic = null,
+                            availableTopics = listOf(CodingTopic.KOTLIN, CodingTopic.PYTHON, CodingTopic.RUST),
+                            sessionPendingDeletion = sampleHistorySessions.first(),
+                            eventSink = {},
+                        ),
+                    transitionScope = this@SharedElementTransitionScope,
+                )
+            }
+        }
     }
 }

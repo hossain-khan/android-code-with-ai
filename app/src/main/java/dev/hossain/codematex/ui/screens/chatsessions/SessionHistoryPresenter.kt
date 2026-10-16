@@ -35,6 +35,7 @@ class SessionHistoryPresenter(
     override fun present(): SessionHistoryScreen.State {
         var sessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var selectedTopic by rememberRetained { mutableStateOf<CodingTopic?>(null) }
+        var sessionPendingDeletion by rememberRetained { mutableStateOf<ChatSession?>(null) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
@@ -89,10 +90,22 @@ class SessionHistoryPresenter(
                     }
                 }
 
-                is SessionHistoryScreen.Event.DeleteSession -> {
-                    scope.launch {
-                        sessionRepository.deleteSession(event.sessionId)
+                is SessionHistoryScreen.Event.RequestDeleteSession -> {
+                    sessionPendingDeletion = event.session
+                }
+
+                SessionHistoryScreen.Event.ConfirmDeleteSession -> {
+                    val sessionToDelete = sessionPendingDeletion
+                    sessionPendingDeletion = null
+                    if (sessionToDelete != null) {
+                        scope.launch {
+                            sessionRepository.deleteSession(sessionToDelete.id)
+                        }
                     }
+                }
+
+                SessionHistoryScreen.Event.DismissDeleteSession -> {
+                    sessionPendingDeletion = null
                 }
 
                 is SessionHistoryScreen.Event.SelectTopicFilter -> {
@@ -124,6 +137,7 @@ class SessionHistoryPresenter(
                     allSessions = sessions,
                     availableTopics = availableTopics,
                     selectedTopic = effectiveTopic,
+                    sessionPendingDeletion = sessionPendingDeletion,
                     eventSink = eventSink,
                 )
             }
