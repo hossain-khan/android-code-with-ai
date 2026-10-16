@@ -12,11 +12,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -78,7 +77,6 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
 import androidx.compose.foundation.lazy.grid.items as gridItems
-import androidx.compose.foundation.lazy.items as lazyItems
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -210,71 +208,31 @@ internal fun ChapterScreenInnerContent(
 
             is ChapterScreen.State.Success -> {
                 val course = state.course
-                if (isExpanded) {
-                    // Expanded layout uses an adaptive multi-column grid; state is intentionally scoped
-                    // to this layout branch rather than shared with the compact single-column list.
-                    val gridState = rememberLazyGridState()
-                    LazyVerticalGrid(
-                        columns = GridCells.Adaptive(minSize = 340.dp),
-                        state = gridState,
-                        modifier = Modifier.fillMaxSize().padding(padding).adaptiveScrollbar(gridState),
-                        contentPadding = PaddingValues(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
-                    ) {
-                        item(span = {
-                            androidx.compose.foundation.lazy.grid
-                                .GridItemSpan(maxLineSpan)
-                        }) {
-                            CourseProgressHeader(course, state, transitionScope)
-                        }
-                        if (course.chapters.isEmpty()) {
-                            item(span = {
-                                androidx.compose.foundation.lazy.grid
-                                    .GridItemSpan(maxLineSpan)
-                            }) {
-                                EmptyChapterState()
-                            }
-                        } else {
-                            gridItems(course.chapters) { chapter ->
-                                ChapterCard(
-                                    chapter = chapter,
-                                    progress = state.progress,
-                                    visualAccent = visualInfo.accentColor,
-                                    transitionScope = transitionScope,
-                                ) { lesson ->
-                                    state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
-                                }
-                            }
-                        }
+                val gridState = rememberLazyGridState()
+                LazyVerticalGrid(
+                    columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
+                    state = gridState,
+                    modifier = Modifier.fillMaxSize().padding(padding).adaptiveScrollbar(gridState),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        CourseProgressHeader(course, state, transitionScope)
                     }
-                } else {
-                    // Compact layout uses a single vertical list; state is intentionally scoped
-                    // to this layout branch rather than shared with the expanded multi-column grid.
-                    val listState = rememberLazyListState()
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize().padding(padding).adaptiveScrollbar(listState),
-                        contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(14.dp),
-                    ) {
-                        item {
-                            CourseProgressHeader(course, state, transitionScope)
+                    if (course.chapters.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            EmptyChapterState()
                         }
-                        if (course.chapters.isEmpty()) {
-                            item {
-                                EmptyChapterState()
-                            }
-                        } else {
-                            lazyItems(course.chapters) { chapter ->
-                                ChapterCard(
-                                    chapter = chapter,
-                                    progress = state.progress,
-                                    visualAccent = visualInfo.accentColor,
-                                    transitionScope = transitionScope,
-                                ) { lesson ->
-                                    state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
-                                }
+                    } else {
+                        gridItems(course.chapters, key = { it.id }) { chapter ->
+                            ChapterCard(
+                                chapter = chapter,
+                                progress = state.progress,
+                                visualAccent = visualInfo.accentColor,
+                                transitionScope = transitionScope,
+                            ) { lesson ->
+                                state.eventSink(ChapterScreen.Event.OpenLesson(lesson.id))
                             }
                         }
                     }
