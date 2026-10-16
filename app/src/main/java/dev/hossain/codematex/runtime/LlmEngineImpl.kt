@@ -302,7 +302,9 @@ class LlmEngineImpl(
     ) {
         currentSystemInstruction = systemInstruction
         currentConfig = config
-        closeQuietly(conversation)
+        val oldConversation = conversation
+        conversation = null
+        closeQuietly(oldConversation)
         conversation = createConversationLocked(systemInstruction, config)
     }
 

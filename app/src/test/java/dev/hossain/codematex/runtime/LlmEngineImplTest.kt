@@ -583,6 +583,58 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `resetConversation nulls conversation when recreation throws and avoids calling closed handle`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            // Simulate failure during conversation recreation
+            fakeEngine.conversationToThrow = IllegalStateException("Native conversation allocation failed")
+
+            val result =
+                runCatching {
+                    engine.resetConversation(
+                        systemInstruction = "New prompt",
+                        config = ModelConfig(),
+                    )
+                }
+
+            assertThat(result.isFailure).isTrue()
+            assertThat(result.exceptionOrNull()).hasMessageThat().isEqualTo("Native conversation allocation failed")
+            // The old conversation was safely closed
+            assertThat(fakeConversation.closed).isTrue()
+
+            // Reset conversation cancellation flag to verify stop() does not invoke cancelProcess() on the closed conversation
+            fakeConversation.cancelled = false
+            engine.stop()
+            assertThat(fakeConversation.cancelled).isFalse()
+
+            // When running inference subsequently, the engine sees conversation is null and recreates it
+            fakeEngine.conversationToThrow = null
+            val job =
+                launch {
+                    engine.runInference("Hello after reset") { _, _ -> }
+                }
+            val recreatedConversation = fakeEngine.createdConversations.last()
+            val recreatedMessage = recreatedConversation.sentMessages.single()
+            recreatedMessage.callback.onDone()
+            job.join()
+
+            assertThat(recreatedConversation).isNotEqualTo(fakeConversation)
+        }
+
+    @Test
     fun `restoreHistory seeds context through conversation`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()
