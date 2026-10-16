@@ -534,7 +534,7 @@ private fun getOnboardingPages(): List<OnboardingPageData> =
                     FeatureItem(
                         icon = Icons.Default.Code,
                         title = "Works Completely Offline",
-                        description = "Code, chat, and learn anytime—even on flights, commutes, or off-grid environments.",
+                        description = "Code, chat, and learn anytime - even on flights, commutes, or off-grid environments.",
                     ),
                     FeatureItem(
                         icon = Icons.Default.CheckCircle,
