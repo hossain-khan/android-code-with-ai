@@ -436,7 +436,7 @@ private fun SessionHistoryLayout(
                                 state.eventSink(SessionHistoryScreen.Event.OpenSession(session.id))
                             },
                             onDelete = {
-                                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session))
+                                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session.id))
                             },
                             transitionScope = transitionScope,
                             modifier = Modifier.animateItem(),

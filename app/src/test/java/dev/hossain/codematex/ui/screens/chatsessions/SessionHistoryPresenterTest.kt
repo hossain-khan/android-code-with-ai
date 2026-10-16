@@ -170,7 +170,7 @@ class SessionHistoryPresenterTest {
                 val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 assertThat(state.sessionPendingDeletion).isNull()
 
-                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session))
+                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session.id))
                 val pendingState = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 assertThat(pendingState.sessionPendingDeletion).isEqualTo(session)
                 assertThat(fakeRepo.deletedSessionIds).isEmpty()
@@ -192,7 +192,7 @@ class SessionHistoryPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session))
+                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session.id))
                 val pendingState = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 assertThat(pendingState.sessionPendingDeletion).isEqualTo(session)
 
@@ -218,7 +218,7 @@ class SessionHistoryPresenterTest {
 
             presenter.test {
                 val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
-                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session))
+                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession(session.id))
                 val pendingState = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 assertThat(pendingState.sessionPendingDeletion).isEqualTo(session)
 
@@ -226,6 +226,53 @@ class SessionHistoryPresenterTest {
                 val confirmedState = expectMostRecentItem() as SessionHistoryScreen.State.Success
                 assertThat(confirmedState.sessionPendingDeletion).isNull()
                 assertThat(fakeRepo.deletedSessionIds).containsExactly("s1")
+            }
+        }
+
+    @Test
+    fun `given confirm delete session event with no pending session - does nothing and leaves deletedSessionIds empty`() =
+        runTest {
+            val session = testSession(id = "s1", topic = CodingTopic.KOTLIN)
+            val fakeRepo = FakeChatSessionRepository(sessions = listOf(session))
+            val navigator = FakeNavigator(SessionHistoryScreen)
+            val presenter =
+                SessionHistoryPresenter(
+                    navigator = navigator,
+                    screen = SessionHistoryScreen,
+                    sessionRepository = fakeRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                assertThat(state.sessionPendingDeletion).isNull()
+
+                state.eventSink(SessionHistoryScreen.Event.ConfirmDeleteSession)
+                assertThat(fakeRepo.deletedSessionIds).isEmpty()
+                expectNoEvents()
+            }
+        }
+
+    @Test
+    fun `given session pending deletion not in sessions list - sessionPendingDeletion resolves to null`() =
+        runTest {
+            val session = testSession(id = "s1", topic = CodingTopic.KOTLIN)
+            val fakeRepo = FakeChatSessionRepository(sessions = listOf(session))
+            val navigator = FakeNavigator(SessionHistoryScreen)
+            val presenter =
+                SessionHistoryPresenter(
+                    navigator = navigator,
+                    screen = SessionHistoryScreen,
+                    sessionRepository = fakeRepo,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                // Request deletion for unknown session id
+                state.eventSink(SessionHistoryScreen.Event.RequestDeleteSession("unknown-id"))
+                // Expect sessionPendingDeletion to remain null since session does not exist in sessions list
+                val pendingState = expectMostRecentItem() as SessionHistoryScreen.State.Success
+                assertThat(pendingState.sessionPendingDeletion).isNull()
+                assertThat(fakeRepo.deletedSessionIds).isEmpty()
             }
         }
 }

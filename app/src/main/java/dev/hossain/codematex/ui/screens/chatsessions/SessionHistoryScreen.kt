@@ -38,7 +38,7 @@ data object SessionHistoryScreen : ParcelableScreen {
         ) : Event
 
         data class RequestDeleteSession(
-            val session: ChatSession,
+            val sessionId: String,
         ) : Event
 
         data object ConfirmDeleteSession : Event

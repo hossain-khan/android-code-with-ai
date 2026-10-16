@@ -7,7 +7,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -78,12 +77,22 @@ fun DeleteSessionConfirmationDialog(
 @Composable
 private fun DeleteSessionConfirmationDialogPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        Surface {
-            DeleteSessionConfirmationDialog(
-                sessionTitle = "Kotlin Coroutines & Flow Deep Dive",
-                onConfirm = {},
-                onDismiss = {},
-            )
-        }
+        DeleteSessionConfirmationDialog(
+            sessionTitle = "Kotlin Coroutines & Flow Deep Dive",
+            onConfirm = {},
+            onDismiss = {},
+        )
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun DeleteSessionConfirmationDialogEmptyTitlePreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        DeleteSessionConfirmationDialog(
+            sessionTitle = "",
+            onConfirm = {},
+            onDismiss = {},
+        )
     }
 }

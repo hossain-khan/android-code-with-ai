@@ -35,7 +35,7 @@ class SessionHistoryPresenter(
     override fun present(): SessionHistoryScreen.State {
         var sessions by rememberRetained { mutableStateOf<List<ChatSession>>(emptyList()) }
         var selectedTopic by rememberRetained { mutableStateOf<CodingTopic?>(null) }
-        var sessionPendingDeletion by rememberRetained { mutableStateOf<ChatSession?>(null) }
+        var sessionPendingDeletionId by rememberRetained { mutableStateOf<String?>(null) }
         var isLoading by rememberRetained { mutableStateOf(true) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
@@ -81,6 +81,11 @@ class SessionHistoryPresenter(
                 }
             }
 
+        val sessionPendingDeletion =
+            remember(sessions, sessionPendingDeletionId) {
+                sessions.find { it.id == sessionPendingDeletionId }
+            }
+
         val eventSink: (SessionHistoryScreen.Event) -> Unit = { event ->
             when (event) {
                 is SessionHistoryScreen.Event.OpenSession -> {
@@ -91,21 +96,21 @@ class SessionHistoryPresenter(
                 }
 
                 is SessionHistoryScreen.Event.RequestDeleteSession -> {
-                    sessionPendingDeletion = event.session
+                    sessionPendingDeletionId = event.sessionId
                 }
 
                 SessionHistoryScreen.Event.ConfirmDeleteSession -> {
-                    val sessionToDelete = sessionPendingDeletion
-                    sessionPendingDeletion = null
-                    if (sessionToDelete != null) {
+                    val sessionIdToDelete = sessionPendingDeletionId
+                    sessionPendingDeletionId = null
+                    if (sessionIdToDelete != null) {
                         scope.launch {
-                            sessionRepository.deleteSession(sessionToDelete.id)
+                            sessionRepository.deleteSession(sessionIdToDelete)
                         }
                     }
                 }
 
                 SessionHistoryScreen.Event.DismissDeleteSession -> {
-                    sessionPendingDeletion = null
+                    sessionPendingDeletionId = null
                 }
 
                 is SessionHistoryScreen.Event.SelectTopicFilter -> {
