@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.28.0:
+• Session Deletion Safety: Added confirmation dialog before deleting chat sessions to prevent accidental data loss.
+• AI Engine Stability: Hardened native conversation lifecycle preventing stale handles and stalls after interrupted generation or error recovery.
+• Typography & Quality: Sanitized character formatting across UI and improved test coverage for session management.
