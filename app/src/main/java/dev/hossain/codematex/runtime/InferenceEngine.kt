@@ -71,28 +71,21 @@ class DefaultInferenceEngine internal constructor(
     override fun initialize() {
         synchronized(stateLock) {
             check(!isClosed) { "Cannot initialize a closed engine." }
+            initAction()
         }
-        initAction()
     }
 
     override fun createConversation(config: ConversationConfig): InferenceConversation {
         synchronized(stateLock) {
             check(!isClosed) { "Cannot create conversation from a closed engine." }
+            return createConversationAction(config)
         }
-        return createConversationAction(config)
     }
 
     override fun close() {
-        val shouldClose =
-            synchronized(stateLock) {
-                if (isClosed) {
-                    false
-                } else {
-                    isClosed = true
-                    true
-                }
-            }
-        if (shouldClose) {
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
             closeAction()
         }
     }
@@ -121,31 +114,21 @@ class DefaultInferenceConversation internal constructor(
     ) {
         synchronized(stateLock) {
             check(!isClosed) { "Cannot send message on a closed conversation." }
+            sendAction(input, callback)
         }
-        sendAction(input, callback)
     }
 
     override fun cancelProcess() {
-        val shouldCancel =
-            synchronized(stateLock) {
-                !isClosed
-            }
-        if (shouldCancel) {
+        synchronized(stateLock) {
+            if (isClosed) return
             cancelAction()
         }
     }
 
     override fun close() {
-        val shouldClose =
-            synchronized(stateLock) {
-                if (isClosed) {
-                    false
-                } else {
-                    isClosed = true
-                    true
-                }
-            }
-        if (shouldClose) {
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
             closeAction()
         }
     }

@@ -203,4 +203,79 @@ class InferenceEngineTest {
 
         assertThat(closeCount).isEqualTo(1)
     }
+
+    @Test
+    fun `DefaultInferenceConversation cancelProcess and close are strictly serialized`() {
+        val cancelStarted = java.util.concurrent.CountDownLatch(1)
+        val canCompleteCancel = java.util.concurrent.CountDownLatch(1)
+        var closeExecuted = false
+        var cancelExecuted = false
+
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> },
+                cancelAction = {
+                    cancelStarted.countDown()
+                    canCompleteCancel.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                    cancelExecuted = true
+                },
+                closeAction = {
+                    closeExecuted = true
+                },
+            )
+
+        val cancelThread = Thread { conversation.cancelProcess() }
+        cancelThread.start()
+
+        assertThat(cancelStarted.await(2, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+
+        val closeThread = Thread { conversation.close() }
+        closeThread.start()
+
+        Thread.sleep(50)
+        assertThat(closeExecuted).isFalse()
+
+        canCompleteCancel.countDown()
+        cancelThread.join(2000)
+        closeThread.join(2000)
+
+        assertThat(cancelExecuted).isTrue()
+        assertThat(closeExecuted).isTrue()
+    }
+
+    @Test
+    fun `DefaultInferenceConversation cancelProcess never runs after close starts`() {
+        val closeStarted = java.util.concurrent.CountDownLatch(1)
+        val canCompleteClose = java.util.concurrent.CountDownLatch(1)
+        var cancelExecuted = false
+        var closeExecuted = false
+
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> },
+                cancelAction = {
+                    cancelExecuted = true
+                },
+                closeAction = {
+                    closeStarted.countDown()
+                    canCompleteClose.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                    closeExecuted = true
+                },
+            )
+
+        val closeThread = Thread { conversation.close() }
+        closeThread.start()
+
+        assertThat(closeStarted.await(2, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+
+        val cancelThread = Thread { conversation.cancelProcess() }
+        cancelThread.start()
+
+        canCompleteClose.countDown()
+        closeThread.join(2000)
+        cancelThread.join(2000)
+
+        assertThat(closeExecuted).isTrue()
+        assertThat(cancelExecuted).isFalse()
+    }
 }
