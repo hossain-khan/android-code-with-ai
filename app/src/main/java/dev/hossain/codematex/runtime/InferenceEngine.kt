@@ -54,39 +54,82 @@ interface InferenceConversation {
 /**
  * Default implementation that forwards calls to the native LiteRT-LM [Engine].
  */
-class DefaultInferenceEngine(
-    private val engine: Engine,
+class DefaultInferenceEngine internal constructor(
+    private val initAction: () -> Unit,
+    private val createConversationAction: (ConversationConfig) -> InferenceConversation,
+    private val closeAction: () -> Unit,
 ) : InferenceEngine {
+    private val stateLock = Any()
+    private var isClosed = false
+
+    constructor(engine: Engine) : this(
+        initAction = { engine.initialize() },
+        createConversationAction = { config -> DefaultInferenceConversation(engine.createConversation(config)) },
+        closeAction = { engine.close() },
+    )
+
     override fun initialize() {
-        engine.initialize()
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot initialize a closed engine." }
+            initAction()
+        }
     }
 
-    override fun createConversation(config: ConversationConfig): InferenceConversation =
-        DefaultInferenceConversation(engine.createConversation(config))
+    override fun createConversation(config: ConversationConfig): InferenceConversation {
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot create conversation from a closed engine." }
+            return createConversationAction(config)
+        }
+    }
 
     override fun close() {
-        engine.close()
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
+            closeAction()
+        }
     }
 }
 
 /**
  * Default implementation that forwards calls to the native LiteRT-LM [com.google.ai.edge.litertlm.Conversation].
  */
-class DefaultInferenceConversation(
-    private val conversation: com.google.ai.edge.litertlm.Conversation,
+class DefaultInferenceConversation internal constructor(
+    private val sendAction: (String, MessageCallback) -> Unit,
+    private val cancelAction: () -> Unit,
+    private val closeAction: () -> Unit,
 ) : InferenceConversation {
+    private val stateLock = Any()
+    private var isClosed = false
+
+    constructor(conversation: com.google.ai.edge.litertlm.Conversation) : this(
+        sendAction = { input, callback -> conversation.sendMessageAsync(input, callback) },
+        cancelAction = { conversation.cancelProcess() },
+        closeAction = { conversation.close() },
+    )
+
     override fun sendMessageAsync(
         input: String,
         callback: MessageCallback,
     ) {
-        conversation.sendMessageAsync(input, callback)
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot send message on a closed conversation." }
+            sendAction(input, callback)
+        }
     }
 
     override fun cancelProcess() {
-        conversation.cancelProcess()
+        synchronized(stateLock) {
+            if (isClosed) return
+            cancelAction()
+        }
     }
 
     override fun close() {
-        conversation.close()
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
+            closeAction()
+        }
     }
 }
