@@ -21,6 +21,7 @@ data object SessionHistoryScreen : ParcelableScreen {
             val allSessions: List<ChatSession>,
             val availableTopics: List<CodingTopic>,
             val selectedTopic: CodingTopic?,
+            val sessionPendingDeletion: ChatSession? = null,
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -36,9 +37,13 @@ data object SessionHistoryScreen : ParcelableScreen {
             val sessionId: String,
         ) : Event
 
-        data class DeleteSession(
+        data class RequestDeleteSession(
             val sessionId: String,
         ) : Event
+
+        data object ConfirmDeleteSession : Event
+
+        data object DismissDeleteSession : Event
 
         data class SelectTopicFilter(
             val topic: CodingTopic?,
