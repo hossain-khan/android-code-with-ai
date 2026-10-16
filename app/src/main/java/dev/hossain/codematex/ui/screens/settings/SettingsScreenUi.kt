@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -614,9 +615,14 @@ private fun PersonaSelectionDialog(
                 TutorPersona.entries.forEach { persona ->
                     val isSelected = persona == currentPersona
                     Surface(
+                        onClick = { onPersonaSelected(persona) },
                         shape = MaterialTheme.shapes.medium,
                         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent,
-                        modifier = Modifier.fillMaxWidth().clickable { onPersonaSelected(persona) },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                                .handHoverIcon(),
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -645,7 +651,10 @@ private fun PersonaSelectionDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.handHoverIcon(),
+            ) {
                 Text("Done")
             }
         },
@@ -684,8 +693,10 @@ private fun RamEvictionDialog(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                                 .clip(MaterialTheme.shapes.small)
                                 .clickable { onMinutesSelected(minutes) }
+                                .handHoverIcon()
                                 .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -704,7 +715,10 @@ private fun RamEvictionDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.handHoverIcon(),
+            ) {
                 Text("Cancel")
             }
         },

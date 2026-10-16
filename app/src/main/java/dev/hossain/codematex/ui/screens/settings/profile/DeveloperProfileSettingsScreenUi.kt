@@ -14,13 +14,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -58,6 +61,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +71,8 @@ import dev.hossain.codematex.data.model.DeveloperExperienceLevel
 import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.adaptiveScrollbar
+import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -91,10 +97,12 @@ private fun DeveloperProfileSettingsContent(
     state: DeveloperProfileSettingsScreen.State.Content,
     modifier: Modifier = Modifier,
 ) {
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     Scaffold(
         modifier =
             modifier
                 .fillMaxSize()
+                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.16f)),
         topBar = {
             TopAppBar(
@@ -116,7 +124,10 @@ private fun DeveloperProfileSettingsContent(
                     }
                 },
                 actions = {
-                    TextButton(onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.ResetClicked) }) {
+                    TextButton(
+                        onClick = { state.eventSink(DeveloperProfileSettingsScreen.Event.ResetClicked) },
+                        modifier = Modifier.handHoverIcon(),
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = null,
@@ -130,122 +141,135 @@ private fun DeveloperProfileSettingsContent(
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
                     ),
+                scrollBehavior = scrollBehavior,
             )
         },
     ) { innerPadding ->
-        Column(
+        Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .navigationBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
+                    .padding(innerPadding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            // Hero / Informational Banner
-            HeroExplainerCard()
-
-            // Master Toggle Card
-            MasterToggleCard(
-                enabled = state.profile.enabled,
-                onToggle = { state.eventSink(DeveloperProfileSettingsScreen.Event.EnabledToggled(it)) },
-            )
-
-            // One-Tap Starter Presets
-            StarterPresetsSection(
-                onPresetSelected = { state.eventSink(DeveloperProfileSettingsScreen.Event.PresetApplied(it)) },
-            )
-
-            // Section 1: Experience Level
-            SectionHeader(title = "Experience Level", icon = Icons.Default.School)
-            ExperienceLevelCard(
-                selectedLevel = state.profile.experienceLevel,
-                onSelectLevel = { state.eventSink(DeveloperProfileSettingsScreen.Event.ExperienceLevelSelected(it)) },
-            )
-
-            // Section 2: Primary Tech Stack
-            SectionHeader(title = "Primary Tech Stack & Languages", icon = Icons.Default.Code)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+            val scrollState = rememberScrollState()
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxHeight()
+                        .widthIn(max = 720.dp)
+                        .fillMaxWidth()
+                        // adaptiveScrollbar must precede verticalScroll so the thumb is drawn in viewport coordinates
+                        .adaptiveScrollbar(scrollState)
+                        .verticalScroll(scrollState)
+                        .navigationBarsPadding()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "List your primary languages, frameworks, or architecture patterns:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = state.profile.primaryStack,
-                        onValueChange = { state.eventSink(DeveloperProfileSettingsScreen.Event.PrimaryStackChanged(it)) },
-                        placeholder = {
-                            Text(
-                                "e.g. Kotlin, Jetpack Compose, Coroutines, KMP, Python",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                    )
+                // Hero / Informational Banner
+                HeroExplainerCard()
+
+                // Master Toggle Card
+                MasterToggleCard(
+                    enabled = state.profile.enabled,
+                    onToggle = { state.eventSink(DeveloperProfileSettingsScreen.Event.EnabledToggled(it)) },
+                )
+
+                // One-Tap Starter Presets
+                StarterPresetsSection(
+                    onPresetSelected = { state.eventSink(DeveloperProfileSettingsScreen.Event.PresetApplied(it)) },
+                )
+
+                // Section 1: Experience Level
+                SectionHeader(title = "Experience Level", icon = Icons.Default.School)
+                ExperienceLevelCard(
+                    selectedLevel = state.profile.experienceLevel,
+                    onSelectLevel = { state.eventSink(DeveloperProfileSettingsScreen.Event.ExperienceLevelSelected(it)) },
+                )
+
+                // Section 2: Primary Tech Stack
+                SectionHeader(title = "Primary Tech Stack & Languages", icon = Icons.Default.Code)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "List your primary languages, frameworks, or architecture patterns:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = state.profile.primaryStack,
+                            onValueChange = { state.eventSink(DeveloperProfileSettingsScreen.Event.PrimaryStackChanged(it)) },
+                            placeholder = {
+                                Text(
+                                    "e.g. Kotlin, Jetpack Compose, Coroutines, KMP, Python",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                )
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors =
+                                OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                ),
+                        )
+                    }
                 }
-            }
 
-            // Section 3: Custom Directives & Preferences
-            SectionHeader(title = "Custom Guidelines & Preferences", icon = Icons.Default.Description)
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Specific instructions for how the AI tutor should format answers:",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = state.profile.customDirectives,
-                        onValueChange = { state.eventSink(DeveloperProfileSettingsScreen.Event.CustomDirectivesChanged(it)) },
-                        placeholder = {
-                            Text(
-                                "e.g. Skip basic syntax explanations. Provide code-first solutions with idiomatic Kotlin Coroutines. Focus on memory safety and lifecycle trade-offs.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                            )
-                        },
-                        minLines = 4,
-                        maxLines = 8,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
-                            ),
-                    )
+                // Section 3: Custom Directives & Preferences
+                SectionHeader(title = "Custom Guidelines & Preferences", icon = Icons.Default.Description)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Specific instructions for how the AI tutor should format answers:",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = state.profile.customDirectives,
+                            onValueChange = { state.eventSink(DeveloperProfileSettingsScreen.Event.CustomDirectivesChanged(it)) },
+                            placeholder = {
+                                Text(
+                                    "e.g. Skip basic syntax explanations. Provide code-first solutions with idiomatic Kotlin Coroutines. Focus on memory safety and lifecycle trade-offs.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                )
+                            },
+                            minLines = 4,
+                            maxLines = 8,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors =
+                                OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                ),
+                        )
+                    }
                 }
+
+                // Section 4: Live Generated Prompt Preview
+                SectionHeader(title = "Generated System Prompt Preview", icon = Icons.Default.AutoAwesome)
+                PromptPreviewCard(
+                    promptSnippet = state.generatedPromptSnippet,
+                    enabled = state.profile.enabled,
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            // Section 4: Live Generated Prompt Preview
-            SectionHeader(title = "Generated System Prompt Preview", icon = Icons.Default.AutoAwesome)
-            PromptPreviewCard(
-                promptSnippet = state.generatedPromptSnippet,
-                enabled = state.profile.enabled,
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -341,7 +365,9 @@ private fun MasterToggleCard(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .heightIn(min = 48.dp)
                     .clickable { onToggle(!enabled) }
+                    .handHoverIcon()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -390,6 +416,7 @@ private fun StarterPresetsSection(
                     selected = false,
                     onClick = { onPresetSelected(preset) },
                     label = { Text(preset.title, style = MaterialTheme.typography.labelMedium) },
+                    modifier = Modifier.handHoverIcon(),
                     colors =
                         FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -421,7 +448,9 @@ private fun ExperienceLevelCard(
                     modifier =
                         Modifier
                             .fillMaxWidth()
+                            .heightIn(min = 48.dp)
                             .clickable { onSelectLevel(level) }
+                            .handHoverIcon()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
