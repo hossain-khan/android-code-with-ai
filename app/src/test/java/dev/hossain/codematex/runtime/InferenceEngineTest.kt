@@ -1,0 +1,199 @@
+package dev.hossain.codematex.runtime
+
+import com.google.ai.edge.litertlm.ConversationConfig
+import com.google.ai.edge.litertlm.MessageCallback
+import com.google.common.truth.Truth.assertThat
+import org.junit.Assert.assertThrows
+import org.junit.Test
+
+class InferenceEngineTest {
+    @Test
+    fun `DefaultInferenceConversation forwards sendMessageAsync when open`() {
+        var sentInput: String? = null
+        var callbackReceived: MessageCallback? = null
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { input, cb ->
+                    sentInput = input
+                    callbackReceived = cb
+                },
+                cancelAction = {},
+                closeAction = {},
+            )
+
+        val callback =
+            object : MessageCallback {
+                override fun onMessage(message: com.google.ai.edge.litertlm.Message) {}
+
+                override fun onDone() {}
+
+                override fun onError(throwable: Throwable) {}
+            }
+        conversation.sendMessageAsync("Hello", callback)
+
+        assertThat(sentInput).isEqualTo("Hello")
+        assertThat(callbackReceived).isSameInstanceAs(callback)
+    }
+
+    @Test
+    fun `DefaultInferenceConversation throws on sendMessageAsync when closed`() {
+        var sendInvoked = false
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> sendInvoked = true },
+                cancelAction = {},
+                closeAction = {},
+            )
+
+        conversation.close()
+
+        val exception =
+            assertThrows(IllegalStateException::class.java) {
+                conversation.sendMessageAsync(
+                    "Hello",
+                    object : MessageCallback {
+                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {}
+
+                        override fun onDone() {}
+
+                        override fun onError(throwable: Throwable) {}
+                    },
+                )
+            }
+
+        assertThat(exception).hasMessageThat().isEqualTo("Cannot send message on a closed conversation.")
+        assertThat(sendInvoked).isFalse()
+    }
+
+    @Test
+    fun `DefaultInferenceConversation forwards cancelProcess when open`() {
+        var cancelInvoked = false
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> },
+                cancelAction = { cancelInvoked = true },
+                closeAction = {},
+            )
+
+        conversation.cancelProcess()
+        assertThat(cancelInvoked).isTrue()
+    }
+
+    @Test
+    fun `DefaultInferenceConversation ignores cancelProcess when closed`() {
+        var cancelInvoked = false
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> },
+                cancelAction = { cancelInvoked = true },
+                closeAction = {},
+            )
+
+        conversation.close()
+        conversation.cancelProcess()
+
+        assertThat(cancelInvoked).isFalse()
+    }
+
+    @Test
+    fun `DefaultInferenceConversation close is idempotent`() {
+        var closeCount = 0
+        val conversation =
+            DefaultInferenceConversation(
+                sendAction = { _, _ -> },
+                cancelAction = {},
+                closeAction = { closeCount++ },
+            )
+
+        conversation.close()
+        conversation.close()
+
+        assertThat(closeCount).isEqualTo(1)
+    }
+
+    @Test
+    fun `DefaultInferenceEngine forwards initialize and createConversation when open`() {
+        var initInvoked = false
+        var createdConfig: ConversationConfig? = null
+        val fakeConversation = FakeInferenceConversation()
+
+        val engine =
+            DefaultInferenceEngine(
+                initAction = { initInvoked = true },
+                createConversationAction = { config ->
+                    createdConfig = config
+                    fakeConversation
+                },
+                closeAction = {},
+            )
+
+        engine.initialize()
+        assertThat(initInvoked).isTrue()
+
+        val config = ConversationConfig()
+        val result = engine.createConversation(config)
+        assertThat(result).isSameInstanceAs(fakeConversation)
+        assertThat(createdConfig).isSameInstanceAs(config)
+    }
+
+    @Test
+    fun `DefaultInferenceEngine throws on initialize when closed`() {
+        var initInvoked = false
+        val engine =
+            DefaultInferenceEngine(
+                initAction = { initInvoked = true },
+                createConversationAction = { FakeInferenceConversation() },
+                closeAction = {},
+            )
+
+        engine.close()
+
+        val exception =
+            assertThrows(IllegalStateException::class.java) {
+                engine.initialize()
+            }
+
+        assertThat(exception).hasMessageThat().isEqualTo("Cannot initialize a closed engine.")
+        assertThat(initInvoked).isFalse()
+    }
+
+    @Test
+    fun `DefaultInferenceEngine throws on createConversation when closed`() {
+        var createInvoked = false
+        val engine =
+            DefaultInferenceEngine(
+                initAction = {},
+                createConversationAction = {
+                    createInvoked = true
+                    FakeInferenceConversation()
+                },
+                closeAction = {},
+            )
+
+        engine.close()
+
+        val exception =
+            assertThrows(IllegalStateException::class.java) {
+                engine.createConversation(ConversationConfig())
+            }
+
+        assertThat(exception).hasMessageThat().isEqualTo("Cannot create conversation from a closed engine.")
+        assertThat(createInvoked).isFalse()
+    }
+
+    @Test
+    fun `DefaultInferenceEngine close is idempotent`() {
+        var closeCount = 0
+        val engine =
+            DefaultInferenceEngine(
+                initAction = {},
+                createConversationAction = { FakeInferenceConversation() },
+                closeAction = { closeCount++ },
+            )
+
+        engine.close()
+        engine.close()
+
+        assertThat(closeCount).isEqualTo(1)
+    }
+}

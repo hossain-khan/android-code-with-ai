@@ -3,7 +3,6 @@ package dev.hossain.codematex.runtime
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.MessageCallback
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Wrapper around the native LiteRT-LM [Engine].
@@ -55,24 +54,39 @@ interface InferenceConversation {
 /**
  * Default implementation that forwards calls to the native LiteRT-LM [Engine].
  */
-class DefaultInferenceEngine(
-    private val engine: Engine,
+class DefaultInferenceEngine internal constructor(
+    private val initAction: () -> Unit,
+    private val createConversationAction: (ConversationConfig) -> InferenceConversation,
+    private val closeAction: () -> Unit,
 ) : InferenceEngine {
-    private val isClosed = AtomicBoolean(false)
+    private val stateLock = Any()
+    private var isClosed = false
+
+    constructor(engine: Engine) : this(
+        initAction = { engine.initialize() },
+        createConversationAction = { config -> DefaultInferenceConversation(engine.createConversation(config)) },
+        closeAction = { engine.close() },
+    )
 
     override fun initialize() {
-        check(!isClosed.get()) { "Cannot initialize a closed engine." }
-        engine.initialize()
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot initialize a closed engine." }
+            initAction()
+        }
     }
 
     override fun createConversation(config: ConversationConfig): InferenceConversation {
-        check(!isClosed.get()) { "Cannot create conversation from a closed engine." }
-        return DefaultInferenceConversation(engine.createConversation(config))
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot create conversation from a closed engine." }
+            return createConversationAction(config)
+        }
     }
 
     override fun close() {
-        if (isClosed.compareAndSet(false, true)) {
-            engine.close()
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
+            closeAction()
         }
     }
 }
@@ -80,27 +94,42 @@ class DefaultInferenceEngine(
 /**
  * Default implementation that forwards calls to the native LiteRT-LM [com.google.ai.edge.litertlm.Conversation].
  */
-class DefaultInferenceConversation(
-    private val conversation: com.google.ai.edge.litertlm.Conversation,
+class DefaultInferenceConversation internal constructor(
+    private val sendAction: (String, MessageCallback) -> Unit,
+    private val cancelAction: () -> Unit,
+    private val closeAction: () -> Unit,
 ) : InferenceConversation {
-    private val isClosed = AtomicBoolean(false)
+    private val stateLock = Any()
+    private var isClosed = false
+
+    constructor(conversation: com.google.ai.edge.litertlm.Conversation) : this(
+        sendAction = { input, callback -> conversation.sendMessageAsync(input, callback) },
+        cancelAction = { conversation.cancelProcess() },
+        closeAction = { conversation.close() },
+    )
 
     override fun sendMessageAsync(
         input: String,
         callback: MessageCallback,
     ) {
-        check(!isClosed.get()) { "Cannot send message on a closed conversation." }
-        conversation.sendMessageAsync(input, callback)
+        synchronized(stateLock) {
+            check(!isClosed) { "Cannot send message on a closed conversation." }
+            sendAction(input, callback)
+        }
     }
 
     override fun cancelProcess() {
-        if (isClosed.get()) return
-        conversation.cancelProcess()
+        synchronized(stateLock) {
+            if (isClosed) return
+            cancelAction()
+        }
     }
 
     override fun close() {
-        if (isClosed.compareAndSet(false, true)) {
-            conversation.close()
+        synchronized(stateLock) {
+            if (isClosed) return
+            isClosed = true
+            closeAction()
         }
     }
 }

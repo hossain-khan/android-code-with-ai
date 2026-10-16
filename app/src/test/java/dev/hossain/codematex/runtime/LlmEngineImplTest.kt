@@ -615,7 +615,7 @@ class LlmEngineImplTest {
             // The old conversation was safely closed
             assertThat(fakeConversation.closed).isTrue()
 
-            // Reset conversation cancellation flag to verify stop() does not invoke cancelProcess() on the closed conversation
+            // Clear the fake's cancelled flag so the assertion below proves stop() does not call cancelProcess() when no live conversation exists.
             fakeConversation.cancelled = false
             engine.stop()
             assertThat(fakeConversation.cancelled).isFalse()
