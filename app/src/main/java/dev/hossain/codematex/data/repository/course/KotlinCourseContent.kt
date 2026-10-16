@@ -151,7 +151,7 @@ object KotlinCourseContent {
 
                                         Use a `List` for ordered values, a `Set` for unique values, and a `Map` for key-value lookup. Factory functions such as `listOf`, `setOf`, and `mapOf` create read-only collections.
 
-                                        Mutable variants—`mutableListOf`, `mutableSetOf`, and `mutableMapOf`—expose operations that change the collection. Prefer read-only types at API boundaries when mutation is not part of the contract.
+                                        Mutable variants - `mutableListOf`, `mutableSetOf`, and `mutableMapOf` - expose operations that change the collection. Prefer read-only types at API boundaries when mutation is not part of the contract.
                                         """.trimIndent(),
                                     code =
                                         """
@@ -557,7 +557,7 @@ object KotlinCourseContent {
 
                                         An extension function adds a callable operation to a type without changing the type's source code. The receiver is available as `this` inside the function.
 
-                                        Extensions are statically resolved, so use them for focused transformations and convenience APIs—not to imply that a type's runtime class has changed.
+                                        Extensions are statically resolved, so use them for focused transformations and convenience APIs - not to imply that a type's runtime class has changed.
                                         """.trimIndent(),
                                     code =
                                         """

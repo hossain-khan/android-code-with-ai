@@ -7,7 +7,7 @@ import dev.hossain.codematex.data.model.LessonBlock
 
 /**
  * Bundled Swift Foundations course based on official Swift open-source documentation:
- * - Primary Source: "The Swift Programming Language" (TSPL) — "A Swift Tour" and "Language Guide"
+ * - Primary Source: "The Swift Programming Language" (TSPL) - "A Swift Tour" and "Language Guide"
  *   (https://docs.swift.org/swift-book/documentation/the-swift-programming-language/)
  * - Repository: https://github.com/swiftlang/swift-book
  * - License: Apache License 2.0 with Runtime Library Exception
@@ -98,7 +98,7 @@ object SwiftCourseContent {
                                         """
                                         # Types and String Interpolation
 
-                                        Swift provides standard basic types: `Int` for integers, `Double` and `Float` for floating-point numbers, and `Bool` for booleans. `String` represents text and is a structure — a collection of `Character` values — rather than a scalar.
+                                        Swift provides standard basic types: `Int` for integers, `Double` and `Float` for floating-point numbers, and `Bool` for booleans. `String` represents text and is a structure - a collection of `Character` values - rather than a scalar.
 
                                         Swift is a type-safe language. The compiler uses type inference to deduce the type of an expression automatically when you provide an initial value.
 

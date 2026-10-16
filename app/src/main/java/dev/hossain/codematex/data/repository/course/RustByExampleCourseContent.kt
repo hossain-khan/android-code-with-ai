@@ -10375,7 +10375,7 @@ object RustByExampleCourseContent {
                                                     //    so File's drop runs and closes the file handle.
                                                     impl Drop for TempFile {
                                                         fn drop(&mut self) {
-                                                            // Note: the File is still open here — field destructors run after this method.
+                                                            // Note: the File is still open here - field destructors run after this method.
                                                             if let Err(e) = std::fs::remove_file(&self.path) {
                                                                 eprintln!("Failed to remove temporary file: {}", e);
                                                             }

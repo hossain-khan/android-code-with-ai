@@ -14,8 +14,8 @@ import java.io.File
  *
  * To handle both shapes without per-snippet metadata, each snippet is exported twice:
  *
- * - `snippet.kt` — the snippet verbatim. Compiles when it is valid top-level declarations.
- * - `wrapped.kt` — the snippet wrapped in `fun main { ... }`. Compiles when it is top-level
+ * - `snippet.kt` - the snippet verbatim. Compiles when it is valid top-level declarations.
+ * - `wrapped.kt` - the snippet wrapped in `fun main { ... }`. Compiles when it is top-level
  *   statements (a function body accepts both statements and local declarations).
  *
  * The CI job compiles `snippet.kt` first and falls back to `wrapped.kt` only if that fails, so a
@@ -23,7 +23,7 @@ import java.io.File
  * containing top-level `enum`/`object` (which cannot be local) compile as `snippet.kt` and never
  * reach the fallback.
  *
- * Snippets flagged `runnable = false` are skipped — currently the two coroutine snippets, which
+ * Snippets flagged `runnable = false` are skipped - currently the two coroutine snippets, which
  * either reference a symbol defined in a sibling lesson or require `kotlinx.coroutines` on the
  * classpath (the CI check is stdlib-only).
  *
