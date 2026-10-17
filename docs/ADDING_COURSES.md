@@ -25,9 +25,12 @@ Important existing files:
 
 - `data/model/LearningModels.kt` - Course, chapter, lesson, block, and progress models.
 - `data/repository/course/KotlinCourseContent.kt` - Bundled Kotlin Foundations course.
+- `data/repository/course/KotlinTourBeginnerCourseContent.kt` - Bundled Kotlin Tour: Beginner course.
+- `data/repository/course/KotlinTourIntermediateCourseContent.kt` - Bundled Kotlin Tour: Intermediate course.
 - `data/repository/course/PythonCourseContent.kt` - Bundled Python Foundations course.
 - `data/repository/course/TypeScriptCourseContent.kt` - Bundled TypeScript Foundations course.
 - `data/repository/course/GoCourseContent.kt` - Bundled Go Foundations course.
+- `data/repository/course/GoByExampleCourseContent.kt` - Bundled Go by Example course.
 - `data/repository/course/RustCourseContent.kt` - Bundled Rust Foundations course.
 - `data/repository/course/RustByExampleCourseContent.kt` - Bundled Rust by Example course.
 - `data/repository/course/SwiftCourseContent.kt` - Bundled Swift Foundations course.
@@ -246,10 +249,14 @@ When adding another course, update the bundled course list and the lookup method
 private val bundledCourses =
     listOf(
         KotlinCourseContent.course,
+        KotlinTourBeginnerCourseContent.course,
+        KotlinTourIntermediateCourseContent.course,
         PythonCourseContent.course,
         TypeScriptCourseContent.course,
         GoCourseContent.course,
+        GoByExampleCourseContent.course,
         RustCourseContent.course,
+        RustByExampleCourseContent.course,
         SwiftCourseContent.course,
     )
 ```
