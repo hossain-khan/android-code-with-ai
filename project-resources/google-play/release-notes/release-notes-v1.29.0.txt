@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.29.0:
+• Adaptive Continuity: Active AI chat inference and dialogs seamlessly retain state across rotation, split-screen, and folding.
+• Scroll Preservation: Reading position and scroll anchors are preserved across window breakpoint transitions.
+• Keyboard & Focus: Added Escape key dismissal for inputs and menus, plus high-contrast focus indicators.
+• UI Polish: Constrained settings width and enforced 48dp touch targets.
