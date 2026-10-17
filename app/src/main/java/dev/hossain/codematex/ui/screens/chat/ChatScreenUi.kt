@@ -136,7 +136,7 @@ private fun ChatLayout(
     }
 
     var inputText by rememberSaveable { mutableStateOf("") }
-    var showPersonaPicker by remember { mutableStateOf(false) }
+    var showPersonaPicker by rememberSaveable { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass

@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -19,6 +20,7 @@ import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -34,9 +36,49 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.coroutines.CoroutineContext
+
+/**
+ * Retained wrapper that maintains a [CoroutineScope] across composition restarts and configuration changes.
+ *
+ * In Slack Circuit, [rememberRetained] delegates [RememberObserver.onForgotten] only when the
+ * retained state entry is permanently unregistered from the retained registry (e.g., screen popped
+ * from backstack), NOT on configuration change or activity recreation.
+ *
+ * [getOrCreateScope] defensively restores an active scope in the event the parent job was
+ * previously cancelled, ensuring subsequent message launches succeed.
+ */
+private class RetainedCoroutineScope(
+    private val coroutineContext: CoroutineContext,
+) : RememberObserver {
+    private var parentJob = SupervisorJob()
+    var scope: CoroutineScope = CoroutineScope(parentJob + coroutineContext)
+        private set
+
+    fun getOrCreateScope(): CoroutineScope {
+        if (!parentJob.isActive) {
+            parentJob = SupervisorJob()
+            scope = CoroutineScope(parentJob + coroutineContext)
+        }
+        return scope
+    }
+
+    override fun onRemembered() {}
+
+    override fun onForgotten() {
+        scope.cancel()
+    }
+
+    override fun onAbandoned() {
+        scope.cancel()
+    }
+}
 
 @AssistedInject
 class ChatPresenter(
@@ -51,9 +93,12 @@ class ChatPresenter(
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
+        val coroutineContext = rememberCoroutineScope().coroutineContext.minusKey(Job)
+        val retainedScope = rememberRetained { RetainedCoroutineScope(coroutineContext) }
+
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
-        var isGenerating by remember { mutableStateOf(false) }
+        var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var isRestoringHistory by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
@@ -67,14 +112,19 @@ class ChatPresenter(
         // mutation cycle that triggers unnecessary LaunchedEffect cancellations and in-flight restarts (fixes #285).
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
+        var lastInitializedModelId by rememberRetained { mutableStateOf<String?>(null) }
+        var lastInitializedModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
+        var lastHandledInitTrigger by rememberRetained { mutableIntStateOf(-1) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
-        var inferenceJob by remember { mutableStateOf<Job?>(null) }
+        var inferenceJob by rememberRetained { mutableStateOf<Job?>(null) }
 
         LaunchedEffect(Unit) {
-            // Defensively clear any stale streaming state if messages were retained from a cancelled session
-            val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
-            if (lastAgent != null && lastAgent.isStreaming) {
-                messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+            // Defensively clear any stale streaming state only if generation is NOT active
+            if (!isGenerating) {
+                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                if (lastAgent != null && lastAgent.isStreaming) {
+                    messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                }
             }
             launch {
                 modelRepository.getAvailableModels().collect { models ->
@@ -107,7 +157,7 @@ class ChatPresenter(
 
         // Instantly load messages from disk into UI state so the user sees their conversation immediately.
         LaunchedEffect(screen.sessionId) {
-            if (screen.sessionId != null && messages.isEmpty()) {
+            if (screen.sessionId != null && messages.isEmpty() && !isGenerating) {
                 Timber.d("ChatPresenter: Instantly loading messages for session=${screen.sessionId}")
                 val loaded = sessionRepository.getMessages(screen.sessionId)
                 val sanitized =
@@ -121,16 +171,31 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, modelConfig, initTrigger, isGenerating) {
+            if (isGenerating) {
+                Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on composition restart.")
+                return@LaunchedEffect
+            }
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
                 isModelInitialized = false
+                lastInitializedModelId = null
+                lastInitializedModelConfig = null
                 return@LaunchedEffect
             }
-            Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
             val modelPath = model.localPath
             val isModelAlreadyLoaded = modelPath != null && chatInferenceOrchestrator.isModelLoaded(modelPath)
+            if (isModelInitialized &&
+                model.id == lastInitializedModelId &&
+                modelConfig == lastInitializedModelConfig &&
+                initTrigger == lastHandledInitTrigger &&
+                isModelAlreadyLoaded
+            ) {
+                return@LaunchedEffect
+            }
+            lastHandledInitTrigger = initTrigger
+            Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
             val hasHistoryToRestore = currentSessionId != null || messages.isNotEmpty()
             isRestoringHistory = isModelAlreadyLoaded && hasHistoryToRestore
             isPreparing = true
@@ -158,10 +223,14 @@ class ChatPresenter(
                             messages = sanitized
                         }
                         isModelInitialized = true
+                        lastInitializedModelId = model.id
+                        lastInitializedModelConfig = modelConfig
                         Timber.d("ChatPresenter: Model initialized successfully")
                     }.onFailure { error ->
                         Timber.e(error, "ChatPresenter: Model initialization failed")
                         isModelInitialized = false
+                        lastInitializedModelId = null
+                        lastInitializedModelConfig = null
                         errorMessage = error.message
                     }
             } catch (e: CancellationException) {
@@ -174,6 +243,20 @@ class ChatPresenter(
         }
 
         val scope = rememberCoroutineScope()
+
+        val stopInference = {
+            if (isGenerating) {
+                Timber.d("ChatPresenter: Stopping LLM engine...")
+                inferenceJob?.cancel()
+                inferenceJob = null
+                chatInferenceOrchestrator.stop()
+                isGenerating = false
+                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                if (lastAgent != null && lastAgent.isStreaming) {
+                    messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                }
+            }
+        }
 
         val eventSink: (ChatScreen.Event) -> Unit = { event ->
             when (event) {
@@ -191,7 +274,7 @@ class ChatPresenter(
 
                         inferenceJob?.cancel()
                         val job =
-                            scope.launch {
+                            retainedScope.getOrCreateScope().launch {
                                 // Capture the active model at inference start so the saved session
                                 // is tagged with the model that actually generated the response.
                                 val currentModel = activeModel
@@ -348,16 +431,7 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.StopGeneration -> {
-                    if (isGenerating) {
-                        Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
-                        inferenceJob?.cancel()
-                        chatInferenceOrchestrator.stop()
-                        isGenerating = false
-                        val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
-                        if (lastAgent != null && lastAgent.isStreaming) {
-                            messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
-                        }
-                    }
+                    stopInference()
                 }
 
                 ChatScreen.Event.ResetSession -> {
@@ -419,6 +493,9 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.Back -> {
+                    // Leaving the screen pops the navigator; stop in-flight inference to prevent
+                    // native engine resource leaks and background battery drain when user exits.
+                    stopInference()
                     navigator.pop()
                 }
             }

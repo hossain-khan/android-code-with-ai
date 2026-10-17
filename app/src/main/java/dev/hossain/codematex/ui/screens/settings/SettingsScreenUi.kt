@@ -59,6 +59,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -106,7 +107,7 @@ private fun SettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val uriHandler = LocalUriHandler.current
-    var showAppInfo by remember { mutableStateOf(false) }
+    var showAppInfo by rememberSaveable { mutableStateOf(false) }
 
     if (showAppInfo) {
         AppInfoBottomSheet(
