@@ -43,6 +43,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -241,8 +242,9 @@ private fun ModelPickerLayout(
 
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE) }
-    var pendingDownloadModel by remember { mutableStateOf<AiModel?>(null) }
-    var showPermissionRationale by remember { mutableStateOf(false) }
+    var pendingDownloadModelId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showPermissionRationale by rememberSaveable { mutableStateOf(false) }
+    val pendingDownloadModel = state.models.firstOrNull { it.id == pendingDownloadModelId }
 
     val notificationPermissionState =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -256,13 +258,13 @@ private fun ModelPickerLayout(
     }
 
     if (showPermissionRationale && pendingDownloadModel != null) {
-        val modelToDownload = pendingDownloadModel!!
+        val modelToDownload = pendingDownloadModel
         NotificationRationaleDialog(
             modelSize = modelToDownload.formattedSize,
             onEnableNotifications = {
                 Timber.d("ModelPicker: User agreed to enable notifications for ${modelToDownload.displayName}")
                 showPermissionRationale = false
-                pendingDownloadModel = null
+                pendingDownloadModelId = null
                 prefs.edit { putBoolean("has_prompted_notifications", true) }
                 notificationPermissionState?.launchPermissionRequest()
                 triggerDownload(modelToDownload)
@@ -270,7 +272,7 @@ private fun ModelPickerLayout(
             onDismiss = {
                 Timber.d("ModelPicker: User opted out of notifications for ${modelToDownload.displayName}")
                 showPermissionRationale = false
-                pendingDownloadModel = null
+                pendingDownloadModelId = null
                 prefs.edit { putBoolean("has_prompted_notifications", true) }
                 triggerDownload(modelToDownload)
             },
@@ -377,7 +379,7 @@ private fun ModelPickerLayout(
 
                                 if (needsRationale) {
                                     Timber.d("ModelPicker: Showing in-context notification permission rationale for ${model.displayName}")
-                                    pendingDownloadModel = model
+                                    pendingDownloadModelId = model.id
                                     showPermissionRationale = true
                                 } else {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&

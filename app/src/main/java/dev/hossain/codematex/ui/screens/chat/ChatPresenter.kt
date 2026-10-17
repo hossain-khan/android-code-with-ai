@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.chat
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -34,9 +35,33 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.coroutines.CoroutineContext
+
+/**
+ * Retained wrapper that maintains a [CoroutineScope] across composition restarts and configuration changes.
+ * The scope is only cancelled when the presenter is permanently forgotten by Circuit.
+ */
+private class RetainedCoroutineScope(
+    coroutineContext: CoroutineContext,
+) : RememberObserver {
+    val scope: CoroutineScope = CoroutineScope(SupervisorJob() + coroutineContext)
+
+    override fun onRemembered() {}
+
+    override fun onForgotten() {
+        scope.cancel()
+    }
+
+    override fun onAbandoned() {
+        scope.cancel()
+    }
+}
 
 @AssistedInject
 class ChatPresenter(
@@ -51,9 +76,12 @@ class ChatPresenter(
 ) : Presenter<ChatScreen.State> {
     @Composable
     override fun present(): ChatScreen.State {
+        val coroutineContext = rememberCoroutineScope().coroutineContext.minusKey(Job)
+        val retainedScope = rememberRetained { RetainedCoroutineScope(coroutineContext) }
+
         var messages by rememberRetained { mutableStateOf<List<ChatMessage>>(emptyList()) }
         var currentSessionId by rememberRetained { mutableStateOf(screen.sessionId) }
-        var isGenerating by remember { mutableStateOf(false) }
+        var isGenerating by rememberRetained { mutableStateOf(false) }
         var isPreparing by rememberRetained { mutableStateOf(false) }
         var isRestoringHistory by rememberRetained { mutableStateOf(false) }
         var persona by rememberRetained { mutableStateOf(TutorPersona.SENIOR_ENGINEER) }
@@ -68,13 +96,15 @@ class ChatPresenter(
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
-        var inferenceJob by remember { mutableStateOf<Job?>(null) }
+        var inferenceJob by rememberRetained { mutableStateOf<Job?>(null) }
 
         LaunchedEffect(Unit) {
-            // Defensively clear any stale streaming state if messages were retained from a cancelled session
-            val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
-            if (lastAgent != null && lastAgent.isStreaming) {
-                messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+            // Defensively clear any stale streaming state only if generation is NOT active
+            if (!isGenerating) {
+                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                if (lastAgent != null && lastAgent.isStreaming) {
+                    messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                }
             }
             launch {
                 modelRepository.getAvailableModels().collect { models ->
@@ -107,7 +137,7 @@ class ChatPresenter(
 
         // Instantly load messages from disk into UI state so the user sees their conversation immediately.
         LaunchedEffect(screen.sessionId) {
-            if (screen.sessionId != null && messages.isEmpty()) {
+            if (screen.sessionId != null && messages.isEmpty() && !isGenerating) {
                 Timber.d("ChatPresenter: Instantly loading messages for session=${screen.sessionId}")
                 val loaded = sessionRepository.getMessages(screen.sessionId)
                 val sanitized =
@@ -122,6 +152,10 @@ class ChatPresenter(
         }
 
         LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
+            if (isGenerating) {
+                Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on composition restart.")
+                return@LaunchedEffect
+            }
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
@@ -191,7 +225,7 @@ class ChatPresenter(
 
                         inferenceJob?.cancel()
                         val job =
-                            scope.launch {
+                            retainedScope.scope.launch {
                                 // Capture the active model at inference start so the saved session
                                 // is tagged with the model that actually generated the response.
                                 val currentModel = activeModel
@@ -419,6 +453,11 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.Back -> {
+                    if (isGenerating) {
+                        inferenceJob?.cancel()
+                        chatInferenceOrchestrator.stop()
+                        isGenerating = false
+                    }
                     navigator.pop()
                 }
             }

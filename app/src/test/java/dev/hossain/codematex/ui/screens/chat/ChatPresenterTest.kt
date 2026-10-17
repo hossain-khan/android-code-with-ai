@@ -870,4 +870,53 @@ class ChatPresenterTest {
                 assertThat(lastMessage?.content).isEqualTo("Interrupted response")
             }
         }
+
+    @Test
+    fun `given in-flight inference - back event cancels inference and stops orchestrator`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val hangSignal = CompletableDeferred<Unit>()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("First chunk"))
+                    hangSignal.await()
+                    emit(ChatInferenceEvent.Done)
+                }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                state.eventSink(ChatScreen.Event.SendMessage("Hello world"))
+
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(streamingState.isGenerating).isTrue()
+
+                // Trigger Back event while generating
+                streamingState.eventSink(ChatScreen.Event.Back)
+
+                // Should have stopped orchestrator and popped navigation
+                assertThat(fakeOrchestrator.stopCalls).isAtLeast(1)
+                navigator.awaitPop()
+
+                val stoppedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(stoppedState.isGenerating).isFalse()
+
+                // Release hangSignal
+                hangSignal.complete(Unit)
+            }
+        }
 }
