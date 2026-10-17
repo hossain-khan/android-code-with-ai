@@ -68,6 +68,7 @@ import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -356,6 +357,7 @@ private fun ChapterCard(
                             .fillMaxWidth()
                             .clip(MaterialTheme.shapes.medium)
                             .sharedBoundsNav(transitionScope, LessonCardSharedKey(lesson.id))
+                            .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
                             .clickable { onLessonClick(lesson) }
                             .handHoverIcon(),
                     shape = MaterialTheme.shapes.medium,

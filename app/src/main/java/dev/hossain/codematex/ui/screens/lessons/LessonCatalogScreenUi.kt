@@ -72,6 +72,7 @@ import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -259,6 +260,7 @@ private fun CourseCard(
             modifier
                 .fillMaxWidth()
                 .sharedBoundsNav(transitionScope, CourseCardSharedKey(course.id))
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .handHoverIcon(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),

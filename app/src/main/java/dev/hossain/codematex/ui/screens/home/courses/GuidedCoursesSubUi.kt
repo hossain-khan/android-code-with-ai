@@ -40,6 +40,7 @@ import dev.hossain.codematex.ui.animation.CourseCardSharedKey
 import dev.hossain.codematex.ui.animation.CourseTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -126,6 +127,7 @@ internal fun CourseHomeCard(
             modifier
                 .width(260.dp)
                 .sharedBoundsNav(CourseCardSharedKey(course.id))
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .handHoverIcon(),
         shape = MaterialTheme.shapes.large,
