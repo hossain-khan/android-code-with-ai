@@ -159,6 +159,14 @@ CodeMateX integrates Slack Circuit's `SharedElementTransitionScope` (`com.slack.
    }
    ```
 
+### H. Keyboard Navigation, Focus Outlines & Escape Handling
+- **Accessible Focus Outlines**: Cards and custom clickable items must apply `Modifier.accessibleFocusOutline(shape)` from `AccessibleFocusIndicator.kt` to render high-contrast primary focus rings during Tab / D-pad traversal.
+- **Escape Key Interception**: Editable text inputs must apply `Modifier.clearFocusOnEscape(focusManager)` so that pressing `Escape` unfocuses the field and hides the keyboard rather than popping the navigation backstack. Context menus and bottom sheets must intercept `Key.Escape` to dismiss the overlay before navigating back.
+
+### I. Adaptive Continuity & State Hoisting
+- **Scroll State Preservation**: Hoist `LazyGridState` and `LazyListState` using `rememberSaveable` across adaptive layout branches so the user's scroll anchor is retained during rotation, split-screen resize, or device folding/unfolding.
+- **Inference Lifecycle Retention**: Ongoing AI inference loops, token streaming flows, and transient dialogs must remain active and retained across Activity recreation. Presenters decouple screen-level initialization keys from transient generation states.
+
 ---
 
 ## 6. Development Workflows & Commands

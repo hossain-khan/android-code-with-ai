@@ -123,6 +123,37 @@ val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_
 | **Medium (Foldables, Small Tablets)** | `600dp - 840dp` width | 2-column layout or adaptive grid (`GridCells.Adaptive(minSize = 340.dp)`) |
 | **Expanded (Large Tablets, Desktop)** | `>= 840dp` width | Multi-pane layout: Master sidebar / Left controls (360dp width) + Main content right pane |
 
+### Secondary Screen Width Constraints (Tier 2 Compliance)
+To prevent awkward line lengths and stretched inputs on wide screens, secondary screens and form layouts (e.g. Developer Profile, Code Block Display Settings) must constrain their maximum width to **720dp** and center horizontally:
+```kotlin
+Box(
+    modifier = Modifier
+        .fillMaxWidth()
+        .padding(innerPadding),
+    contentAlignment = Alignment.TopCenter,
+) {
+    Column(
+        modifier = Modifier
+            .widthIn(max = 720.dp)
+            .fillMaxWidth()
+            .padding(16.dp),
+    ) { ... }
+}
+```
+
+### Minimum Interactive Touch Targets (Tier 2 Compliance)
+Every interactive element (buttons, chips, icon buttons, card actions) must maintain a minimum touch target area of **48x48dp** per Google Play quality standards:
+```kotlin
+// For custom chips and discrete interactive items:
+Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+
+// For standard IconButtons:
+IconButton(
+    onClick = { ... },
+    modifier = Modifier.size(48.dp),
+) { ... }
+```
+
 ---
 
 ## 5. Standard Component Patterns
@@ -171,7 +202,7 @@ Every screen with dynamic lists MUST include an expressive empty state:
 
 ### E. Syntax Highlighting & Code Blocks
 CodeMateX uses **`compose-highlight`** ([github.com/hossain-khan/android-compose-highlight](https://github.com/hossain-khan/android-compose-highlight)) (`dev.hossain:compose-highlight:0.39.0`):
-- **Streaming Chat Messages**: LLM responses are parsed with `multiplatform-markdown-renderer-m3` (`v0.44.0`) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt) using `StreamingSyntaxHighlightedCode`. It retains token spans during live inference to eliminate streaming flicker.
+- **Streaming Chat Messages**: LLM responses are parsed with `multiplatform-markdown-renderer-m3` (`v0.45.0`) in [`MarkdownMessage`](../app/src/main/java/dev/hossain/codematex/ui/component/MarkdownMessage.kt) using `StreamingSyntaxHighlightedCode`. It retains token spans during live inference to eliminate streaming flicker.
 - **Static Lesson Blocks**: Rendered directly with `SyntaxHighlightedCode` in [`LessonScreenUi`](../app/src/main/java/dev/hossain/codematex/ui/screens/lessons/LessonScreenUi.kt) for lightweight, zero-recalculation static syntax highlighting with line numbers.
 
 ### F. Interactive Quizzes & Quick Checks
@@ -203,7 +234,7 @@ Whenever creating or updating modular composable components, always include comp
 - If the composable accepts `SharedElementTransitionScope`, wrap preview content in `PreviewSharedElementTransitionLayout { SharedElementTransitionScope { ... } }` and annotate with `@OptIn(ExperimentalSharedTransitionApi::class)`.
 
 ### J. Circuit Shared Element Transitions & Motion Guidelines
-CodeMateX uses Slack Circuit's `SharedElementTransitionScope` (`com.slack.circuit.sharedelements`) alongside Compose's `ExperimentalSharedTransitionApi` to provide fluid visual continuity across screens (e.g. Topic Card ➔ Chat Header, Guided Course ➔ Chapter Syllabus ➔ Lesson Detail, Active Model Bar ➔ Model Picker):
+CodeMateX uses Slack Circuit's `SharedElementTransitionScope` (`com.slack.circuit.sharedelements`) alongside Compose's `ExperimentalSharedTransitionApi` to provide fluid visual continuity across screens (e.g. Topic Card -> Chat Header, Guided Course -> Chapter Syllabus -> Lesson Detail, Active Model Bar -> Model Picker):
 
 1. **Dual Composable Screen Entry**:
    Top-level `@CircuitInject` composables should check `SharedElementTransitionScope.isAvailable` and delegate to an internal implementation accepting `transitionScope: SharedElementTransitionScope? = null`:
@@ -231,6 +262,41 @@ CodeMateX uses Slack Circuit's `SharedElementTransitionScope` (`com.slack.circui
    - Use `data object` for screen-unique items (`ActiveModelCardSharedKey`).
    - Use `data class` with stable item IDs for dynamic lists (`TopicCardSharedKey(topicId)`, `SessionCardSharedKey(sessionId)`, `CourseCardSharedKey(courseId)`) to avoid Compose transition key collisions.
 
+### K. Keyboard Navigation & Accessible Focus Outlines
+Interactive cards, chips, and custom actionable surfaces must provide a prominent, high-contrast visual outline when navigated using keyboard Tab or D-pad navigation. Use `Modifier.accessibleFocusOutline()` from [`AccessibleFocusIndicator.kt`](../app/src/main/java/dev/hossain/codematex/ui/component/AccessibleFocusIndicator.kt):
+```kotlin
+Card(
+    modifier = modifier
+        .fillMaxWidth()
+        .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
+        .clickable { ... },
+) { ... }
+```
+
+### L. Escape Key Dismissal for Inputs & Overlays
+Per Google Tier 2 `Keyboard_Exit` guidelines, pressing the `Escape` key must dismiss open menus, clear focused text inputs, or close overlays without immediately exiting the screen or popping the navigation backstack:
+```kotlin
+// For text fields:
+OutlinedTextField(
+    modifier = modifier.clearFocusOnEscape(focusManager),
+    // ...
+)
+
+// For popup dropdown menus:
+DropdownMenu(
+    modifier = Modifier.onKeyEvent { keyEvent ->
+        if (keyEvent.key == Key.Escape && keyEvent.type == KeyEventType.KeyUp) {
+            onDismissRequest()
+            true
+        } else false
+    },
+    // ...
+)
+```
+
+### M. Scroll Position & Anchor Preservation Across Breakpoint Transitions
+When adapting between compact and expanded window layouts (e.g. phone unfolding, split-screen resize, or device rotation), scroll states must be hoisted and preserved using `rememberSaveable(saver = LazyGridState.Saver)` or `rememberSaveable(saver = LazyListState.Saver)`. Do not re-instantiate local scroll states inside conditional layout branches.
+
 ---
 
 ## 6. AI Agent Implementation Checklist
@@ -241,6 +307,9 @@ Before finishing any UI task, verify the following checklist:
 - [ ] **Card Scrims & Topic Borders**: Is `radialGradientScrim` applied to the inner card container with `visualInfo.accentColor` borders?
 - [ ] **Progress Indicators**: Is `LinearWavyProgressIndicator` used for downloads and static `LinearProgressIndicator` used for curriculum headers?
 - [ ] **Adaptive Layout**: Is the screen responsive using `currentWindowAdaptiveInfoV2()`?
+- [ ] **Touch Targets**: Are all interactive elements at least 48x48dp (`sizeIn(minWidth = 48.dp, minHeight = 48.dp)`)?
+- [ ] **Keyboard Navigation & Focus**: Are interactive cards equipped with `accessibleFocusOutline` and text inputs with `clearFocusOnEscape`?
+- [ ] **State Continuity**: Are scroll positions and active inference retained across breakpoint and configuration changes?
 - [ ] **Compose Previews**: Are `@ThemePreviews` added with multiple visual states for new or modified modular UI components?
 - [ ] **Circuit Shared Element Transitions**: Does the screen entry point check `SharedElementTransitionScope.isAvailable` and delegate to `InnerContent(transitionScope)`? Are previews wrapped in `PreviewSharedElementTransitionLayout { SharedElementTransitionScope { ... } }`?
 - [ ] **Curriculum Status Badges**: Are completed vs. current vs. upcoming lessons distinctly marked?

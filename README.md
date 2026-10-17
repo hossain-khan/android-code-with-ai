@@ -20,6 +20,7 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 - 💬 **Rich Markdown & Code Highlighting** - Formatted responses with fast syntax highlighting, line numbers, and copy-to-clipboard actions.
 - 💾 **Chat History & Summaries** - Multi-turn conversation persistence with automatic AI-generated session summaries.
 - 🎨 **Material 3 Expressive & Adaptive** - Modern Material You theming with dynamic topic accents and responsive layouts for phones, foldables, and tablets.
+- 📐 **Tier 2 & Tier 3 Adaptive Certified** - Built for phones, foldables, tablets, and desktops with seamless state continuity during rotation, full Tab keyboard navigation with accessible focus outlines, and Escape key dismissal.
 
 ---
 
@@ -32,7 +33,7 @@ An **on-device AI coding tutor** for Android. Chat privately with locally-execut
 | **Dependency Injection** | **Metro** | KSP-based compile-time dependency injection |
 | **Inference Runtime** | **Google LiteRT-LM (0.17.0)** | High-performance edge AI model runtime |
 | **Code Runner** | **Cloudflare Workers + Kotlin Playground** | Edge proxy microservice executing sandboxed interactive code |
-| **Syntax Highlighting** | **compose-highlight (0.36.0)** | Native Compose Highlight.js engine for streaming & static code blocks |
+| **Syntax Highlighting** | **compose-highlight (0.39.0)** | Native Compose Highlight.js engine for streaming & static code blocks |
 | **Markdown Rendering** | **multiplatform-markdown-renderer (0.45.0)** | Material 3 Markdown parsing with custom component interception |
 | **Persistence** | **Room Database** | Type-safe SQLite persistence for sessions, messages, and course progress |
 | **Background Processing** | **AndroidX WorkManager** | Foreground downloads with progress notifications |
