@@ -179,10 +179,6 @@ CodeMateX integrates Slack Circuit's `SharedElementTransitionScope` (`com.slack.
   ```bash
   ./gradlew test
   ```
-* **Run Connected Adaptive & Instrumentation Tests**:
-  ```bash
-  ./gradlew connectedDebugAndroidTest
-  ```
 * **Format Kotlin Code**:
   ```bash
   ./gradlew formatKotlin
