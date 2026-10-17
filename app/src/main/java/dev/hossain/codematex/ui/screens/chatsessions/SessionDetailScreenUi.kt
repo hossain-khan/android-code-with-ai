@@ -328,6 +328,8 @@ private fun SessionDetailLayout(
             )
         },
     ) { innerPadding ->
+        val messagesListState = rememberLazyListState()
+
         if (isExpanded) {
             // Adaptive 2-Pane Multi-Column Layout for Tablets & Foldables
             Row(
@@ -387,8 +389,6 @@ private fun SessionDetailLayout(
                             .weight(1f)
                             .fillMaxHeight(),
                 ) {
-                    val messagesListState = rememberLazyListState()
-
                     Text(
                         text = "Conversation History",
                         style = MaterialTheme.typography.titleMedium,
@@ -422,8 +422,6 @@ private fun SessionDetailLayout(
                         .padding(innerPadding)
                         .fillMaxSize(),
             ) {
-                val compactMessagesListState = rememberLazyListState()
-
                 SessionInfoCard(state.session, modifier = Modifier.padding(16.dp))
 
                 if (state.messages.isNotEmpty()) {
@@ -435,8 +433,8 @@ private fun SessionDetailLayout(
                     )
 
                     LazyColumn(
-                        state = compactMessagesListState,
-                        modifier = Modifier.weight(1f).adaptiveScrollbar(compactMessagesListState),
+                        state = messagesListState,
+                        modifier = Modifier.weight(1f).adaptiveScrollbar(messagesListState),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
