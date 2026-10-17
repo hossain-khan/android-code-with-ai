@@ -1041,6 +1041,58 @@ class ChatPresenterTest {
         }
 
     @Test
+    fun `given in-flight inference - stopping inference with pending config change triggers re-initialization after stop`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val hangSignal = CompletableDeferred<Unit>()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Generating..."))
+                    hangSignal.await()
+                }
+
+            val fakeConfigStore = FakeModelConfigStore()
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    configStore = fakeConfigStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                val initCountAtStart = fakeOrchestrator.initializeCalls.size
+
+                state.eventSink(ChatScreen.Event.SendMessage("Hello world"))
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(streamingState.isGenerating).isTrue()
+
+                // Change config while generating
+                fakeConfigStore.setConfig(model.id, ModelConfig(temperature = 0.9f, topK = 50, topP = 0.95f))
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initCountAtStart)
+
+                // Trigger Stop
+                streamingState.eventSink(ChatScreen.Event.StopGeneration)
+                val stoppedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(stoppedState.isGenerating).isFalse()
+
+                // Verify initialize was invoked after stop to apply pending config change
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initCountAtStart + 1)
+                hangSignal.complete(Unit)
+            }
+        }
+
+    @Test
     fun `given in-flight inference - config update mid-stream does not re-initialize or clear streaming message during generation`() =
         runTest {
             val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
@@ -1109,7 +1161,7 @@ class ChatPresenterTest {
             val staleStreamingMsg = ChatMessage.Agent(content = "Interrupted response", isStreaming = true)
             val sessionRepo = FakeChatSessionRepository(messages = listOf(staleStreamingMsg))
             val fakeOrchestrator = FakeChatInferenceOrchestrator()
-            fakeOrchestrator.initializeResult = Result.success(listOf(staleStreamingMsg.copy(isStreaming = false)))
+            fakeOrchestrator.initializeResult = Result.success(listOf(staleStreamingMsg))
 
             val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"))
             val presenter =

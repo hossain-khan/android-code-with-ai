@@ -49,7 +49,7 @@ import kotlin.coroutines.CoroutineContext
  * A [RememberObserver] that maintains a [CoroutineScope] across configuration changes and
  * recompositions when held by [rememberRetained].
  *
- * It captures the composition's dispatcher (from [rememberCoroutineScope().coroutineContext.minusKey(Job)]),
+ * It captures the composition's dispatcher (from `rememberCoroutineScope().coroutineContext.minusKey(Job)`),
  * which corresponds to [Dispatchers.Main.immediate] in Android runtime and the active test dispatcher
  * in unit test harnesses. The captured dispatcher remains valid across configuration changes because
  * Android main dispatchers are process-level singletons.
@@ -248,6 +248,15 @@ class ChatPresenter(
 
         val scope = rememberCoroutineScope()
 
+        val requestReinitIfConfigChanged = {
+            val currentModel = activeModel
+            if (currentModel != null &&
+                (modelConfig != lastInitializedModelConfig || currentModel.id != lastInitializedModelId)
+            ) {
+                initTrigger++
+            }
+        }
+
         val stopInference = {
             if (isGenerating) {
                 Timber.d("ChatPresenter: Stopping LLM engine...")
@@ -259,12 +268,7 @@ class ChatPresenter(
                 if (lastAgent != null && lastAgent.isStreaming) {
                     messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
                 }
-                val currentModel = activeModel
-                if (currentModel != null &&
-                    (modelConfig != lastInitializedModelConfig || currentModel.id != lastInitializedModelId)
-                ) {
-                    initTrigger++
-                }
+                requestReinitIfConfigChanged()
             }
         }
 
@@ -332,12 +336,7 @@ class ChatPresenter(
                                                 Timber.d(
                                                     "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
                                                 )
-                                                val currentModel = activeModel
-                                                if (currentModel != null &&
-                                                    (modelConfig != lastInitializedModelConfig || currentModel.id != lastInitializedModelId)
-                                                ) {
-                                                    initTrigger++
-                                                }
+                                                requestReinitIfConfigChanged()
 
                                                 if (screen.saveToHistory) {
                                                     // Save session message history in an independent try-catch block
