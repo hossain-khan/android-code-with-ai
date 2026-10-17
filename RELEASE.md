@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.29.0` | `53` | 2026-10-17 | Full Tier 2 & Tier 3 Adaptive Quality Certification (Epic #470): active AI chat inference & dialog state retention across recreation; scroll position and anchor preservation across window breakpoint transitions; Escape key dismissal for text inputs & menus; accessible high-contrast keyboard focus indicators; 48dp minimum touch targets; and automated adaptive continuity test matrix. |
 | `1.28.0` | `52` | 2026-10-16 | Chat session deletion confirmation dialog in session history preventing accidental data loss; hardened native LiteRT-LM conversation lifecycle preventing stale handles or stalls on interrupted response; sanitized typography and expanded test coverage. |
 | `1.27.0` | `51` | 2026-10-15 | Full Tier 2 Adaptive Optimized Quality compliance (Epic #451) for large screens, tablets, and desktops: global keyboard shortcuts (Esc, Ctrl/Cmd+N, Ctrl/Cmd+,, Ctrl/Cmd+F); dynamic visual scrollbars on mouse/trackpad scrolling; pointer hover states and tooltips; secondary-click context menus; and large screen width constraints on secondary flows. |
 | `1.26.0` | `50` | 2026-09-27 | Upgraded compose-highlight to 0.39.0 with optimized token recomposition, faster code rendering, and modern slot architecture across guided courses, interactive snippets, and AI tutor chat. |
