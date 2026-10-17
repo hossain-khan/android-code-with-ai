@@ -44,6 +44,9 @@ class FakeChatInferenceOrchestrator : ChatInferenceOrchestrator {
     ): Result<List<ChatMessage>> {
         initializeCalls += InitializeCall(model, topic, sessionId, existingMessages, persona)
         onInitialize?.invoke()
+        if (initializeResult.isSuccess) {
+            isModelLoadedValue = true
+        }
         return initializeResult
     }
 

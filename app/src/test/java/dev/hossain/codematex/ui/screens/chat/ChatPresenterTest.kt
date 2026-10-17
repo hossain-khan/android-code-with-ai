@@ -606,11 +606,13 @@ class ChatPresenterTest {
             presenter.test {
                 val initialState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(initialState.configInfo).isEqualTo("Temp: 0.7, Top-K: 40, Top-P: 1.0")
+                val initialCalls = fakeChatInferenceOrchestrator.initializeCalls.size
 
                 localConfigStore.setConfig(model.id, ModelConfig(temperature = 0.2f, topK = 10, topP = 0.8f, maxTokens = 512))
 
                 val updatedState = expectMostRecentItem() as ChatScreen.State.Active
                 assertThat(updatedState.configInfo).isEqualTo("Temp: 0.2, Top-K: 10, Top-P: 0.8")
+                assertThat(fakeChatInferenceOrchestrator.initializeCalls.size).isEqualTo(initialCalls + 1)
             }
         }
 

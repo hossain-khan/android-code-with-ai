@@ -20,6 +20,7 @@ import dev.hossain.codematex.data.TopicPromptProvider
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.DownloadStatus
+import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ChatSessionRepository
@@ -45,7 +46,13 @@ import kotlin.coroutines.CoroutineContext
 
 /**
  * Retained wrapper that maintains a [CoroutineScope] across composition restarts and configuration changes.
- * The scope is only cancelled when the presenter is permanently forgotten by Circuit.
+ *
+ * In Slack Circuit, [rememberRetained] delegates [RememberObserver.onForgotten] only when the
+ * retained state entry is permanently unregistered from the retained registry (e.g., screen popped
+ * from backstack), NOT on configuration change or activity recreation.
+ *
+ * [getOrCreateScope] defensively restores an active scope in the event the parent job was
+ * previously cancelled, ensuring subsequent message launches succeed.
  */
 private class RetainedCoroutineScope(
     private val coroutineContext: CoroutineContext,
@@ -106,6 +113,7 @@ class ChatPresenter(
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
         var lastInitializedModelId by rememberRetained { mutableStateOf<String?>(null) }
+        var lastInitializedModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
         var lastHandledInitTrigger by rememberRetained { mutableIntStateOf(-1) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
         var inferenceJob by rememberRetained { mutableStateOf<Job?>(null) }
@@ -163,7 +171,7 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger, isGenerating) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, modelConfig, initTrigger, isGenerating) {
             if (isGenerating) {
                 Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on composition restart.")
                 return@LaunchedEffect
@@ -173,15 +181,21 @@ class ChatPresenter(
                 Timber.w("ChatPresenter: No model selected")
                 isModelInitialized = false
                 lastInitializedModelId = null
+                lastInitializedModelConfig = null
                 return@LaunchedEffect
             }
-            if (isModelInitialized && model.id == lastInitializedModelId && initTrigger == lastHandledInitTrigger) {
+            val modelPath = model.localPath
+            val isModelAlreadyLoaded = modelPath != null && chatInferenceOrchestrator.isModelLoaded(modelPath)
+            if (isModelInitialized &&
+                model.id == lastInitializedModelId &&
+                modelConfig == lastInitializedModelConfig &&
+                initTrigger == lastHandledInitTrigger &&
+                isModelAlreadyLoaded
+            ) {
                 return@LaunchedEffect
             }
             lastHandledInitTrigger = initTrigger
             Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
-            val modelPath = model.localPath
-            val isModelAlreadyLoaded = modelPath != null && chatInferenceOrchestrator.isModelLoaded(modelPath)
             val hasHistoryToRestore = currentSessionId != null || messages.isNotEmpty()
             isRestoringHistory = isModelAlreadyLoaded && hasHistoryToRestore
             isPreparing = true
@@ -210,11 +224,13 @@ class ChatPresenter(
                         }
                         isModelInitialized = true
                         lastInitializedModelId = model.id
+                        lastInitializedModelConfig = modelConfig
                         Timber.d("ChatPresenter: Model initialized successfully")
                     }.onFailure { error ->
                         Timber.e(error, "ChatPresenter: Model initialization failed")
                         isModelInitialized = false
                         lastInitializedModelId = null
+                        lastInitializedModelConfig = null
                         errorMessage = error.message
                     }
             } catch (e: CancellationException) {
@@ -477,6 +493,8 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.Back -> {
+                    // Leaving the screen pops the navigator; stop in-flight inference to prevent
+                    // native engine resource leaks and background battery drain when user exits.
                     stopInference()
                     navigator.pop()
                 }
