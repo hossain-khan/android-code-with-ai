@@ -1,6 +1,8 @@
 package dev.hossain.codematex.ui.screens.chat
 
 import com.google.common.truth.Truth.assertThat
+import com.slack.circuit.retained.LocalRetainedStateRegistry
+import com.slack.circuit.retained.RetainedStateRegistry
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.test.FakeNavigator
 import com.slack.circuit.test.test
@@ -917,6 +919,77 @@ class ChatPresenterTest {
 
                 // Release hangSignal
                 hangSignal.complete(Unit)
+            }
+        }
+
+    @Test
+    fun `given in-flight inference - retained across recreation and completes in recreated composition`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val resumeSignal = CompletableDeferred<Unit>()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Part 1"))
+                    resumeSignal.await()
+                    emit(ChatInferenceEvent.Token(" Part 2"))
+                    emit(ChatInferenceEvent.Done)
+                }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            val registry = RetainedStateRegistry()
+
+            // First composition: send message and stream first chunk
+            presenter.test(LocalRetainedStateRegistry provides registry) {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                state.eventSink(ChatScreen.Event.SendMessage("Explain suspend functions"))
+
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(streamingState.isGenerating).isTrue()
+                val agentMsg = streamingState.messages.last() as ChatMessage.Agent
+                assertThat(agentMsg.content).isEqualTo("Part 1")
+                assertThat(agentMsg.isStreaming).isTrue()
+
+                // Save retained state to simulate configuration change / recreation
+                registry.saveAll()
+                cancelAndIgnoreRemainingEvents()
+            }
+
+            // Verify initialize was called once
+            val initialCallCount = fakeOrchestrator.initializeCalls.size
+
+            // Second composition: recreated presenter with preserved retained registry
+            presenter.test(LocalRetainedStateRegistry provides registry) {
+                val recreatedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(recreatedState.isGenerating).isTrue()
+                assertThat(recreatedState.messages).isNotEmpty()
+
+                // Resume in-flight stream
+                resumeSignal.complete(Unit)
+
+                // The in-flight stream finishes and emits final completed message
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.isGenerating).isFalse()
+                val finalAgentMsg = completedState.messages.last() as ChatMessage.Agent
+                assertThat(finalAgentMsg.content).isEqualTo("Part 1 Part 2")
+                assertThat(finalAgentMsg.isStreaming).isFalse()
+
+                // Verify no second initialization or stop occurred
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initialCallCount)
+                assertThat(fakeOrchestrator.stopCalls).isEqualTo(0)
             }
         }
 }

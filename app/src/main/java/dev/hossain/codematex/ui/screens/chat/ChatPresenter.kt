@@ -48,9 +48,19 @@ import kotlin.coroutines.CoroutineContext
  * The scope is only cancelled when the presenter is permanently forgotten by Circuit.
  */
 private class RetainedCoroutineScope(
-    coroutineContext: CoroutineContext,
+    private val coroutineContext: CoroutineContext,
 ) : RememberObserver {
-    val scope: CoroutineScope = CoroutineScope(SupervisorJob() + coroutineContext)
+    private var parentJob = SupervisorJob()
+    var scope: CoroutineScope = CoroutineScope(parentJob + coroutineContext)
+        private set
+
+    fun getOrCreateScope(): CoroutineScope {
+        if (!parentJob.isActive) {
+            parentJob = SupervisorJob()
+            scope = CoroutineScope(parentJob + coroutineContext)
+        }
+        return scope
+    }
 
     override fun onRemembered() {}
 
@@ -95,6 +105,8 @@ class ChatPresenter(
         // mutation cycle that triggers unnecessary LaunchedEffect cancellations and in-flight restarts (fixes #285).
         var activeModel by rememberRetained { mutableStateOf(modelRepository.getSelectedModel()) }
         var isModelInitialized by rememberRetained { mutableStateOf(false) }
+        var lastInitializedModelId by rememberRetained { mutableStateOf<String?>(null) }
+        var lastHandledInitTrigger by rememberRetained { mutableIntStateOf(-1) }
         var hasSentInitialPrompt by rememberRetained(screen.initialPrompt) { mutableStateOf(false) }
         var inferenceJob by rememberRetained { mutableStateOf<Job?>(null) }
 
@@ -151,7 +163,7 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger) {
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, initTrigger, isGenerating) {
             if (isGenerating) {
                 Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on composition restart.")
                 return@LaunchedEffect
@@ -160,8 +172,13 @@ class ChatPresenter(
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
                 isModelInitialized = false
+                lastInitializedModelId = null
                 return@LaunchedEffect
             }
+            if (isModelInitialized && model.id == lastInitializedModelId && initTrigger == lastHandledInitTrigger) {
+                return@LaunchedEffect
+            }
+            lastHandledInitTrigger = initTrigger
             Timber.d("ChatPresenter: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}")
             val modelPath = model.localPath
             val isModelAlreadyLoaded = modelPath != null && chatInferenceOrchestrator.isModelLoaded(modelPath)
@@ -192,10 +209,12 @@ class ChatPresenter(
                             messages = sanitized
                         }
                         isModelInitialized = true
+                        lastInitializedModelId = model.id
                         Timber.d("ChatPresenter: Model initialized successfully")
                     }.onFailure { error ->
                         Timber.e(error, "ChatPresenter: Model initialization failed")
                         isModelInitialized = false
+                        lastInitializedModelId = null
                         errorMessage = error.message
                     }
             } catch (e: CancellationException) {
@@ -208,6 +227,20 @@ class ChatPresenter(
         }
 
         val scope = rememberCoroutineScope()
+
+        val stopInference = {
+            if (isGenerating) {
+                Timber.d("ChatPresenter: Stopping LLM engine...")
+                inferenceJob?.cancel()
+                inferenceJob = null
+                chatInferenceOrchestrator.stop()
+                isGenerating = false
+                val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
+                if (lastAgent != null && lastAgent.isStreaming) {
+                    messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                }
+            }
+        }
 
         val eventSink: (ChatScreen.Event) -> Unit = { event ->
             when (event) {
@@ -225,7 +258,7 @@ class ChatPresenter(
 
                         inferenceJob?.cancel()
                         val job =
-                            retainedScope.scope.launch {
+                            retainedScope.getOrCreateScope().launch {
                                 // Capture the active model at inference start so the saved session
                                 // is tagged with the model that actually generated the response.
                                 val currentModel = activeModel
@@ -382,16 +415,7 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.StopGeneration -> {
-                    if (isGenerating) {
-                        Timber.d("ChatPresenter: StopGeneration event received. Stopping LLM engine...")
-                        inferenceJob?.cancel()
-                        chatInferenceOrchestrator.stop()
-                        isGenerating = false
-                        val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
-                        if (lastAgent != null && lastAgent.isStreaming) {
-                            messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
-                        }
-                    }
+                    stopInference()
                 }
 
                 ChatScreen.Event.ResetSession -> {
@@ -453,11 +477,7 @@ class ChatPresenter(
                 }
 
                 ChatScreen.Event.Back -> {
-                    if (isGenerating) {
-                        inferenceJob?.cancel()
-                        chatInferenceOrchestrator.stop()
-                        isGenerating = false
-                    }
+                    stopInference()
                     navigator.pop()
                 }
             }

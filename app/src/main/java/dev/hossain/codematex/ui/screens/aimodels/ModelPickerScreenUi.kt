@@ -108,6 +108,9 @@ internal fun ModelPickerScreenInnerContent(
     modifier: Modifier = Modifier,
     transitionScope: SharedElementTransitionScope? = null,
 ) {
+    var pendingDownloadModelId by rememberSaveable { mutableStateOf<String?>(null) }
+    var showPermissionRationale by rememberSaveable { mutableStateOf(false) }
+
     when (state) {
         is ModelPickerScreen.State.Loading -> {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -120,7 +123,15 @@ internal fun ModelPickerScreenInnerContent(
         }
 
         is ModelPickerScreen.State.Success -> {
-            ModelPickerLayout(state, modifier, transitionScope)
+            ModelPickerLayout(
+                state = state,
+                modifier = modifier,
+                transitionScope = transitionScope,
+                pendingDownloadModelId = pendingDownloadModelId,
+                onPendingDownloadModelIdChange = { pendingDownloadModelId = it },
+                showPermissionRationale = showPermissionRationale,
+                onShowPermissionRationaleChange = { showPermissionRationale = it },
+            )
         }
     }
 }
@@ -235,6 +246,10 @@ private fun ModelPickerLayout(
     state: ModelPickerScreen.State.Success,
     modifier: Modifier = Modifier,
     transitionScope: SharedElementTransitionScope? = null,
+    pendingDownloadModelId: String? = null,
+    onPendingDownloadModelIdChange: (String?) -> Unit = {},
+    showPermissionRationale: Boolean = false,
+    onShowPermissionRationaleChange: (Boolean) -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
@@ -242,8 +257,6 @@ private fun ModelPickerLayout(
 
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE) }
-    var pendingDownloadModelId by rememberSaveable { mutableStateOf<String?>(null) }
-    var showPermissionRationale by rememberSaveable { mutableStateOf(false) }
     val pendingDownloadModel = state.models.firstOrNull { it.id == pendingDownloadModelId }
 
     val notificationPermissionState =
@@ -263,16 +276,16 @@ private fun ModelPickerLayout(
             modelSize = modelToDownload.formattedSize,
             onEnableNotifications = {
                 Timber.d("ModelPicker: User agreed to enable notifications for ${modelToDownload.displayName}")
-                showPermissionRationale = false
-                pendingDownloadModelId = null
+                onShowPermissionRationaleChange(false)
+                onPendingDownloadModelIdChange(null)
                 prefs.edit { putBoolean("has_prompted_notifications", true) }
                 notificationPermissionState?.launchPermissionRequest()
                 triggerDownload(modelToDownload)
             },
             onDismiss = {
                 Timber.d("ModelPicker: User opted out of notifications for ${modelToDownload.displayName}")
-                showPermissionRationale = false
-                pendingDownloadModelId = null
+                onShowPermissionRationaleChange(false)
+                onPendingDownloadModelIdChange(null)
                 prefs.edit { putBoolean("has_prompted_notifications", true) }
                 triggerDownload(modelToDownload)
             },
@@ -379,8 +392,8 @@ private fun ModelPickerLayout(
 
                                 if (needsRationale) {
                                     Timber.d("ModelPicker: Showing in-context notification permission rationale for ${model.displayName}")
-                                    pendingDownloadModelId = model.id
-                                    showPermissionRationale = true
+                                    onPendingDownloadModelIdChange(model.id)
+                                    onShowPermissionRationaleChange(true)
                                 } else {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                                         notificationPermissionState?.status?.isGranted == false
