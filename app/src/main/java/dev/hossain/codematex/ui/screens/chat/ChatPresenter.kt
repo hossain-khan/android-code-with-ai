@@ -37,6 +37,7 @@ import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -45,14 +46,17 @@ import timber.log.Timber
 import kotlin.coroutines.CoroutineContext
 
 /**
- * Retained wrapper that maintains a [CoroutineScope] across composition restarts and configuration changes.
+ * A [RememberObserver] that maintains a [CoroutineScope] across configuration changes and
+ * recompositions when held by [rememberRetained].
  *
- * In Slack Circuit, [rememberRetained] delegates [RememberObserver.onForgotten] only when the
- * retained state entry is permanently unregistered from the retained registry (e.g., screen popped
- * from backstack), NOT on configuration change or activity recreation.
+ * It captures the composition's dispatcher (from [rememberCoroutineScope().coroutineContext.minusKey(Job)]),
+ * which corresponds to [Dispatchers.Main.immediate] in Android runtime and the active test dispatcher
+ * in unit test harnesses. The captured dispatcher remains valid across configuration changes because
+ * Android main dispatchers are process-level singletons.
  *
- * [getOrCreateScope] defensively restores an active scope in the event the parent job was
- * previously cancelled, ensuring subsequent message launches succeed.
+ * When the retained entry is forgotten (such as when the presenter is permanently removed from the
+ * backstack) or abandoned, [scope] is cancelled. [getOrCreateScope] defensively restores an active
+ * scope in the event the parent job was previously cancelled, ensuring subsequent message launches succeed.
  */
 private class RetainedCoroutineScope(
     private val coroutineContext: CoroutineContext,
@@ -171,11 +175,7 @@ class ChatPresenter(
             }
         }
 
-        LaunchedEffect(activeModel?.id, activeModel?.localPath, modelConfig, initTrigger, isGenerating) {
-            if (isGenerating) {
-                Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on composition restart.")
-                return@LaunchedEffect
-            }
+        LaunchedEffect(activeModel?.id, activeModel?.localPath, modelConfig, initTrigger) {
             val model = activeModel
             if (model == null) {
                 Timber.w("ChatPresenter: No model selected")
@@ -192,6 +192,10 @@ class ChatPresenter(
                 initTrigger == lastHandledInitTrigger &&
                 isModelAlreadyLoaded
             ) {
+                return@LaunchedEffect
+            }
+            if (isGenerating) {
+                Timber.d("ChatPresenter: Active inference in flight; skipping model re-initialization on config or model change.")
                 return@LaunchedEffect
             }
             lastHandledInitTrigger = initTrigger
@@ -254,6 +258,12 @@ class ChatPresenter(
                 val lastAgent = messages.lastOrNull() as? ChatMessage.Agent
                 if (lastAgent != null && lastAgent.isStreaming) {
                     messages = messages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                }
+                val currentModel = activeModel
+                if (currentModel != null &&
+                    (modelConfig != lastInitializedModelConfig || currentModel.id != lastInitializedModelId)
+                ) {
+                    initTrigger++
                 }
             }
         }
@@ -322,6 +332,12 @@ class ChatPresenter(
                                                 Timber.d(
                                                     "ChatPresenter: Inference completed. $finalThroughput (total tokens: ${throughputTracker.currentTokenCount})",
                                                 )
+                                                val currentModel = activeModel
+                                                if (currentModel != null &&
+                                                    (modelConfig != lastInitializedModelConfig || currentModel.id != lastInitializedModelId)
+                                                ) {
+                                                    initTrigger++
+                                                }
 
                                                 if (screen.saveToHistory) {
                                                     // Save session message history in an independent try-catch block

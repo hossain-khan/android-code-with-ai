@@ -994,4 +994,138 @@ class ChatPresenterTest {
                 assertThat(fakeOrchestrator.stopCalls).isEqualTo(0)
             }
         }
+
+    @Test
+    fun `given in-flight inference - stopping inference does not trigger second initialize call when model is still loaded`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val hangSignal = CompletableDeferred<Unit>()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Generating..."))
+                    hangSignal.await()
+                }
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                val initCountBeforeSend = fakeOrchestrator.initializeCalls.size
+
+                state.eventSink(ChatScreen.Event.SendMessage("Hello world"))
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(streamingState.isGenerating).isTrue()
+
+                // Trigger Stop
+                streamingState.eventSink(ChatScreen.Event.StopGeneration)
+                val stoppedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(stoppedState.isGenerating).isFalse()
+
+                // Verify initialize was NOT called again on Stop
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initCountBeforeSend)
+                hangSignal.complete(Unit)
+            }
+        }
+
+    @Test
+    fun `given in-flight inference - config update mid-stream does not re-initialize or clear streaming message during generation`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val hangSignal = CompletableDeferred<Unit>()
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageFlow =
+                flow {
+                    emit(ChatInferenceEvent.Token("Thinking..."))
+                    hangSignal.await()
+                    emit(ChatInferenceEvent.Done)
+                }
+
+            val fakeConfigStore = FakeModelConfigStore()
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    configStore = fakeConfigStore,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                val initCountAtStart = fakeOrchestrator.initializeCalls.size
+
+                state.eventSink(ChatScreen.Event.SendMessage("Hello world"))
+                val streamingState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(streamingState.isGenerating).isTrue()
+
+                // Update config while generation is in flight
+                fakeConfigStore.setConfig(model.id, ModelConfig(temperature = 0.9f, topK = 50, topP = 0.95f))
+
+                // Verify initialize was NOT invoked mid-flight and streaming message is intact
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initCountAtStart)
+                val lastMsg = (expectMostRecentItem() as ChatScreen.State.Active).messages.last() as ChatMessage.Agent
+                assertThat(lastMsg.content).isEqualTo("Thinking...")
+                assertThat(lastMsg.isStreaming).isTrue()
+
+                // Complete generation
+                hangSignal.complete(Unit)
+
+                // Once generation finishes, presenter detects config mismatch and applies pending reinit
+                val finalState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(finalState.isGenerating).isFalse()
+                assertThat(fakeOrchestrator.initializeCalls.size).isEqualTo(initCountAtStart + 1)
+            }
+        }
+
+    @Test
+    fun `given idle chat with leftover streaming agent message on cold launch - defensive cleanup marks it not streaming`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val staleStreamingMsg = ChatMessage.Agent(content = "Interrupted response", isStreaming = true)
+            val sessionRepo = FakeChatSessionRepository(messages = listOf(staleStreamingMsg))
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.initializeResult = Result.success(listOf(staleStreamingMsg.copy(isStreaming = false)))
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN, sessionId = "session-123"),
+                    modelRepository = fakeModelRepo,
+                    sessionRepository = sessionRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                val lastMsg = state.messages.last() as ChatMessage.Agent
+                assertThat(lastMsg.isStreaming).isFalse()
+                assertThat(lastMsg.content).isEqualTo("Interrupted response")
+            }
+        }
 }
