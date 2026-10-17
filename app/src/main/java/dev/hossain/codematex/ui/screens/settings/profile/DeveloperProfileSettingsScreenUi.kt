@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -72,6 +73,7 @@ import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
 import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
+import dev.hossain.codematex.ui.component.clearFocusOnEscape
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -98,6 +100,7 @@ private fun DeveloperProfileSettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val focusManager = LocalFocusManager.current
     Scaffold(
         modifier =
             modifier
@@ -212,7 +215,7 @@ private fun DeveloperProfileSettingsContent(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 )
                             },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().clearFocusOnEscape(focusManager),
                             shape = RoundedCornerShape(12.dp),
                             colors =
                                 OutlinedTextFieldDefaults.colors(
@@ -250,7 +253,7 @@ private fun DeveloperProfileSettingsContent(
                             },
                             minLines = 4,
                             maxLines = 8,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().clearFocusOnEscape(focusManager),
                             shape = RoundedCornerShape(12.dp),
                             colors =
                                 OutlinedTextFieldDefaults.colors(

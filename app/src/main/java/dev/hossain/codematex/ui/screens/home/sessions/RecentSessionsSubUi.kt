@@ -50,6 +50,7 @@ import dev.hossain.codematex.ui.animation.SessionCardSharedKey
 import dev.hossain.codematex.ui.animation.SessionTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.component.SecondaryClickContextMenuBox
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.copyToClipboard
 import dev.hossain.codematex.ui.component.handHoverIcon
@@ -182,6 +183,7 @@ fun SessionCard(
                 Modifier
                     .fillMaxWidth()
                     .sharedBoundsNav(SessionCardSharedKey(session.id))
+                    .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                     .clickable(onClick = onClick)
                     .handHoverIcon(),
             colors =

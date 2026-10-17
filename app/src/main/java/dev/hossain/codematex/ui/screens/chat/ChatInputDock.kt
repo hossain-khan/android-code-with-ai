@@ -41,6 +41,7 @@ import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -139,6 +140,8 @@ internal fun ChatInputField(
     onInputTextChanged: (String) -> Unit,
     onSendMessage: () -> Unit,
 ) {
+    val focusManager = LocalFocusManager.current
+
     Surface(
         tonalElevation = 3.dp,
         color = MaterialTheme.colorScheme.surfaceContainer,
@@ -190,16 +193,21 @@ internal fun ChatInputField(
                     Modifier
                         .fillMaxWidth()
                         .onPreviewKeyEvent { event ->
-                            if (event.type == KeyEventType.KeyDown &&
-                                (event.key == Key.Enter || event.key == Key.NumPadEnter)
-                            ) {
-                                if (event.isShiftPressed) {
-                                    false
-                                } else if (inputText.isNotBlank() && !state.isGenerating && !state.isPreparing) {
-                                    onSendMessage()
+                            if (event.type == KeyEventType.KeyDown) {
+                                if (event.key == Key.Escape) {
+                                    focusManager.clearFocus()
                                     true
+                                } else if (event.key == Key.Enter || event.key == Key.NumPadEnter) {
+                                    if (event.isShiftPressed) {
+                                        false
+                                    } else if (inputText.isNotBlank() && !state.isGenerating && !state.isPreparing) {
+                                        onSendMessage()
+                                        true
+                                    } else {
+                                        true
+                                    }
                                 } else {
-                                    true
+                                    false
                                 }
                             } else {
                                 false

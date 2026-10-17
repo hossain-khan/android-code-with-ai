@@ -42,6 +42,7 @@ import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
 import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -157,6 +158,7 @@ fun TopicCard(
             modifier
                 .fillMaxWidth()
                 .sharedBoundsNav(TopicCardSharedKey(topic.stableId))
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .handHoverIcon(),
         shape = MaterialTheme.shapes.large,
@@ -262,6 +264,7 @@ fun TopicCompactCard(
             modifier
                 .width(180.dp)
                 .sharedBoundsNav(TopicCardSharedKey(topic.stableId))
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .handHoverIcon(),
         shape = MaterialTheme.shapes.large,

@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.TutorPersona
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import kotlinx.coroutines.launch
@@ -135,6 +136,7 @@ private fun TutorPersonaSheetContent(
                     modifier =
                         Modifier
                             .fillMaxWidth()
+                            .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                             .clickable(enabled = enabled) {
                                 onPersonaSelected(persona)
                             },
