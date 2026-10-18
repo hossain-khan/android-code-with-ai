@@ -115,6 +115,7 @@ app/src/main/java/dev/hossain/codematex/
 - 🚢 **[Release Process Guide](RELEASE.md)** - Step-by-step release lifecycle, versioning rules, and CI/CD cryptographic validation.
 - 🤖 **[AI Agent Guide](AGENTS.md)** - Project overview, JNI memory safety constraints, and core workflows for autonomous developers.
 - 🔍 **[Robin AI Code Review Guide](docs/ROBIN_CODE_REVIEW.md)** - GitHub App identity configuration, required permissions, and automated review workflow.
+- 💡 **[JetBrains Junie GitHub Automation](docs/JUNIE_AUTOMATION.md)** - Automated PR code reviews and interactive issue/PR coding assistant powered by OpenRouter BYOK.
 
 ---
 
