@@ -1,0 +1,3 @@
+What's New in CodeMateX 1.29.1:
+• Chat Benchmark Panel Fix: Resolved an issue on phones where the technical benchmark panel could not be expanded while the AI Tutor was streaming a response.
+• Tablet Telemetry Stability: Fixed sidebar benchmark card flickering and CPU/RAM bar resets during active token generation on tablets and large screens.
