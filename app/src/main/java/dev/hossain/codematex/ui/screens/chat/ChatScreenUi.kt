@@ -371,6 +371,7 @@ private fun ChatLayout(
                                     isGenerating = state.isGenerating,
                                     isPreparing = state.isPreparing,
                                 ),
+                            contentKey = ChatBenchmarkSubScreen.contentKey(isExpanded = true),
                             outerEventSink = {},
                         )
                     }
@@ -398,6 +399,7 @@ private fun ChatLayout(
                             isGenerating = state.isGenerating,
                             isPreparing = state.isPreparing,
                         ),
+                    contentKey = ChatBenchmarkSubScreen.contentKey(isExpanded = false),
                     outerEventSink = {},
                 )
 

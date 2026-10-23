@@ -37,7 +37,18 @@ data class ChatBenchmarkSubScreen(
     val contextStats: ContextUsageStats? = null,
     val isGenerating: Boolean = false,
     val isPreparing: Boolean = false,
-) : SubScreen<ChatBenchmarkOuterEvent>
+) : SubScreen<ChatBenchmarkOuterEvent> {
+    companion object {
+        /**
+         * Stable content key for [com.slack.circuit.subcircuit.SubCircuitContent] so that
+         * high-frequency streaming updates (such as [throughputInfo] and [contextStats] changing
+         * on every token) recompose the existing SubCircuit in place rather than tearing down and
+         * recreating the composition tree, `rememberSaveable` expansion state, and active
+         * telemetry `LaunchedEffect`s on every token.
+         */
+        fun contentKey(isExpanded: Boolean): String = if (isExpanded) "chat_benchmark_expanded" else "chat_benchmark_compact"
+    }
+}
 
 /**
  * UI State for [ChatBenchmarkSubScreen].
