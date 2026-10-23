@@ -27,12 +27,12 @@ class ChatBenchmarkSubPresenter(
     override fun present(outerEventSink: (ChatBenchmarkOuterEvent) -> Unit): ChatBenchmarkSubState {
         var systemResourceStats by remember { mutableStateOf<SystemResourceStats?>(null) }
         var systemStatsInfo by remember { mutableStateOf<String?>(null) }
-        val isActive by rememberUpdatedState(screen.isGenerating || screen.isPreparing)
+        val isTelemetryActive by rememberUpdatedState(screen.isGenerating || screen.isPreparing)
 
-        LaunchedEffect(isActive) {
-            if (isActive) {
+        LaunchedEffect(isTelemetryActive) {
+            if (isTelemetryActive) {
                 systemStatsMonitor.monitorMetricsWhileActive(
-                    isActive = { isActive },
+                    isActive = { isTelemetryActive },
                     onMetrics = { stats ->
                         systemResourceStats = stats
                         systemStatsInfo = stats.formattedSummary

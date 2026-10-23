@@ -36,10 +36,7 @@ class ChatBenchmarkSubPresenterTest {
         )
 
     private fun createPresenter(screen: ChatBenchmarkSubScreen = testScreen): ChatBenchmarkSubPresenter =
-        ChatBenchmarkSubPresenter(
-            screen = screen,
-            systemStatsMonitor = fakeSystemStatsMonitor,
-        )
+        factory.create(screen) as ChatBenchmarkSubPresenter
 
     @Test
     fun `contentKey returns distinct stable keys for compact and expanded modes`() {
@@ -139,6 +136,8 @@ class ChatBenchmarkSubPresenterTest {
             var onTogglePanel: (() -> Unit)? = null
             var latestPanelExpandedState = false
 
+            // Mirrors SubCircuitContent's composition model: presenter is re-remembered per screen instance
+            // while key(contentKey) preserves the SubCircuit composition and UI state across token updates.
             subPresenterTestOf<ChatBenchmarkOuterEvent, ChatBenchmarkSubState>(
                 presentFunction = {
                     val presenter =
@@ -242,6 +241,8 @@ class ChatBenchmarkSubPresenterTest {
                 ),
             )
 
+            // Mirrors SubCircuitContent's composition model: presenter is re-remembered per screen instance
+            // while key(contentKey) preserves the SubCircuit composition and UI state across token updates.
             subPresenterTestOf<ChatBenchmarkOuterEvent, ChatBenchmarkSubState>(
                 presentFunction = {
                     val presenter =

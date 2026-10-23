@@ -46,7 +46,12 @@ data class ChatBenchmarkSubScreen(
          * recreating the composition tree, `rememberSaveable` expansion state, and active
          * telemetry `LaunchedEffect`s on every token.
          */
-        fun contentKey(isExpanded: Boolean): String = if (isExpanded) "chat_benchmark_expanded" else "chat_benchmark_compact"
+        fun contentKey(isExpanded: Boolean): String =
+            if (isExpanded) {
+                "chat_benchmark_expanded"
+            } else {
+                "chat_benchmark_compact"
+            }
     }
 }
 
