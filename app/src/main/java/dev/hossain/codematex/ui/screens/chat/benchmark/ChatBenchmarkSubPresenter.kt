@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import com.slack.circuit.subcircuit.SubPresenter
 import com.slack.circuit.subcircuit.SubPresenterFactory
@@ -26,11 +27,12 @@ class ChatBenchmarkSubPresenter(
     override fun present(outerEventSink: (ChatBenchmarkOuterEvent) -> Unit): ChatBenchmarkSubState {
         var systemResourceStats by remember { mutableStateOf<SystemResourceStats?>(null) }
         var systemStatsInfo by remember { mutableStateOf<String?>(null) }
+        val isTelemetryActive by rememberUpdatedState(screen.isGenerating || screen.isPreparing)
 
-        LaunchedEffect(screen.isGenerating, screen.isPreparing) {
-            if (screen.isGenerating || screen.isPreparing) {
+        LaunchedEffect(isTelemetryActive) {
+            if (isTelemetryActive) {
                 systemStatsMonitor.monitorMetricsWhileActive(
-                    isActive = { screen.isGenerating || screen.isPreparing },
+                    isActive = { isTelemetryActive },
                     onMetrics = { stats ->
                         systemResourceStats = stats
                         systemStatsInfo = stats.formattedSummary
