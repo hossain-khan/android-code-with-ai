@@ -1,6 +1,6 @@
 [![Android CI](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android.yml) [![Android Release Build](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml/badge.svg)](https://github.com/hossain-khan/android-code-with-ai/actions/workflows/android-release.yml) [![codecov](https://codecov.io/gh/hossain-khan/android-code-with-ai/graph/badge.svg?token=F4QSYSTLTX)](https://codecov.io/gh/hossain-khan/android-code-with-ai) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![](https://playbadges.pavi2410.com/badge/downloads?id=dev.hossain.codematex&pretty)](https://play.google.com/store/apps/details?id=dev.hossain.codematex&pcampaignid=web_share)
 
-# <img src="project-resources/app-icon/v2/neon_code_spark_icon_transparent-trimmed.png" height="22"/> CodeMateX - Code with AI
+# <img src="project-resources/app-icon/v2/neon_code_spark_icon_transparent-trimmed.png" height="22" alt="CodeMateX logo"/> CodeMateX - Code with AI
 
 An **on-device AI coding tutor** for Android. Chat privately with locally-executed Large Language Models (LLMs) about programming languages, algorithms, architecture, and system design, or learn via guided interactive courses - **100% private on-device AI, offline-first courses, and zero subscription fees**.
 
