@@ -1,0 +1,3 @@
+What's New in CodeMateX 1.30.0:
+• Brand New App Icon: Fresh, modern Neon Code Spark launcher icon with full adaptive layers, Material You dynamic color theming, and updated high-resolution store graphics (#488).
+• Adaptive Polish: Seamless icon masking and monochrome layer support across all modern Android versions.
