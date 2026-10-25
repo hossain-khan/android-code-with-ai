@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.30.0` | `55` | 2026-10-24 | Redesigned app launcher icon & branding (#488): modern Neon Code Spark adaptive launcher icon with foreground, background, and Material You monochrome layers across all density buckets, plus updated 512x512 Play Store graphic. |
 | `1.29.1` | `54` | 2026-10-23 | Fixed chat benchmark SubCircuit streaming regressions (#486): stabilized `SubCircuitContent` key so phone users can expand/collapse the technical panel while tokens stream and tablet sidebar CPU/RAM telemetry bars remain stable without flickering; added JetBrains Junie CI agent workflow (#485). |
 | `1.29.0` | `53` | 2026-10-17 | Full Tier 2 & Tier 3 Adaptive Quality Certification (Epic #470): active AI chat inference & dialog state retention across recreation; scroll position and anchor preservation across window breakpoint transitions; Escape key dismissal for text inputs & menus; accessible high-contrast keyboard focus indicators; 48dp minimum touch targets; and automated adaptive continuity test matrix. |
 | `1.28.0` | `52` | 2026-10-16 | Chat session deletion confirmation dialog in session history preventing accidental data loss; hardened native LiteRT-LM conversation lifecycle preventing stale handles or stalls on interrupted response; sanitized typography and expanded test coverage. |
