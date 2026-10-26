@@ -139,13 +139,92 @@ class DefaultChatInferenceOrchestrator
         private val systemMemoryManager: SystemMemoryManager,
         private val userPreferencesStore: UserPreferencesStore,
     ) : ChatInferenceOrchestrator {
+        @Volatile
         private var activeModel: AiModel? = null
+
+        @Volatile
         private var activeTopic: CodingTopic? = null
+
+        @Volatile
         private var activePersona: TutorPersona = TutorPersona.SENIOR_ENGINEER
+
+        @Volatile
         private var activeSessionId: String? = null
+
+        @Volatile
         private var activeMessages: List<ChatMessage> = emptyList()
 
         override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
+
+        private suspend fun loadModelAndRestoreHistory(
+            model: AiModel,
+            topic: CodingTopic,
+            persona: TutorPersona,
+            messages: List<ChatMessage>,
+            isLazyReload: Boolean = false,
+        ) {
+            // Pre-flight memory headroom check:
+            // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
+            // If the model is ALREADY resident in memory, skip this check because LlmEngine reuses the compiled
+            // in-memory engine (requiring 0 MB of additional RAM). Running the check when already resident would
+            // result in a false-positive OOM error since the loaded model already occupies RAM (fixes #285).
+            // On-device LLMs allocate 1.5GB-3.5GB of physical RAM across native C++ and GPU buffers.
+            // Failing to validate available RAM before fresh loading can trigger kernel Low Memory Killer (LMK) kills.
+            // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
+            val modelPath = model.localPath
+            val isAlreadyLoaded = modelPath != null && llmEngine.isModelLoaded(modelPath)
+            if (isAlreadyLoaded) {
+                Timber.d(
+                    "ChatInferenceOrchestrator [IN_MEMORY_REUSE]: Model at '%s' is already loaded in RAM. Bypassing pre-flight headroom check.",
+                    modelPath,
+                )
+            } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
+                // If a different model was currently loaded in RAM, clean it up before checking headroom
+                // so its memory is returned to the OS before evaluating headroom for the new model.
+                if (llmEngine.isInitialized()) {
+                    Timber.d(
+                        "ChatInferenceOrchestrator [MODEL_SWITCH]: Releasing previously loaded model from RAM before memory headroom check for '%s'",
+                        model.name,
+                    )
+                    llmEngine.cleanup()
+                }
+                val headroomResult = systemMemoryManager.checkMemoryHeadroom()
+                if (headroomResult is MemoryHeadroomResult.Constrained) {
+                    Timber.w(
+                        "ChatInferenceOrchestrator [PRE_FLIGHT_OOM_GUARD]: Blocking model load due to memory pressure " +
+                            "(available=%d bytes, required=%d bytes)",
+                        headroomResult.availMemBytes,
+                        headroomResult.requiredBytes,
+                    )
+                    throw LowMemoryException(
+                        availMemBytes = headroomResult.availMemBytes,
+                        requiredBytes = headroomResult.requiredBytes,
+                    )
+                }
+            }
+
+            val tag = if (isLazyReload) "LAZY_RELOAD" else "INIT_START"
+            Timber.d(
+                "ChatInferenceOrchestrator [$tag]: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}",
+            )
+            val modelConfig = configStore.getConfig(model.id)
+            val devProfile = userPreferencesStore.getDeveloperProfile()
+            llmEngine.initialize(
+                modelPath = model.localPath ?: "",
+                backend = model.preferredBackend,
+                systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
+                config = modelConfig,
+            )
+            Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
+
+            if (messages.isNotEmpty()) {
+                Timber.d(
+                    "ChatInferenceOrchestrator: Restoring %d messages to conversation context",
+                    messages.size,
+                )
+                llmEngine.restoreHistory(messages)
+            }
+        }
 
         override suspend fun initialize(
             model: AiModel,
@@ -155,63 +234,6 @@ class DefaultChatInferenceOrchestrator
             persona: TutorPersona,
         ): Result<List<ChatMessage>> =
             try {
-                // Pre-flight memory headroom check:
-                // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
-                // If the model is ALREADY resident in memory, skip this check because LlmEngine reuses the compiled
-                // in-memory engine (requiring 0 MB of additional RAM). Running the check when already resident would
-                // result in a false-positive OOM error since the loaded model already occupies RAM (fixes #285).
-                // On-device LLMs allocate 1.5GB–3.5GB of physical RAM across native C++ and GPU buffers.
-                // Failing to validate available RAM before fresh loading can trigger kernel Low Memory Killer (LMK) kills.
-                // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
-                val modelPath = model.localPath
-                val isAlreadyLoaded = modelPath != null && llmEngine.isModelLoaded(modelPath)
-                if (isAlreadyLoaded) {
-                    Timber.d(
-                        "ChatInferenceOrchestrator [IN_MEMORY_REUSE]: Model at '%s' is already loaded in RAM. Bypassing pre-flight headroom check.",
-                        modelPath,
-                    )
-                } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
-                    // If a different model was currently loaded in RAM, clean it up before checking headroom
-                    // so its memory is returned to the OS before evaluating headroom for the new model.
-                    if (llmEngine.isInitialized()) {
-                        Timber.d(
-                            "ChatInferenceOrchestrator [MODEL_SWITCH]: Releasing previously loaded model from RAM before memory headroom check for '%s'",
-                            model.name,
-                        )
-                        llmEngine.cleanup()
-                    }
-                    val headroomResult = systemMemoryManager.checkMemoryHeadroom()
-                    if (headroomResult is MemoryHeadroomResult.Constrained) {
-                        Timber.w(
-                            "ChatInferenceOrchestrator [PRE_FLIGHT_OOM_GUARD]: Blocking model load due to memory pressure " +
-                                "(available=%d bytes, required=%d bytes)",
-                            headroomResult.availMemBytes,
-                            headroomResult.requiredBytes,
-                        )
-                        throw LowMemoryException(
-                            availMemBytes = headroomResult.availMemBytes,
-                            requiredBytes = headroomResult.requiredBytes,
-                        )
-                    }
-                }
-
-                Timber.d(
-                    "ChatInferenceOrchestrator [INIT_START]: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}",
-                )
-                val modelConfig = configStore.getConfig(model.id)
-                val devProfile = userPreferencesStore.getDeveloperProfile()
-                llmEngine.initialize(
-                    modelPath = model.localPath ?: "",
-                    backend = model.preferredBackend,
-                    systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
-                    config = modelConfig,
-                )
-                Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
-
-                activeModel = model
-                activeTopic = topic
-                activePersona = persona
-                activeSessionId = sessionId
                 val rawMessages =
                     if (sessionId != null) {
                         existingMessages.ifEmpty {
@@ -227,9 +249,19 @@ class DefaultChatInferenceOrchestrator
                     } else {
                         rawMessages
                     }
-                if (messagesToDisplay.isNotEmpty()) {
-                    llmEngine.restoreHistory(messagesToDisplay)
-                }
+
+                loadModelAndRestoreHistory(
+                    model = model,
+                    topic = topic,
+                    persona = persona,
+                    messages = messagesToDisplay,
+                    isLazyReload = false,
+                )
+
+                activeModel = model
+                activeTopic = topic
+                activePersona = persona
+                activeSessionId = sessionId
                 activeMessages = messagesToDisplay
 
                 Result.success(messagesToDisplay)
@@ -297,26 +329,22 @@ class DefaultChatInferenceOrchestrator
                 if (!llmEngine.isInitialized()) {
                     val currentModel = activeModel
                     val currentTopic = activeTopic
-                    if (currentModel != null && currentTopic != null) {
+                    if (currentModel != null &&
+                        currentTopic != null &&
+                        currentModel.localPath != null &&
+                        currentModel.localPath != DEV_STUB_MODEL_PATH
+                    ) {
                         Timber.i(
                             "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
                             currentModel.name,
                         )
-                        val modelConfig = configStore.getConfig(currentModel.id)
-                        val devProfile = userPreferencesStore.getDeveloperProfile()
-                        llmEngine.initialize(
-                            modelPath = currentModel.localPath ?: "",
-                            backend = currentModel.preferredBackend,
-                            systemInstruction = topicPromptProvider.buildSystemPrompt(currentTopic, activePersona, devProfile),
-                            config = modelConfig,
+                        loadModelAndRestoreHistory(
+                            model = currentModel,
+                            topic = currentTopic,
+                            persona = activePersona,
+                            messages = historyToRestore,
+                            isLazyReload = true,
                         )
-                        if (historyToRestore.isNotEmpty()) {
-                            Timber.d(
-                                "ChatInferenceOrchestrator [LAZY_RELOAD]: Restoring %d messages to reloaded conversation context",
-                                historyToRestore.size,
-                            )
-                            llmEngine.restoreHistory(historyToRestore)
-                        }
                     }
                 }
 
