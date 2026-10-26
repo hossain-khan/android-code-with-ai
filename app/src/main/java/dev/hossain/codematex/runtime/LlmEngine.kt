@@ -72,7 +72,7 @@ interface LlmEngine {
      * Returns `true` if the conversation handle was cancelled or invalid and needs
      * history to be restored via [restoreHistory] before running subsequent inference.
      */
-    fun needsHistoryRestoration(): Boolean = false
+    fun needsHistoryRestoration(): Boolean
 
     /**
      * Returns `true` if the specific model at [modelPath] is currently loaded in memory.

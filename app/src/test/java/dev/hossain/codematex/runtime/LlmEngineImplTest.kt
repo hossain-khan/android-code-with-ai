@@ -1350,8 +1350,16 @@ class LlmEngineImplTest {
                 backend = LlmEngine.Backend.GPU,
             )
 
+            // User launches inference in-flight
+            val inFlightJob =
+                launch {
+                    engine.runInference("In-flight prompt") { _, _ -> }
+                }
+            testScheduler.runCurrent()
+
             // User stops generation mid-flight
             engine.stop()
+            inFlightJob.cancel()
             assertThat(fakeConversation.cancelled).isTrue()
 
             // Subsequent inference should create a fresh conversation from the loaded engine
@@ -1402,8 +1410,16 @@ class LlmEngineImplTest {
 
             assertThat(engine.needsHistoryRestoration()).isFalse()
 
+            // User launches inference in-flight
+            val inFlightJob =
+                launch {
+                    engine.runInference("In-flight prompt") { _, _ -> }
+                }
+            testScheduler.runCurrent()
+
             // User stops generation mid-flight
             engine.stop()
+            inFlightJob.cancel()
             assertThat(fakeConversation.cancelled).isTrue()
             assertThat(engine.needsHistoryRestoration()).isTrue()
 
@@ -1422,6 +1438,29 @@ class LlmEngineImplTest {
 
             assertThat(engine.needsHistoryRestoration()).isFalse()
             assertThat(newConversation.sentMessages.single().input).contains("Prior turn")
+        }
+
+    @Test
+    fun `stop when idle does not mark conversation cancelled or need restoration`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            // When idle, stop cancels native process safely but does not mark conversation cancelled
+            engine.stop()
+            assertThat(fakeConversation.cancelled).isTrue()
+            assertThat(engine.needsHistoryRestoration()).isFalse()
         }
 
     @Test

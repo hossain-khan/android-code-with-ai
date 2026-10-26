@@ -592,13 +592,12 @@ class ChatInferenceOrchestratorTest {
             orchestrator.stop()
             assertThat(fakeEngine.needsHistoryRestoration()).isTrue()
 
-            // User sends follow-up message
-            val followUpMessages = initialMessages + ChatMessage.User("Follow-up question")
-            orchestrator.sendMessage("Follow-up question", followUpMessages).toList()
+            // User sends follow-up message (in production, existingMessages only contains history prior to the new prompt)
+            orchestrator.sendMessage("Follow-up question", initialMessages).toList()
 
             // Verify history was restored to the newly created conversation before running inference
             assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(2)
-            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(followUpMessages).inOrder()
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(initialMessages).inOrder()
             assertThat(fakeEngine.needsHistoryRestoration()).isFalse()
         }
 
