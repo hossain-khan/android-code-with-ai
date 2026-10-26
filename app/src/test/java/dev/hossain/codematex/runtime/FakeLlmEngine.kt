@@ -19,6 +19,9 @@ class FakeLlmEngine : LlmEngine {
     var backendFailureBackend: LlmEngine.Backend? = null
     var backendFailureBackends: List<LlmEngine.Backend> = emptyList()
     var lastSystemInstruction: String? = null
+    var needsHistoryRestorationValue: Boolean = false
+
+    override fun needsHistoryRestoration(): Boolean = needsHistoryRestorationValue
 
     override suspend fun initialize(
         modelPath: String,
@@ -30,6 +33,7 @@ class FakeLlmEngine : LlmEngine {
         initializeCalls++
         lastConfig = config
         lastSystemInstruction = systemInstruction
+        needsHistoryRestorationValue = false
         if (modelPath == DEV_STUB_MODEL_PATH) {
             isInitializedValue = false
             return
@@ -74,6 +78,7 @@ class FakeLlmEngine : LlmEngine {
 
     override fun stop() {
         stopCalls++
+        needsHistoryRestorationValue = true
     }
 
     override suspend fun resetConversation(
@@ -82,6 +87,7 @@ class FakeLlmEngine : LlmEngine {
     ) {
         resetCalls++
         lastSystemInstruction = systemInstruction
+        needsHistoryRestorationValue = false
     }
 
     var restoredMessages = mutableListOf<List<ChatMessage>>()
@@ -90,6 +96,7 @@ class FakeLlmEngine : LlmEngine {
     override suspend fun restoreHistory(messages: List<ChatMessage>) {
         restoreHistoryCalls++
         restoredMessages.add(messages)
+        needsHistoryRestorationValue = false
     }
 
     var activeBackendValue: LlmEngine.Backend? = LlmEngine.Backend.CPU

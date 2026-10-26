@@ -568,4 +568,75 @@ class ChatInferenceOrchestratorTest {
                 )
             assertThat(fakeEngine.lastSystemInstruction).isEqualTo(expectedPrompt)
         }
+
+    @Test
+    fun `sendMessage restores history when previous inference was stopped or cancelled`() =
+        runTest {
+            val initialMessages =
+                listOf(
+                    ChatMessage.User("Prior question"),
+                    ChatMessage.Agent("Prior answer"),
+                )
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+            )
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+
+            // User taps "Stop" during generation
+            orchestrator.stop()
+            assertThat(fakeEngine.needsHistoryRestoration()).isTrue()
+
+            // User sends follow-up message (in production, existingMessages only contains history prior to the new prompt)
+            orchestrator.sendMessage("Follow-up question", initialMessages).toList()
+
+            // Verify history was restored to the newly created conversation before running inference
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(initialMessages).inOrder()
+            assertThat(fakeEngine.needsHistoryRestoration()).isFalse()
+        }
+
+    @Test
+    fun `new session does not restore stale messages from previous session after cancellation`() =
+        runTest {
+            val session1Messages =
+                listOf(
+                    ChatMessage.User("Session 1 question"),
+                    ChatMessage.Agent("Session 1 answer"),
+                )
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            // Session 1
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = session1Messages,
+            )
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(session1Messages)
+
+            // Switch to new session with no existing messages
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-2",
+                existingMessages = emptyList(),
+            )
+
+            // Stop triggered on session 2
+            orchestrator.stop()
+
+            // First message in session 2
+            orchestrator.sendMessage("First question in session 2", emptyList()).toList()
+
+            // Does not restore session 1 messages into session 2
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(session1Messages)
+        }
 }

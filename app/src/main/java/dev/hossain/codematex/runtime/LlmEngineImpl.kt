@@ -59,6 +59,7 @@ class LlmEngineImpl(
 
     @Volatile
     private var isConversationCancelled = false
+    private val isExecutingInference = AtomicBoolean(false)
 
     /**
      * Serializes all engine operations. LiteRT-LM does not support concurrent
@@ -71,6 +72,8 @@ class LlmEngineImpl(
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
     override fun isInitialized(): Boolean = engine != null
+
+    override fun needsHistoryRestoration(): Boolean = isConversationCancelled || conversation == null
 
     override fun isModelLoaded(modelPath: String): Boolean = engine != null && currentModelPath == modelPath
 
@@ -159,7 +162,6 @@ class LlmEngineImpl(
         if (isConversationCancelled || conversation == null) {
             Timber.d("LlmEngineImpl [RECREATE_CONVERSATION]: Recreating native conversation handle following cancellation")
             resetConversationLocked(currentSystemInstruction, currentConfig)
-            isConversationCancelled = false
         }
 
         try {
@@ -263,26 +265,33 @@ class LlmEngineImpl(
         backend: LlmEngine.Backend = activeBackend ?: LlmEngine.Backend.CPU,
     ) {
         withContext(dispatcher) {
-            suspendCancellableCoroutine<Unit> { cont ->
-                val callback =
-                    SafeCallback(
-                        cont = cont,
-                        backend = backend,
-                        onContent = { text -> onToken(text, false) },
-                        onTerminal = { onToken("", true) },
-                    )
-                activeCallback = callback
-                conv.sendMessageAsync(input, callback)
-                cont.invokeOnCancellation {
-                    callback.cancel()
-                    cancelNativeProcess(conv)
+            isExecutingInference.set(true)
+            try {
+                suspendCancellableCoroutine<Unit> { cont ->
+                    val callback =
+                        SafeCallback(
+                            cont = cont,
+                            backend = backend,
+                            onContent = { text -> onToken(text, false) },
+                            onTerminal = { onToken("", true) },
+                        )
+                    activeCallback = callback
+                    conv.sendMessageAsync(input, callback)
+                    cont.invokeOnCancellation {
+                        callback.cancel()
+                        cancelNativeProcess(conv)
+                    }
                 }
+            } finally {
+                isExecutingInference.set(false)
             }
         }
     }
 
     override fun stop() {
-        isConversationCancelled = true
+        if (isExecutingInference.get()) {
+            isConversationCancelled = true
+        }
         try {
             conversation?.cancelProcess()
         } catch (throwable: Throwable) {
@@ -314,6 +323,7 @@ class LlmEngineImpl(
         conversation = null
         closeQuietly(oldConversation)
         conversation = createConversationLocked(systemInstruction, config)
+        isConversationCancelled = false
     }
 
     /**
@@ -357,7 +367,6 @@ class LlmEngineImpl(
                     "LlmEngineImpl [RECREATE_CONVERSATION]: Recreating native conversation handle following cancellation before history restore",
                 )
                 resetConversationLocked(currentSystemInstruction, currentConfig)
-                isConversationCancelled = false
             }
 
             val priorMessages = messages.filter { it is ChatMessage.User || it is ChatMessage.Agent }
@@ -411,21 +420,26 @@ class LlmEngineImpl(
             }
 
         withContext(dispatcher) {
-            suspendCancellableCoroutine<Unit> { cont ->
-                val callback =
-                    SafeCallback(
-                        cont = cont,
-                        backend = activeBackend ?: LlmEngine.Backend.CPU,
-                        onContent = { },
-                        onTerminal = { Timber.d("LlmEngineImpl: Context restoration complete") },
-                        onError = { throwable -> Timber.w(throwable, "LlmEngineImpl: Context restoration failed") },
-                    )
-                activeCallback = callback
-                conv.sendMessageAsync(contextPrompt, callback)
-                cont.invokeOnCancellation {
-                    callback.cancel()
-                    cancelNativeProcess(conv)
+            isExecutingInference.set(true)
+            try {
+                suspendCancellableCoroutine<Unit> { cont ->
+                    val callback =
+                        SafeCallback(
+                            cont = cont,
+                            backend = activeBackend ?: LlmEngine.Backend.CPU,
+                            onContent = { },
+                            onTerminal = { Timber.d("LlmEngineImpl: Context restoration complete") },
+                            onError = { throwable -> Timber.w(throwable, "LlmEngineImpl: Context restoration failed") },
+                        )
+                    activeCallback = callback
+                    conv.sendMessageAsync(contextPrompt, callback)
+                    cont.invokeOnCancellation {
+                        callback.cancel()
+                        cancelNativeProcess(conv)
+                    }
                 }
+            } finally {
+                isExecutingInference.set(false)
             }
         }
     }
@@ -479,6 +493,7 @@ class LlmEngineImpl(
         activeBackend = null
         activeCallback = null
         isConversationCancelled = false
+        isExecutingInference.set(false)
     }
 
     /**

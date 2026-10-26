@@ -357,6 +357,18 @@ class DefaultChatInferenceOrchestrator
                             }
                         }
                     }
+                } else if (llmEngine.needsHistoryRestoration()) {
+                    reloadMutex.withLock {
+                        if (llmEngine.needsHistoryRestoration()) {
+                            if (historyToRestore.isNotEmpty()) {
+                                Timber.i(
+                                    "ChatInferenceOrchestrator [RESTORE_AFTER_CANCEL]: Conversation was cancelled or reset. Restoring %d messages before inference.",
+                                    historyToRestore.size,
+                                )
+                                llmEngine.restoreHistory(historyToRestore)
+                            }
+                        }
+                    }
                 }
 
                 suspend fun runAndEmit(input: String) {
