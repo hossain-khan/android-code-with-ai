@@ -167,6 +167,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |
+| `1.31.0` | `56` | 2026-10-25 | Hardened on-device AI chat lifecycle: multi-turn conversation history preservation & replay after Stop or cancellation (#408); transparent model reloading on return to chat after background RAM eviction (#411); refined app icon variants and updated JetBrains Junie CI review automation (#496). |
 | `1.30.0` | `55` | 2026-10-24 | Redesigned app launcher icon & branding (#488): modern Neon Code Spark adaptive launcher icon with foreground, background, and Material You monochrome layers across all density buckets, plus updated 512x512 Play Store graphic. |
 | `1.29.1` | `54` | 2026-10-23 | Fixed chat benchmark SubCircuit streaming regressions (#486): stabilized `SubCircuitContent` key so phone users can expand/collapse the technical panel while tokens stream and tablet sidebar CPU/RAM telemetry bars remain stable without flickering; added JetBrains Junie CI agent workflow (#485). |
 | `1.29.0` | `53` | 2026-10-17 | Full Tier 2 & Tier 3 Adaptive Quality Certification (Epic #470): active AI chat inference & dialog state retention across recreation; scroll position and anchor preservation across window breakpoint transitions; Escape key dismissal for text inputs & menus; accessible high-contrast keyboard focus indicators; 48dp minimum touch targets; and automated adaptive continuity test matrix. |

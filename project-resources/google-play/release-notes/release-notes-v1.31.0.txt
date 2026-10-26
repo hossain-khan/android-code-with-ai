@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.31.0:
+• Chat History Restoration: Preserves multi-turn chat context after stopping or cancelling an active AI response, seamlessly replaying history on follow-up questions (#408).
+• Memory Eviction Recovery: Transparently reloads models when returning to chat after background RAM eviction, preventing stalls (#411).
+• Icon & Stability Polish: Refined app icon variants and updated JetBrains Junie CI review automation.
