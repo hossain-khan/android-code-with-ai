@@ -44,11 +44,16 @@ class LlmEngineImpl(
     private val llmEngineFactory: LlmEngineFactory,
     private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) : LlmEngine {
+    @Volatile
     private var engine: InferenceEngine? = null
+
+    @Volatile
     private var conversation: InferenceConversation? = null
     private var currentModelPath: String = ""
     private var currentSystemInstruction: String? = null
     private var currentConfig: ModelConfig = ModelConfig()
+
+    @Volatile
     private var activeBackend: LlmEngine.Backend? = null
     private var activeCallback: MessageCallback? = null
 

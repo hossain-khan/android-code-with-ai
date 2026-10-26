@@ -5,11 +5,13 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.testModel
+import dev.hossain.codematex.runtime.DEV_STUB_MODEL_PATH
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LowMemoryException
@@ -424,5 +426,146 @@ class ChatInferenceOrchestratorTest {
             assertThat(result.isSuccess).isTrue()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
             assertThat(fakeEngine.initializeCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun `sendMessage lazily re-initializes engine and restores history when engine was evicted from memory`() =
+        runTest {
+            val initialMessages =
+                listOf(
+                    ChatMessage.User("Prior question"),
+                    ChatMessage.Agent("Prior answer"),
+                )
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            // Initial model load
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+            )
+            assertThat(fakeEngine.initializeCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+
+            // Simulate external memory eviction (e.g. SystemMemoryManager trim or background timeout)
+            fakeEngine.cleanup()
+            assertThat(fakeEngine.isInitialized()).isFalse()
+
+            // User returns and sends a message without manual reload
+            val events = orchestrator.sendMessage("Follow-up after eviction", initialMessages).toList()
+
+            // Verify the engine was automatically re-initialized and history restored before dispatch
+            assertThat(fakeEngine.initializeCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(initialMessages).inOrder()
+            assertThat(events)
+                .containsExactly(
+                    ChatInferenceEvent.Token("test response"),
+                    ChatInferenceEvent.Done,
+                ).inOrder()
+        }
+
+    @Test
+    fun `sendMessage fails with LowMemoryException when memory is constrained during lazy reload after eviction`() =
+        runTest {
+            val initialMessages =
+                listOf(
+                    ChatMessage.User("Prior question"),
+                    ChatMessage.Agent("Prior answer"),
+                )
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+            )
+
+            // Simulate external eviction
+            fakeEngine.cleanup()
+            assertThat(fakeEngine.isInitialized()).isFalse()
+
+            // Memory is now constrained when user attempts to send message
+            fakeMemoryManager.headroomResult =
+                MemoryHeadroomResult.Constrained(
+                    availMemBytes = 300_000_000L,
+                    requiredBytes = 1_500_000_000L,
+                    isLowMemory = true,
+                )
+
+            var caughtException: Throwable? = null
+            try {
+                orchestrator.sendMessage("Follow-up question", initialMessages).toList()
+            } catch (e: Throwable) {
+                caughtException = e
+            }
+
+            assertThat(caughtException).isInstanceOf(LowMemoryException::class.java)
+            assertThat(fakeEngine.initializeCalls).isEqualTo(1) // No second initialization occurred
+        }
+
+    @Test
+    fun `sendMessage skips lazy reload when model is dev stub model`() =
+        runTest {
+            val model = testModel(id = "stub-model", localPath = DEV_STUB_MODEL_PATH)
+            val orchestrator = createOrchestrator()
+
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = emptyList(),
+            )
+            val initialInitCalls = fakeEngine.initializeCalls
+
+            orchestrator.sendMessage("Hello stub", emptyList()).toList()
+
+            // Does not attempt to re-initialize stub model on sendMessage
+            assertThat(fakeEngine.initializeCalls).isEqualTo(initialInitCalls)
+            assertThat(fakeEngine.isInitialized()).isFalse()
+        }
+
+    @Test
+    fun `switchPersona updates active persona and lazy reload restores updated persona prompt after eviction`() =
+        runTest {
+            val initialMessages = listOf(ChatMessage.User("Hello"))
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+                persona = TutorPersona.SENIOR_ENGINEER,
+            )
+
+            // User switches persona mid-conversation
+            orchestrator.switchPersona(
+                topic = CodingTopic.PYTHON,
+                persona = TutorPersona.BEGINNER_FRIENDLY,
+                messages = initialMessages,
+            )
+
+            // Simulate external eviction
+            fakeEngine.cleanup()
+            assertThat(fakeEngine.isInitialized()).isFalse()
+
+            // User sends message triggering lazy reload
+            orchestrator.sendMessage("Explain decorators", initialMessages).toList()
+
+            // Verify lazy reload used updated persona and topic
+            assertThat(fakeEngine.initializeCalls).isEqualTo(2)
+            val expectedPrompt =
+                topicPromptProvider.buildSystemPrompt(
+                    topic = CodingTopic.PYTHON,
+                    persona = TutorPersona.BEGINNER_FRIENDLY,
+                    developerProfile = fakeUserPreferencesStore.getDeveloperProfile(),
+                )
+            assertThat(fakeEngine.lastSystemInstruction).isEqualTo(expectedPrompt)
         }
 }
