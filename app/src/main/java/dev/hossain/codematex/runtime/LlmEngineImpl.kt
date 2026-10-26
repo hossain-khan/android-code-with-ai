@@ -60,6 +60,9 @@ class LlmEngineImpl(
     @Volatile
     private var isConversationCancelled = false
 
+    @Volatile
+    private var lastRestoredMessages: List<ChatMessage> = emptyList()
+
     /**
      * Serializes all engine operations. LiteRT-LM does not support concurrent
      * [sendMessageAsync] calls on the same [com.google.ai.edge.litertlm.Conversation];
@@ -71,6 +74,8 @@ class LlmEngineImpl(
     override fun getActiveBackend(): LlmEngine.Backend? = activeBackend
 
     override fun isInitialized(): Boolean = engine != null
+
+    override fun needsHistoryRestoration(): Boolean = isConversationCancelled || conversation == null
 
     override fun isModelLoaded(modelPath: String): Boolean = engine != null && currentModelPath == modelPath
 
@@ -160,6 +165,13 @@ class LlmEngineImpl(
             Timber.d("LlmEngineImpl [RECREATE_CONVERSATION]: Recreating native conversation handle following cancellation")
             resetConversationLocked(currentSystemInstruction, currentConfig)
             isConversationCancelled = false
+            if (lastRestoredMessages.isNotEmpty()) {
+                Timber.d(
+                    "LlmEngineImpl: Automatically restoring %d prior messages after cancellation recreation",
+                    lastRestoredMessages.size,
+                )
+                executeRestoreHistory(lastRestoredMessages)
+            }
         }
 
         try {
@@ -294,6 +306,7 @@ class LlmEngineImpl(
         systemInstruction: String?,
         config: ModelConfig,
     ) = engineMutex.withLock {
+        lastRestoredMessages = emptyList()
         resetConversationLocked(systemInstruction, config)
     }
 
@@ -314,6 +327,7 @@ class LlmEngineImpl(
         conversation = null
         closeQuietly(oldConversation)
         conversation = createConversationLocked(systemInstruction, config)
+        isConversationCancelled = false
     }
 
     /**
@@ -361,6 +375,7 @@ class LlmEngineImpl(
             }
 
             val priorMessages = messages.filter { it is ChatMessage.User || it is ChatMessage.Agent }
+            lastRestoredMessages = priorMessages
             if (priorMessages.isEmpty()) return@withLock
 
             while (true) {
@@ -478,6 +493,8 @@ class LlmEngineImpl(
         currentModelPath = ""
         activeBackend = null
         activeCallback = null
+        isConversationCancelled = false
+        lastRestoredMessages = emptyList()
         isConversationCancelled = false
     }
 

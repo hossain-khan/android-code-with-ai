@@ -1384,6 +1384,76 @@ class LlmEngineImplTest {
         }
 
     @Test
+    fun `stop and recreation preserves previously restored history on subsequent runInference`() =
+        runEngineTest {
+            val fakeEngine = FakeInferenceEngine()
+            val fakeConversation = FakeInferenceConversation()
+            factory.addSession(
+                factory.createFakeSession(
+                    engine = fakeEngine,
+                    conversation = fakeConversation,
+                    backend = LlmEngine.Backend.GPU,
+                ),
+            )
+            engine.initialize(
+                modelPath = "/data/model.bin",
+                backend = LlmEngine.Backend.GPU,
+            )
+
+            // Seed initial conversation history
+            val restoreJob =
+                launch {
+                    engine.restoreHistory(listOf(ChatMessage.User("Prior turn")))
+                }
+            testScheduler.runCurrent()
+            fakeConversation.sentMessages
+                .single()
+                .callback
+                .onDone()
+            restoreJob.join()
+
+            // User stops generation mid-flight
+            engine.stop()
+            assertThat(fakeConversation.cancelled).isTrue()
+            assertThat(engine.needsHistoryRestoration()).isTrue()
+
+            // Subsequent inference should create a fresh conversation and replay history before input
+            val emittedTokens = mutableListOf<String>()
+            val job =
+                launch {
+                    engine.runInference("Follow-up prompt") { token, done ->
+                        if (token.isNotEmpty()) emittedTokens.add(token)
+                    }
+                }
+            testScheduler.runCurrent()
+
+            // A new conversation should have been created
+            assertThat(fakeEngine.createdConversations).hasSize(1)
+            val newConversation = fakeEngine.createdConversations.single()
+            // First message sent to new conversation is the restored history context prompt
+            assertThat(newConversation.sentMessages).hasSize(1)
+            assertThat(newConversation.sentMessages.first().input).contains("Prior turn")
+
+            // Complete the restoration prompt callback so runInference proceeds to follow-up prompt
+            newConversation.sentMessages
+                .first()
+                .callback
+                .onDone()
+            testScheduler.runCurrent()
+
+            // Second message is the follow-up prompt
+            assertThat(newConversation.sentMessages).hasSize(2)
+            assertThat(newConversation.sentMessages[1].input).isEqualTo("Follow-up prompt")
+
+            newConversation.sentMessages[1].callback.onMessage(textMessage("Response"))
+            newConversation.sentMessages[1].callback.onDone()
+            job.join()
+
+            assertThat(emittedTokens).containsExactly("Response")
+            assertThat(engine.needsHistoryRestoration()).isFalse()
+        }
+
+    @Test
     fun `cancelled inference callback recreates conversation on next runInference`() =
         runEngineTest {
             val fakeEngine = FakeInferenceEngine()
