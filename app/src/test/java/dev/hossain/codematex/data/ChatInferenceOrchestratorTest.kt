@@ -5,6 +5,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
@@ -513,19 +514,58 @@ class ChatInferenceOrchestratorTest {
             val model = testModel(id = "stub-model", localPath = DEV_STUB_MODEL_PATH)
             val orchestrator = createOrchestrator()
 
-            fakeEngine.isInitializedValue = false
             orchestrator.initialize(
                 model = model,
                 topic = CodingTopic.KOTLIN,
                 sessionId = "session-1",
                 existingMessages = emptyList(),
             )
-            fakeEngine.isInitializedValue = false
             val initialInitCalls = fakeEngine.initializeCalls
 
             orchestrator.sendMessage("Hello stub", emptyList()).toList()
 
             // Does not attempt to re-initialize stub model on sendMessage
             assertThat(fakeEngine.initializeCalls).isEqualTo(initialInitCalls)
+            assertThat(fakeEngine.isInitialized()).isFalse()
+        }
+
+    @Test
+    fun `switchPersona updates active persona and lazy reload restores updated persona prompt after eviction`() =
+        runTest {
+            val initialMessages = listOf(ChatMessage.User("Hello"))
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+                persona = TutorPersona.SENIOR_ENGINEER,
+            )
+
+            // User switches persona mid-conversation
+            orchestrator.switchPersona(
+                topic = CodingTopic.PYTHON,
+                persona = TutorPersona.BEGINNER_FRIENDLY,
+                messages = initialMessages,
+            )
+
+            // Simulate external eviction
+            fakeEngine.cleanup()
+            assertThat(fakeEngine.isInitialized()).isFalse()
+
+            // User sends message triggering lazy reload
+            orchestrator.sendMessage("Explain decorators", initialMessages).toList()
+
+            // Verify lazy reload used updated persona and topic
+            assertThat(fakeEngine.initializeCalls).isEqualTo(2)
+            val expectedPrompt =
+                topicPromptProvider.buildSystemPrompt(
+                    topic = CodingTopic.PYTHON,
+                    persona = TutorPersona.BEGINNER_FRIENDLY,
+                    developerProfile = fakeUserPreferencesStore.getDeveloperProfile(),
+                )
+            assertThat(fakeEngine.lastSystemInstruction).isEqualTo(expectedPrompt)
         }
 }

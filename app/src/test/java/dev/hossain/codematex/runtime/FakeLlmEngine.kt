@@ -18,6 +18,7 @@ class FakeLlmEngine : LlmEngine {
     var shouldThrow: Exception? = null
     var backendFailureBackend: LlmEngine.Backend? = null
     var backendFailureBackends: List<LlmEngine.Backend> = emptyList()
+    var lastSystemInstruction: String? = null
 
     override suspend fun initialize(
         modelPath: String,
@@ -28,6 +29,11 @@ class FakeLlmEngine : LlmEngine {
         if (shouldThrow != null) throw shouldThrow!!
         initializeCalls++
         lastConfig = config
+        lastSystemInstruction = systemInstruction
+        if (modelPath == DEV_STUB_MODEL_PATH) {
+            isInitializedValue = false
+            return
+        }
         isInitializedValue = true
         loadedModelPath = modelPath
         activeBackendValue = backend
@@ -75,6 +81,7 @@ class FakeLlmEngine : LlmEngine {
         config: ModelConfig,
     ) {
         resetCalls++
+        lastSystemInstruction = systemInstruction
     }
 
     var restoredMessages = mutableListOf<List<ChatMessage>>()

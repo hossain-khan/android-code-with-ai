@@ -21,6 +21,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -154,6 +156,8 @@ class DefaultChatInferenceOrchestrator
         @Volatile
         private var activeMessages: List<ChatMessage> = emptyList()
 
+        private val reloadMutex = Mutex()
+
         override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
 
         private suspend fun loadModelAndRestoreHistory(
@@ -161,7 +165,6 @@ class DefaultChatInferenceOrchestrator
             topic: CodingTopic,
             persona: TutorPersona,
             messages: List<ChatMessage>,
-            isLazyReload: Boolean = false,
         ) {
             // Pre-flight memory headroom check:
             // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
@@ -203,9 +206,11 @@ class DefaultChatInferenceOrchestrator
                 }
             }
 
-            val tag = if (isLazyReload) "LAZY_RELOAD" else "INIT_START"
             Timber.d(
-                "ChatInferenceOrchestrator [$tag]: Initializing model=${model.name}, path=${model.localPath}, persona=${persona.name}",
+                "ChatInferenceOrchestrator: Initializing model=%s, path=%s, persona=%s",
+                model.name,
+                model.localPath,
+                persona.name,
             )
             val modelConfig = configStore.getConfig(model.id)
             val devProfile = userPreferencesStore.getDeveloperProfile()
@@ -255,7 +260,6 @@ class DefaultChatInferenceOrchestrator
                     topic = topic,
                     persona = persona,
                     messages = messagesToDisplay,
-                    isLazyReload = false,
                 )
 
                 activeModel = model
@@ -282,6 +286,8 @@ class DefaultChatInferenceOrchestrator
             persona: TutorPersona,
         ) {
             Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
+            activeTopic = topic
+            activePersona = persona
             activeMessages = emptyList()
             activeSessionId = null
             val devProfile = userPreferencesStore.getDeveloperProfile()
@@ -297,6 +303,8 @@ class DefaultChatInferenceOrchestrator
             messages: List<ChatMessage>,
         ) {
             Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
+            activeTopic = topic
+            activePersona = persona
             activeMessages = messages
             val devProfile = userPreferencesStore.getDeveloperProfile()
             llmEngine.resetConversation(
@@ -327,24 +335,27 @@ class DefaultChatInferenceOrchestrator
                 // If the engine was evicted from memory (e.g., via SystemMemoryManager trim/timeout),
                 // lazily re-initialize it and replay history before dispatching the prompt (fixes #411).
                 if (!llmEngine.isInitialized()) {
-                    val currentModel = activeModel
-                    val currentTopic = activeTopic
-                    if (currentModel != null &&
-                        currentTopic != null &&
-                        currentModel.localPath != null &&
-                        currentModel.localPath != DEV_STUB_MODEL_PATH
-                    ) {
-                        Timber.i(
-                            "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
-                            currentModel.name,
-                        )
-                        loadModelAndRestoreHistory(
-                            model = currentModel,
-                            topic = currentTopic,
-                            persona = activePersona,
-                            messages = historyToRestore,
-                            isLazyReload = true,
-                        )
+                    reloadMutex.withLock {
+                        if (!llmEngine.isInitialized()) {
+                            val currentModel = activeModel
+                            val currentTopic = activeTopic
+                            if (currentModel != null &&
+                                currentTopic != null &&
+                                currentModel.localPath != null &&
+                                currentModel.localPath != DEV_STUB_MODEL_PATH
+                            ) {
+                                Timber.i(
+                                    "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
+                                    currentModel.name,
+                                )
+                                loadModelAndRestoreHistory(
+                                    model = currentModel,
+                                    topic = currentTopic,
+                                    persona = activePersona,
+                                    messages = historyToRestore,
+                                )
+                            }
+                        }
                     }
                 }
 
