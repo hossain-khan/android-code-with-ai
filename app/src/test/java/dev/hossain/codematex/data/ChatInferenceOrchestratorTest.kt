@@ -425,4 +425,43 @@ class ChatInferenceOrchestratorTest {
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
             assertThat(fakeEngine.initializeCalls).isEqualTo(1)
         }
+
+    @Test
+    fun `sendMessage lazily re-initializes engine and restores history when engine was evicted from memory`() =
+        runTest {
+            val initialMessages =
+                listOf(
+                    ChatMessage.User("Prior question"),
+                    ChatMessage.Agent("Prior answer"),
+                )
+            val model = testModel(id = "google/gemma-2-2b-it", localPath = "/models/gemma.task")
+            val orchestrator = createOrchestrator()
+
+            // Initial model load
+            orchestrator.initialize(
+                model = model,
+                topic = CodingTopic.KOTLIN,
+                sessionId = "session-1",
+                existingMessages = initialMessages,
+            )
+            assertThat(fakeEngine.initializeCalls).isEqualTo(1)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(1)
+
+            // Simulate external memory eviction (e.g. SystemMemoryManager trim or background timeout)
+            fakeEngine.cleanup()
+            assertThat(fakeEngine.isInitialized()).isFalse()
+
+            // User returns and sends a message without manual reload
+            val events = orchestrator.sendMessage("Follow-up after eviction", initialMessages).toList()
+
+            // Verify the engine was automatically re-initialized and history restored before dispatch
+            assertThat(fakeEngine.initializeCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoreHistoryCalls).isEqualTo(2)
+            assertThat(fakeEngine.restoredMessages.last()).containsExactlyElementsIn(initialMessages).inOrder()
+            assertThat(events)
+                .containsExactly(
+                    ChatInferenceEvent.Token("test response"),
+                    ChatInferenceEvent.Done,
+                ).inOrder()
+        }
 }

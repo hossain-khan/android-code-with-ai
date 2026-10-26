@@ -28,6 +28,9 @@ class FakeLlmEngine : LlmEngine {
         if (shouldThrow != null) throw shouldThrow!!
         initializeCalls++
         lastConfig = config
+        isInitializedValue = true
+        loadedModelPath = modelPath
+        activeBackendValue = backend
     }
 
     override suspend fun runInference(

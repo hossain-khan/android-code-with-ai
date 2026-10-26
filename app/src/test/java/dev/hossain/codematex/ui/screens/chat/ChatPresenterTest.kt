@@ -1180,4 +1180,48 @@ class ChatPresenterTest {
                 assertThat(lastMsg.content).isEqualTo("Interrupted response")
             }
         }
+
+    @Test
+    fun `given external memory eviction during session - sending message succeeds via orchestrator without crashing`() =
+        runTest {
+            val model = testModel(id = "litert-community/gemma-4-E2B-it-litert-lm", downloadStatus = DownloadStatus.DOWNLOADED)
+            val fakeModelRepo =
+                FakeModelRepository(
+                    availableModels = listOf(model),
+                    selectedModel = model,
+                )
+            val fakeOrchestrator = FakeChatInferenceOrchestrator()
+            fakeOrchestrator.messageEvents =
+                listOf(
+                    ChatInferenceEvent.Token("Response after eviction"),
+                    ChatInferenceEvent.Done,
+                )
+
+            val navigator = FakeNavigator(ChatScreen(CodingTopic.KOTLIN))
+            val presenter =
+                createPresenter(
+                    navigator = navigator,
+                    screen = ChatScreen(CodingTopic.KOTLIN),
+                    modelRepository = fakeModelRepo,
+                    chatInferenceOrchestrator = fakeOrchestrator,
+                )
+
+            presenter.test {
+                val state = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(state.isPreparing).isFalse()
+                assertThat(state.isGenerating).isFalse()
+
+                // Simulate memory eviction happening while presenter is active/retained
+                fakeOrchestrator.isModelLoadedValue = false
+
+                // Sending message triggers inference without presenter crashing or showing error bubble
+                state.eventSink(ChatScreen.Event.SendMessage("Hello after eviction"))
+
+                val completedState = expectMostRecentItem() as ChatScreen.State.Active
+                assertThat(completedState.isGenerating).isFalse()
+                val lastAgent = completedState.messages.last() as ChatMessage.Agent
+                assertThat(lastAgent.content).isEqualTo("Response after eviction")
+                assertThat(fakeOrchestrator.sendMessageInputs).containsExactly("Hello after eviction")
+            }
+        }
 }

@@ -139,6 +139,9 @@ class DefaultChatInferenceOrchestrator
         private val systemMemoryManager: SystemMemoryManager,
         private val userPreferencesStore: UserPreferencesStore,
     ) : ChatInferenceOrchestrator {
+        private var activeModel: AiModel? = null
+        private var activeTopic: CodingTopic? = null
+        private var activePersona: TutorPersona = TutorPersona.SENIOR_ENGINEER
         private var activeSessionId: String? = null
         private var activeMessages: List<ChatMessage> = emptyList()
 
@@ -205,6 +208,9 @@ class DefaultChatInferenceOrchestrator
                 )
                 Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
 
+                activeModel = model
+                activeTopic = topic
+                activePersona = persona
                 activeSessionId = sessionId
                 val rawMessages =
                     if (sessionId != null) {
@@ -285,6 +291,34 @@ class DefaultChatInferenceOrchestrator
                             activeSessionId?.let { sessionRepository.getMessages(it) } ?: emptyList()
                         }
                     }
+
+                // If the engine was evicted from memory (e.g., via SystemMemoryManager trim/timeout),
+                // lazily re-initialize it and replay history before dispatching the prompt (fixes #411).
+                if (!llmEngine.isInitialized()) {
+                    val currentModel = activeModel
+                    val currentTopic = activeTopic
+                    if (currentModel != null && currentTopic != null) {
+                        Timber.i(
+                            "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
+                            currentModel.name,
+                        )
+                        val modelConfig = configStore.getConfig(currentModel.id)
+                        val devProfile = userPreferencesStore.getDeveloperProfile()
+                        llmEngine.initialize(
+                            modelPath = currentModel.localPath ?: "",
+                            backend = currentModel.preferredBackend,
+                            systemInstruction = topicPromptProvider.buildSystemPrompt(currentTopic, activePersona, devProfile),
+                            config = modelConfig,
+                        )
+                        if (historyToRestore.isNotEmpty()) {
+                            Timber.d(
+                                "ChatInferenceOrchestrator [LAZY_RELOAD]: Restoring %d messages to reloaded conversation context",
+                                historyToRestore.size,
+                            )
+                            llmEngine.restoreHistory(historyToRestore)
+                        }
+                    }
+                }
 
                 suspend fun runAndEmit(input: String) {
                     llmEngine.runInference(input) { partialToken, done ->
