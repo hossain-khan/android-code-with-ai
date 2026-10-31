@@ -25,7 +25,7 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
 
     override fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>> = workInfoFlows.getOrPut(modelId) { MutableStateFlow(emptyList()) }
 
-    override fun enqueueDownload(
+    override suspend fun enqueueDownload(
         modelId: String,
         urls: List<String>,
         path: String,
@@ -37,7 +37,7 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         enqueuedDownloads += Triple(modelId, urls.firstOrNull() ?: "", path)
     }
 
-    override fun enqueueDownload(
+    override suspend fun enqueueDownload(
         modelId: String,
         url: String,
         path: String,
