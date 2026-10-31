@@ -308,4 +308,37 @@ class SystemMemoryManagerTest {
             advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
         }
+
+    @Test
+    fun `given userPreferencesStore emits 0 minutes then coerces delay to at least 1 minute`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 0)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            runCurrent()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(60_000L)
+        }
+
+    @Test
+    fun `given constructor without userPreferencesStore then retains default 3 minute eviction delay`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = null,
+                )
+
+            runCurrent()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS)
+        }
 }
