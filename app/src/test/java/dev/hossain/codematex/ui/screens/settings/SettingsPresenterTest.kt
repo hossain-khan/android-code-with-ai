@@ -6,7 +6,6 @@ import com.slack.circuit.test.test
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.data.repository.FakeChatSessionRepository
-import dev.hossain.codematex.data.repository.FakeModelDownloadPreferences
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
@@ -23,7 +22,6 @@ class SettingsPresenterTest {
     private lateinit var fakeUserPreferencesStore: FakeUserPreferencesStore
     private lateinit var fakeModelRepository: FakeModelRepository
     private lateinit var fakeChatSessionRepository: FakeChatSessionRepository
-    private lateinit var fakeModelDownloadPreferences: FakeModelDownloadPreferences
 
     @Before
     fun setUp() {
@@ -31,14 +29,12 @@ class SettingsPresenterTest {
         fakeUserPreferencesStore = FakeUserPreferencesStore()
         fakeModelRepository = FakeModelRepository()
         fakeChatSessionRepository = FakeChatSessionRepository()
-        fakeModelDownloadPreferences = FakeModelDownloadPreferences()
     }
 
     private fun createPresenter(
         userPreferencesStore: FakeUserPreferencesStore = fakeUserPreferencesStore,
         modelRepository: FakeModelRepository = fakeModelRepository,
         chatSessionRepository: FakeChatSessionRepository = fakeChatSessionRepository,
-        modelDownloadPreferences: FakeModelDownloadPreferences = fakeModelDownloadPreferences,
     ): SettingsPresenter =
         SettingsPresenter(
             navigator = fakeNavigator,
@@ -46,7 +42,6 @@ class SettingsPresenterTest {
             userPreferencesStore = userPreferencesStore,
             modelRepository = modelRepository,
             chatSessionRepository = chatSessionRepository,
-            modelDownloadPreferences = modelDownloadPreferences,
         )
 
     @Test
@@ -95,7 +90,6 @@ class SettingsPresenterTest {
                 val updatedState = expectMostRecentItem() as SettingsScreen.State.Content
                 assertThat(updatedState.isWifiOnlyDownload).isFalse()
                 assertThat(fakeUserPreferencesStore.isWifiOnlyDownloadEnabled()).isFalse()
-                assertThat(fakeModelDownloadPreferences.getDownloadOverWifiOnly()).isFalse()
             }
         }
 

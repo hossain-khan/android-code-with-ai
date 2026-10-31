@@ -1,25 +1,15 @@
 package dev.hossain.codematex.data.repository
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.core.IOException
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import timber.log.Timber
 import javax.inject.Inject
 
 /**
  * Persistent preferences for model downloads.
  *
+ * Delegates to [UserPreferencesStore] as the single authoritative owner of user preferences.
  * Tests can supply an in-memory fake to avoid depending on Android DataStore.
  */
 interface ModelDownloadPreferences {
@@ -44,29 +34,14 @@ interface ModelDownloadPreferences {
 class ModelDownloadPreferencesImpl
     @Inject
     constructor(
-        private val dataStore: DataStore<Preferences>,
+        private val userPreferencesStore: UserPreferencesStore,
     ) : ModelDownloadPreferences {
         override val downloadOverWifiOnlyFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "ModelDownloadPreferencesImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs -> prefs[KEY_WIFI_ONLY] ?: true }
-                .distinctUntilChanged()
+            userPreferencesStore.isWifiOnlyDownloadEnabledFlow
 
-        override suspend fun getDownloadOverWifiOnly(): Boolean = downloadOverWifiOnlyFlow.first()
+        override suspend fun getDownloadOverWifiOnly(): Boolean = userPreferencesStore.isWifiOnlyDownloadEnabled()
 
         override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_WIFI_ONLY] = enabled
-            }
-        }
-
-        companion object {
-            private val KEY_WIFI_ONLY = booleanPreferencesKey("download_over_wifi_only")
+            userPreferencesStore.setWifiOnlyDownloadEnabled(enabled)
         }
     }

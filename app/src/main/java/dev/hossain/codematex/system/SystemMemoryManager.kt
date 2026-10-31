@@ -9,6 +9,7 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import androidx.compose.runtime.Immutable
+import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.zacsweers.metro.AppScope
@@ -134,29 +135,27 @@ interface SystemMemoryManager {
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 class SystemMemoryManagerImpl
-    @Inject
-    constructor(
-        @ApplicationContext private val context: Context,
+    internal constructor(
+        private val context: Context,
         private val llmEngine: LlmEngine,
+        private val userPreferencesStore: UserPreferencesStore? = null,
+        private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
+        private var backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
+        private var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null,
     ) : SystemMemoryManager {
-        private var dispatcher: CoroutineDispatcher = Dispatchers.Default
-        private var backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS
-        private var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null
-
-        /**
-         * Secondary constructor for unit testing with custom dispatchers and mock memory providers.
-         */
-        internal constructor(
-            context: Context,
+        @Inject
+        constructor(
+            @ApplicationContext context: Context,
             llmEngine: LlmEngine,
-            dispatcher: CoroutineDispatcher = Dispatchers.Default,
-            backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
-            memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null,
-        ) : this(context, llmEngine) {
-            this.dispatcher = dispatcher
-            this.backgroundEvictionDelayMs = backgroundEvictionDelayMs
-            this.memoryInfoProvider = memoryInfoProvider
-        }
+            userPreferencesStore: UserPreferencesStore,
+        ) : this(
+            context = context,
+            llmEngine = llmEngine,
+            userPreferencesStore = userPreferencesStore,
+            dispatcher = Dispatchers.Default,
+            backgroundEvictionDelayMs = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
+            memoryInfoProvider = null,
+        )
 
         private val activityManager by lazy {
             try {
@@ -169,6 +168,26 @@ class SystemMemoryManagerImpl
 
         private var backgroundEvictionJob: Job? = null
         private var startedActivityCount = 0
+
+        init {
+            userPreferencesStore?.let { store ->
+                scope.launch {
+                    store.ramEvictionMinutesFlow.collect { minutes ->
+                        val newDelayMs = minutes.coerceAtLeast(1) * 60 * 1000L
+                        val delayChanged = newDelayMs != backgroundEvictionDelayMs
+                        backgroundEvictionDelayMs = newDelayMs
+                        Timber.d(
+                            "SystemMemoryManager [PREF_CHANGE]: Background eviction delay updated to %d ms (%d min)",
+                            backgroundEvictionDelayMs,
+                            minutes,
+                        )
+                        if (delayChanged && backgroundEvictionJob?.isActive == true) {
+                            scheduleBackgroundEviction()
+                        }
+                    }
+                }
+            }
+        }
 
         /**
          * ComponentCallbacks2 listener for responding to memory pressure events.
@@ -458,4 +477,7 @@ class SystemMemoryManagerImpl
         internal fun notifyActivityResumed() {
             cancelBackgroundEviction()
         }
+
+        // Exposed for testing
+        internal fun getBackgroundEvictionDelayMs(): Long = backgroundEvictionDelayMs
     }
