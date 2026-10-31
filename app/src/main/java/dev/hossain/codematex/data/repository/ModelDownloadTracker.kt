@@ -12,6 +12,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 import javax.inject.Inject
 
 /**
@@ -31,7 +32,7 @@ interface ModelDownloadTracker {
      * Enqueues a download for [modelId] from [urls] to [path], trying candidate URLs in order
      * and optionally verifying against [expectedSha256].
      */
-    fun enqueueDownload(
+    suspend fun enqueueDownload(
         modelId: String,
         urls: List<String>,
         path: String,
@@ -42,7 +43,7 @@ interface ModelDownloadTracker {
     /**
      * Enqueues a download for [modelId] from [url] to [path].
      */
-    fun enqueueDownload(
+    suspend fun enqueueDownload(
         modelId: String,
         url: String,
         path: String,
@@ -66,7 +67,7 @@ class ModelDownloadTrackerImpl
     ) : ModelDownloadTracker {
         override fun getWorkInfoFlow(modelId: String): Flow<List<WorkInfo>> = workManager.getWorkInfosForUniqueWorkFlow(modelId)
 
-        override fun enqueueDownload(
+        override suspend fun enqueueDownload(
             modelId: String,
             urls: List<String>,
             path: String,
@@ -90,10 +91,9 @@ class ModelDownloadTrackerImpl
 
             val isWifiOnly =
                 try {
-                    kotlinx.coroutines.runBlocking {
-                        downloadPreferences.getDownloadOverWifiOnly()
-                    }
+                    downloadPreferences.getDownloadOverWifiOnly()
                 } catch (e: Exception) {
+                    Timber.e(e, "ModelDownloadTracker: Failed to read Wi-Fi only preference, defaulting to Wi-Fi only")
                     true
                 }
 
