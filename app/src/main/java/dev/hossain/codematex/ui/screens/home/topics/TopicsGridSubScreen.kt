@@ -27,7 +27,7 @@ data class TopicsGridSubScreen(
  */
 @Immutable
 data class TopicsGridSubState(
-    val topics: List<CodingTopic> = CodingTopic.entries,
+    val topics: List<CodingTopic> = CodingTopic.selectableEntries,
     val topicsWithCourses: Set<CodingTopic> = emptySet(),
     val isCompact: Boolean = false,
     val eventSink: (TopicsGridUiEvent) -> Unit = {},

@@ -31,7 +31,7 @@ class TopicsGridSubPresenter(
         }
 
         return TopicsGridSubState(
-            topics = CodingTopic.entries,
+            topics = CodingTopic.selectableEntries,
             topicsWithCourses = topicsWithCourses,
             isCompact = screen.isCompact,
             eventSink = { event ->

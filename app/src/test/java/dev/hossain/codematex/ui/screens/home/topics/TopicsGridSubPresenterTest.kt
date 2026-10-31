@@ -22,14 +22,15 @@ class TopicsGridSubPresenterTest {
         )
 
     @Test
-    fun `emits topics and topicsWithCourses from repository`() =
+    fun `emits selectable topics and topicsWithCourses from repository`() =
         runTest {
             val fakeRepo = FakeLearningRepository(courses = testCourses)
             val presenter = TopicsGridSubPresenter(TopicsGridSubScreen(isCompact = false), learningRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem()
-                assertThat(state.topics).containsExactlyElementsIn(CodingTopic.entries)
+                assertThat(state.topics).containsExactlyElementsIn(CodingTopic.selectableEntries).inOrder()
+                assertThat(state.topics).doesNotContain(CodingTopic.UNKNOWN)
                 assertThat(state.topicsWithCourses).containsExactly(CodingTopic.KOTLIN)
                 assertThat(state.isCompact).isFalse()
             }
