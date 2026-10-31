@@ -4,6 +4,7 @@ import androidx.work.Constraints
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
+import androidx.work.OneTimeWorkRequest
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -11,6 +12,7 @@ import dev.hossain.codematex.work.ModelDownloadWorker
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import javax.inject.Inject
@@ -74,56 +76,98 @@ class ModelDownloadTrackerImpl
             expectedSha256: String?,
             modelName: String?,
         ) {
-            val builder =
-                Data
-                    .Builder()
-                    .putString(ModelDownloadWorker.KEY_MODEL_ID, modelId)
-                    .putString(ModelDownloadWorker.KEY_MODEL_NAME, modelName ?: modelId.substringAfterLast("/"))
-                    .putStringArray(ModelDownloadWorker.KEY_URLS, urls.toTypedArray())
-                    .putString(ModelDownloadWorker.KEY_URL, urls.firstOrNull() ?: "")
-                    .putString(ModelDownloadWorker.KEY_PATH, path)
-
-            if (expectedSha256 != null) {
-                builder.putString(ModelDownloadWorker.KEY_SHA256, expectedSha256)
-            }
-
-            val data = builder.build()
-
-            val isWifiOnly =
-                try {
-                    downloadPreferences.getDownloadOverWifiOnly()
-                } catch (e: Exception) {
-                    Timber.e(e, "ModelDownloadTracker: Failed to read Wi-Fi only preference, defaulting to Wi-Fi only")
-                    true
-                }
-
-            val networkType =
-                if (isWifiOnly) {
-                    NetworkType.UNMETERED
-                } else {
-                    NetworkType.CONNECTED
-                }
-
-            val constraints =
-                Constraints
-                    .Builder()
-                    .setRequiredNetworkType(networkType)
-                    .build()
-
-            val request =
-                OneTimeWorkRequestBuilder<ModelDownloadWorker>()
-                    .setInputData(data)
-                    .setConstraints(constraints)
-                    .build()
-
-            workManager.enqueueUniqueWork(
-                modelId,
-                ExistingWorkPolicy.REPLACE,
-                request,
+            enqueueDownloadInternal(
+                modelId = modelId,
+                urls = urls,
+                path = path,
+                expectedSha256 = expectedSha256,
+                modelName = modelName,
+                workEnqueuer = { name, policy, request ->
+                    workManager.enqueueUniqueWork(name, policy, request)
+                },
             )
+        }
+
+        internal suspend fun enqueueDownloadInternal(
+            modelId: String,
+            urls: List<String>,
+            path: String,
+            expectedSha256: String?,
+            modelName: String?,
+            workEnqueuer: (String, ExistingWorkPolicy, OneTimeWorkRequest) -> Unit,
+        ) {
+            val request =
+                buildDownloadRequest(
+                    modelId = modelId,
+                    urls = urls,
+                    path = path,
+                    expectedSha256 = expectedSha256,
+                    modelName = modelName,
+                    downloadPreferences = downloadPreferences,
+                )
+
+            workEnqueuer(modelId, ExistingWorkPolicy.REPLACE, request)
         }
 
         override fun cancelDownload(modelId: String) {
             workManager.cancelUniqueWork(modelId)
+        }
+
+        companion object {
+            internal suspend fun buildDownloadRequest(
+                modelId: String,
+                urls: List<String>,
+                path: String,
+                expectedSha256: String?,
+                modelName: String?,
+                downloadPreferences: ModelDownloadPreferences,
+            ): OneTimeWorkRequest {
+                val builder =
+                    Data
+                        .Builder()
+                        .putString(ModelDownloadWorker.KEY_MODEL_ID, modelId)
+                        .putString(ModelDownloadWorker.KEY_MODEL_NAME, modelName ?: modelId.substringAfterLast("/"))
+                        .putStringArray(ModelDownloadWorker.KEY_URLS, urls.toTypedArray())
+                        .putString(ModelDownloadWorker.KEY_URL, urls.firstOrNull() ?: "")
+                        .putString(ModelDownloadWorker.KEY_PATH, path)
+
+                if (expectedSha256 != null) {
+                    builder.putString(ModelDownloadWorker.KEY_SHA256, expectedSha256)
+                }
+
+                val data = builder.build()
+
+                val isWifiOnly =
+                    try {
+                        downloadPreferences.getDownloadOverWifiOnly()
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.e(
+                            e,
+                            "ModelDownloadTracker: Failed to read Wi-Fi only preference for %s, defaulting to Wi-Fi only",
+                            modelId,
+                        )
+                        true
+                    }
+
+                val networkType =
+                    if (isWifiOnly) {
+                        NetworkType.UNMETERED
+                    } else {
+                        NetworkType.CONNECTED
+                    }
+
+                val constraints =
+                    Constraints
+                        .Builder()
+                        .setRequiredNetworkType(networkType)
+                        .build()
+
+                return OneTimeWorkRequestBuilder<ModelDownloadWorker>()
+                    .setInputData(data)
+                    .setConstraints(constraints)
+                    .build()
+            }
         }
     }
