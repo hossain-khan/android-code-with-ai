@@ -82,31 +82,11 @@ class ModelDownloadTrackerImpl
                 path = path,
                 expectedSha256 = expectedSha256,
                 modelName = modelName,
+                downloadPreferences = downloadPreferences,
                 workEnqueuer = { name, policy, request ->
                     workManager.enqueueUniqueWork(name, policy, request)
                 },
             )
-        }
-
-        internal suspend fun enqueueDownloadInternal(
-            modelId: String,
-            urls: List<String>,
-            path: String,
-            expectedSha256: String?,
-            modelName: String?,
-            workEnqueuer: (String, ExistingWorkPolicy, OneTimeWorkRequest) -> Unit,
-        ) {
-            val request =
-                buildDownloadRequest(
-                    modelId = modelId,
-                    urls = urls,
-                    path = path,
-                    expectedSha256 = expectedSha256,
-                    modelName = modelName,
-                    downloadPreferences = downloadPreferences,
-                )
-
-            workEnqueuer(modelId, ExistingWorkPolicy.REPLACE, request)
         }
 
         override fun cancelDownload(modelId: String) {
@@ -114,6 +94,28 @@ class ModelDownloadTrackerImpl
         }
 
         companion object {
+            internal suspend fun enqueueDownloadInternal(
+                modelId: String,
+                urls: List<String>,
+                path: String,
+                expectedSha256: String?,
+                modelName: String?,
+                downloadPreferences: ModelDownloadPreferences,
+                workEnqueuer: (String, ExistingWorkPolicy, OneTimeWorkRequest) -> Unit,
+            ) {
+                val request =
+                    buildDownloadRequest(
+                        modelId = modelId,
+                        urls = urls,
+                        path = path,
+                        expectedSha256 = expectedSha256,
+                        modelName = modelName,
+                        downloadPreferences = downloadPreferences,
+                    )
+
+                workEnqueuer(modelId, ExistingWorkPolicy.REPLACE, request)
+            }
+
             internal suspend fun buildDownloadRequest(
                 modelId: String,
                 urls: List<String>,

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import timber.log.Timber
 import java.io.IOException
 
 class ModelDownloadTrackerImplTest {
@@ -38,18 +39,18 @@ class ModelDownloadTrackerImplTest {
         modelName: String? = null,
         preferences: ModelDownloadPreferences = downloadPreferences,
     ) {
-        val request =
-            ModelDownloadTrackerImpl.buildDownloadRequest(
-                modelId = modelId,
-                urls = urls,
-                path = path,
-                expectedSha256 = expectedSha256,
-                modelName = modelName,
-                downloadPreferences = preferences,
-            )
-        lastEnqueuedWorkName = modelId
-        lastExistingWorkPolicy = ExistingWorkPolicy.REPLACE
-        lastEnqueuedRequest = request
+        ModelDownloadTrackerImpl.enqueueDownloadInternal(
+            modelId = modelId,
+            urls = urls,
+            path = path,
+            expectedSha256 = expectedSha256,
+            modelName = modelName,
+            downloadPreferences = preferences,
+        ) { name, policy, request ->
+            lastEnqueuedWorkName = name
+            lastExistingWorkPolicy = policy
+            lastEnqueuedRequest = request
+        }
     }
 
     @Test
@@ -88,6 +89,7 @@ class ModelDownloadTrackerImplTest {
             )
 
             assertThat(lastEnqueuedWorkName).isEqualTo("vendor/model-2")
+            assertThat(lastExistingWorkPolicy).isEqualTo(ExistingWorkPolicy.REPLACE)
             val request = lastEnqueuedRequest
             assertThat(request).isNotNull()
             assertThat(request!!.workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.CONNECTED)
@@ -96,28 +98,50 @@ class ModelDownloadTrackerImplTest {
     @Test
     fun `given preference read error when enqueueDownload called then logs error and falls back to UNMETERED`() =
         runTest {
-            val failingPreferences =
-                object : ModelDownloadPreferences {
-                    override val downloadOverWifiOnlyFlow: Flow<Boolean> get() = flowOf(true)
-
-                    override suspend fun getDownloadOverWifiOnly(): Boolean = throw IOException("Disk read error")
-
-                    override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {}
+            val loggedMessages = mutableListOf<String>()
+            val testTree =
+                object : Timber.Tree() {
+                    override fun log(
+                        priority: Int,
+                        tag: String?,
+                        message: String,
+                        t: Throwable?,
+                    ) {
+                        loggedMessages.add(message)
+                    }
                 }
+            Timber.plant(testTree)
+            try {
+                val failingPreferences =
+                    object : ModelDownloadPreferences {
+                        override val downloadOverWifiOnlyFlow: Flow<Boolean> get() = flowOf(true)
 
-            enqueueDownload(
-                modelId = "vendor/model-3",
-                urls = listOf("https://example.com/model3.bin"),
-                path = "/path/to/model3.bin",
-                preferences = failingPreferences,
-            )
+                        override suspend fun getDownloadOverWifiOnly(): Boolean = throw IOException("Disk read error")
 
-            val request = lastEnqueuedRequest
-            assertThat(request).isNotNull()
-            assertThat(request!!.workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.UNMETERED)
+                        override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {}
+                    }
+
+                enqueueDownload(
+                    modelId = "vendor/model-3",
+                    urls = listOf("https://example.com/model3.bin"),
+                    path = "/path/to/model3.bin",
+                    preferences = failingPreferences,
+                )
+
+                assertThat(lastEnqueuedWorkName).isEqualTo("vendor/model-3")
+                assertThat(lastExistingWorkPolicy).isEqualTo(ExistingWorkPolicy.REPLACE)
+                val request = lastEnqueuedRequest
+                assertThat(request).isNotNull()
+                assertThat(request!!.workSpec.constraints.requiredNetworkType).isEqualTo(NetworkType.UNMETERED)
+                assertThat(loggedMessages).hasSize(1)
+                assertThat(loggedMessages.first()).contains("vendor/model-3")
+                assertThat(loggedMessages.first()).contains("Failed to read Wi-Fi only preference")
+            } finally {
+                Timber.uproot(testTree)
+            }
         }
 
-    @Test(expected = CancellationException::class)
+    @Test
     fun `given coroutine cancellation when reading preference then propagates CancellationException and does not enqueue`() =
         runTest {
             val cancellingPreferences =
@@ -129,6 +153,7 @@ class ModelDownloadTrackerImplTest {
                     override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {}
                 }
 
+            var caughtException: CancellationException? = null
             try {
                 enqueueDownload(
                     modelId = "vendor/model-cancelled",
@@ -136,8 +161,14 @@ class ModelDownloadTrackerImplTest {
                     path = "/path/to/cancelled.bin",
                     preferences = cancellingPreferences,
                 )
-            } finally {
-                assertThat(lastEnqueuedRequest).isNull()
+            } catch (e: CancellationException) {
+                caughtException = e
             }
+
+            assertThat(caughtException).isNotNull()
+            assertThat(caughtException).hasMessageThat().contains("Caller coroutine cancelled")
+            assertThat(lastEnqueuedRequest).isNull()
+            assertThat(lastEnqueuedWorkName).isNull()
+            assertThat(lastExistingWorkPolicy).isNull()
         }
 }
