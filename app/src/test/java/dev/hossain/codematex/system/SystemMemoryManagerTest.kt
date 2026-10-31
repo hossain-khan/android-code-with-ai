@@ -3,11 +3,13 @@ package dev.hossain.codematex.system
 import android.content.ComponentCallbacks2
 import android.content.ContextWrapper
 import com.google.common.truth.Truth.assertThat
+import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.runtime.FakeLlmEngine
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -203,5 +205,140 @@ class SystemMemoryManagerTest {
             advanceTimeBy(600L)
             advanceUntilIdle()
             assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun `given userPreferencesStore with custom eviction minutes when initialized then updates backgroundEvictionDelayMs`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 10)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            advanceUntilIdle()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(10 * 60 * 1000L)
+        }
+
+    @Test
+    fun `given running manager when user updates ramEvictionMinutes then dynamically updates eviction delay`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 3)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            advanceUntilIdle()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(3 * 60 * 1000L)
+
+            fakePreferences.setRamEvictionMinutes(15)
+            advanceUntilIdle()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(15 * 60 * 1000L)
+        }
+
+    @Test
+    fun `given dynamic delay configured when activity stopped then evicts after dynamic delay`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 5)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            runCurrent()
+
+            manager.notifyActivityStarted()
+            manager.notifyActivityStopped()
+
+            // 4 minutes pass: should not have evicted yet
+            advanceTimeBy(4 * 60 * 1000L)
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
+
+            // 1 more minute passes (total 5 minutes): should evict
+            advanceTimeBy(1 * 60 * 1000L)
+            advanceUntilIdle()
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun `given eviction scheduled when ramEvictionMinutes updated then reschedules with new delay`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 5)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            runCurrent()
+
+            manager.notifyActivityStarted()
+            manager.notifyActivityStopped()
+
+            // 2 minutes pass
+            advanceTimeBy(2 * 60 * 1000L)
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
+
+            // User increases timeout to 10 minutes while eviction was scheduled
+            fakePreferences.setRamEvictionMinutes(10)
+            runCurrent()
+
+            // Advance by 4 more minutes (total 6 minutes since stop, past initial 5 min): should not have evicted
+            advanceTimeBy(4 * 60 * 1000L)
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
+
+            // Advance remaining time for the 10 min window: should evict
+            advanceTimeBy(6 * 60 * 1000L)
+            advanceUntilIdle()
+            assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+        }
+
+    @Test
+    fun `given userPreferencesStore emits 0 minutes then coerces delay to at least 1 minute`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val fakePreferences = FakeUserPreferencesStore(initialRamEvictionMinutes = 0)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = fakePreferences,
+                )
+
+            runCurrent()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(60_000L)
+        }
+
+    @Test
+    fun `given constructor without userPreferencesStore then retains default 3 minute eviction delay`() =
+        runTest {
+            val testDispatcher = StandardTestDispatcher(testScheduler)
+            val manager =
+                SystemMemoryManagerImpl(
+                    context = ContextWrapper(null),
+                    llmEngine = fakeEngine,
+                    dispatcher = testDispatcher,
+                    userPreferencesStore = null,
+                )
+
+            runCurrent()
+            assertThat(manager.getBackgroundEvictionDelayMs()).isEqualTo(SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS)
         }
 }
