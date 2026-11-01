@@ -90,6 +90,19 @@ fun TopicsGridSubUi(
         ) {
             TopicsHeader(topicCount = state.topics.size)
 
+            // Note: BoxWithConstraints with non-lazy Column/Row is used here because this composable
+            // is placed inside an outer LazyColumn item on expanded tablet/foldable screens (see HomeScreenUi.kt).
+            // Nesting a LazyVerticalGrid inside a LazyColumn requires a fixed height constraint, which breaks
+            // the unified scrolling experience where preceding items (Active Model Banner, Guided Courses) scroll
+            // off-screen to give topics full column height.
+            //
+            // Trade-off: Since the curated coding topics list is small and bounded (currently 7-10 items),
+            // composing all cards at once has negligible impact on memory and recomposition performance.
+            //
+            // TODO: Optimize to restore lazy item recycling if the topic list becomes dynamic or unbounded.
+            // Potential approaches:
+            // 1. Flatten chunked topic rows directly into the parent LazyColumn using LazyListScope.
+            // 2. Hoist column calculation and emit items directly into the parent LazyListScope.
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                 val minCardWidth = 220.dp
                 val spacing = 12.dp
