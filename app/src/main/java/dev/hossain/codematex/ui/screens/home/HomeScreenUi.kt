@@ -180,51 +180,59 @@ private fun HomeLayout(
                         .padding(horizontal = 24.dp, vertical = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                // Left Column: Active Model Banner + Guided Courses + Topics Grid
-                Column(
+                // Left Column: Active Model Banner + Guided Courses + Topics Grid in a unified scrolling feed
+                val leftListState = rememberLazyListState()
+                LazyColumn(
+                    state = leftListState,
                     modifier =
                         Modifier
                             .weight(1.3f)
-                            .fillMaxHeight(),
+                            .fillMaxHeight()
+                            .adaptiveScrollbar(leftListState),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    SubCircuitContent(
-                        screen = ActiveModelBannerSubScreen,
-                        outerEventSink = { event ->
-                            when (event) {
-                                ActiveModelBannerOuterEvent.NavigateToModelPicker -> {
-                                    state.eventSink(HomeScreen.Event.ManageModels)
+                    item {
+                        SubCircuitContent(
+                            screen = ActiveModelBannerSubScreen,
+                            outerEventSink = { event ->
+                                when (event) {
+                                    ActiveModelBannerOuterEvent.NavigateToModelPicker -> {
+                                        state.eventSink(HomeScreen.Event.ManageModels)
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
 
-                    SubCircuitContent(
-                        screen = GuidedCoursesSubScreen,
-                        outerEventSink = { event ->
-                            when (event) {
-                                is GuidedCoursesOuterEvent.NavigateToCourse -> {
-                                    state.eventSink(HomeScreen.Event.CourseClicked(event.courseId))
-                                }
+                    item {
+                        SubCircuitContent(
+                            screen = GuidedCoursesSubScreen,
+                            outerEventSink = { event ->
+                                when (event) {
+                                    is GuidedCoursesOuterEvent.NavigateToCourse -> {
+                                        state.eventSink(HomeScreen.Event.CourseClicked(event.courseId))
+                                    }
 
-                                GuidedCoursesOuterEvent.NavigateToAllCourses -> {
-                                    state.eventSink(HomeScreen.Event.GuidedLessons)
+                                    GuidedCoursesOuterEvent.NavigateToAllCourses -> {
+                                        state.eventSink(HomeScreen.Event.GuidedLessons)
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
 
-                    SubCircuitContent(
-                        screen = TopicsGridSubScreen(isCompact = false),
-                        modifier = Modifier.weight(1f),
-                        outerEventSink = { event ->
-                            when (event) {
-                                is TopicsGridOuterEvent.NavigateToTopic -> {
-                                    state.eventSink(HomeScreen.Event.TopicSelected(event.topic))
+                    item {
+                        SubCircuitContent(
+                            screen = TopicsGridSubScreen(isCompact = false),
+                            outerEventSink = { event ->
+                                when (event) {
+                                    is TopicsGridOuterEvent.NavigateToTopic -> {
+                                        state.eventSink(HomeScreen.Event.TopicSelected(event.topic))
+                                    }
                                 }
-                            }
-                        },
-                    )
+                            },
+                        )
+                    }
                 }
 
                 // Right Column: Recent Sessions
