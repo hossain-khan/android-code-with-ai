@@ -1,0 +1,6 @@
+What's New in CodeMateX 1.32.0:
+• Tablet & Foldables: Unified scrolling left pane expands "Chat with AI Tutor" to full height (#501).
+• Startup Stability: Resolved Metro DI initialization crash on launch.
+• Performance: Eliminated main-thread blocking in download tracking (#416).
+• RAM Controls: Added configurable background memory eviction settings (#417).
+• UI Polish: Filtered unknown topic tiles from topics grid (#418).
