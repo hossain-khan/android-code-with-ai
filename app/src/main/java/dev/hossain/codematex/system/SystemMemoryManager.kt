@@ -143,7 +143,7 @@ class SystemMemoryManagerImpl
         private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
         @Volatile private var backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
     ) : SystemMemoryManager {
-        internal var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null
+        private var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null
 
         @Inject
         constructor(
