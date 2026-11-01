@@ -3,18 +3,17 @@ package dev.hossain.codematex.ui.screens.home.topics
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -27,6 +26,7 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -90,20 +90,52 @@ fun TopicsGridSubUi(
         ) {
             TopicsHeader(topicCount = state.topics.size)
 
-            val gridState = rememberLazyGridState()
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 220.dp),
-                state = gridState,
-                modifier = Modifier.fillMaxWidth().adaptiveScrollbar(gridState),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(state.topics) { topic ->
-                    TopicCard(
-                        topic = topic,
-                        hasCourse = state.topicsWithCourses.contains(topic),
-                        onClick = { state.eventSink(TopicsGridUiEvent.TopicSelected(topic)) },
-                    )
+            // Note: BoxWithConstraints with non-lazy Column/Row is used here because this composable
+            // is placed inside an outer LazyColumn item on expanded tablet/foldable screens (see HomeScreenUi.kt).
+            // Nesting a LazyVerticalGrid inside a LazyColumn requires a fixed height constraint, which breaks
+            // the unified scrolling experience where preceding items (Active Model Banner, Guided Courses) scroll
+            // off-screen to give topics full column height.
+            //
+            // Trade-off: Since the curated coding topics list is small and bounded (currently 7-10 items),
+            // composing all cards at once has negligible impact on memory and recomposition performance.
+            //
+            // TODO: Optimize to restore lazy item recycling if the topic list becomes dynamic or unbounded.
+            // Potential approaches:
+            // 1. Flatten chunked topic rows directly into the parent LazyColumn using LazyListScope.
+            // 2. Hoist column calculation and emit items directly into the parent LazyListScope.
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val minCardWidth = 220.dp
+                val spacing = 12.dp
+                val columns = ((maxWidth + spacing) / (minCardWidth + spacing)).toInt().coerceAtLeast(1)
+
+                val chunkedTopics =
+                    remember(state.topics, columns) {
+                        state.topics.chunked(columns)
+                    }
+
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(spacing),
+                ) {
+                    chunkedTopics.forEach { rowTopics ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(spacing),
+                        ) {
+                            rowTopics.forEach { topic ->
+                                Box(modifier = Modifier.weight(1f)) {
+                                    TopicCard(
+                                        topic = topic,
+                                        hasCourse = state.topicsWithCourses.contains(topic),
+                                        onClick = { state.eventSink(TopicsGridUiEvent.TopicSelected(topic)) },
+                                    )
+                                }
+                            }
+                            repeat(columns - rowTopics.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
             }
         }
