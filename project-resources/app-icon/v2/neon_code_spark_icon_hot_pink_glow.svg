@@ -1,0 +1,226 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254">
+  <defs>
+    <linearGradient id="bg-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="1254" y2="1254">
+      <stop offset="0%" stop-color="#090d22"/>
+      <stop offset="50%" stop-color="#080d21"/>
+      <stop offset="100%" stop-color="#080c20"/>
+    </linearGradient>
+    <linearGradient id="grad-lu-1" gradientUnits="userSpaceOnUse" x1="393.00" y1="393.00" x2="501.00" y2="501.00">
+      <stop offset="0.00%" stop-color="#0bfffc"/>
+      <stop offset="7.14%" stop-color="#0afffe"/>
+      <stop offset="14.29%" stop-color="#09fafd"/>
+      <stop offset="21.43%" stop-color="#0af5fd"/>
+      <stop offset="28.57%" stop-color="#0beefd"/>
+      <stop offset="35.71%" stop-color="#0be9fd"/>
+      <stop offset="42.86%" stop-color="#0ce3fd"/>
+      <stop offset="50.00%" stop-color="#0cdefd"/>
+      <stop offset="57.14%" stop-color="#0dd9fd"/>
+      <stop offset="64.29%" stop-color="#0dd6fe"/>
+      <stop offset="71.43%" stop-color="#0bd3fc"/>
+      <stop offset="78.57%" stop-color="#0cd8fe"/>
+      <stop offset="85.71%" stop-color="#0dd4fe"/>
+      <stop offset="92.86%" stop-color="#0bd4fd"/>
+      <stop offset="100.00%" stop-color="#03d5fb"/>
+    </linearGradient>
+    <linearGradient id="grad-lu-2" gradientUnits="userSpaceOnUse" x1="27.19" y1="-38.83" x2="-252.30" y2="360.33">
+      <stop offset="0.00%" stop-color="#0cd8fc"/>
+      <stop offset="7.14%" stop-color="#0ed9fd"/>
+      <stop offset="14.29%" stop-color="#0fd8fc"/>
+      <stop offset="21.43%" stop-color="#0ddbfd"/>
+      <stop offset="28.57%" stop-color="#0bdcfd"/>
+      <stop offset="35.71%" stop-color="#0dddfe"/>
+      <stop offset="42.86%" stop-color="#0cddfe"/>
+      <stop offset="50.00%" stop-color="#0dddfe"/>
+      <stop offset="57.14%" stop-color="#0cdcfd"/>
+      <stop offset="64.29%" stop-color="#0bd9fd"/>
+      <stop offset="71.43%" stop-color="#0bd6fd"/>
+      <stop offset="78.57%" stop-color="#0dd9fd"/>
+      <stop offset="85.71%" stop-color="#0becfd"/>
+      <stop offset="92.86%" stop-color="#04fffe"/>
+      <stop offset="100.00%" stop-color="#03fffd"/>
+    </linearGradient>
+    <linearGradient id="grad-ll-1" gradientUnits="userSpaceOnUse" x1="267.26" y1="645.21" x2="406.02" y2="980.23">
+      <stop offset="0.00%" stop-color="#0965ef"/>
+      <stop offset="7.14%" stop-color="#0d77f1"/>
+      <stop offset="14.29%" stop-color="#0e8cf5"/>
+      <stop offset="21.43%" stop-color="#109df8"/>
+      <stop offset="28.57%" stop-color="#10adfb"/>
+      <stop offset="35.71%" stop-color="#0fbafc"/>
+      <stop offset="42.86%" stop-color="#0ec6fc"/>
+      <stop offset="50.00%" stop-color="#0ed1fd"/>
+      <stop offset="57.14%" stop-color="#0ddbfc"/>
+      <stop offset="64.29%" stop-color="#0ce4fd"/>
+      <stop offset="71.43%" stop-color="#0ceefd"/>
+      <stop offset="78.57%" stop-color="#0bf6fd"/>
+      <stop offset="85.71%" stop-color="#0bfbfd"/>
+      <stop offset="92.86%" stop-color="#0bfffd"/>
+      <stop offset="100.00%" stop-color="#0cfffc"/>
+    </linearGradient>
+    <linearGradient id="grad-ll-2" gradientUnits="userSpaceOnUse" x1="-148.00" y1="148.00" x2="-227.50" y2="227.50">
+      <stop offset="0.00%" stop-color="#23c0d7"/>
+      <stop offset="7.14%" stop-color="#0dd4ff"/>
+      <stop offset="14.29%" stop-color="#0cccff"/>
+      <stop offset="21.43%" stop-color="#0fcaff"/>
+      <stop offset="28.57%" stop-color="#12c9fe"/>
+      <stop offset="35.71%" stop-color="#11cafd"/>
+      <stop offset="42.86%" stop-color="#10c9fd"/>
+      <stop offset="50.00%" stop-color="#0dc9fd"/>
+      <stop offset="57.14%" stop-color="#0dc8fb"/>
+      <stop offset="64.29%" stop-color="#0ccafd"/>
+      <stop offset="71.43%" stop-color="#0acafb"/>
+      <stop offset="78.57%" stop-color="#0accfd"/>
+      <stop offset="85.71%" stop-color="#06d1fd"/>
+      <stop offset="92.86%" stop-color="#09d8ff"/>
+      <stop offset="100.00%" stop-color="#00d9f5"/>
+    </linearGradient>
+    <linearGradient id="grad-ru-1" gradientUnits="userSpaceOnUse" x1="516.50" y1="516.50" x2="854.00" y2="854.00">
+      <stop offset="0.00%" stop-color="#0bfffd"/>
+      <stop offset="7.14%" stop-color="#0bfbfe"/>
+      <stop offset="14.29%" stop-color="#0cf3fd"/>
+      <stop offset="21.43%" stop-color="#0aeafd"/>
+      <stop offset="28.57%" stop-color="#0be0fd"/>
+      <stop offset="35.71%" stop-color="#0dd5fd"/>
+      <stop offset="42.86%" stop-color="#0dcbfd"/>
+      <stop offset="50.00%" stop-color="#0ec0fc"/>
+      <stop offset="57.14%" stop-color="#10b6fd"/>
+      <stop offset="64.29%" stop-color="#12abfd"/>
+      <stop offset="71.43%" stop-color="#18a3fd"/>
+      <stop offset="78.57%" stop-color="#18a4fd"/>
+      <stop offset="85.71%" stop-color="#10b9fd"/>
+      <stop offset="92.86%" stop-color="#0cd3fd"/>
+      <stop offset="100.00%" stop-color="#06f2fd"/>
+    </linearGradient>
+    <linearGradient id="grad-ru-2" gradientUnits="userSpaceOnUse" x1="-29.95" y1="169.83" x2="-94.87" y2="538.06">
+      <stop offset="0.00%" stop-color="#05caf6"/>
+      <stop offset="7.14%" stop-color="#10cdff"/>
+      <stop offset="14.29%" stop-color="#11c8fe"/>
+      <stop offset="21.43%" stop-color="#0ec7fd"/>
+      <stop offset="28.57%" stop-color="#10c6fd"/>
+      <stop offset="35.71%" stop-color="#11c7fd"/>
+      <stop offset="42.86%" stop-color="#13c9fe"/>
+      <stop offset="50.00%" stop-color="#10ccfe"/>
+      <stop offset="57.14%" stop-color="#0fc8fd"/>
+      <stop offset="64.29%" stop-color="#0ec0fc"/>
+      <stop offset="71.43%" stop-color="#0fc2fc"/>
+      <stop offset="78.57%" stop-color="#13cefd"/>
+      <stop offset="85.71%" stop-color="#16d0fc"/>
+      <stop offset="92.86%" stop-color="#0ddaff"/>
+      <stop offset="100.00%" stop-color="#04f8ff"/>
+    </linearGradient>
+    <linearGradient id="grad-rl-1" gradientUnits="userSpaceOnUse" x1="384.81" y1="-245.15" x2="85.87" y2="-54.71">
+      <stop offset="0.00%" stop-color="#1092f4"/>
+      <stop offset="7.14%" stop-color="#10a4f8"/>
+      <stop offset="14.29%" stop-color="#0fb4fb"/>
+      <stop offset="21.43%" stop-color="#0fc0fc"/>
+      <stop offset="28.57%" stop-color="#0fc9fd"/>
+      <stop offset="35.71%" stop-color="#0ed2fd"/>
+      <stop offset="42.86%" stop-color="#0edafd"/>
+      <stop offset="50.00%" stop-color="#0de1fd"/>
+      <stop offset="57.14%" stop-color="#0de9fe"/>
+      <stop offset="64.29%" stop-color="#0deffe"/>
+      <stop offset="71.43%" stop-color="#0df5fe"/>
+      <stop offset="78.57%" stop-color="#0efaff"/>
+      <stop offset="85.71%" stop-color="#0efdff"/>
+      <stop offset="92.86%" stop-color="#0dfdfe"/>
+      <stop offset="100.00%" stop-color="#0dfdfe"/>
+    </linearGradient>
+    <linearGradient id="grad-rl-2" gradientUnits="userSpaceOnUse" x1="691.50" y1="0.00" x2="974.50" y2="0.00">
+      <stop offset="0.00%" stop-color="#23e3ee"/>
+      <stop offset="7.14%" stop-color="#0ceefa"/>
+      <stop offset="14.29%" stop-color="#09edf6"/>
+      <stop offset="21.43%" stop-color="#05e9f6"/>
+      <stop offset="28.57%" stop-color="#09e1f7"/>
+      <stop offset="35.71%" stop-color="#08daf8"/>
+      <stop offset="42.86%" stop-color="#05d5f8"/>
+      <stop offset="50.00%" stop-color="#0acef9"/>
+      <stop offset="57.14%" stop-color="#09cbfa"/>
+      <stop offset="64.29%" stop-color="#07c6fc"/>
+      <stop offset="71.43%" stop-color="#0fc0fc"/>
+      <stop offset="78.57%" stop-color="#12c1fd"/>
+      <stop offset="85.71%" stop-color="#15c6ff"/>
+      <stop offset="92.86%" stop-color="#1cdaff"/>
+      <stop offset="100.00%" stop-color="#10ffff"/>
+    </linearGradient>
+    <radialGradient id="grad-lu-tip" gradientUnits="userSpaceOnUse" cx="272" cy="725" r="75">
+      <stop offset="0%" stop-color="#0afafe" stop-opacity="0.85"/>
+      <stop offset="60%" stop-color="#0af5fe" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#0ae8fe" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Variation 2: Hyper Neon Pink / Magenta Glow -->
+    <radialGradient id="spark-halo-pink" gradientUnits="userSpaceOnUse" cx="627" cy="621" r="260">
+      <stop offset="0%" stop-color="#FF2A8D" stop-opacity="0.65"/>
+      <stop offset="35%" stop-color="#D946EF" stop-opacity="0.30"/>
+      <stop offset="70%" stop-color="#9333EA" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="spark-core-pink" gradientUnits="userSpaceOnUse" cx="627" cy="621" r="185">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="18%" stop-color="#FFE4F8"/>
+      <stop offset="42%" stop-color="#FF2A8D"/>
+      <stop offset="72%" stop-color="#E11D74"/>
+      <stop offset="90%" stop-color="#C026D3"/>
+      <stop offset="100%" stop-color="#9333EA"/>
+    </radialGradient>
+
+    <linearGradient id="spark-pink-sheen" gradientUnits="userSpaceOnUse" x1="580" y1="450" x2="680" y2="790">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.6"/>
+      <stop offset="50%" stop-color="#FF2A8D" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#9333EA" stop-opacity="0.3"/>
+    </linearGradient>
+
+    <clipPath id="clip-left-bracket">
+      <path d="M 497.44 306.52 C 490.13 307.55, 482.89 309.45, 476.25 312.73 C 472.42 314.57, 468.77 316.76, 465.27 319.18 C 461.14 321.91, 457.63 325.43, 454.14 328.91 C 439.74 342.92, 425.40 356.99, 411.11 371.11 C 397.24 384.91, 383.32 398.65, 369.39 412.39 C 362.26 419.26, 355.47 426.47, 348.40 433.40 C 341.18 440.85, 333.65 447.99, 326.46 455.46 C 312.58 469.24, 298.94 483.27, 285.13 497.13 C 270.93 511.59, 256.66 526.00, 242.45 540.45 C 235.93 547.00, 229.32 553.56, 224.20 561.30 C 219.66 568.24, 215.65 575.57, 212.67 583.32 C 209.96 590.11, 208.10 597.21, 206.77 604.40 C 205.57 611.70, 204.84 619.11, 205.27 626.52 C 205.79 633.64, 206.67 640.75, 208.58 647.64 C 210.62 655.28, 213.51 662.69, 217.18 669.70 C 221.11 677.21, 225.90 684.29, 231.41 690.74 C 234.93 694.50, 238.75 697.97, 242.28 701.72 C 245.86 705.48, 249.71 708.96, 253.44 712.56 C 260.20 719.47, 267.40 725.93, 274.12 732.88 C 281.44 740.23, 288.99 747.34, 296.35 754.65 C 310.65 768.69, 325.03 782.64, 339.32 796.68 C 353.69 810.64, 367.95 824.72, 382.29 838.71 C 389.02 845.47, 396.00 851.96, 402.75 858.70 C 409.95 865.68, 417.07 872.75, 424.28 879.72 C 430.86 886.33, 437.80 892.58, 444.31 899.25 C 451.60 906.26, 458.83 913.33, 466.27 920.17 C 478.52 930.37, 494.47 936.55, 510.52 935.64 C 526.89 934.96, 542.69 926.68, 552.73 913.76 C 562.42 901.81, 565.69 885.16, 561.55 870.38 C 559.47 862.66, 555.44 855.57, 550.63 849.24 C 547.33 845.28, 543.49 841.81, 539.96 838.06 C 536.67 834.67, 533.33 831.33, 529.90 828.08 C 522.94 821.05, 515.93 814.06, 508.89 807.11 C 501.66 799.67, 494.11 792.56, 486.92 785.08 C 472.46 770.87, 458.15 756.52, 443.69 742.31 C 429.50 728.15, 415.26 714.05, 400.91 700.06 C 386.54 685.77, 372.03 671.62, 357.58 657.41 C 350.66 650.57, 343.30 644.08, 337.40 636.28 C 334.78 632.78, 332.42 629.09, 330.15 625.35 C 329.20 623.74, 328.36 622.07, 327.60 620.37 C 326.87 618.50, 325.82 616.66, 325.82 614.60 C 325.92 612.79, 327.51 611.63, 328.67 610.43 C 330.30 608.81, 331.95 607.20, 333.61 605.61 C 337.35 602.02, 340.98 598.31, 344.72 594.72 C 352.12 587.47, 359.45 580.16, 366.90 572.97 C 380.89 559.27, 394.84 545.53, 408.75 531.75 C 423.00 517.67, 437.39 503.72, 451.63 489.63 C 466.14 475.47, 480.45 461.12, 494.90 446.90 C 509.11 432.78, 523.44 418.78, 537.71 404.71 C 541.01 401.40, 544.44 398.20, 547.59 394.74 C 550.42 391.30, 552.91 387.57, 555.06 383.66 C 558.92 376.90, 560.99 369.26, 561.58 361.52 C 562.18 354.32, 560.66 347.05, 558.05 340.36 C 554.86 331.79, 548.90 324.42, 541.78 318.77 C 535.22 313.69, 527.65 309.84, 519.59 307.83 C 512.37 306.05, 504.82 305.79, 497.44 306.52 Z"/>
+    </clipPath>
+    <clipPath id="clip-left-upper">
+      <path d="M 329.64 612.00 C 289.64 640.11, 258.58 694.01, 283.00 742.00 L 180.0 742.0 L 180.0 280.0 L 580.0 280.0 L 580.0 612.0 Z"/>
+    </clipPath>
+    <clipPath id="clip-right-bracket">
+      <path d="M 740.45 306.49 C 724.02 308.38, 708.42 317.49, 699.13 331.24 C 694.91 337.58, 692.03 344.90, 691.10 352.47 C 690.27 359.92, 690.93 367.55, 693.43 374.63 C 696.24 382.42, 700.50 389.76, 706.11 395.86 C 713.28 403.37, 720.93 410.39, 728.22 417.78 C 735.37 424.57, 742.21 431.67, 749.37 438.45 C 755.99 444.89, 762.48 451.46, 769.08 457.93 C 797.69 486.31, 826.59 514.41, 855.29 542.71 C 869.44 556.90, 883.90 570.77, 898.17 584.83 C 905.55 592.12, 913.01 599.32, 920.34 606.66 C 921.99 608.30, 923.72 609.88, 925.31 611.58 C 926.99 613.04, 927.44 615.47, 926.42 617.43 C 924.97 621.24, 923.14 624.91, 920.92 628.32 C 916.07 636.11, 910.14 643.18, 903.43 649.43 C 895.99 656.65, 888.63 663.96, 881.24 671.24 C 867.64 684.64, 853.94 697.94, 840.39 711.39 C 811.52 739.85, 782.73 768.40, 754.04 797.04 C 740.35 810.68, 726.71 824.38, 713.06 838.06 C 709.83 841.49, 706.32 844.65, 703.24 848.21 C 700.40 851.63, 697.90 855.34, 695.85 859.28 C 692.27 866.12, 690.19 873.77, 689.89 881.49 C 689.55 888.73, 690.73 896.11, 693.82 902.69 C 695.64 906.57, 697.62 910.43, 700.31 913.80 C 703.23 917.44, 706.63 920.69, 710.23 923.66 C 716.73 928.74, 724.45 932.02, 732.41 934.03 C 739.62 935.99, 747.22 935.89, 754.58 934.99 C 762.03 933.99, 769.17 931.27, 775.70 927.61 C 779.62 925.36, 783.41 922.86, 786.84 919.91 C 790.52 916.58, 794.06 913.09, 797.66 909.66 C 812.06 895.73, 826.35 881.68, 840.73 867.73 C 855.08 853.74, 869.30 839.63, 883.72 825.72 C 897.73 812.07, 911.69 798.36, 925.66 784.66 C 939.72 771.05, 953.58 757.24, 967.60 743.60 C 974.83 736.84, 981.54 729.53, 988.67 722.67 C 996.06 715.39, 1003.43 708.10, 1010.84 700.84 C 1014.17 697.50, 1017.58 694.22, 1020.78 690.76 C 1023.80 687.26, 1026.58 683.55, 1029.15 679.71 C 1033.67 672.77, 1037.61 665.42, 1040.50 657.65 C 1045.75 643.60, 1047.83 628.42, 1046.72 613.47 C 1045.59 598.41, 1041.18 583.60, 1033.96 570.34 C 1029.79 562.87, 1024.94 555.73, 1019.24 549.34 C 1012.24 542.48, 1005.66 535.20, 998.68 528.32 C 984.72 513.95, 970.60 499.74, 956.53 485.47 C 949.16 478.18, 941.97 470.70, 934.62 463.38 C 927.16 456.17, 920.13 448.54, 912.62 441.38 C 905.66 434.34, 898.53 427.47, 891.56 420.44 C 884.64 413.56, 877.61 406.79, 870.79 399.82 C 863.74 393.00, 856.90 385.97, 849.89 379.11 C 842.57 371.76, 835.00 364.67, 827.68 357.32 C 820.64 350.56, 813.71 343.68, 806.78 336.81 C 803.11 333.28, 799.46 329.74, 795.84 326.15 C 792.58 322.63, 788.70 319.79, 784.68 317.20 C 777.88 312.90, 770.46 309.47, 762.57 307.78 C 755.35 306.05, 747.82 305.87, 740.45 306.49 Z"/>
+    </clipPath>
+    <clipPath id="clip-right-upper">
+      <path d="M 922.77 612.00 C 962.92 640.05, 993.75 693.90, 969.72 742.00 L 1070.0 742.0 L 1070.0 280.0 L 670.0 280.0 L 670.0 612.0 Z"/>
+    </clipPath>
+    <clipPath id="clip-spark">
+      <path d="M 622.32 450.77 C 620.04 451.99, 618.13 453.93, 616.97 456.24 C 615.90 458.54, 615.34 461.02, 614.47 463.39 C 612.93 468.03, 611.56 472.74, 609.87 477.34 C 606.65 486.83, 602.91 496.15, 598.81 505.30 C 594.63 514.61, 589.88 523.68, 584.32 532.25 C 577.76 542.46, 569.98 551.83, 561.35 560.34 C 545.49 575.71, 526.35 587.23, 506.27 596.19 C 497.41 599.99, 488.40 603.42, 479.33 606.70 C 474.64 608.47, 469.83 609.97, 465.24 611.96 C 460.39 614.42, 457.93 620.54, 459.78 625.66 C 460.53 628.03, 462.16 630.06, 464.17 631.49 C 466.34 632.99, 468.95 633.57, 471.37 634.55 C 476.02 636.30, 480.69 637.99, 485.34 639.76 C 494.81 643.35, 504.19 647.20, 513.28 651.68 C 533.74 661.63, 552.92 674.72, 568.02 691.87 C 582.45 707.77, 592.72 726.94, 600.88 746.68 C 604.79 755.84, 608.08 765.25, 611.36 774.65 C 612.22 776.96, 612.99 779.30, 613.78 781.64 C 614.62 784.04, 615.21 786.58, 616.67 788.71 C 619.58 793.27, 626.10 794.79, 630.73 792.02 C 635.31 789.54, 636.22 784.08, 637.90 779.64 C 639.55 774.99, 640.99 770.27, 642.78 765.67 C 646.29 756.23, 649.86 746.81, 654.19 737.71 C 663.44 717.18, 676.03 697.97, 692.56 682.56 C 708.49 667.48, 727.62 656.21, 747.67 647.53 C 756.90 643.65, 766.19 639.88, 775.66 636.64 C 778.02 635.81, 780.36 634.92, 782.69 634.02 C 785.08 633.11, 787.67 632.39, 789.54 630.53 C 793.31 626.97, 794.19 620.81, 791.60 616.32 C 789.28 611.78, 784.00 610.71, 779.63 609.10 C 774.99 607.40, 770.29 605.85, 765.67 604.08 C 756.21 600.47, 746.85 596.59, 737.74 592.17 C 717.49 582.35, 698.56 569.29, 683.64 552.33 C 676.42 543.94, 669.85 534.98, 664.46 525.31 C 659.18 516.37, 654.92 506.88, 650.90 497.33 C 647.14 488.16, 644.02 478.76, 640.81 469.39 C 639.05 464.72, 638.00 459.76, 635.77 455.28 C 633.32 450.60, 627.07 448.39, 622.32 450.77 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1254" height="1254" fill="url(#bg-grad)"/>
+
+  <!-- Left Code Bracket (<) -->
+  <g clip-path="url(#clip-left-bracket)">
+    <!-- Lower Arm (Tucked Underneath) -->
+    <rect x="200" y="300" width="370" height="645" fill="url(#grad-ll-1)"/>
+    <rect x="200" y="300" width="370" height="645" fill="url(#grad-ll-2)" opacity="0.15"/>
+    <!-- Upper Arm (Folded Over Top) -->
+    <g clip-path="url(#clip-left-upper)">
+      <rect x="200" y="300" width="370" height="645" fill="url(#grad-lu-1)"/>
+      <rect x="200" y="300" width="370" height="645" fill="url(#grad-lu-2)" opacity="0.35"/>
+      <rect x="200" y="640" width="160" height="120" fill="url(#grad-lu-tip)"/>
+    </g>
+  </g>
+
+  <!-- Right Code Bracket (>) -->
+  <g clip-path="url(#clip-right-bracket)">
+    <!-- Lower Arm (Tucked Underneath) -->
+    <rect x="680" y="300" width="375" height="645" fill="url(#grad-rl-1)"/>
+    <rect x="680" y="300" width="375" height="645" fill="url(#grad-rl-2)" opacity="0.15"/>
+    <!-- Upper Arm (Folded Over Top) -->
+    <g clip-path="url(#clip-right-upper)">
+      <rect x="680" y="300" width="375" height="645" fill="url(#grad-ru-1)"/>
+      <rect x="680" y="300" width="375" height="645" fill="url(#grad-ru-2)" opacity="0.15"/>
+    </g>
+  </g>
+
+  <!-- Ambient Glow Behind Spark (Hyper Neon Pink / Magenta) -->
+  <circle cx="627" cy="621" r="260" fill="url(#spark-halo-pink)"/>
+
+  <!-- Center Four-Pointed Spark (High Contrast Hyper Neon Pink) -->
+  <g clip-path="url(#clip-spark)">
+    <rect x="450" y="440" width="350" height="360" fill="url(#spark-core-pink)"/>
+    <rect x="450" y="440" width="350" height="360" fill="url(#spark-pink-sheen)"/>
+  </g>
+</svg>
