@@ -142,8 +142,9 @@ class SystemMemoryManagerImpl
         private val userPreferencesStore: UserPreferencesStore? = null,
         private val dispatcher: CoroutineDispatcher = Dispatchers.Default,
         @Volatile private var backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
-        private var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null,
     ) : SystemMemoryManager {
+        internal var memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null
+
         @Inject
         constructor(
             @ApplicationContext context: Context,
@@ -155,8 +156,27 @@ class SystemMemoryManagerImpl
             userPreferencesStore = userPreferencesStore,
             dispatcher = Dispatchers.Default,
             backgroundEvictionDelayMs = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
-            memoryInfoProvider = null,
         )
+
+        /**
+         * Secondary constructor for unit testing with custom dispatchers and mock memory providers.
+         */
+        internal constructor(
+            context: Context,
+            llmEngine: LlmEngine,
+            userPreferencesStore: UserPreferencesStore? = null,
+            dispatcher: CoroutineDispatcher = Dispatchers.Default,
+            backgroundEvictionDelayMs: Long = SystemMemoryManager.BACKGROUND_EVICTION_DELAY_MS,
+            memoryInfoProvider: (() -> Pair<Long, Boolean>)? = null,
+        ) : this(
+            context = context,
+            llmEngine = llmEngine,
+            userPreferencesStore = userPreferencesStore,
+            dispatcher = dispatcher,
+            backgroundEvictionDelayMs = backgroundEvictionDelayMs,
+        ) {
+            this.memoryInfoProvider = memoryInfoProvider
+        }
 
         private val activityManager by lazy {
             try {
