@@ -3,9 +3,8 @@ package dev.hossain.codematex.ui.screens.debug.hardware
 import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.system.DebugMemoryProvider
 import dev.hossain.codematex.system.DeviceMemoryProvider
@@ -13,16 +12,31 @@ import dev.hossain.codematex.system.HardwareEligibilityChecker
 import dev.hossain.codematex.system.MemoryCompatibilityPolicy
 import dev.hossain.codematex.ui.screens.debug.LITERT_LM_VERSION
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 
-class HardwareDiagnosticsSubPresenter(
+class HardwareDiagnosticsSubPresenter internal constructor(
     private val screen: HardwareDiagnosticsSubScreen,
     private val hardwareEligibilityChecker: HardwareEligibilityChecker,
     private val deviceMemoryProvider: DeviceMemoryProvider,
     private val debugMemoryProvider: DebugMemoryProvider,
     private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
 ) : SubPresenter<HardwareDiagnosticsOuterEvent, HardwareDiagnosticsSubState> {
+    @AssistedInject
+    constructor(
+        @Assisted screen: HardwareDiagnosticsSubScreen,
+        hardwareEligibilityChecker: HardwareEligibilityChecker,
+        deviceMemoryProvider: DeviceMemoryProvider,
+        debugMemoryProvider: DebugMemoryProvider,
+    ) : this(
+        screen = screen,
+        hardwareEligibilityChecker = hardwareEligibilityChecker,
+        deviceMemoryProvider = deviceMemoryProvider,
+        debugMemoryProvider = debugMemoryProvider,
+        isDevMode = { BuildConfig.DEV_MODE },
+    )
+
     @Composable
     override fun present(outerEventSink: (HardwareDiagnosticsOuterEvent) -> Unit): HardwareDiagnosticsSubState {
         val eligibility = remember { hardwareEligibilityChecker.checkEligibility() }
@@ -80,28 +94,10 @@ class HardwareDiagnosticsSubPresenter(
             isDevMode = devModeActive,
         )
     }
-}
 
-@ContributesIntoSet(AppScope::class)
-@Inject
-class HardwareDiagnosticsSubPresenterFactory(
-    private val hardwareEligibilityChecker: HardwareEligibilityChecker,
-    private val deviceMemoryProvider: DeviceMemoryProvider,
-    private val debugMemoryProvider: DebugMemoryProvider,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is HardwareDiagnosticsSubScreen -> {
-                HardwareDiagnosticsSubPresenter(
-                    screen = screen,
-                    hardwareEligibilityChecker = hardwareEligibilityChecker,
-                    deviceMemoryProvider = deviceMemoryProvider,
-                    debugMemoryProvider = debugMemoryProvider,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
+    @SubCircuitInject(HardwareDiagnosticsSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: HardwareDiagnosticsSubScreen): HardwareDiagnosticsSubPresenter
+    }
 }

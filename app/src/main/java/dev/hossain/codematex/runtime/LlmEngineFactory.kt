@@ -19,7 +19,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Result of creating a LiteRT-LM engine session.
@@ -61,11 +60,9 @@ interface NativeEngineFactory {
  */
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class DefaultNativeEngineFactory
-    @Inject
-    constructor() : NativeEngineFactory {
-        override fun create(config: EngineConfig): InferenceEngine = DefaultInferenceEngine(Engine(config))
-    }
+class DefaultNativeEngineFactory : NativeEngineFactory {
+    override fun create(config: EngineConfig): InferenceEngine = DefaultInferenceEngine(Engine(config))
+}
 
 /**
  * Factory responsible for creating a LiteRT-LM [Engine] and [Conversation]
@@ -110,152 +107,150 @@ interface LlmEngineFactory {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class DefaultLlmEngineFactory
-    @Inject
-    constructor(
-        @param:ApplicationContext private val context: Context,
-        private val backendFallbackStrategy: BackendFallbackStrategy,
-        private val nativeEngineFactory: NativeEngineFactory,
-    ) : LlmEngineFactory {
-        override suspend fun createFallbackSession(
-            modelPath: String,
-            failedBackend: LlmEngine.Backend,
-            systemInstruction: String?,
-            config: ModelConfig,
-        ): LlmEngineSession {
-            val fallbackBackend =
-                requireNotNull(backendFallbackStrategy.nextBackend(failedBackend)) {
-                    "Backend $failedBackend has no fallback"
-                }
-            backendFallbackStrategy.markUnsupported(failedBackend)
-            return createSession(
-                modelPath = modelPath,
-                preferredBackend = fallbackBackend,
-                systemInstruction = systemInstruction,
-                config = config,
-            )
-        }
+class DefaultLlmEngineFactory(
+    @ApplicationContext private val context: Context,
+    private val backendFallbackStrategy: BackendFallbackStrategy,
+    private val nativeEngineFactory: NativeEngineFactory,
+) : LlmEngineFactory {
+    override suspend fun createFallbackSession(
+        modelPath: String,
+        failedBackend: LlmEngine.Backend,
+        systemInstruction: String?,
+        config: ModelConfig,
+    ): LlmEngineSession {
+        val fallbackBackend =
+            requireNotNull(backendFallbackStrategy.nextBackend(failedBackend)) {
+                "Backend $failedBackend has no fallback"
+            }
+        backendFallbackStrategy.markUnsupported(failedBackend)
+        return createSession(
+            modelPath = modelPath,
+            preferredBackend = fallbackBackend,
+            systemInstruction = systemInstruction,
+            config = config,
+        )
+    }
 
-        override suspend fun createSession(
-            modelPath: String,
-            preferredBackend: LlmEngine.Backend,
-            systemInstruction: String?,
-            config: ModelConfig,
-        ): LlmEngineSession {
-            var session: LlmEngineSession? = null
-            try {
-                return withContext(Dispatchers.Default) {
-                    var actualBackend = backendFallbackStrategy.resolveStartBackend(preferredBackend)
+    override suspend fun createSession(
+        modelPath: String,
+        preferredBackend: LlmEngine.Backend,
+        systemInstruction: String?,
+        config: ModelConfig,
+    ): LlmEngineSession {
+        var session: LlmEngineSession? = null
+        try {
+            return withContext(Dispatchers.Default) {
+                var actualBackend = backendFallbackStrategy.resolveStartBackend(preferredBackend)
 
-                    while (session == null) {
-                        currentCoroutineContext().ensureActive()
-                        var inferenceEngine: InferenceEngine? = null
-                        var inferenceConversation: InferenceConversation? = null
-                        try {
-                            Timber.d("LlmEngineFactory: Attempting to initialize engine with backend=$actualBackend")
-                            Timber.d(
-                                "LlmEngineFactory: Config parameters - MaxTokens: ${config.maxTokens}, " +
-                                    "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}, " +
-                                    "SystemPrompt length: ${systemInstruction?.length ?: 0}",
+                while (session == null) {
+                    currentCoroutineContext().ensureActive()
+                    var inferenceEngine: InferenceEngine? = null
+                    var inferenceConversation: InferenceConversation? = null
+                    try {
+                        Timber.d("LlmEngineFactory: Attempting to initialize engine with backend=$actualBackend")
+                        Timber.d(
+                            "LlmEngineFactory: Config parameters - MaxTokens: ${config.maxTokens}, " +
+                                "Temp: ${config.temperature}, Top-K: ${config.topK}, Top-P: ${config.topP}, " +
+                                "SystemPrompt length: ${systemInstruction?.length ?: 0}",
+                        )
+
+                        val engineConfig =
+                            EngineConfig(
+                                modelPath = modelPath,
+                                backend = actualBackend.toLiteRtBackend(),
+                                maxNumTokens = config.maxTokens,
                             )
 
-                            val engineConfig =
-                                EngineConfig(
-                                    modelPath = modelPath,
-                                    backend = actualBackend.toLiteRtBackend(),
-                                    maxNumTokens = config.maxTokens,
-                                )
+                        inferenceEngine = nativeEngineFactory.create(engineConfig).also { it.initialize() }
 
-                            inferenceEngine = nativeEngineFactory.create(engineConfig).also { it.initialize() }
+                        currentCoroutineContext().ensureActive()
 
-                            currentCoroutineContext().ensureActive()
+                        val samplerConfig =
+                            SamplerConfig(
+                                topK = config.topK,
+                                topP = config.topP.toDouble(),
+                                temperature = config.temperature.toDouble(),
+                            )
 
-                            val samplerConfig =
-                                SamplerConfig(
-                                    topK = config.topK,
-                                    topP = config.topP.toDouble(),
-                                    temperature = config.temperature.toDouble(),
-                                )
+                        val conversationConfig =
+                            ConversationConfig(
+                                systemInstruction =
+                                    systemInstruction?.let {
+                                        com.google.ai.edge.litertlm.Content
+                                            .Text(it)
+                                            .let { content -> Contents.of(content) }
+                                    },
+                                samplerConfig = samplerConfig,
+                            )
 
-                            val conversationConfig =
-                                ConversationConfig(
-                                    systemInstruction =
-                                        systemInstruction?.let {
-                                            com.google.ai.edge.litertlm.Content
-                                                .Text(it)
-                                                .let { content -> Contents.of(content) }
-                                        },
-                                    samplerConfig = samplerConfig,
-                                )
+                        inferenceConversation = inferenceEngine.createConversation(conversationConfig)
 
-                            inferenceConversation = inferenceEngine.createConversation(conversationConfig)
+                        currentCoroutineContext().ensureActive()
 
-                            currentCoroutineContext().ensureActive()
+                        Timber.d("LlmEngineFactory: Engine initialized successfully with backend=$actualBackend")
+                        session =
+                            LlmEngineSession(
+                                inferenceEngine,
+                                inferenceConversation,
+                                actualBackend,
+                            )
+                    } catch (e: CancellationException) {
+                        Timber.i("LlmEngineFactory: Session creation cancelled, releasing native handles")
+                        try {
+                            inferenceConversation?.close()
+                        } catch (closeError: Exception) {
+                            Timber.w(closeError, "LlmEngineFactory: Error closing conversation on cancellation")
+                        }
+                        try {
+                            inferenceEngine?.close()
+                        } catch (closeError: Exception) {
+                            Timber.w(closeError, "LlmEngineFactory: Error closing engine on cancellation")
+                        }
+                        throw e
+                    } catch (e: LiteRtLmJniException) {
+                        Timber.w(e, "LlmEngineFactory: Backend $actualBackend not supported, attempting fallback")
+                        backendFallbackStrategy.markUnsupported(actualBackend)
 
-                            Timber.d("LlmEngineFactory: Engine initialized successfully with backend=$actualBackend")
-                            session =
-                                LlmEngineSession(
-                                    inferenceEngine,
-                                    inferenceConversation,
-                                    actualBackend,
-                                )
-                        } catch (e: CancellationException) {
-                            Timber.i("LlmEngineFactory: Session creation cancelled, releasing native handles")
+                        actualBackend =
+                            backendFallbackStrategy.nextBackend(actualBackend)
+                                ?: run {
+                                    Timber.e("LlmEngineFactory: CPU backend failed. No further fallback available.")
+                                    throw e
+                                }
+                    } catch (e: Exception) {
+                        Timber.e(e, "LlmEngineFactory: Non-backend error initializing engine with backend=$actualBackend")
+                        throw e
+                    } finally {
+                        // If we did not successfully build a session, release any partially initialized
+                        // native resources so the next fallback attempt (or the caller) starts clean.
+                        if (session == null) {
                             try {
                                 inferenceConversation?.close()
                             } catch (closeError: Exception) {
-                                Timber.w(closeError, "LlmEngineFactory: Error closing conversation on cancellation")
+                                Timber.w(closeError, "LlmEngineFactory: Error closing failed conversation")
                             }
                             try {
                                 inferenceEngine?.close()
                             } catch (closeError: Exception) {
-                                Timber.w(closeError, "LlmEngineFactory: Error closing engine on cancellation")
-                            }
-                            throw e
-                        } catch (e: LiteRtLmJniException) {
-                            Timber.w(e, "LlmEngineFactory: Backend $actualBackend not supported, attempting fallback")
-                            backendFallbackStrategy.markUnsupported(actualBackend)
-
-                            actualBackend =
-                                backendFallbackStrategy.nextBackend(actualBackend)
-                                    ?: run {
-                                        Timber.e("LlmEngineFactory: CPU backend failed. No further fallback available.")
-                                        throw e
-                                    }
-                        } catch (e: Exception) {
-                            Timber.e(e, "LlmEngineFactory: Non-backend error initializing engine with backend=$actualBackend")
-                            throw e
-                        } finally {
-                            // If we did not successfully build a session, release any partially initialized
-                            // native resources so the next fallback attempt (or the caller) starts clean.
-                            if (session == null) {
-                                try {
-                                    inferenceConversation?.close()
-                                } catch (closeError: Exception) {
-                                    Timber.w(closeError, "LlmEngineFactory: Error closing failed conversation")
-                                }
-                                try {
-                                    inferenceEngine?.close()
-                                } catch (closeError: Exception) {
-                                    Timber.w(closeError, "LlmEngineFactory: Error closing failed engine")
-                                }
+                                Timber.w(closeError, "LlmEngineFactory: Error closing failed engine")
                             }
                         }
                     }
-
-                    session
                 }
-            } catch (e: CancellationException) {
-                Timber.i(e, "LlmEngineFactory: Coroutine cancelled during createSession, closing session")
-                session?.close()
-                throw e
-            }
-        }
 
-        private fun LlmEngine.Backend.toLiteRtBackend(): com.google.ai.edge.litertlm.Backend =
-            when (this) {
-                LlmEngine.Backend.CPU -> Backend.CPU()
-                LlmEngine.Backend.GPU -> Backend.GPU()
-                LlmEngine.Backend.NPU -> Backend.NPU(context.applicationInfo.nativeLibraryDir)
+                session
             }
+        } catch (e: CancellationException) {
+            Timber.i(e, "LlmEngineFactory: Coroutine cancelled during createSession, closing session")
+            session?.close()
+            throw e
+        }
     }
+
+    private fun LlmEngine.Backend.toLiteRtBackend(): com.google.ai.edge.litertlm.Backend =
+        when (this) {
+            LlmEngine.Backend.CPU -> Backend.CPU()
+            LlmEngine.Backend.GPU -> Backend.GPU()
+            LlmEngine.Backend.NPU -> Backend.NPU(context.applicationInfo.nativeLibraryDir)
+        }
+}

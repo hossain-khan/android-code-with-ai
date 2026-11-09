@@ -7,9 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ModelConfigStore
@@ -18,11 +17,12 @@ import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DebugMemoryProvider
 import dev.hossain.codematex.system.MemoryDelta
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@SubCircuitInject(ModelLifecycleSubScreen::class, AppScope::class)
+@Inject
 class ModelLifecycleSubPresenter(
     private val modelRepository: ModelRepository,
     private val llmEngine: LlmEngine,
@@ -173,29 +173,4 @@ class ModelLifecycleSubPresenter(
             },
         )
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ModelLifecycleSubPresenterFactory(
-    private val modelRepository: ModelRepository,
-    private val llmEngine: LlmEngine,
-    private val configStore: ModelConfigStore,
-    private val debugMemoryProvider: DebugMemoryProvider,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is ModelLifecycleSubScreen -> {
-                ModelLifecycleSubPresenter(
-                    modelRepository = modelRepository,
-                    llmEngine = llmEngine,
-                    configStore = configStore,
-                    debugMemoryProvider = debugMemoryProvider,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
 }

@@ -19,7 +19,7 @@ import org.junit.Test
 
 class ChatBenchmarkSubPresenterTest {
     private val fakeSystemStatsMonitor = FakeSystemStatsMonitor()
-    private val factory = ChatBenchmarkSubPresenterFactory(fakeSystemStatsMonitor)
+    private val factory = ChatBenchmarkSubPresenter.Factory { screen -> ChatBenchmarkSubPresenter(screen, fakeSystemStatsMonitor) }
 
     private val testScreen =
         ChatBenchmarkSubScreen(
@@ -35,8 +35,7 @@ class ChatBenchmarkSubPresenterTest {
             isPreparing = false,
         )
 
-    private fun createPresenter(screen: ChatBenchmarkSubScreen = testScreen): ChatBenchmarkSubPresenter =
-        factory.create(screen) as ChatBenchmarkSubPresenter
+    private fun createPresenter(screen: ChatBenchmarkSubScreen = testScreen): ChatBenchmarkSubPresenter = factory.create(screen)
 
     @Test
     fun `contentKey returns distinct stable keys for compact and expanded modes`() {
@@ -124,7 +123,7 @@ class ChatBenchmarkSubPresenterTest {
                         awaitCancellation()
                     }
                 }
-            val subPresenterFactory = ChatBenchmarkSubPresenterFactory(suspendingMonitor)
+            val subPresenterFactory = ChatBenchmarkSubPresenter.Factory { screen -> ChatBenchmarkSubPresenter(screen, suspendingMonitor) }
 
             var currentScreen by mutableStateOf(
                 testScreen.copy(
@@ -142,7 +141,7 @@ class ChatBenchmarkSubPresenterTest {
                 presentFunction = {
                     val presenter =
                         remember(currentScreen) {
-                            subPresenterFactory.create(currentScreen) as ChatBenchmarkSubPresenter
+                            subPresenterFactory.create(currentScreen)
                         }
                     key(ChatBenchmarkSubScreen.contentKey(currentScreen.isExpanded)) {
                         val state = presenter.present(outerEventSink = {})
@@ -231,7 +230,7 @@ class ChatBenchmarkSubPresenterTest {
                         awaitCancellation()
                     }
                 }
-            val subPresenterFactory = ChatBenchmarkSubPresenterFactory(suspendingMonitor)
+            val subPresenterFactory = ChatBenchmarkSubPresenter.Factory { screen -> ChatBenchmarkSubPresenter(screen, suspendingMonitor) }
 
             var currentScreen by mutableStateOf(
                 testScreen.copy(
@@ -247,7 +246,7 @@ class ChatBenchmarkSubPresenterTest {
                 presentFunction = {
                     val presenter =
                         remember(currentScreen) {
-                            subPresenterFactory.create(currentScreen) as ChatBenchmarkSubPresenter
+                            subPresenterFactory.create(currentScreen)
                         }
                     key(ChatBenchmarkSubScreen.contentKey(currentScreen.isExpanded)) {
                         presenter.present(outerEventSink = {})

@@ -45,7 +45,7 @@ retrofitKotlinxSerializationConverter = "1.0.0"
 # https://github.com/pinterest/ktlint
 kotlinter = "5.7.0"
 lifecycleRuntimeKtx = "2.11.0"
-metro = "1.4.3"
+metro = "1.5.2"
 androidxWork = "2.11.2"
 
 # On-device AI
@@ -106,9 +106,6 @@ circuitx-gestureNav = { group = "com.slack.circuit", name = "circuitx-gesture-na
 circuitx-overlays = { group = "com.slack.circuit", name = "circuitx-overlays", version.ref = "circuit" }
 circuitx-subcircuit = { group = "com.slack.circuit", name = "circuitx-subcircuit", version.ref = "circuit" }
 circuitx-subcircuit-test = { group = "com.slack.circuit", name = "circuitx-subcircuit-test", version.ref = "circuit" }
-circuit-codegen = { group = "com.slack.circuit", name = "circuit-codegen", version.ref = "circuit" }
-
-javax-inject = { group = "javax.inject", name = "javax.inject", version = "1" }
 
 # Networking
 # https://square.github.io/okhttp/

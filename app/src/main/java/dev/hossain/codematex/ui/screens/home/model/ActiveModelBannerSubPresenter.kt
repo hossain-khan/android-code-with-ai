@@ -6,21 +6,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
-import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 /**
  * SubPresenter that monitors downloaded AI model state and memory engine lifecycle
  * for the hero banner section on the dashboard.
  */
+@SubCircuitInject(ActiveModelBannerSubScreen::class, AppScope::class)
+@Inject
 class ActiveModelBannerSubPresenter(
     private val modelRepository: ModelRepository,
     private val llmEngine: LlmEngine,
@@ -57,28 +56,4 @@ class ActiveModelBannerSubPresenter(
             },
         )
     }
-}
-
-/**
- * Factory providing [ActiveModelBannerSubPresenter] for [ActiveModelBannerSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ActiveModelBannerSubPresenterFactory(
-    private val modelRepository: ModelRepository,
-    private val llmEngine: LlmEngine,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is ActiveModelBannerSubScreen -> {
-                ActiveModelBannerSubPresenter(
-                    modelRepository = modelRepository,
-                    llmEngine = llmEngine,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
 }

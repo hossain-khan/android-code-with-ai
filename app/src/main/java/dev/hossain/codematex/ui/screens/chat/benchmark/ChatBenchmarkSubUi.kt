@@ -35,9 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.system.ContextUsageStats
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.hossain.codematex.ui.component.LiveContextTelemetryBar
@@ -47,13 +45,12 @@ import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.formatShortModelName
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Top-level Composable rendering technical benchmarking telemetry, routing to either
  * the sidebar card (expanded) or sticky collapsible panel (compact).
  */
+@SubCircuitInject(ChatBenchmarkSubScreen::class, AppScope::class)
 @Composable
 fun ChatBenchmarkSubUi(
     state: ChatBenchmarkSubState,
@@ -64,26 +61,6 @@ fun ChatBenchmarkSubUi(
     } else {
         ModelTechnicalInfoPanel(state = state, modifier = modifier)
     }
-}
-
-/**
- * SubUi factory contributing [ChatBenchmarkSubUi] into Metro DI [AppScope].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ChatBenchmarkSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is ChatBenchmarkSubScreen -> {
-                SubUi<ChatBenchmarkSubState> { state, modifier ->
-                    ChatBenchmarkSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 /**

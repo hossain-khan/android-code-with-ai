@@ -36,16 +36,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.ui.screens.debug.DebugScreen.DebugDatabaseStats
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
+@SubCircuitInject(DatabaseDiagnosticsSubScreen::class, AppScope::class)
 @Composable
 fun DatabaseDiagnosticsSubUi(
     state: DatabaseDiagnosticsSubState,
@@ -349,23 +346,6 @@ internal fun DatabaseDiagnosticsCard(
             },
         )
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class DatabaseDiagnosticsSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is DatabaseDiagnosticsSubScreen -> {
-                SubUi<DatabaseDiagnosticsSubState> { state, modifier ->
-                    DatabaseDiagnosticsSubUi(state, modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

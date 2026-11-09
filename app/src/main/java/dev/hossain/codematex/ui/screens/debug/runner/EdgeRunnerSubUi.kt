@@ -37,17 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.ui.screens.debug.RUNNER_SUPPORTED_LANGUAGES
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
+@SubCircuitInject(EdgeRunnerSubScreen::class, AppScope::class)
 @Composable
 fun EdgeRunnerSubUi(
     state: EdgeRunnerSubState,
@@ -369,23 +366,6 @@ internal fun EdgeRunnerDiagnosticsCard(
             }
         }
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class EdgeRunnerSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is EdgeRunnerSubScreen -> {
-                SubUi<EdgeRunnerSubState> { state, modifier ->
-                    EdgeRunnerSubUi(state, modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

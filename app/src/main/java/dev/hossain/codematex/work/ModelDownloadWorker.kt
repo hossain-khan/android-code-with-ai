@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import dev.hossain.codematex.MainActivity
 import dev.hossain.codematex.di.AppWorkerFactory
 import dev.hossain.codematex.di.AppWorkerFactory.WorkerInstanceFactory
+import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.di.WorkerKey
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
@@ -27,7 +28,7 @@ import java.io.IOException
 
 @AssistedInject
 class ModelDownloadWorker(
-    context: Context,
+    @ApplicationContext context: Context,
     @Assisted params: WorkerParameters,
     private val modelDownloader: ModelDownloader,
 ) : CoroutineWorker(context, params) {

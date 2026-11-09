@@ -6,22 +6,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.repository.ChatSessionRepository
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.flow.catch
 import timber.log.Timber
 
 /**
  * SubPresenter that observes stored chat sessions and emits the top 5 recent sessions for the dashboard.
  */
+@AssistedInject
 class RecentSessionsSubPresenter(
-    private val screen: RecentSessionsSubScreen,
+    @Assisted private val screen: RecentSessionsSubScreen,
     private val sessionRepository: ChatSessionRepository,
 ) : SubPresenter<RecentSessionsOuterEvent, RecentSessionsSubState> {
     @Composable
@@ -53,19 +54,10 @@ class RecentSessionsSubPresenter(
             },
         )
     }
-}
 
-/**
- * Factory providing [RecentSessionsSubPresenter] for [RecentSessionsSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class RecentSessionsSubPresenterFactory(
-    private val sessionRepository: ChatSessionRepository,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is RecentSessionsSubScreen -> RecentSessionsSubPresenter(screen, sessionRepository)
-            else -> null
-        }
+    @SubCircuitInject(RecentSessionsSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: RecentSessionsSubScreen): RecentSessionsSubPresenter
+    }
 }

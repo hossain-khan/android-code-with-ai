@@ -41,9 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.animation.SessionCardSharedKey
@@ -60,13 +58,12 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.codematex.util.formatRelativeTime
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering recent chat sessions on the home dashboard.
  * Adapts between an inline Column in compact phones and an expanded LazyColumn in tablets.
  */
+@SubCircuitInject(RecentSessionsSubScreen::class, AppScope::class)
 @Composable
 fun RecentSessionsSubUi(
     state: RecentSessionsSubState,
@@ -323,26 +320,6 @@ fun EmptySessionsCard(modifier: Modifier = Modifier) {
             }
         }
     }
-}
-
-/**
- * Factory creating [SubUi] instances for [RecentSessionsSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class RecentSessionsSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is RecentSessionsSubScreen -> {
-                SubUi<RecentSessionsSubState> { state, modifier ->
-                    RecentSessionsSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

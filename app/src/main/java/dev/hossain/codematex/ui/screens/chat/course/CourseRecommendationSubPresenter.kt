@@ -7,23 +7,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.UserPreferencesStore
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.launch
 
 /**
  * SubPresenter observing contextual learning courses for the active coding topic
  * and managing dismissal preferences.
  */
+@AssistedInject
 class CourseRecommendationSubPresenter(
-    private val screen: CourseRecommendationSubScreen,
+    @Assisted private val screen: CourseRecommendationSubScreen,
     private val learningRepository: LearningRepository,
     private val userPreferencesStore: UserPreferencesStore,
 ) : SubPresenter<CourseRecommendationOuterEvent, CourseRecommendationSubState> {
@@ -71,29 +72,10 @@ class CourseRecommendationSubPresenter(
             },
         )
     }
-}
 
-/**
- * SubPresenter factory contributing [CourseRecommendationSubPresenter] into Metro DI [AppScope].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class CourseRecommendationSubPresenterFactory(
-    private val learningRepository: LearningRepository,
-    private val userPreferencesStore: UserPreferencesStore,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is CourseRecommendationSubScreen -> {
-                CourseRecommendationSubPresenter(
-                    screen = screen,
-                    learningRepository = learningRepository,
-                    userPreferencesStore = userPreferencesStore,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
+    @SubCircuitInject(CourseRecommendationSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: CourseRecommendationSubScreen): CourseRecommendationSubPresenter
+    }
 }

@@ -3,7 +3,6 @@ package dev.hossain.codematex.runtime
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
-import javax.inject.Inject
 
 /**
  * Determines the order in which LiteRT-LM hardware backends should be attempted.
@@ -40,29 +39,27 @@ interface BackendFallbackStrategy {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class DefaultBackendFallbackStrategy
-    @Inject
-    constructor() : BackendFallbackStrategy {
-        private val unsupportedBackends = mutableSetOf<LlmEngine.Backend>()
+class DefaultBackendFallbackStrategy : BackendFallbackStrategy {
+    private val unsupportedBackends = mutableSetOf<LlmEngine.Backend>()
 
-        override fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend {
-            var backend = preferred
-            while (backend in unsupportedBackends && backend != LlmEngine.Backend.CPU) {
-                backend = nextBackend(backend) ?: LlmEngine.Backend.CPU
-            }
-            return backend
+    override fun resolveStartBackend(preferred: LlmEngine.Backend): LlmEngine.Backend {
+        var backend = preferred
+        while (backend in unsupportedBackends && backend != LlmEngine.Backend.CPU) {
+            backend = nextBackend(backend) ?: LlmEngine.Backend.CPU
         }
-
-        override fun nextBackend(current: LlmEngine.Backend): LlmEngine.Backend? =
-            when (current) {
-                LlmEngine.Backend.NPU -> LlmEngine.Backend.GPU
-                LlmEngine.Backend.GPU -> LlmEngine.Backend.CPU
-                LlmEngine.Backend.CPU -> null
-            }
-
-        override fun markUnsupported(backend: LlmEngine.Backend) {
-            unsupportedBackends.add(backend)
-        }
-
-        override fun isUnsupported(backend: LlmEngine.Backend): Boolean = backend in unsupportedBackends
+        return backend
     }
+
+    override fun nextBackend(current: LlmEngine.Backend): LlmEngine.Backend? =
+        when (current) {
+            LlmEngine.Backend.NPU -> LlmEngine.Backend.GPU
+            LlmEngine.Backend.GPU -> LlmEngine.Backend.CPU
+            LlmEngine.Backend.CPU -> null
+        }
+
+    override fun markUnsupported(backend: LlmEngine.Backend) {
+        unsupportedBackends.add(backend)
+    }
+
+    override fun isUnsupported(backend: LlmEngine.Backend): Boolean = backend in unsupportedBackends
+}

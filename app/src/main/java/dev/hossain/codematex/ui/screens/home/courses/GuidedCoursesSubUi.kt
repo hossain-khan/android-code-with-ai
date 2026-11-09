@@ -30,10 +30,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
-import dev.hossain.codematex.data.model.CodingTopic
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.ui.animation.CourseBadgeSharedKey
 import dev.hossain.codematex.ui.animation.CourseCardSharedKey
@@ -47,12 +44,11 @@ import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering the interactive guided courses section on the home dashboard.
  */
+@SubCircuitInject(GuidedCoursesSubScreen::class, AppScope::class)
 @Composable
 fun GuidedCoursesSubUi(
     state: GuidedCoursesSubState,
@@ -219,26 +215,6 @@ internal fun CourseHomeCard(
             }
         }
     }
-}
-
-/**
- * Factory creating [SubUi] instances for [GuidedCoursesSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class GuidedCoursesSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is GuidedCoursesSubScreen -> {
-                SubUi<GuidedCoursesSubState> { state, modifier ->
-                    GuidedCoursesSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

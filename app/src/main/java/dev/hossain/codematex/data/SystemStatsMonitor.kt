@@ -6,7 +6,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.delay
-import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 
@@ -36,61 +35,59 @@ interface SystemStatsMonitor {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class DefaultSystemStatsMonitor
-    @Inject
-    constructor(
-        private val deviceMemoryProvider: DeviceMemoryProvider,
-    ) : SystemStatsMonitor {
-        override suspend fun monitorWhileActive(
-            isActive: () -> Boolean,
-            onStats: (String) -> Unit,
-        ) {
-            monitorMetricsWhileActive(isActive) { metrics ->
-                onStats(metrics.formattedSummary)
-            }
+class DefaultSystemStatsMonitor(
+    private val deviceMemoryProvider: DeviceMemoryProvider,
+) : SystemStatsMonitor {
+    override suspend fun monitorWhileActive(
+        isActive: () -> Boolean,
+        onStats: (String) -> Unit,
+    ) {
+        monitorMetricsWhileActive(isActive) { metrics ->
+            onStats(metrics.formattedSummary)
         }
+    }
 
-        override suspend fun monitorMetricsWhileActive(
-            isActive: () -> Boolean,
-            onMetrics: (SystemResourceStats) -> Unit,
-        ) {
-            var prevTicks = deviceMemoryProvider.getProcessCpuTicks()
-            var prevTime = System.currentTimeMillis()
-            val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
+    override suspend fun monitorMetricsWhileActive(
+        isActive: () -> Boolean,
+        onMetrics: (SystemResourceStats) -> Unit,
+    ) {
+        var prevTicks = deviceMemoryProvider.getProcessCpuTicks()
+        var prevTime = System.currentTimeMillis()
+        val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
 
-            // Emit initial memory reading immediately without waiting for the first delay cycle
-            val initialMem = deviceMemoryProvider.getMemoryStats()
-            onMetrics(
-                SystemResourceStats(
-                    cpuPercent = 0f,
-                    ramUsedGb = initialMem.usedGb,
-                    ramTotalGb = initialMem.totalGb,
-                ),
-            )
+        // Emit initial memory reading immediately without waiting for the first delay cycle
+        val initialMem = deviceMemoryProvider.getMemoryStats()
+        onMetrics(
+            SystemResourceStats(
+                cpuPercent = 0f,
+                ramUsedGb = initialMem.usedGb,
+                ramTotalGb = initialMem.totalGb,
+            ),
+        )
 
-            while (isActive()) {
-                delay(750.milliseconds)
-                val now = System.currentTimeMillis()
-                val elapsedSec = (now - prevTime).milliseconds.toDouble(DurationUnit.SECONDS).toFloat()
-                val currentTicks = deviceMemoryProvider.getProcessCpuTicks()
+        while (isActive()) {
+            delay(750.milliseconds)
+            val now = System.currentTimeMillis()
+            val elapsedSec = (now - prevTime).milliseconds.toDouble(DurationUnit.SECONDS).toFloat()
+            val currentTicks = deviceMemoryProvider.getProcessCpuTicks()
 
-                if (elapsedSec > 0.1f) {
-                    val ticksDiff = (currentTicks - prevTicks).coerceAtLeast(0L)
-                    val cpuUsage = ((ticksDiff / 100f) / elapsedSec) * 100f
-                    val scaledCpu = (cpuUsage / cores).coerceIn(0f, 100f)
+            if (elapsedSec > 0.1f) {
+                val ticksDiff = (currentTicks - prevTicks).coerceAtLeast(0L)
+                val cpuUsage = ((ticksDiff / 100f) / elapsedSec) * 100f
+                val scaledCpu = (cpuUsage / cores).coerceIn(0f, 100f)
 
-                    val mem = deviceMemoryProvider.getMemoryStats()
-                    onMetrics(
-                        SystemResourceStats(
-                            cpuPercent = scaledCpu,
-                            ramUsedGb = mem.usedGb,
-                            ramTotalGb = mem.totalGb,
-                        ),
-                    )
+                val mem = deviceMemoryProvider.getMemoryStats()
+                onMetrics(
+                    SystemResourceStats(
+                        cpuPercent = scaledCpu,
+                        ramUsedGb = mem.usedGb,
+                        ramTotalGb = mem.totalGb,
+                    ),
+                )
 
-                    prevTicks = currentTicks
-                    prevTime = now
-                }
+                prevTicks = currentTicks
+                prevTime = now
             }
         }
     }
+}

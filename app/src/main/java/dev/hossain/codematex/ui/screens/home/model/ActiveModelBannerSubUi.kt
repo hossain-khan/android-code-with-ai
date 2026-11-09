@@ -28,9 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.ui.animation.ActiveModelBadgeSharedKey
 import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
 import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
@@ -41,12 +39,11 @@ import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering the active AI model hero banner on the home dashboard.
  */
+@SubCircuitInject(ActiveModelBannerSubScreen::class, AppScope::class)
 @Composable
 fun ActiveModelBannerSubUi(
     state: ActiveModelBannerSubState,
@@ -249,26 +246,6 @@ internal fun HeroBanner(
             }
         }
     }
-}
-
-/**
- * Factory creating [SubUi] instances for [ActiveModelBannerSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ActiveModelBannerSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is ActiveModelBannerSubScreen -> {
-                SubUi<ActiveModelBannerSubState> { state, modifier ->
-                    ActiveModelBannerSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

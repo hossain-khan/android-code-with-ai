@@ -7,21 +7,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.local.SessionDao
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.model.LessonStatus
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.hossain.codematex.ui.screens.debug.DebugScreen.DebugDatabaseStats
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@SubCircuitInject(DatabaseDiagnosticsSubScreen::class, AppScope::class)
+@Inject
 class DatabaseDiagnosticsSubPresenter(
     private val learningRepository: LearningRepository,
     private val sessionDao: SessionDao,
@@ -112,22 +112,4 @@ class DatabaseDiagnosticsSubPresenter(
             },
         )
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class DatabaseDiagnosticsSubPresenterFactory(
-    private val learningRepository: LearningRepository,
-    private val sessionDao: SessionDao,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is DatabaseDiagnosticsSubScreen -> {
-                DatabaseDiagnosticsSubPresenter(learningRepository, sessionDao)
-            }
-
-            else -> {
-                null
-            }
-        }
 }

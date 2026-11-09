@@ -7,20 +7,20 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.system.NetworkMonitor
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_RUNNER_LANGUAGE
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_RUNNER_SNIPPETS
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@SubCircuitInject(EdgeRunnerSubScreen::class, AppScope::class)
+@Inject
 class EdgeRunnerSubPresenter(
     private val codeRunner: PlaygroundCodeRunner,
     private val networkMonitor: NetworkMonitor,
@@ -151,17 +151,4 @@ class EdgeRunnerSubPresenter(
             },
         )
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class EdgeRunnerSubPresenterFactory(
-    private val codeRunner: PlaygroundCodeRunner,
-    private val networkMonitor: NetworkMonitor,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is EdgeRunnerSubScreen -> EdgeRunnerSubPresenter(codeRunner, networkMonitor)
-            else -> null
-        }
 }

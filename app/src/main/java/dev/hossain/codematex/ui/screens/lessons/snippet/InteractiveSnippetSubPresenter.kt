@@ -7,23 +7,24 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.domain.runner.PlaygroundCodeRunner
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
 import dev.hossain.codematex.system.NetworkMonitor
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.launch
 
 /**
  * SubPresenter that manages local compilation state and remote playground execution
  * for a single interactive code snippet.
  */
+@AssistedInject
 class InteractiveSnippetSubPresenter(
-    private val screen: InteractiveSnippetSubScreen,
+    @Assisted private val screen: InteractiveSnippetSubScreen,
     private val playgroundCodeRunner: PlaygroundCodeRunner,
     private val networkMonitor: NetworkMonitor,
 ) : SubPresenter<InteractiveSnippetOuterEvent, InteractiveSnippetSubState> {
@@ -76,29 +77,10 @@ class InteractiveSnippetSubPresenter(
             },
         )
     }
-}
 
-/**
- * Factory creating [InteractiveSnippetSubPresenter] instances for [InteractiveSnippetSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class InteractiveSnippetSubPresenterFactory(
-    private val playgroundCodeRunner: PlaygroundCodeRunner,
-    private val networkMonitor: NetworkMonitor,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is InteractiveSnippetSubScreen -> {
-                InteractiveSnippetSubPresenter(
-                    screen = screen,
-                    playgroundCodeRunner = playgroundCodeRunner,
-                    networkMonitor = networkMonitor,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
+    @SubCircuitInject(InteractiveSnippetSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: InteractiveSnippetSubScreen): InteractiveSnippetSubPresenter
+    }
 }

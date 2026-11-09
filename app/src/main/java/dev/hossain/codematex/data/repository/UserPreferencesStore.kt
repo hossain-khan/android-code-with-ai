@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Persistent user preferences storage across app launches and sessions.
@@ -230,388 +229,386 @@ interface UserPreferencesStore {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class UserPreferencesStoreImpl
-    @Inject
-    constructor(
-        private val dataStore: DataStore<Preferences>,
-    ) : UserPreferencesStore {
-        override val selectedPersonaFlow: Flow<TutorPersona> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val storedName = prefs[KEY_SELECTED_PERSONA] ?: return@map TutorPersona.SENIOR_ENGINEER
-                    try {
-                        TutorPersona.valueOf(storedName)
-                    } catch (e: IllegalArgumentException) {
-                        Timber.w(e, "Unknown stored persona '$storedName', defaulting to ${TutorPersona.SENIOR_ENGINEER}")
-                        TutorPersona.SENIOR_ENGINEER
-                    }
-                }.distinctUntilChanged()
+class UserPreferencesStoreImpl(
+    private val dataStore: DataStore<Preferences>,
+) : UserPreferencesStore {
+    override val selectedPersonaFlow: Flow<TutorPersona> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val storedName = prefs[KEY_SELECTED_PERSONA] ?: return@map TutorPersona.SENIOR_ENGINEER
+                try {
+                    TutorPersona.valueOf(storedName)
+                } catch (e: IllegalArgumentException) {
+                    Timber.w(e, "Unknown stored persona '$storedName', defaulting to ${TutorPersona.SENIOR_ENGINEER}")
+                    TutorPersona.SENIOR_ENGINEER
+                }
+            }.distinctUntilChanged()
 
-        override val dismissedCourseBannerTopicsFlow: Flow<Set<String>> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] ?: emptySet()
-                }.distinctUntilChanged()
+    override val dismissedCourseBannerTopicsFlow: Flow<Set<String>> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] ?: emptySet()
+            }.distinctUntilChanged()
 
-        override val isOnboardingCompletedFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_ONBOARDING_COMPLETED] ?: false
-                }.distinctUntilChanged()
+    override val isOnboardingCompletedFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_ONBOARDING_COMPLETED] ?: false
+            }.distinctUntilChanged()
 
-        override val isWifiOnlyDownloadEnabledFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_WIFI_ONLY_DOWNLOAD] ?: true
-                }.distinctUntilChanged()
+    override val isWifiOnlyDownloadEnabledFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_WIFI_ONLY_DOWNLOAD] ?: true
+            }.distinctUntilChanged()
 
-        override val showLineNumbersFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_SHOW_LINE_NUMBERS] ?: false
-                }.distinctUntilChanged()
+    override val showLineNumbersFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_SHOW_LINE_NUMBERS] ?: false
+            }.distinctUntilChanged()
 
-        override val hapticFeedbackEnabledFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_HAPTIC_FEEDBACK] ?: true
-                }.distinctUntilChanged()
+    override val hapticFeedbackEnabledFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_HAPTIC_FEEDBACK] ?: true
+            }.distinctUntilChanged()
 
-        override val ramEvictionMinutesFlow: Flow<Int> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_RAM_EVICTION_MINUTES] ?: 3
-                }.distinctUntilChanged()
+    override val ramEvictionMinutesFlow: Flow<Int> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_RAM_EVICTION_MINUTES] ?: 3
+            }.distinctUntilChanged()
 
-        override val codeThemeFlow: Flow<CodeTheme> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val stored = prefs[KEY_CODE_THEME] ?: return@map CodeTheme.TOMORROW
-                    try {
-                        CodeTheme.valueOf(stored)
-                    } catch (e: IllegalArgumentException) {
-                        CodeTheme.TOMORROW
-                    }
-                }.distinctUntilChanged()
+    override val codeThemeFlow: Flow<CodeTheme> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val stored = prefs[KEY_CODE_THEME] ?: return@map CodeTheme.TOMORROW
+                try {
+                    CodeTheme.valueOf(stored)
+                } catch (e: IllegalArgumentException) {
+                    CodeTheme.TOMORROW
+                }
+            }.distinctUntilChanged()
 
-        override val showLanguageLabelFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
-                }.distinctUntilChanged()
+    override val showLanguageLabelFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
+            }.distinctUntilChanged()
 
-        override val showCopyButtonFlow: Flow<Boolean> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    prefs[KEY_SHOW_COPY_BUTTON] ?: true
-                }.distinctUntilChanged()
+    override val showCopyButtonFlow: Flow<Boolean> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                prefs[KEY_SHOW_COPY_BUTTON] ?: true
+            }.distinctUntilChanged()
 
-        override val codeBlockPresetFlow: Flow<CodeBlockPreset> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val stored = prefs[KEY_CODE_BLOCK_PRESET] ?: return@map CodeBlockPreset.COMPACT
-                    try {
-                        CodeBlockPreset.valueOf(stored)
-                    } catch (e: IllegalArgumentException) {
-                        CodeBlockPreset.COMPACT
-                    }
-                }.distinctUntilChanged()
+    override val codeBlockPresetFlow: Flow<CodeBlockPreset> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val stored = prefs[KEY_CODE_BLOCK_PRESET] ?: return@map CodeBlockPreset.COMPACT
+                try {
+                    CodeBlockPreset.valueOf(stored)
+                } catch (e: IllegalArgumentException) {
+                    CodeBlockPreset.COMPACT
+                }
+            }.distinctUntilChanged()
 
-        override val codeFontSizeFlow: Flow<CodeFontSize> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val stored = prefs[KEY_CODE_FONT_SIZE] ?: return@map CodeFontSize.MEDIUM
-                    try {
-                        CodeFontSize.valueOf(stored)
-                    } catch (e: IllegalArgumentException) {
-                        CodeFontSize.MEDIUM
-                    }
-                }.distinctUntilChanged()
+    override val codeFontSizeFlow: Flow<CodeFontSize> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val stored = prefs[KEY_CODE_FONT_SIZE] ?: return@map CodeFontSize.MEDIUM
+                try {
+                    CodeFontSize.valueOf(stored)
+                } catch (e: IllegalArgumentException) {
+                    CodeFontSize.MEDIUM
+                }
+            }.distinctUntilChanged()
 
-        override val codeBlockSettingsFlow: Flow<CodeBlockSettings> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val theme =
-                        prefs[KEY_CODE_THEME]?.let {
-                            try {
-                                CodeTheme.valueOf(it)
-                            } catch (e: IllegalArgumentException) {
-                                CodeTheme.TOMORROW
-                            }
-                        } ?: CodeTheme.TOMORROW
-                    val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: false
-                    val showLang = prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
-                    val showCopy = prefs[KEY_SHOW_COPY_BUTTON] ?: true
-                    val preset =
-                        prefs[KEY_CODE_BLOCK_PRESET]?.let {
-                            try {
-                                CodeBlockPreset.valueOf(it)
-                            } catch (e: IllegalArgumentException) {
-                                CodeBlockPreset.COMPACT
-                            }
-                        } ?: CodeBlockPreset.COMPACT
-                    val fontSize =
-                        prefs[KEY_CODE_FONT_SIZE]?.let {
-                            try {
-                                CodeFontSize.valueOf(it)
-                            } catch (e: IllegalArgumentException) {
-                                CodeFontSize.MEDIUM
-                            }
-                        } ?: CodeFontSize.MEDIUM
+    override val codeBlockSettingsFlow: Flow<CodeBlockSettings> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val theme =
+                    prefs[KEY_CODE_THEME]?.let {
+                        try {
+                            CodeTheme.valueOf(it)
+                        } catch (e: IllegalArgumentException) {
+                            CodeTheme.TOMORROW
+                        }
+                    } ?: CodeTheme.TOMORROW
+                val showLines = prefs[KEY_SHOW_LINE_NUMBERS] ?: false
+                val showLang = prefs[KEY_SHOW_LANGUAGE_LABEL] ?: true
+                val showCopy = prefs[KEY_SHOW_COPY_BUTTON] ?: true
+                val preset =
+                    prefs[KEY_CODE_BLOCK_PRESET]?.let {
+                        try {
+                            CodeBlockPreset.valueOf(it)
+                        } catch (e: IllegalArgumentException) {
+                            CodeBlockPreset.COMPACT
+                        }
+                    } ?: CodeBlockPreset.COMPACT
+                val fontSize =
+                    prefs[KEY_CODE_FONT_SIZE]?.let {
+                        try {
+                            CodeFontSize.valueOf(it)
+                        } catch (e: IllegalArgumentException) {
+                            CodeFontSize.MEDIUM
+                        }
+                    } ?: CodeFontSize.MEDIUM
 
-                    CodeBlockSettings(
-                        theme = theme,
-                        showLineNumbers = showLines,
-                        showLanguageLabel = showLang,
-                        showCopyButton = showCopy,
-                        preset = preset,
-                        fontSize = fontSize,
-                    )
-                }.distinctUntilChanged()
+                CodeBlockSettings(
+                    theme = theme,
+                    showLineNumbers = showLines,
+                    showLanguageLabel = showLang,
+                    showCopyButton = showCopy,
+                    preset = preset,
+                    fontSize = fontSize,
+                )
+            }.distinctUntilChanged()
 
-        override val developerProfileFlow: Flow<DeveloperProfile> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val enabled = prefs[KEY_DEV_PROFILE_ENABLED] ?: false
-                    val experienceLevel =
-                        prefs[KEY_DEV_PROFILE_EXPERIENCE]?.let {
-                            try {
-                                DeveloperExperienceLevel.valueOf(it)
-                            } catch (e: IllegalArgumentException) {
-                                DeveloperExperienceLevel.INTERMEDIATE
-                            }
-                        } ?: DeveloperExperienceLevel.INTERMEDIATE
-                    val primaryStack = prefs[KEY_DEV_PROFILE_STACK] ?: ""
-                    val customDirectives = prefs[KEY_DEV_PROFILE_DIRECTIVES] ?: ""
+    override val developerProfileFlow: Flow<DeveloperProfile> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "UserPreferencesStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val enabled = prefs[KEY_DEV_PROFILE_ENABLED] ?: false
+                val experienceLevel =
+                    prefs[KEY_DEV_PROFILE_EXPERIENCE]?.let {
+                        try {
+                            DeveloperExperienceLevel.valueOf(it)
+                        } catch (e: IllegalArgumentException) {
+                            DeveloperExperienceLevel.INTERMEDIATE
+                        }
+                    } ?: DeveloperExperienceLevel.INTERMEDIATE
+                val primaryStack = prefs[KEY_DEV_PROFILE_STACK] ?: ""
+                val customDirectives = prefs[KEY_DEV_PROFILE_DIRECTIVES] ?: ""
 
-                    DeveloperProfile(
-                        enabled = enabled,
-                        experienceLevel = experienceLevel,
-                        primaryStack = primaryStack,
-                        customDirectives = customDirectives,
-                    )
-                }.distinctUntilChanged()
+                DeveloperProfile(
+                    enabled = enabled,
+                    experienceLevel = experienceLevel,
+                    primaryStack = primaryStack,
+                    customDirectives = customDirectives,
+                )
+            }.distinctUntilChanged()
 
-        override suspend fun getSelectedPersona(): TutorPersona = selectedPersonaFlow.first()
+    override suspend fun getSelectedPersona(): TutorPersona = selectedPersonaFlow.first()
 
-        override suspend fun setSelectedPersona(persona: TutorPersona) {
-            dataStore.edit { prefs ->
-                prefs[KEY_SELECTED_PERSONA] = persona.name
-            }
-        }
-
-        override suspend fun dismissCourseBanner(topic: CodingTopic) {
-            dataStore.edit { prefs ->
-                val current = prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] ?: emptySet()
-                prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] = current + topic.name
-            }
-        }
-
-        override suspend fun isOnboardingCompleted(): Boolean = isOnboardingCompletedFlow.first()
-
-        override suspend fun setOnboardingCompleted(completed: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_ONBOARDING_COMPLETED] = completed
-            }
-        }
-
-        override suspend fun isWifiOnlyDownloadEnabled(): Boolean = isWifiOnlyDownloadEnabledFlow.first()
-
-        override suspend fun setWifiOnlyDownloadEnabled(enabled: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_WIFI_ONLY_DOWNLOAD] = enabled
-            }
-        }
-
-        override suspend fun isShowLineNumbersEnabled(): Boolean = showLineNumbersFlow.first()
-
-        override suspend fun setShowLineNumbers(show: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_SHOW_LINE_NUMBERS] = show
-            }
-        }
-
-        override suspend fun isHapticFeedbackEnabled(): Boolean = hapticFeedbackEnabledFlow.first()
-
-        override suspend fun setHapticFeedbackEnabled(enabled: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_HAPTIC_FEEDBACK] = enabled
-            }
-        }
-
-        override suspend fun getRamEvictionMinutes(): Int = ramEvictionMinutesFlow.first()
-
-        override suspend fun setRamEvictionMinutes(minutes: Int) {
-            dataStore.edit { prefs ->
-                prefs[KEY_RAM_EVICTION_MINUTES] = minutes
-            }
-        }
-
-        override suspend fun getCodeTheme(): CodeTheme = codeThemeFlow.first()
-
-        override suspend fun setCodeTheme(theme: CodeTheme) {
-            dataStore.edit { prefs ->
-                prefs[KEY_CODE_THEME] = theme.name
-            }
-        }
-
-        override suspend fun isShowLanguageLabelEnabled(): Boolean = showLanguageLabelFlow.first()
-
-        override suspend fun setShowLanguageLabel(show: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_SHOW_LANGUAGE_LABEL] = show
-            }
-        }
-
-        override suspend fun isShowCopyButtonEnabled(): Boolean = showCopyButtonFlow.first()
-
-        override suspend fun setShowCopyButton(show: Boolean) {
-            dataStore.edit { prefs ->
-                prefs[KEY_SHOW_COPY_BUTTON] = show
-            }
-        }
-
-        override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.first()
-
-        override suspend fun setCodeBlockPreset(preset: CodeBlockPreset) {
-            dataStore.edit { prefs ->
-                prefs[KEY_CODE_BLOCK_PRESET] = preset.name
-            }
-        }
-
-        override suspend fun getCodeFontSize(): CodeFontSize = codeFontSizeFlow.first()
-
-        override suspend fun setCodeFontSize(fontSize: CodeFontSize) {
-            dataStore.edit { prefs ->
-                prefs[KEY_CODE_FONT_SIZE] = fontSize.name
-            }
-        }
-
-        override suspend fun getDeveloperProfile(): DeveloperProfile = developerProfileFlow.first()
-
-        override suspend fun setDeveloperProfile(profile: DeveloperProfile) {
-            dataStore.edit { prefs ->
-                prefs[KEY_DEV_PROFILE_ENABLED] = profile.enabled
-                prefs[KEY_DEV_PROFILE_EXPERIENCE] = profile.experienceLevel.name
-                prefs[KEY_DEV_PROFILE_STACK] = profile.primaryStack
-                prefs[KEY_DEV_PROFILE_DIRECTIVES] = profile.customDirectives
-            }
-        }
-
-        companion object {
-            private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
-            private val KEY_DISMISSED_COURSE_BANNER_TOPICS = stringSetPreferencesKey("dismissed_course_banner_topics")
-            private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
-            private val KEY_WIFI_ONLY_DOWNLOAD = booleanPreferencesKey("wifi_only_download")
-            private val KEY_SHOW_LINE_NUMBERS = booleanPreferencesKey("show_line_numbers")
-            private val KEY_HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback_enabled")
-            private val KEY_RAM_EVICTION_MINUTES = intPreferencesKey("ram_eviction_minutes")
-            private val KEY_CODE_THEME = stringPreferencesKey("code_block_theme")
-            private val KEY_SHOW_LANGUAGE_LABEL = booleanPreferencesKey("code_show_language_label")
-            private val KEY_SHOW_COPY_BUTTON = booleanPreferencesKey("code_show_copy_button")
-            private val KEY_CODE_BLOCK_PRESET = stringPreferencesKey("code_block_preset")
-            private val KEY_CODE_FONT_SIZE = stringPreferencesKey("code_font_size")
-            private val KEY_DEV_PROFILE_ENABLED = booleanPreferencesKey("dev_profile_enabled")
-            private val KEY_DEV_PROFILE_EXPERIENCE = stringPreferencesKey("dev_profile_experience")
-            private val KEY_DEV_PROFILE_STACK = stringPreferencesKey("dev_profile_stack")
-            private val KEY_DEV_PROFILE_DIRECTIVES = stringPreferencesKey("dev_profile_directives")
+    override suspend fun setSelectedPersona(persona: TutorPersona) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SELECTED_PERSONA] = persona.name
         }
     }
+
+    override suspend fun dismissCourseBanner(topic: CodingTopic) {
+        dataStore.edit { prefs ->
+            val current = prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] ?: emptySet()
+            prefs[KEY_DISMISSED_COURSE_BANNER_TOPICS] = current + topic.name
+        }
+    }
+
+    override suspend fun isOnboardingCompleted(): Boolean = isOnboardingCompletedFlow.first()
+
+    override suspend fun setOnboardingCompleted(completed: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_ONBOARDING_COMPLETED] = completed
+        }
+    }
+
+    override suspend fun isWifiOnlyDownloadEnabled(): Boolean = isWifiOnlyDownloadEnabledFlow.first()
+
+    override suspend fun setWifiOnlyDownloadEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_WIFI_ONLY_DOWNLOAD] = enabled
+        }
+    }
+
+    override suspend fun isShowLineNumbersEnabled(): Boolean = showLineNumbersFlow.first()
+
+    override suspend fun setShowLineNumbers(show: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SHOW_LINE_NUMBERS] = show
+        }
+    }
+
+    override suspend fun isHapticFeedbackEnabled(): Boolean = hapticFeedbackEnabledFlow.first()
+
+    override suspend fun setHapticFeedbackEnabled(enabled: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_HAPTIC_FEEDBACK] = enabled
+        }
+    }
+
+    override suspend fun getRamEvictionMinutes(): Int = ramEvictionMinutesFlow.first()
+
+    override suspend fun setRamEvictionMinutes(minutes: Int) {
+        dataStore.edit { prefs ->
+            prefs[KEY_RAM_EVICTION_MINUTES] = minutes
+        }
+    }
+
+    override suspend fun getCodeTheme(): CodeTheme = codeThemeFlow.first()
+
+    override suspend fun setCodeTheme(theme: CodeTheme) {
+        dataStore.edit { prefs ->
+            prefs[KEY_CODE_THEME] = theme.name
+        }
+    }
+
+    override suspend fun isShowLanguageLabelEnabled(): Boolean = showLanguageLabelFlow.first()
+
+    override suspend fun setShowLanguageLabel(show: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SHOW_LANGUAGE_LABEL] = show
+        }
+    }
+
+    override suspend fun isShowCopyButtonEnabled(): Boolean = showCopyButtonFlow.first()
+
+    override suspend fun setShowCopyButton(show: Boolean) {
+        dataStore.edit { prefs ->
+            prefs[KEY_SHOW_COPY_BUTTON] = show
+        }
+    }
+
+    override suspend fun getCodeBlockPreset(): CodeBlockPreset = codeBlockPresetFlow.first()
+
+    override suspend fun setCodeBlockPreset(preset: CodeBlockPreset) {
+        dataStore.edit { prefs ->
+            prefs[KEY_CODE_BLOCK_PRESET] = preset.name
+        }
+    }
+
+    override suspend fun getCodeFontSize(): CodeFontSize = codeFontSizeFlow.first()
+
+    override suspend fun setCodeFontSize(fontSize: CodeFontSize) {
+        dataStore.edit { prefs ->
+            prefs[KEY_CODE_FONT_SIZE] = fontSize.name
+        }
+    }
+
+    override suspend fun getDeveloperProfile(): DeveloperProfile = developerProfileFlow.first()
+
+    override suspend fun setDeveloperProfile(profile: DeveloperProfile) {
+        dataStore.edit { prefs ->
+            prefs[KEY_DEV_PROFILE_ENABLED] = profile.enabled
+            prefs[KEY_DEV_PROFILE_EXPERIENCE] = profile.experienceLevel.name
+            prefs[KEY_DEV_PROFILE_STACK] = profile.primaryStack
+            prefs[KEY_DEV_PROFILE_DIRECTIVES] = profile.customDirectives
+        }
+    }
+
+    companion object {
+        private val KEY_SELECTED_PERSONA = stringPreferencesKey("selected_tutor_persona")
+        private val KEY_DISMISSED_COURSE_BANNER_TOPICS = stringSetPreferencesKey("dismissed_course_banner_topics")
+        private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("is_onboarding_completed")
+        private val KEY_WIFI_ONLY_DOWNLOAD = booleanPreferencesKey("wifi_only_download")
+        private val KEY_SHOW_LINE_NUMBERS = booleanPreferencesKey("show_line_numbers")
+        private val KEY_HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback_enabled")
+        private val KEY_RAM_EVICTION_MINUTES = intPreferencesKey("ram_eviction_minutes")
+        private val KEY_CODE_THEME = stringPreferencesKey("code_block_theme")
+        private val KEY_SHOW_LANGUAGE_LABEL = booleanPreferencesKey("code_show_language_label")
+        private val KEY_SHOW_COPY_BUTTON = booleanPreferencesKey("code_show_copy_button")
+        private val KEY_CODE_BLOCK_PRESET = stringPreferencesKey("code_block_preset")
+        private val KEY_CODE_FONT_SIZE = stringPreferencesKey("code_font_size")
+        private val KEY_DEV_PROFILE_ENABLED = booleanPreferencesKey("dev_profile_enabled")
+        private val KEY_DEV_PROFILE_EXPERIENCE = stringPreferencesKey("dev_profile_experience")
+        private val KEY_DEV_PROFILE_STACK = stringPreferencesKey("dev_profile_stack")
+        private val KEY_DEV_PROFILE_DIRECTIVES = stringPreferencesKey("dev_profile_directives")
+    }
+}

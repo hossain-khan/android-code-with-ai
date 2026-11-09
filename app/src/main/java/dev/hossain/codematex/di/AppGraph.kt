@@ -26,7 +26,7 @@ import kotlin.reflect.KClass
  *
  * Key Metro features used:
  * - [DependencyGraph]: Marks this as a Metro dependency graph (similar to Dagger's @Component)
- * - [SingleIn]: Declares the scope for this graph (AppScope in this case)
+ *   and declares [AppScope], which also acts as an implicit `@SingleIn(AppScope::class)` scope.
  * - [Provides]: Functions that provide dependencies to the graph
  * - [DependencyGraph.Factory]: Factory interface for creating the graph with runtime inputs
  * - Multibindings: `activityProviders` is a map multibinding for Activity injection
@@ -36,7 +36,6 @@ import kotlin.reflect.KClass
  * See https://zacsweers.github.io/metro/latest/bindings/ for more information on bindings and multibindings.
  */
 @DependencyGraph(scope = AppScope::class)
-@SingleIn(AppScope::class)
 interface AppGraph {
     /**
      * Map of Activity classes to their providers. This is a multibinding that allows
@@ -86,7 +85,7 @@ interface AppGraph {
      * See https://zacsweers.github.io/metro/latest/dependency-graphs/#provides
      */
     @DependencyGraph.Factory
-    interface Factory {
+    fun interface Factory {
         fun create(
             @ApplicationContext @Provides context: Context,
         ): AppGraph

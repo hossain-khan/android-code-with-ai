@@ -7,20 +7,21 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.SystemStatsMonitor
 import dev.hossain.codematex.system.SystemResourceStats
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 
 /**
  * SubPresenter managing live system telemetry monitoring for the chat screen sticky benchmark panel.
  */
+@AssistedInject
 class ChatBenchmarkSubPresenter(
-    private val screen: ChatBenchmarkSubScreen,
+    @Assisted private val screen: ChatBenchmarkSubScreen,
     private val systemStatsMonitor: SystemStatsMonitor,
 ) : SubPresenter<ChatBenchmarkOuterEvent, ChatBenchmarkSubState> {
     @Composable
@@ -59,19 +60,10 @@ class ChatBenchmarkSubPresenter(
             isPreparing = screen.isPreparing,
         )
     }
-}
 
-/**
- * SubPresenter factory contributing [ChatBenchmarkSubPresenter] into Metro DI [AppScope].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ChatBenchmarkSubPresenterFactory(
-    private val systemStatsMonitor: SystemStatsMonitor,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is ChatBenchmarkSubScreen -> ChatBenchmarkSubPresenter(screen, systemStatsMonitor)
-            else -> null
-        }
+    @SubCircuitInject(ChatBenchmarkSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: ChatBenchmarkSubScreen): ChatBenchmarkSubPresenter
+    }
 }

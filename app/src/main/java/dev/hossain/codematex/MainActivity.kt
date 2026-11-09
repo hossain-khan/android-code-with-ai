@@ -46,7 +46,6 @@ import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.highlight.ui.HighlightThemeProvider
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
-import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.binding
 
 /**
@@ -55,9 +54,8 @@ import dev.zacsweers.metro.binding
  * This Activity is injected via constructor using Metro DI, enabled by [ComposeAppComponentFactory].
  *
  * Key Metro features demonstrated:
- * - [ActivityKey]: Map key annotation for multibinding
+ * - [ActivityKey]: Map key annotation for multibinding (with `implicitClassKey = true`)
  * - [ContributesIntoMap]: Contributes this Activity to the multibinding map
- * - [Inject]: Marks this class for constructor injection
  * - [binding]: Type-safe binding helper for specifying the bound type
  *
  * The Activity receives its dependencies ([Circuit]) through constructor injection,
@@ -67,144 +65,142 @@ import dev.zacsweers.metro.binding
  * See https://zacsweers.github.io/metro/latest/bindings/#multibindings for multibindings.
  * See https://zacsweers.github.io/metro/latest/aggregation/ for contribution.
  *
- * Note: [@Inject][Inject] is now implicit when using [@ContributesIntoMap][ContributesIntoMap]
- * as of Metro 0.10.0 with `contributesAsInject` enabled by default.
+ * Note: `@Inject` is implicit when using [@ContributesIntoMap][ContributesIntoMap]
+ * with `contributesAsInject` enabled by default.
  */
-@ActivityKey(MainActivity::class)
+@ActivityKey
 @ContributesIntoMap(AppScope::class, binding = binding<Activity>())
-class MainActivity
-    constructor(
-        private val circuit: Circuit,
-        private val subCircuit: SubCircuit,
-        private val userPreferencesStore: UserPreferencesStore,
-    ) : ComponentActivity() {
-        private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
-        private var globalKeyHandler: ((android.view.KeyEvent) -> Boolean)? = null
+class MainActivity(
+    private val circuit: Circuit,
+    private val subCircuit: SubCircuit,
+    private val userPreferencesStore: UserPreferencesStore,
+) : ComponentActivity() {
+    private var pendingDeepLinkScreen by mutableStateOf<Screen?>(null)
+    private var globalKeyHandler: ((android.view.KeyEvent) -> Boolean)? = null
 
-        @OptIn(ExperimentalSharedTransitionApi::class)
-        override fun onCreate(savedInstanceState: Bundle?) {
-            enableEdgeToEdge()
-            super.onCreate(savedInstanceState)
-            handleIntent(intent)
+    @OptIn(ExperimentalSharedTransitionApi::class)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
+        super.onCreate(savedInstanceState)
+        handleIntent(intent)
 
-            setContent {
-                CodeWithAIAppTheme {
-                    Surface(
-                        modifier = Modifier.fillMaxSize(),
-                        color = MaterialTheme.colorScheme.background,
-                    ) {
-                        val isOnboardingCompleted by userPreferencesStore.isOnboardingCompletedFlow.collectAsState(initial = null)
-                        val completed = isOnboardingCompleted ?: return@Surface
+        setContent {
+            CodeWithAIAppTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    val isOnboardingCompleted by userPreferencesStore.isOnboardingCompletedFlow.collectAsState(initial = null)
+                    val completed = isOnboardingCompleted ?: return@Surface
 
-                        CircuitCompositionLocals(circuit) {
-                            CompositionLocalProvider(LocalSubCircuit provides subCircuit) {
-                                // Cold-start deep link initialization: if launched directly via deep link,
-                                // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
-                                // On first run without deep links, seed with OnboardingScreen.
-                                val initialStack =
-                                    remember {
-                                        if (pendingDeepLinkScreen != null) {
-                                            val target = pendingDeepLinkScreen!!
-                                            pendingDeepLinkScreen = null
-                                            listOf(HomeScreen, target)
-                                        } else if (!completed) {
-                                            listOf(OnboardingScreen)
-                                        } else {
-                                            listOf(HomeScreen)
+                    CircuitCompositionLocals(circuit) {
+                        CompositionLocalProvider(LocalSubCircuit provides subCircuit) {
+                            // Cold-start deep link initialization: if launched directly via deep link,
+                            // seed the backstack with HomeScreen -> TargetScreen so the back button works naturally.
+                            // On first run without deep links, seed with OnboardingScreen.
+                            val initialStack =
+                                remember {
+                                    if (pendingDeepLinkScreen != null) {
+                                        val target = pendingDeepLinkScreen!!
+                                        pendingDeepLinkScreen = null
+                                        listOf(HomeScreen, target)
+                                    } else if (!completed) {
+                                        listOf(OnboardingScreen)
+                                    } else {
+                                        listOf(HomeScreen)
+                                    }
+                                }
+                            val navStack = rememberSaveableNavStack(initialStack)
+                            val navigator = rememberCircuitNavigator(navStack)
+
+                            // Global keyboard shortcuts: Esc to pop, Ctrl/Cmd+N for new chat/home, Ctrl/Cmd+, for settings.
+                            val canPopBack = navStack.size > 1
+                            val onNavigateBack: () -> Unit = remember(navigator) { { navigator.pop() } }
+                            val onNewChatOrHome =
+                                remember(navigator, navStack) {
+                                    {
+                                        if (navStack.topRecord?.screen != HomeScreen) {
+                                            navigator.goTo(HomeScreen)
                                         }
                                     }
-                                val navStack = rememberSaveableNavStack(initialStack)
-                                val navigator = rememberCircuitNavigator(navStack)
-
-                                // Global keyboard shortcuts: Esc to pop, Ctrl/Cmd+N for new chat/home, Ctrl/Cmd+, for settings.
-                                val canPopBack = navStack.size > 1
-                                val onNavigateBack: () -> Unit = remember(navigator) { { navigator.pop() } }
-                                val onNewChatOrHome =
-                                    remember(navigator, navStack) {
-                                        {
-                                            if (navStack.topRecord?.screen != HomeScreen) {
-                                                navigator.goTo(HomeScreen)
-                                            }
+                                }
+                            val onOpenSettings =
+                                remember(navigator, navStack) {
+                                    {
+                                        if (navStack.topRecord?.screen != SettingsScreen) {
+                                            navigator.goTo(SettingsScreen)
                                         }
                                     }
-                                val onOpenSettings =
-                                    remember(navigator, navStack) {
-                                        {
-                                            if (navStack.topRecord?.screen != SettingsScreen) {
-                                                navigator.goTo(SettingsScreen)
-                                            }
-                                        }
-                                    }
-                                val handleShortcut =
-                                    remember(canPopBack, onNavigateBack, onNewChatOrHome, onOpenSettings) {
-                                        { event: androidx.compose.ui.input.key.KeyEvent ->
-                                            handleGlobalKeyEvent(
-                                                event = event,
-                                                canPopBack = canPopBack,
-                                                onNavigateBack = onNavigateBack,
-                                                onNewChatOrHome = onNewChatOrHome,
-                                                onOpenSettings = onOpenSettings,
-                                            )
-                                        }
-                                    }
-
-                                DisposableEffect(handleShortcut) {
-                                    globalKeyHandler = { nativeEvent ->
-                                        handleShortcut(
-                                            androidx.compose.ui.input.key
-                                                .KeyEvent(nativeEvent),
+                                }
+                            val handleShortcut =
+                                remember(canPopBack, onNavigateBack, onNewChatOrHome, onOpenSettings) {
+                                    { event: androidx.compose.ui.input.key.KeyEvent ->
+                                        handleGlobalKeyEvent(
+                                            event = event,
+                                            canPopBack = canPopBack,
+                                            onNavigateBack = onNavigateBack,
+                                            onNewChatOrHome = onNewChatOrHome,
+                                            onOpenSettings = onOpenSettings,
                                         )
                                     }
-                                    onDispose {
-                                        globalKeyHandler = null
-                                    }
                                 }
 
-                                // Warm-start deep link handling: navigate to the deep-linked screen if already running
-                                LaunchedEffect(pendingDeepLinkScreen) {
-                                    val target = pendingDeepLinkScreen
-                                    if (target != null) {
-                                        if (navStack.topRecord?.screen != target) {
-                                            navigator.goTo(target)
-                                        }
-                                        pendingDeepLinkScreen = null
+                            DisposableEffect(handleShortcut) {
+                                globalKeyHandler = { nativeEvent ->
+                                    handleShortcut(
+                                        androidx.compose.ui.input.key
+                                            .KeyEvent(nativeEvent),
+                                    )
+                                }
+                                onDispose {
+                                    globalKeyHandler = null
+                                }
+                            }
+
+                            // Warm-start deep link handling: navigate to the deep-linked screen if already running
+                            LaunchedEffect(pendingDeepLinkScreen) {
+                                val target = pendingDeepLinkScreen
+                                if (target != null) {
+                                    if (navStack.topRecord?.screen != target) {
+                                        navigator.goTo(target)
                                     }
+                                    pendingDeepLinkScreen = null
+                                }
+                            }
+
+                            val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
+                                .collectAsState(initial = CodeBlockSettings())
+                            val (lightHighlightTheme, darkHighlightTheme) =
+                                remember(codeBlockSettings.theme) {
+                                    codeBlockSettings.theme.resolveHighlightThemes()
                                 }
 
-                                val codeBlockSettings by userPreferencesStore.codeBlockSettingsFlow
-                                    .collectAsState(initial = CodeBlockSettings())
-                                val (lightHighlightTheme, darkHighlightTheme) =
-                                    remember(codeBlockSettings.theme) {
-                                        codeBlockSettings.theme.resolveHighlightThemes()
-                                    }
-
-                                // See https://slackhq.github.io/circuit/circuit-content/
-                                HighlightThemeProvider(
-                                    lightHighlightTheme = lightHighlightTheme,
-                                    darkHighlightTheme = darkHighlightTheme,
+                            // See https://slackhq.github.io/circuit/circuit-content/
+                            HighlightThemeProvider(
+                                lightHighlightTheme = lightHighlightTheme,
+                                darkHighlightTheme = darkHighlightTheme,
+                            ) {
+                                CompositionLocalProvider(
+                                    LocalCodeBlockSettings provides codeBlockSettings,
                                 ) {
-                                    CompositionLocalProvider(
-                                        LocalCodeBlockSettings provides codeBlockSettings,
-                                    ) {
-                                        // See https://slackhq.github.io/circuit/shared-elements/
-                                        SharedElementTransitionLayout {
-                                            Box(
-                                                modifier =
-                                                    Modifier
-                                                        .fillMaxSize()
-                                                        .globalKeyboardShortcuts(handleShortcut),
-                                            ) {
-                                                // See https://slackhq.github.io/circuit/overlays/
-                                                ContentWithOverlays {
-                                                    NavigableCircuitContent(
-                                                        navigator = navigator,
-                                                        navStack = navStack,
-                                                        decoratorFactory =
-                                                            remember {
-                                                                GestureNavigationDecorationFactory()
-                                                            },
-                                                    )
-                                                }
+                                    // See https://slackhq.github.io/circuit/shared-elements/
+                                    SharedElementTransitionLayout {
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .globalKeyboardShortcuts(handleShortcut),
+                                        ) {
+                                            // See https://slackhq.github.io/circuit/overlays/
+                                            ContentWithOverlays {
+                                                NavigableCircuitContent(
+                                                    navigator = navigator,
+                                                    navStack = navStack,
+                                                    decoratorFactory =
+                                                        remember {
+                                                            GestureNavigationDecorationFactory()
+                                                        },
+                                                )
                                             }
                                         }
                                     }
@@ -215,36 +211,37 @@ class MainActivity
                 }
             }
         }
+    }
 
-        // AndroidX ComponentActivity restricts dispatchKeyEvent to LIBRARY_GROUP_PREFIX via KeyEventDispatcher,
-        // but overriding dispatchKeyEvent in this Activity subclass is required to catch unhandled physical keyboard shortcuts.
-        @SuppressLint("RestrictedApi")
-        override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
-            // Let focused Compose components (e.g. text fields, bottom sheets) process key events first.
-            if (super.dispatchKeyEvent(event)) {
-                return true
-            }
-
-            // Fall back to top-level global shortcuts (Escape, Ctrl/Cmd+N, Ctrl/Cmd+,) if unhandled.
-            return globalKeyHandler?.invoke(event) == true
+    // AndroidX ComponentActivity restricts dispatchKeyEvent to LIBRARY_GROUP_PREFIX via KeyEventDispatcher,
+    // but overriding dispatchKeyEvent in this Activity subclass is required to catch unhandled physical keyboard shortcuts.
+    @SuppressLint("RestrictedApi")
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        // Let focused Compose components (e.g. text fields, bottom sheets) process key events first.
+        if (super.dispatchKeyEvent(event)) {
+            return true
         }
 
-        override fun onNewIntent(intent: Intent) {
-            super.onNewIntent(intent)
-            handleIntent(intent)
-        }
+        // Fall back to top-level global shortcuts (Escape, Ctrl/Cmd+N, Ctrl/Cmd+,) if unhandled.
+        return globalKeyHandler?.invoke(event) == true
+    }
 
-        private fun handleIntent(intent: Intent?) {
-            val uri = intent?.data
-            if ((uri?.scheme == "codematex" && uri.host == "models") ||
-                intent?.getStringExtra(EXTRA_TARGET_SCREEN) == SCREEN_MODELS
-            ) {
-                pendingDeepLinkScreen = ModelPickerScreen
-            }
-        }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
 
-        companion object {
-            const val EXTRA_TARGET_SCREEN = "extra_target_screen"
-            const val SCREEN_MODELS = "models"
+    private fun handleIntent(intent: Intent?) {
+        val uri = intent?.data
+        if ((uri?.scheme == "codematex" && uri.host == "models") ||
+            intent?.getStringExtra(EXTRA_TARGET_SCREEN) == SCREEN_MODELS
+        ) {
+            pendingDeepLinkScreen = ModelPickerScreen
         }
     }
+
+    companion object {
+        const val EXTRA_TARGET_SCREEN = "extra_target_screen"
+        const val SCREEN_MODELS = "models"
+    }
+}
