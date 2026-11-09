@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.33.0:
+• Memory & Backup Stability: Fixed persisted RAM warning preferences in SystemMemoryManager and guarded Android Auto-Backup initialization (#505).
+• Architecture & Performance: Migrated to Metro DI 1.5.2 with @SubCircuitInject codegen and Slack Circuit 0.39.0 with Compose RetainObserver lifecycle support (#505).
+• Core Platform Updates: Upgraded to Kotlin 2.4.21, KSP 2.3.13, Material 3 1.5.0-rc01, and AndroidX Core KTX 1.19.1 (#505).
