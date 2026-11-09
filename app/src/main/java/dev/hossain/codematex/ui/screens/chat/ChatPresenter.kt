@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.retain.RetainObserver
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -60,7 +61,8 @@ import kotlin.coroutines.CoroutineContext
  */
 private class RetainedCoroutineScope(
     private val coroutineContext: CoroutineContext,
-) : RememberObserver {
+) : RememberObserver,
+    RetainObserver {
     private var parentJob = SupervisorJob()
     var scope: CoroutineScope = CoroutineScope(parentJob + coroutineContext)
         private set
@@ -82,6 +84,16 @@ private class RetainedCoroutineScope(
     override fun onAbandoned() {
         scope.cancel()
     }
+
+    override fun onRetained() = onRemembered()
+
+    override fun onEnteredComposition() = Unit
+
+    override fun onExitedComposition() = Unit
+
+    override fun onRetired() = onForgotten()
+
+    override fun onUnused() = onAbandoned()
 }
 
 @AssistedInject

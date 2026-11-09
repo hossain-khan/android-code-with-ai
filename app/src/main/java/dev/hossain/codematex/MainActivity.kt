@@ -119,7 +119,7 @@ class MainActivity(
                             val onNewChatOrHome =
                                 remember(navigator, navStack) {
                                     {
-                                        if (navStack.topRecord?.screen != HomeScreen) {
+                                        if (navStack.currentRecord?.screen != HomeScreen) {
                                             navigator.goTo(HomeScreen)
                                         }
                                     }
@@ -127,7 +127,7 @@ class MainActivity(
                             val onOpenSettings =
                                 remember(navigator, navStack) {
                                     {
-                                        if (navStack.topRecord?.screen != SettingsScreen) {
+                                        if (navStack.currentRecord?.screen != SettingsScreen) {
                                             navigator.goTo(SettingsScreen)
                                         }
                                     }
@@ -161,7 +161,7 @@ class MainActivity(
                             LaunchedEffect(pendingDeepLinkScreen) {
                                 val target = pendingDeepLinkScreen
                                 if (target != null) {
-                                    if (navStack.topRecord?.screen != target) {
+                                    if (navStack.currentRecord?.screen != target) {
                                         navigator.goTo(target)
                                     }
                                     pendingDeepLinkScreen = null
