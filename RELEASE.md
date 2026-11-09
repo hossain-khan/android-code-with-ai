@@ -9,7 +9,7 @@ This document outlines the standard release lifecycle and CI/CD automation workf
 ```mermaid
 graph TD
     A[Checkout chore/bump-version-X.Y.Z] --> B[Bump versionCode & versionName in app/build.gradle.kts]
-    B --> C[Draft Google Play Release Notes in project-resources/google-play/release-notes/]
+    B --> C[Draft Google Play Release Notes & Update RELEASE.md CHANGELOG]
     C --> D[Run ./gradlew formatKotlin && ./gradlew check]
     D --> E[Open & Merge Pull Request to main]
     E --> F[Tag Release vX.Y.Z on main]
@@ -52,8 +52,9 @@ defaultConfig {
 
 ---
 
-### Step 3: Create Google Play Release Notes
-Create a new release notes file under [`project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt`](project-resources/google-play/release-notes/).
+### Step 3: Create Google Play Release Notes & Update CHANGELOG
+1. Create a new release notes file under [`project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt`](project-resources/google-play/release-notes/).
+2. Prepend a new row for version `X.Y.Z` to the [Release History & Cadence Reference (CHANGELOG)](#4-release-history--cadence-reference-changelog) table in [`RELEASE.md`](RELEASE.md).
 
 > [!IMPORTANT]
 > **Google Play Console Character Limit**: Release notes must be **strictly under 500 characters** per language.
@@ -85,9 +86,9 @@ Ensure that:
 ---
 
 ### Step 5: Commit, Push, and Open Pull Request
-Commit the version bump and release notes:
+Commit the version bump, release notes, and changelog update:
 ```bash
-git add app/build.gradle.kts project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt
+git add app/build.gradle.kts project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt RELEASE.md
 git commit -m "Bump version to X.Y.Z (versionCode N) with release notes"
 git push -u origin chore/bump-version-X.Y.Z
 ```
@@ -163,7 +164,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
 
 ---
 
-## 4. Release History & Cadence Reference
+## 4. Release History & Cadence Reference (CHANGELOG)
 
 | Version | `versionCode` | Release Date | Key Highlights |
 | :---: | :---: | :---: | :--- |

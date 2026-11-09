@@ -196,7 +196,7 @@ Whenever preparing or cutting a new application release, **all agents must stric
 
 1. **Branching**: Create `chore/bump-version-X.Y.Z` off `main`.
 2. **Version Bump**: Increment `versionCode` by `1` and update `versionName = "X.Y.Z"` in [`app/build.gradle.kts`](app/build.gradle.kts).
-3. **Play Store Notes**: Draft user-facing release notes under `project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt` (**strictly under 500 characters**).
+3. **Play Store Notes & Changelog**: Draft user-facing release notes under `project-resources/google-play/release-notes/release-notes-vX.Y.Z.txt` (**strictly under 500 characters**) and prepend the new version entry to the `Release History & Cadence Reference (CHANGELOG)` table in [`RELEASE.md`](RELEASE.md).
 4. **Verification**: Run `./gradlew formatKotlin && ./gradlew check`.
 5. **PR & Merge**: Open a PR, merge into `main`, and pull latest `main`.
 6. **Tag & Publish**: Create git tag `X.Y.Z` (`git tag X.Y.Z && git push origin X.Y.Z`) and publish a GitHub Release (`gh release create X.Y.Z ...`).
