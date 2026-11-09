@@ -33,9 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.DownloadStatus
 import dev.hossain.codematex.runtime.LlmEngine
@@ -44,9 +42,8 @@ import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
+@SubCircuitInject(ModelLifecycleSubScreen::class, AppScope::class)
 @Composable
 fun ModelLifecycleSubUi(
     state: ModelLifecycleSubState,
@@ -328,23 +325,6 @@ internal fun StorageInspectorCard(
             }
         }
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class ModelLifecycleSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is ModelLifecycleSubScreen -> {
-                SubUi<ModelLifecycleSubState> { state, modifier ->
-                    ModelLifecycleSubUi(state, modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

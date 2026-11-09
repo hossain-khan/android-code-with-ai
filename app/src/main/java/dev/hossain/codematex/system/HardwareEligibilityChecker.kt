@@ -38,50 +38,59 @@ interface HardwareEligibilityChecker {
     fun checkEligibility(): HardwareEligibility
 }
 
-@Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class HardwareEligibilityCheckerImpl(
-    private val deviceMemoryProvider: DeviceMemoryProvider,
-    private val is64BitSupported: () -> Boolean = { Build.SUPPORTED_64_BIT_ABIS?.isNotEmpty() == true },
-    private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
-) : HardwareEligibilityChecker {
-    override fun checkEligibility(): HardwareEligibility {
-        // In DEV_MODE, bypass hardware restrictions so developers can test on emulators
-        if (isDevMode()) {
-            return HardwareEligibility.Eligible
-        }
+class HardwareEligibilityCheckerImpl
+    internal constructor(
+        private val deviceMemoryProvider: DeviceMemoryProvider,
+        private val is64BitSupported: () -> Boolean = { Build.SUPPORTED_64_BIT_ABIS?.isNotEmpty() == true },
+        private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
+    ) : HardwareEligibilityChecker {
+        @Inject
+        constructor(
+            deviceMemoryProvider: DeviceMemoryProvider,
+        ) : this(
+            deviceMemoryProvider = deviceMemoryProvider,
+            is64BitSupported = { Build.SUPPORTED_64_BIT_ABIS?.isNotEmpty() == true },
+            isDevMode = { BuildConfig.DEV_MODE },
+        )
 
-        val is64Bit = is64BitSupported()
-        val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
-        val detectedGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalBytes)
-        val minRequiredBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8)
-        val minRequiredRamGb = MemoryCompatibilityPolicy.toDecimalGigabytes(minRequiredBytes)
-
-        // 1. 64-bit Architecture Verification & 2. RAM Verification
-        // An 8 GB marketed device must report at least ~7.2 GB to the kernel. The same byte-based
-        // policy and reservation allowance is used for app-level and per-model eligibility.
-        return when {
-            !is64Bit -> {
-                HardwareEligibility.Ineligible(
-                    reason = "This app requires a modern 64-bit processor (arm64-v8a).",
-                    detectedRamGb = detectedGb,
-                    is64BitSupported = false,
-                )
+        override fun checkEligibility(): HardwareEligibility {
+            // In DEV_MODE, bypass hardware restrictions so developers can test on emulators
+            if (isDevMode()) {
+                return HardwareEligibility.Eligible
             }
 
-            totalBytes < minRequiredBytes -> {
-                HardwareEligibility.Ineligible(
-                    reason = "On-device AI models require at least 8 GB RAM for stable execution.",
-                    detectedRamGb = detectedGb,
-                    minRequiredRamGb = minRequiredRamGb,
-                    is64BitSupported = true,
-                )
-            }
+            val is64Bit = is64BitSupported()
+            val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
+            val detectedGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalBytes)
+            val minRequiredBytes = MemoryCompatibilityPolicy.minimumRequiredBytes(8)
+            val minRequiredRamGb = MemoryCompatibilityPolicy.toDecimalGigabytes(minRequiredBytes)
 
-            else -> {
-                HardwareEligibility.Eligible
+            // 1. 64-bit Architecture Verification & 2. RAM Verification
+            // An 8 GB marketed device must report at least ~7.2 GB to the kernel. The same byte-based
+            // policy and reservation allowance is used for app-level and per-model eligibility.
+            return when {
+                !is64Bit -> {
+                    HardwareEligibility.Ineligible(
+                        reason = "This app requires a modern 64-bit processor (arm64-v8a).",
+                        detectedRamGb = detectedGb,
+                        is64BitSupported = false,
+                    )
+                }
+
+                totalBytes < minRequiredBytes -> {
+                    HardwareEligibility.Ineligible(
+                        reason = "On-device AI models require at least 8 GB RAM for stable execution.",
+                        detectedRamGb = detectedGb,
+                        minRequiredRamGb = minRequiredRamGb,
+                        is64BitSupported = true,
+                    )
+                }
+
+                else -> {
+                    HardwareEligibility.Eligible
+                }
             }
         }
     }
-}

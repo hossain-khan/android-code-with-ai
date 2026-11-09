@@ -80,7 +80,7 @@ class ComposeAppComponentFactory : AppComponentFactory() {
         className: String,
         intent: Intent?,
     ): Activity =
-        getInstance(classLoader, className, activityProviders)
+        activityProviders?.let { getInstance(classLoader, className, it) }
             ?: super.instantiateActivityCompat(classLoader, className, intent)
 
     /**
@@ -97,8 +97,8 @@ class ComposeAppComponentFactory : AppComponentFactory() {
         className: String,
     ): Application {
         val app = super.instantiateApplicationCompat(classLoader, className)
-        // Retrieve the Metro app graph and the activity providers from it
-        activityProviders = (app as CodeWithAIApp).appGraph().activityProviders
+        // Android creates a plain Application when it starts the app for a full backup or restore.
+        activityProviders = (app as? CodeWithAIApp)?.appGraph()?.activityProviders
         return app
     }
 
@@ -110,6 +110,6 @@ class ComposeAppComponentFactory : AppComponentFactory() {
      * This map is initialized when the application is created via the Metro dependency graph.
      */
     companion object {
-        private lateinit var activityProviders: Map<KClass<out Activity>, () -> Activity>
+        private var activityProviders: Map<KClass<out Activity>, () -> Activity>? = null
     }
 }

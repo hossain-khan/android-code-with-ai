@@ -4,7 +4,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 /**
  * Persistent preferences for model downloads.
@@ -31,17 +30,15 @@ interface ModelDownloadPreferences {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ModelDownloadPreferencesImpl
-    @Inject
-    constructor(
-        private val userPreferencesStore: UserPreferencesStore,
-    ) : ModelDownloadPreferences {
-        override val downloadOverWifiOnlyFlow: Flow<Boolean> =
-            userPreferencesStore.isWifiOnlyDownloadEnabledFlow
+class ModelDownloadPreferencesImpl(
+    private val userPreferencesStore: UserPreferencesStore,
+) : ModelDownloadPreferences {
+    override val downloadOverWifiOnlyFlow: Flow<Boolean> =
+        userPreferencesStore.isWifiOnlyDownloadEnabledFlow
 
-        override suspend fun getDownloadOverWifiOnly(): Boolean = userPreferencesStore.isWifiOnlyDownloadEnabled()
+    override suspend fun getDownloadOverWifiOnly(): Boolean = userPreferencesStore.isWifiOnlyDownloadEnabled()
 
-        override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
-            userPreferencesStore.setWifiOnlyDownloadEnabled(enabled)
-        }
+    override suspend fun setDownloadOverWifiOnly(enabled: Boolean) {
+        userPreferencesStore.setWifiOnlyDownloadEnabled(enabled)
     }
+}

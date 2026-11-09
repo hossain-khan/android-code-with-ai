@@ -50,10 +50,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
-import dev.hossain.codematex.data.model.ModelConfig
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.handHoverIcon
@@ -62,10 +59,9 @@ import dev.hossain.codematex.ui.screens.debug.DebugScreen.BenchmarkSamplerPreset
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 import kotlin.math.roundToInt
 
+@SubCircuitInject(BenchmarkSubScreen::class, AppScope::class)
 @Composable
 fun BenchmarkSubUi(
     state: BenchmarkSubState,
@@ -505,23 +501,6 @@ private fun MetricPill(
             fontFamily = FontFamily.Monospace,
         )
     }
-}
-
-@ContributesIntoSet(AppScope::class)
-@Inject
-class BenchmarkSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is BenchmarkSubScreen -> {
-                SubUi<BenchmarkSubState> { state, modifier ->
-                    BenchmarkSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

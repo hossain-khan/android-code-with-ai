@@ -17,132 +17,129 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import javax.inject.Inject
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class LearningRepositoryImpl
-    @Inject
-    constructor(
-        private val lessonProgressDao: LessonProgressDao,
-    ) : LearningRepository {
-        private val bundledCourses =
-            listOf(
-                KotlinCourseContent.course,
-                KotlinTourBeginnerCourseContent.course,
-                KotlinTourIntermediateCourseContent.course,
-                PythonCourseContent.course,
-                TypeScriptCourseContent.course,
-                GoCourseContent.course,
-                GoByExampleCourseContent.course,
-                RustCourseContent.course,
-                RustByExampleCourseContent.course,
-                SwiftCourseContent.course,
-            )
+class LearningRepositoryImpl(
+    private val lessonProgressDao: LessonProgressDao,
+) : LearningRepository {
+    private val bundledCourses =
+        listOf(
+            KotlinCourseContent.course,
+            KotlinTourBeginnerCourseContent.course,
+            KotlinTourIntermediateCourseContent.course,
+            PythonCourseContent.course,
+            TypeScriptCourseContent.course,
+            GoCourseContent.course,
+            GoByExampleCourseContent.course,
+            RustCourseContent.course,
+            RustByExampleCourseContent.course,
+            SwiftCourseContent.course,
+        )
 
-        override fun getCourses(): Flow<List<LearningCourse>> = flowOf(bundledCourses)
+    override fun getCourses(): Flow<List<LearningCourse>> = flowOf(bundledCourses)
 
-        override suspend fun getCourse(courseId: String): LearningCourse? = bundledCourses.firstOrNull { it.id == courseId }
+    override suspend fun getCourse(courseId: String): LearningCourse? = bundledCourses.firstOrNull { it.id == courseId }
 
-        override suspend fun getChapter(chapterId: String): LearningChapter? =
-            bundledCourses.flatMap { it.chapters }.firstOrNull { it.id == chapterId }
+    override suspend fun getChapter(chapterId: String): LearningChapter? =
+        bundledCourses.flatMap { it.chapters }.firstOrNull { it.id == chapterId }
 
-        override suspend fun getLesson(lessonId: String): LearningLesson? =
-            bundledCourses
-                .flatMap { it.chapters }
-                .flatMap { it.lessons }
-                .firstOrNull { it.id == lessonId }
+    override suspend fun getLesson(lessonId: String): LearningLesson? =
+        bundledCourses
+            .flatMap { it.chapters }
+            .flatMap { it.lessons }
+            .firstOrNull { it.id == lessonId }
 
-        override suspend fun getCourseForLesson(lessonId: String): LearningCourse? =
-            bundledCourses.firstOrNull { course ->
-                course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
-            }
+    override suspend fun getCourseForLesson(lessonId: String): LearningCourse? =
+        bundledCourses.firstOrNull { course ->
+            course.chapters.any { chapter -> chapter.lessons.any { it.id == lessonId } }
+        }
 
-        override suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse? = bundledCourses.firstOrNull { it.topic == topic }
+    override suspend fun getCourseForTopic(topic: CodingTopic): LearningCourse? = bundledCourses.firstOrNull { it.topic == topic }
 
-        override suspend fun getTopicsWithCourses(): Set<CodingTopic> = bundledCourses.map { it.topic }.toSet()
+    override suspend fun getTopicsWithCourses(): Set<CodingTopic> = bundledCourses.map { it.topic }.toSet()
 
-        override fun observeAllProgress(): Flow<List<LessonProgress>> =
-            lessonProgressDao.observeAllProgress().map { entities ->
-                entities.map { it.toLessonProgress() }
-            }
+    override fun observeAllProgress(): Flow<List<LessonProgress>> =
+        lessonProgressDao.observeAllProgress().map { entities ->
+            entities.map { it.toLessonProgress() }
+        }
 
-        override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
-            lessonProgressDao.observeCourseProgress(courseId).map { stored ->
-                val course = bundledCourses.firstOrNull { it.id == courseId }
-                val lessons = course?.chapters.orEmpty().flatMap { it.lessons }
-                val completedIds =
-                    stored
-                        .filter { it.toLessonStatus() == LessonStatus.COMPLETED }
-                        .map { it.lessonId }
-                        .toSet()
-                val current =
-                    stored
-                        .filter { it.toLessonStatus() == LessonStatus.IN_PROGRESS }
-                        .maxByOrNull { it.lastOpenedAt }
-                        ?.lessonId
-                        ?: lessons.firstOrNull { lesson -> lesson.id !in completedIds }?.id
-                CourseProgress(
-                    courseId = courseId,
-                    completedLessons = completedIds.size,
-                    totalLessons = lessons.size,
-                    currentLessonId = current,
-                    completedLessonIds = completedIds,
-                )
-            }
-
-        override fun observeLessonStatus(lessonId: String): Flow<LessonStatus> =
-            lessonProgressDao.observeLessonProgress(lessonId).map { it?.toLessonStatus() ?: LessonStatus.NOT_STARTED }
-
-        override suspend fun markLessonStarted(lessonId: String) {
-            val lesson = getLesson(lessonId) ?: return
-            val course = getCourseForLesson(lesson.id) ?: return
-            val existing = lessonProgressDao.getLessonProgress(lesson.id)
-            if (existing?.toLessonStatus() == LessonStatus.COMPLETED) return
-            lessonProgressDao.upsert(
-                LessonProgressEntity(
-                    lessonId = lesson.id,
-                    courseId = course.id,
-                    status = LessonStatus.IN_PROGRESS.name,
-                    lastOpenedAt = System.currentTimeMillis(),
-                ),
+    override fun observeCourseProgress(courseId: String): Flow<CourseProgress> =
+        lessonProgressDao.observeCourseProgress(courseId).map { stored ->
+            val course = bundledCourses.firstOrNull { it.id == courseId }
+            val lessons = course?.chapters.orEmpty().flatMap { it.lessons }
+            val completedIds =
+                stored
+                    .filter { it.toLessonStatus() == LessonStatus.COMPLETED }
+                    .map { it.lessonId }
+                    .toSet()
+            val current =
+                stored
+                    .filter { it.toLessonStatus() == LessonStatus.IN_PROGRESS }
+                    .maxByOrNull { it.lastOpenedAt }
+                    ?.lessonId
+                    ?: lessons.firstOrNull { lesson -> lesson.id !in completedIds }?.id
+            CourseProgress(
+                courseId = courseId,
+                completedLessons = completedIds.size,
+                totalLessons = lessons.size,
+                currentLessonId = current,
+                completedLessonIds = completedIds,
             )
         }
 
-        override suspend fun markLessonCompleted(lessonId: String) {
-            val lesson = getLesson(lessonId) ?: return
-            val course = getCourseForLesson(lesson.id) ?: return
-            lessonProgressDao.upsert(
-                LessonProgressEntity(
-                    lessonId = lesson.id,
-                    courseId = course.id,
-                    status = LessonStatus.COMPLETED.name,
-                    lastOpenedAt = System.currentTimeMillis(),
-                ),
-            )
-        }
+    override fun observeLessonStatus(lessonId: String): Flow<LessonStatus> =
+        lessonProgressDao.observeLessonProgress(lessonId).map { it?.toLessonStatus() ?: LessonStatus.NOT_STARTED }
 
-        override suspend fun resetCourseProgress(courseId: String) {
-            lessonProgressDao.deleteCourseProgress(courseId)
-        }
-
-        override suspend fun resetAllProgress() {
-            lessonProgressDao.deleteAllProgress()
-        }
-
-        override suspend fun seedSampleProgress(lessonsPerCourse: Int) {
-            val sampleEntities =
-                bundledCourses.flatMap { course ->
-                    val lessons = course.chapters.flatMap { it.lessons }
-                    lessons.take(lessonsPerCourse).map { lesson ->
-                        LessonProgressEntity(
-                            lessonId = lesson.id,
-                            courseId = course.id,
-                            status = LessonStatus.COMPLETED.name,
-                            lastOpenedAt = System.currentTimeMillis(),
-                        )
-                    }
-                }
-            lessonProgressDao.upsertAll(sampleEntities)
-        }
+    override suspend fun markLessonStarted(lessonId: String) {
+        val lesson = getLesson(lessonId) ?: return
+        val course = getCourseForLesson(lesson.id) ?: return
+        val existing = lessonProgressDao.getLessonProgress(lesson.id)
+        if (existing?.toLessonStatus() == LessonStatus.COMPLETED) return
+        lessonProgressDao.upsert(
+            LessonProgressEntity(
+                lessonId = lesson.id,
+                courseId = course.id,
+                status = LessonStatus.IN_PROGRESS.name,
+                lastOpenedAt = System.currentTimeMillis(),
+            ),
+        )
     }
+
+    override suspend fun markLessonCompleted(lessonId: String) {
+        val lesson = getLesson(lessonId) ?: return
+        val course = getCourseForLesson(lesson.id) ?: return
+        lessonProgressDao.upsert(
+            LessonProgressEntity(
+                lessonId = lesson.id,
+                courseId = course.id,
+                status = LessonStatus.COMPLETED.name,
+                lastOpenedAt = System.currentTimeMillis(),
+            ),
+        )
+    }
+
+    override suspend fun resetCourseProgress(courseId: String) {
+        lessonProgressDao.deleteCourseProgress(courseId)
+    }
+
+    override suspend fun resetAllProgress() {
+        lessonProgressDao.deleteAllProgress()
+    }
+
+    override suspend fun seedSampleProgress(lessonsPerCourse: Int) {
+        val sampleEntities =
+            bundledCourses.flatMap { course ->
+                val lessons = course.chapters.flatMap { it.lessons }
+                lessons.take(lessonsPerCourse).map { lesson ->
+                    LessonProgressEntity(
+                        lessonId = lesson.id,
+                        courseId = course.id,
+                        status = LessonStatus.COMPLETED.name,
+                        lastOpenedAt = System.currentTimeMillis(),
+                    )
+                }
+            }
+        lessonProgressDao.upsertAll(sampleEntities)
+    }
+}

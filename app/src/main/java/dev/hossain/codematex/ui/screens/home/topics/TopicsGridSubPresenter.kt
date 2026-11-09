@@ -6,20 +6,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 
 /**
  * SubPresenter providing selectable coding topics and identifying which topics have interactive courses.
  */
+@AssistedInject
 class TopicsGridSubPresenter(
-    private val screen: TopicsGridSubScreen,
+    @Assisted private val screen: TopicsGridSubScreen,
     private val learningRepository: LearningRepository,
 ) : SubPresenter<TopicsGridOuterEvent, TopicsGridSubState> {
     @Composable
@@ -43,19 +44,10 @@ class TopicsGridSubPresenter(
             },
         )
     }
-}
 
-/**
- * Factory providing [TopicsGridSubPresenter] for [TopicsGridSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class TopicsGridSubPresenterFactory(
-    private val learningRepository: LearningRepository,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is TopicsGridSubScreen -> TopicsGridSubPresenter(screen, learningRepository)
-            else -> null
-        }
+    @SubCircuitInject(TopicsGridSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: TopicsGridSubScreen): TopicsGridSubPresenter
+    }
 }

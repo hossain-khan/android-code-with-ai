@@ -11,11 +11,13 @@ import kotlin.reflect.KClass
  * Activities to the multibinding map that [ComposeAppComponentFactory] uses for
  * constructor injection of Activities.
  *
+ * Because `implicitClassKey = true` is enabled, the Activity class is inferred automatically
+ * by the Metro compiler when [value] is omitted.
+ *
  * Example usage:
  * ```kotlin
- * @ActivityKey(MainActivity::class)
+ * @ActivityKey
  * @ContributesIntoMap(AppScope::class, binding = binding<Activity>())
- * @Inject
  * class MainActivity(
  *     private val circuit: Circuit,
  * ) : ComponentActivity() {
@@ -26,7 +28,8 @@ import kotlin.reflect.KClass
  * See https://zacsweers.github.io/metro/latest/bindings/#multibindings for more on map multibindings.
  * See [MapKey] for more on map key annotations.
  */
-@MapKey
+@MapKey(implicitClassKey = true)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.PROPERTY)
 annotation class ActivityKey(
-    val value: KClass<out Activity>,
+    val value: KClass<out Activity> = Nothing::class,
 )

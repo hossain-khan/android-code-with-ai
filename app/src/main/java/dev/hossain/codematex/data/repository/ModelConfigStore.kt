@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Manages model configuration hyperparameters (temperature, topK, topP, maxTokens).
@@ -67,70 +66,68 @@ interface ModelConfigStore {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ModelConfigStoreImpl
-    @Inject
-    constructor(
-        private val dataStore: DataStore<Preferences>,
-    ) : ModelConfigStore {
-        private val defaultFallbackConfig = MutableStateFlow(ModelConfig())
+class ModelConfigStoreImpl(
+    private val dataStore: DataStore<Preferences>,
+) : ModelConfigStore {
+    private val defaultFallbackConfig = MutableStateFlow(ModelConfig())
 
-        override val configFlow: StateFlow<ModelConfig> = defaultFallbackConfig.asStateFlow()
+    override val configFlow: StateFlow<ModelConfig> = defaultFallbackConfig.asStateFlow()
 
-        override val config: ModelConfig
-            get() = defaultFallbackConfig.value
+    override val config: ModelConfig
+        get() = defaultFallbackConfig.value
 
-        override fun updateConfig(newConfig: ModelConfig) {
-            defaultFallbackConfig.value = newConfig
-        }
+    override fun updateConfig(newConfig: ModelConfig) {
+        defaultFallbackConfig.value = newConfig
+    }
 
-        override fun getConfigFlow(modelId: String): Flow<ModelConfig> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "ModelConfigStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs ->
-                    val rawJson = prefs[keyForModel(modelId)]
-                    if (rawJson != null) {
-                        try {
-                            json.decodeFromString<ModelConfig>(rawJson)
-                        } catch (e: Exception) {
-                            Timber.w(e, "Failed to parse stored ModelConfig for $modelId, falling back to default")
-                            ModelConfig()
-                        }
-                    } else {
+    override fun getConfigFlow(modelId: String): Flow<ModelConfig> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "ModelConfigStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
+                } else {
+                    throw exception
+                }
+            }.map { prefs ->
+                val rawJson = prefs[keyForModel(modelId)]
+                if (rawJson != null) {
+                    try {
+                        json.decodeFromString<ModelConfig>(rawJson)
+                    } catch (e: Exception) {
+                        Timber.w(e, "Failed to parse stored ModelConfig for $modelId, falling back to default")
                         ModelConfig()
                     }
-                }.distinctUntilChanged()
-
-        override suspend fun getConfig(modelId: String): ModelConfig = getConfigFlow(modelId).first()
-
-        override suspend fun setConfig(
-            modelId: String,
-            config: ModelConfig,
-        ) {
-            val jsonString = json.encodeToString(ModelConfig.serializer(), config)
-            dataStore.edit { prefs ->
-                prefs[keyForModel(modelId)] = jsonString
-            }
-        }
-
-        override suspend fun resetConfig(modelId: String) {
-            dataStore.edit { prefs ->
-                prefs.remove(keyForModel(modelId))
-            }
-        }
-
-        companion object {
-            private val json =
-                Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
+                } else {
+                    ModelConfig()
                 }
+            }.distinctUntilChanged()
 
-            private fun keyForModel(modelId: String) = stringPreferencesKey("model_config_$modelId")
+    override suspend fun getConfig(modelId: String): ModelConfig = getConfigFlow(modelId).first()
+
+    override suspend fun setConfig(
+        modelId: String,
+        config: ModelConfig,
+    ) {
+        val jsonString = json.encodeToString(ModelConfig.serializer(), config)
+        dataStore.edit { prefs ->
+            prefs[keyForModel(modelId)] = jsonString
         }
     }
+
+    override suspend fun resetConfig(modelId: String) {
+        dataStore.edit { prefs ->
+            prefs.remove(keyForModel(modelId))
+        }
+    }
+
+    companion object {
+        private val json =
+            Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+            }
+
+        private fun keyForModel(modelId: String) = stringPreferencesKey("model_config_$modelId")
+    }
+}

@@ -240,8 +240,6 @@ dependencies {
     implementation(libs.circuitx.overlays)
     implementation(libs.circuitx.subcircuit)
 
-    implementation(libs.javax.inject)
-
     implementation(libs.androidx.work)
 
     // On-device LLM inference
@@ -292,14 +290,11 @@ dependencies {
 }
 
 metro {
-    // Enable Metro debug mode for better logging and debugging support
-    // When enabled, Metro will emit detailed debug information about the dependency graph
-    // See https://zacsweers.github.io/metro/latest/
-    debug.set(true)
-
-    // Enable Metro's built-in Circuit codegen support (introduced in Metro 0.13.0).
-    // This replaces the circuit-codegen KSP processor and the circuit.codegen.mode=metro KSP arg.
+    // Enable Metro's built-in Circuit and SubCircuit codegen support.
+    // This replaces the circuit-codegen KSP processor and generates Presenter.Factory,
+    // Ui.Factory, SubPresenterFactory, and SubUiFactory implementations directly in FIR/IR.
+    // Pass -Pmetro.debug=true on the command line when debugging generated IR classes.
     // See https://zacsweers.github.io/metro/latest/circuit/
-    @Suppress("DelicateApi")
+    @OptIn(dev.zacsweers.metro.gradle.ExperimentalMetroGradleApi::class)
     enableCircuitCodegen.set(true)
 }

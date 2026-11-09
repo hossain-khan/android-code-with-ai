@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Events emitted by [ChatInferenceOrchestrator.sendMessage].
@@ -131,283 +130,281 @@ interface ChatInferenceOrchestrator {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class DefaultChatInferenceOrchestrator
-    @Inject
-    constructor(
-        private val llmEngine: LlmEngine,
-        private val sessionRepository: ChatSessionRepository,
-        private val configStore: ModelConfigStore,
-        private val topicPromptProvider: TopicPromptProvider,
-        private val systemMemoryManager: SystemMemoryManager,
-        private val userPreferencesStore: UserPreferencesStore,
-    ) : ChatInferenceOrchestrator {
-        @Volatile
-        private var activeModel: AiModel? = null
+class DefaultChatInferenceOrchestrator(
+    private val llmEngine: LlmEngine,
+    private val sessionRepository: ChatSessionRepository,
+    private val configStore: ModelConfigStore,
+    private val topicPromptProvider: TopicPromptProvider,
+    private val systemMemoryManager: SystemMemoryManager,
+    private val userPreferencesStore: UserPreferencesStore,
+) : ChatInferenceOrchestrator {
+    @Volatile
+    private var activeModel: AiModel? = null
 
-        @Volatile
-        private var activeTopic: CodingTopic? = null
+    @Volatile
+    private var activeTopic: CodingTopic? = null
 
-        @Volatile
-        private var activePersona: TutorPersona = TutorPersona.SENIOR_ENGINEER
+    @Volatile
+    private var activePersona: TutorPersona = TutorPersona.SENIOR_ENGINEER
 
-        @Volatile
-        private var activeSessionId: String? = null
+    @Volatile
+    private var activeSessionId: String? = null
 
-        @Volatile
-        private var activeMessages: List<ChatMessage> = emptyList()
+    @Volatile
+    private var activeMessages: List<ChatMessage> = emptyList()
 
-        private val reloadMutex = Mutex()
+    private val reloadMutex = Mutex()
 
-        override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
+    override fun isModelLoaded(modelPath: String): Boolean = llmEngine.isModelLoaded(modelPath)
 
-        private suspend fun loadModelAndRestoreHistory(
-            model: AiModel,
-            topic: CodingTopic,
-            persona: TutorPersona,
-            messages: List<ChatMessage>,
-        ) {
-            // Pre-flight memory headroom check:
-            // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
-            // If the model is ALREADY resident in memory, skip this check because LlmEngine reuses the compiled
-            // in-memory engine (requiring 0 MB of additional RAM). Running the check when already resident would
-            // result in a false-positive OOM error since the loaded model already occupies RAM (fixes #285).
-            // On-device LLMs allocate 1.5GB-3.5GB of physical RAM across native C++ and GPU buffers.
-            // Failing to validate available RAM before fresh loading can trigger kernel Low Memory Killer (LMK) kills.
-            // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
-            val modelPath = model.localPath
-            val isAlreadyLoaded = modelPath != null && llmEngine.isModelLoaded(modelPath)
-            if (isAlreadyLoaded) {
-                Timber.d(
-                    "ChatInferenceOrchestrator [IN_MEMORY_REUSE]: Model at '%s' is already loaded in RAM. Bypassing pre-flight headroom check.",
-                    modelPath,
-                )
-            } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
-                // If a different model was currently loaded in RAM, clean it up before checking headroom
-                // so its memory is returned to the OS before evaluating headroom for the new model.
-                if (llmEngine.isInitialized()) {
-                    Timber.d(
-                        "ChatInferenceOrchestrator [MODEL_SWITCH]: Releasing previously loaded model from RAM before memory headroom check for '%s'",
-                        model.name,
-                    )
-                    llmEngine.cleanup()
-                }
-                val headroomResult = systemMemoryManager.checkMemoryHeadroom()
-                if (headroomResult is MemoryHeadroomResult.Constrained) {
-                    Timber.w(
-                        "ChatInferenceOrchestrator [PRE_FLIGHT_OOM_GUARD]: Blocking model load due to memory pressure " +
-                            "(available=%d bytes, required=%d bytes)",
-                        headroomResult.availMemBytes,
-                        headroomResult.requiredBytes,
-                    )
-                    throw LowMemoryException(
-                        availMemBytes = headroomResult.availMemBytes,
-                        requiredBytes = headroomResult.requiredBytes,
-                    )
-                }
-            }
-
+    private suspend fun loadModelAndRestoreHistory(
+        model: AiModel,
+        topic: CodingTopic,
+        persona: TutorPersona,
+        messages: List<ChatMessage>,
+    ) {
+        // Pre-flight memory headroom check:
+        // If model is a real downloaded model (not a stub), verify the device has sufficient available RAM.
+        // If the model is ALREADY resident in memory, skip this check because LlmEngine reuses the compiled
+        // in-memory engine (requiring 0 MB of additional RAM). Running the check when already resident would
+        // result in a false-positive OOM error since the loaded model already occupies RAM (fixes #285).
+        // On-device LLMs allocate 1.5GB-3.5GB of physical RAM across native C++ and GPU buffers.
+        // Failing to validate available RAM before fresh loading can trigger kernel Low Memory Killer (LMK) kills.
+        // See: https://developer.android.com/topic/performance/memory/manage-app-memory#CheckMemory
+        val modelPath = model.localPath
+        val isAlreadyLoaded = modelPath != null && llmEngine.isModelLoaded(modelPath)
+        if (isAlreadyLoaded) {
             Timber.d(
-                "ChatInferenceOrchestrator: Initializing model=%s, path=%s, persona=%s",
-                model.name,
-                model.localPath,
-                persona.name,
+                "ChatInferenceOrchestrator [IN_MEMORY_REUSE]: Model at '%s' is already loaded in RAM. Bypassing pre-flight headroom check.",
+                modelPath,
             )
-            val modelConfig = configStore.getConfig(model.id)
-            val devProfile = userPreferencesStore.getDeveloperProfile()
-            llmEngine.initialize(
-                modelPath = model.localPath ?: "",
-                backend = model.preferredBackend,
-                systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
-                config = modelConfig,
-            )
-            Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
-
-            if (messages.isNotEmpty()) {
+        } else if (modelPath != null && modelPath != DEV_STUB_MODEL_PATH) {
+            // If a different model was currently loaded in RAM, clean it up before checking headroom
+            // so its memory is returned to the OS before evaluating headroom for the new model.
+            if (llmEngine.isInitialized()) {
                 Timber.d(
-                    "ChatInferenceOrchestrator: Restoring %d messages to conversation context",
-                    messages.size,
+                    "ChatInferenceOrchestrator [MODEL_SWITCH]: Releasing previously loaded model from RAM before memory headroom check for '%s'",
+                    model.name,
                 )
-                llmEngine.restoreHistory(messages)
+                llmEngine.cleanup()
             }
-        }
-
-        override suspend fun initialize(
-            model: AiModel,
-            topic: CodingTopic,
-            sessionId: String?,
-            existingMessages: List<ChatMessage>,
-            persona: TutorPersona,
-        ): Result<List<ChatMessage>> =
-            try {
-                val rawMessages =
-                    if (sessionId != null) {
-                        existingMessages.ifEmpty {
-                            sessionRepository.getMessages(sessionId)
-                        }
-                    } else {
-                        existingMessages
-                    }
-                val messagesToDisplay =
-                    if (rawMessages.isNotEmpty() && (rawMessages.last() as? ChatMessage.Agent)?.isStreaming == true) {
-                        val lastAgent = rawMessages.last() as ChatMessage.Agent
-                        rawMessages.dropLast(1) + lastAgent.copy(isStreaming = false)
-                    } else {
-                        rawMessages
-                    }
-
-                loadModelAndRestoreHistory(
-                    model = model,
-                    topic = topic,
-                    persona = persona,
-                    messages = messagesToDisplay,
+            val headroomResult = systemMemoryManager.checkMemoryHeadroom()
+            if (headroomResult is MemoryHeadroomResult.Constrained) {
+                Timber.w(
+                    "ChatInferenceOrchestrator [PRE_FLIGHT_OOM_GUARD]: Blocking model load due to memory pressure " +
+                        "(available=%d bytes, required=%d bytes)",
+                    headroomResult.availMemBytes,
+                    headroomResult.requiredBytes,
                 )
-
-                activeModel = model
-                activeTopic = topic
-                activePersona = persona
-                activeSessionId = sessionId
-                activeMessages = messagesToDisplay
-
-                Result.success(messagesToDisplay)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                Timber.e(e, "ChatInferenceOrchestrator: Model initialization failed")
-                Result.failure(e)
-            }
-
-        override fun stop() {
-            Timber.d("ChatInferenceOrchestrator: Stopping LLM engine")
-            llmEngine.stop()
-        }
-
-        override suspend fun resetConversation(
-            topic: CodingTopic,
-            persona: TutorPersona,
-        ) {
-            Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
-            activeTopic = topic
-            activePersona = persona
-            activeMessages = emptyList()
-            activeSessionId = null
-            val devProfile = userPreferencesStore.getDeveloperProfile()
-            llmEngine.resetConversation(
-                topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
-                configStore.config,
-            )
-        }
-
-        override suspend fun switchPersona(
-            topic: CodingTopic,
-            persona: TutorPersona,
-            messages: List<ChatMessage>,
-        ) {
-            Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
-            activeTopic = topic
-            activePersona = persona
-            activeMessages = messages
-            val devProfile = userPreferencesStore.getDeveloperProfile()
-            llmEngine.resetConversation(
-                topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
-                configStore.config,
-            )
-            if (messages.isNotEmpty()) {
-                llmEngine.restoreHistory(messages)
+                throw LowMemoryException(
+                    availMemBytes = headroomResult.availMemBytes,
+                    requiredBytes = headroomResult.requiredBytes,
+                )
             }
         }
 
-        override fun getActiveBackend(): Backend? = llmEngine.getActiveBackend()
+        Timber.d(
+            "ChatInferenceOrchestrator: Initializing model=%s, path=%s, persona=%s",
+            model.name,
+            model.localPath,
+            persona.name,
+        )
+        val modelConfig = configStore.getConfig(model.id)
+        val devProfile = userPreferencesStore.getDeveloperProfile()
+        llmEngine.initialize(
+            modelPath = model.localPath ?: "",
+            backend = model.preferredBackend,
+            systemInstruction = topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
+            config = modelConfig,
+        )
+        Timber.d("ChatInferenceOrchestrator: Model initialized successfully")
 
-        override suspend fun sendMessage(
-            input: String,
-            existingMessages: List<ChatMessage>,
-        ): Flow<ChatInferenceEvent> =
-            callbackFlow {
-                Timber.d("ChatInferenceOrchestrator: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
+        if (messages.isNotEmpty()) {
+            Timber.d(
+                "ChatInferenceOrchestrator: Restoring %d messages to conversation context",
+                messages.size,
+            )
+            llmEngine.restoreHistory(messages)
+        }
+    }
 
-                val historyToRestore =
+    override suspend fun initialize(
+        model: AiModel,
+        topic: CodingTopic,
+        sessionId: String?,
+        existingMessages: List<ChatMessage>,
+        persona: TutorPersona,
+    ): Result<List<ChatMessage>> =
+        try {
+            val rawMessages =
+                if (sessionId != null) {
                     existingMessages.ifEmpty {
-                        activeMessages.ifEmpty {
-                            activeSessionId?.let { sessionRepository.getMessages(it) } ?: emptyList()
-                        }
+                        sessionRepository.getMessages(sessionId)
                     }
+                } else {
+                    existingMessages
+                }
+            val messagesToDisplay =
+                if (rawMessages.isNotEmpty() && (rawMessages.last() as? ChatMessage.Agent)?.isStreaming == true) {
+                    val lastAgent = rawMessages.last() as ChatMessage.Agent
+                    rawMessages.dropLast(1) + lastAgent.copy(isStreaming = false)
+                } else {
+                    rawMessages
+                }
 
-                // If the engine was evicted from memory (e.g., via SystemMemoryManager trim/timeout),
-                // lazily re-initialize it and replay history before dispatching the prompt (fixes #411).
-                if (!llmEngine.isInitialized()) {
-                    reloadMutex.withLock {
-                        if (!llmEngine.isInitialized()) {
-                            val currentModel = activeModel
-                            val currentTopic = activeTopic
-                            if (currentModel != null &&
-                                currentTopic != null &&
-                                currentModel.localPath != null &&
-                                currentModel.localPath != DEV_STUB_MODEL_PATH
-                            ) {
-                                Timber.i(
-                                    "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
-                                    currentModel.name,
-                                )
-                                loadModelAndRestoreHistory(
-                                    model = currentModel,
-                                    topic = currentTopic,
-                                    persona = activePersona,
-                                    messages = historyToRestore,
-                                )
-                            }
-                        }
-                    }
-                } else if (llmEngine.needsHistoryRestoration()) {
-                    reloadMutex.withLock {
-                        if (llmEngine.needsHistoryRestoration()) {
-                            if (historyToRestore.isNotEmpty()) {
-                                Timber.i(
-                                    "ChatInferenceOrchestrator [RESTORE_AFTER_CANCEL]: Conversation was cancelled or reset. Restoring %d messages before inference.",
-                                    historyToRestore.size,
-                                )
-                                llmEngine.restoreHistory(historyToRestore)
-                            }
-                        }
+            loadModelAndRestoreHistory(
+                model = model,
+                topic = topic,
+                persona = persona,
+                messages = messagesToDisplay,
+            )
+
+            activeModel = model
+            activeTopic = topic
+            activePersona = persona
+            activeSessionId = sessionId
+            activeMessages = messagesToDisplay
+
+            Result.success(messagesToDisplay)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "ChatInferenceOrchestrator: Model initialization failed")
+            Result.failure(e)
+        }
+
+    override fun stop() {
+        Timber.d("ChatInferenceOrchestrator: Stopping LLM engine")
+        llmEngine.stop()
+    }
+
+    override suspend fun resetConversation(
+        topic: CodingTopic,
+        persona: TutorPersona,
+    ) {
+        Timber.d("ChatInferenceOrchestrator: Resetting conversation with persona=${persona.name}")
+        activeTopic = topic
+        activePersona = persona
+        activeMessages = emptyList()
+        activeSessionId = null
+        val devProfile = userPreferencesStore.getDeveloperProfile()
+        llmEngine.resetConversation(
+            topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
+            configStore.config,
+        )
+    }
+
+    override suspend fun switchPersona(
+        topic: CodingTopic,
+        persona: TutorPersona,
+        messages: List<ChatMessage>,
+    ) {
+        Timber.d("ChatInferenceOrchestrator: Switching persona to ${persona.name} and restoring ${messages.size} messages")
+        activeTopic = topic
+        activePersona = persona
+        activeMessages = messages
+        val devProfile = userPreferencesStore.getDeveloperProfile()
+        llmEngine.resetConversation(
+            topicPromptProvider.buildSystemPrompt(topic, persona, devProfile),
+            configStore.config,
+        )
+        if (messages.isNotEmpty()) {
+            llmEngine.restoreHistory(messages)
+        }
+    }
+
+    override fun getActiveBackend(): Backend? = llmEngine.getActiveBackend()
+
+    override suspend fun sendMessage(
+        input: String,
+        existingMessages: List<ChatMessage>,
+    ): Flow<ChatInferenceEvent> =
+        callbackFlow {
+            Timber.d("ChatInferenceOrchestrator: Starting inference. Input: '${input.take(100)}' (length: ${input.length})")
+
+            val historyToRestore =
+                existingMessages.ifEmpty {
+                    activeMessages.ifEmpty {
+                        activeSessionId?.let { sessionRepository.getMessages(it) } ?: emptyList()
                     }
                 }
 
-                suspend fun runAndEmit(input: String) {
-                    llmEngine.runInference(input) { partialToken, done ->
-                        if (partialToken.isNotEmpty()) {
-                            trySend(ChatInferenceEvent.Token(partialToken))
-                        }
-                        if (done) {
-                            trySend(ChatInferenceEvent.Done)
-                            close()
+            // If the engine was evicted from memory (e.g., via SystemMemoryManager trim/timeout),
+            // lazily re-initialize it and replay history before dispatching the prompt (fixes #411).
+            if (!llmEngine.isInitialized()) {
+                reloadMutex.withLock {
+                    if (!llmEngine.isInitialized()) {
+                        val currentModel = activeModel
+                        val currentTopic = activeTopic
+                        if (currentModel != null &&
+                            currentTopic != null &&
+                            currentModel.localPath != null &&
+                            currentModel.localPath != DEV_STUB_MODEL_PATH
+                        ) {
+                            Timber.i(
+                                "ChatInferenceOrchestrator [LAZY_RELOAD]: LLM engine was evicted from RAM. Reloading model=%s before inference.",
+                                currentModel.name,
+                            )
+                            loadModelAndRestoreHistory(
+                                model = currentModel,
+                                topic = currentTopic,
+                                persona = activePersona,
+                                messages = historyToRestore,
+                            )
                         }
                     }
                 }
-
-                val failedBackends = mutableSetOf<LlmEngine.Backend>()
-                while (true) {
-                    try {
-                        runAndEmit(input)
-                        break
-                    } catch (e: BackendFailureException) {
-                        if (e.failedBackend == LlmEngine.Backend.CPU || !failedBackends.add(e.failedBackend)) {
-                            // CPU and repeated backend failures are terminal.
-                            throw e
-                        }
-                        Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
-                        send(ChatInferenceEvent.BackendFailed(e.failedBackend))
-
+            } else if (llmEngine.needsHistoryRestoration()) {
+                reloadMutex.withLock {
+                    if (llmEngine.needsHistoryRestoration()) {
                         if (historyToRestore.isNotEmpty()) {
-                            Timber.d(
-                                "ChatInferenceOrchestrator: Restoring ${historyToRestore.size} messages to fallback session before retry",
+                            Timber.i(
+                                "ChatInferenceOrchestrator [RESTORE_AFTER_CANCEL]: Conversation was cancelled or reset. Restoring %d messages before inference.",
+                                historyToRestore.size,
                             )
                             llmEngine.restoreHistory(historyToRestore)
                         }
                     }
                 }
+            }
 
-                awaitClose {
-                    // No explicit cleanup needed; the engine handles cancellation
-                    // via stop() when the presenter leaves the composition.
+            suspend fun runAndEmit(input: String) {
+                llmEngine.runInference(input) { partialToken, done ->
+                    if (partialToken.isNotEmpty()) {
+                        trySend(ChatInferenceEvent.Token(partialToken))
+                    }
+                    if (done) {
+                        trySend(ChatInferenceEvent.Done)
+                        close()
+                    }
                 }
             }
-    }
+
+            val failedBackends = mutableSetOf<LlmEngine.Backend>()
+            while (true) {
+                try {
+                    runAndEmit(input)
+                    break
+                } catch (e: BackendFailureException) {
+                    if (e.failedBackend == LlmEngine.Backend.CPU || !failedBackends.add(e.failedBackend)) {
+                        // CPU and repeated backend failures are terminal.
+                        throw e
+                    }
+                    Timber.w(e, "ChatInferenceOrchestrator: Backend ${e.failedBackend} failed, signaling retry boundary")
+                    send(ChatInferenceEvent.BackendFailed(e.failedBackend))
+
+                    if (historyToRestore.isNotEmpty()) {
+                        Timber.d(
+                            "ChatInferenceOrchestrator: Restoring ${historyToRestore.size} messages to fallback session before retry",
+                        )
+                        llmEngine.restoreHistory(historyToRestore)
+                    }
+                }
+            }
+
+            awaitClose {
+                // No explicit cleanup needed; the engine handles cancellation
+                // via stop() when the presenter leaves the composition.
+            }
+        }
+}

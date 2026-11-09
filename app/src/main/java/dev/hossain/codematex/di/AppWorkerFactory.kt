@@ -6,7 +6,6 @@ import androidx.work.WorkerFactory
 import androidx.work.WorkerParameters
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
-import dev.zacsweers.metro.Inject
 import kotlin.collections.get
 import kotlin.reflect.KClass
 
@@ -18,7 +17,6 @@ import kotlin.reflect.KClass
  *
  * Key Metro features used:
  * - [ContributesBinding]: Automatically binds this implementation to [WorkerFactory] in [AppScope]
- * - [Inject]: Constructor injection - Metro will automatically provide the workerProviders map
  * - Multibinding: The `workerProviders` map is a multibinding that Workers contribute to
  *
  * To register a Worker, annotate the Worker class with [@WorkerKey][WorkerKey] and
@@ -29,7 +27,7 @@ import kotlin.reflect.KClass
  * ```kotlin
  * @AssistedInject
  * class YourWorker(
- *     context: Context,
+ *     @ApplicationContext context: Context,
  *     @Assisted params: WorkerParameters,
  *     // Your injected dependencies here
  * ) : CoroutineWorker(context, params) {
@@ -48,8 +46,8 @@ import kotlin.reflect.KClass
  * See https://zacsweers.github.io/metro/latest/bindings/#multibindings for multibindings.
  * See https://zacsweers.github.io/metro/latest/aggregation/ for contribution.
  *
- * Note: [@Inject][Inject] is now implicit when using [@ContributesBinding][ContributesBinding]
- * as of Metro 0.10.0 with `contributesAsInject` enabled by default.
+ * Note: `@Inject` is implicit when using [@ContributesBinding][ContributesBinding]
+ * with `contributesAsInject` enabled by default.
  */
 @ContributesBinding(AppScope::class)
 class AppWorkerFactory(

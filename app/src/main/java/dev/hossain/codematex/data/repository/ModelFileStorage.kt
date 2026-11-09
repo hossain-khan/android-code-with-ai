@@ -6,7 +6,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.SingleIn
 import java.io.File
-import javax.inject.Inject
 
 /**
  * Abstraction over file-system operations for downloaded models.
@@ -46,28 +45,26 @@ interface ModelFileStorage {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ModelFileStorageImpl
-    @Inject
-    constructor(
-        @param:ApplicationContext private val context: Context,
-    ) : ModelFileStorage {
-        private val modelsDir = File(context.getExternalFilesDir(null), "models")
+class ModelFileStorageImpl(
+    @ApplicationContext private val context: Context,
+) : ModelFileStorage {
+    private val modelsDir = File(context.getExternalFilesDir(null), "models")
 
-        override fun getModelsDir(): File = modelsDir
+    override fun getModelsDir(): File = modelsDir
 
-        override fun getAvailableStorageBytes(): Long =
-            modelsDir.usableSpace.takeIf { it > 0 }
-                ?: (context.getExternalFilesDir(null) ?: context.filesDir).usableSpace
+    override fun getAvailableStorageBytes(): Long =
+        modelsDir.usableSpace.takeIf { it > 0 }
+            ?: (context.getExternalFilesDir(null) ?: context.filesDir).usableSpace
 
-        override fun modelExists(path: String): Boolean = File(path).exists()
+    override fun modelExists(path: String): Boolean = File(path).exists()
 
-        override fun deleteModel(path: String): Boolean = File(path).delete()
+    override fun deleteModel(path: String): Boolean = File(path).delete()
 
-        override fun getLocalPath(
-            modelId: String,
-            modelFile: String,
-        ): String {
-            val normalizedName = modelId.replace("/", "_")
-            return "${modelsDir.absolutePath}/$normalizedName/$modelFile"
-        }
+    override fun getLocalPath(
+        modelId: String,
+        modelFile: String,
+    ): String {
+        val normalizedName = modelId.replace("/", "_")
+        return "${modelsDir.absolutePath}/$normalizedName/$modelFile"
     }
+}

@@ -39,49 +39,57 @@ interface ModelCompatibilityChecker {
     fun getDeviceMemoryInfo(): DeviceMemoryInfo
 }
 
-@Inject
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ModelCompatibilityCheckerImpl(
-    private val deviceMemoryProvider: DeviceMemoryProvider,
-    private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
-) : ModelCompatibilityChecker {
-    override fun checkCompatibility(modelMinRamGb: Int): ModelCompatibility {
-        // In DEV_MODE, bypass hardware restrictions so developers can test on emulators.
-        if (isDevMode()) {
-            return ModelCompatibility.Compatible
+class ModelCompatibilityCheckerImpl
+    internal constructor(
+        private val deviceMemoryProvider: DeviceMemoryProvider,
+        private val isDevMode: () -> Boolean = { BuildConfig.DEV_MODE },
+    ) : ModelCompatibilityChecker {
+        @Inject
+        constructor(
+            deviceMemoryProvider: DeviceMemoryProvider,
+        ) : this(
+            deviceMemoryProvider = deviceMemoryProvider,
+            isDevMode = { BuildConfig.DEV_MODE },
+        )
+
+        override fun checkCompatibility(modelMinRamGb: Int): ModelCompatibility {
+            // In DEV_MODE, bypass hardware restrictions so developers can test on emulators.
+            if (isDevMode()) {
+                return ModelCompatibility.Compatible
+            }
+
+            if (modelMinRamGb == 0) {
+                return ModelCompatibility.Compatible
+            }
+
+            val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
+            return if (MemoryCompatibilityPolicy.isCompatible(modelMinRamGb, totalBytes)) {
+                ModelCompatibility.Compatible
+            } else {
+                val info = getDeviceMemoryInfo()
+                ModelCompatibility.Incompatible(
+                    reason =
+                        "Requires ${modelMinRamGb}GB RAM (Device has " +
+                            "${formatDecimalGb(info.displayTotalGb)}${info.displayLabel})",
+                )
+            }
         }
 
-        if (modelMinRamGb == 0) {
-            return ModelCompatibility.Compatible
-        }
-
-        val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
-        return if (MemoryCompatibilityPolicy.isCompatible(modelMinRamGb, totalBytes)) {
-            ModelCompatibility.Compatible
-        } else {
-            val info = getDeviceMemoryInfo()
-            ModelCompatibility.Incompatible(
-                reason =
-                    "Requires ${modelMinRamGb}GB RAM (Device has " +
-                        "${formatDecimalGb(info.displayTotalGb)}${info.displayLabel})",
+        override fun getDeviceMemoryInfo(): DeviceMemoryInfo {
+            val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
+            return DeviceMemoryInfo(
+                totalBytes = totalBytes,
+                displayTotalGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalBytes),
+                displayLabel = "GB",
             )
         }
-    }
 
-    override fun getDeviceMemoryInfo(): DeviceMemoryInfo {
-        val totalBytes = deviceMemoryProvider.getTotalMemoryBytes()
-        return DeviceMemoryInfo(
-            totalBytes = totalBytes,
-            displayTotalGb = MemoryCompatibilityPolicy.toDecimalGigabytes(totalBytes),
-            displayLabel = "GB",
-        )
+        private fun formatDecimalGb(value: Double): String =
+            if (value == value.toLong().toDouble()) {
+                value.toLong().toString()
+            } else {
+                String.format(Locale.US, "%.1f", value)
+            }
     }
-
-    private fun formatDecimalGb(value: Double): String =
-        if (value == value.toLong().toDouble()) {
-            value.toLong().toString()
-        } else {
-            String.format(Locale.US, "%.1f", value)
-        }
-}

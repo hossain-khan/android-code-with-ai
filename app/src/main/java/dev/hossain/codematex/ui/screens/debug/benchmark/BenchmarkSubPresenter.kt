@@ -9,22 +9,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
-import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_BENCHMARK_CONFIG
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_BENCHMARK_PROMPT
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.Assisted
+import dev.zacsweers.metro.AssistedFactory
+import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
+@AssistedInject
 class BenchmarkSubPresenter(
-    private val screen: BenchmarkSubScreen,
+    @Assisted private val screen: BenchmarkSubScreen,
     private val llmEngine: LlmEngine,
     private val configStore: ModelConfigStore,
 ) : SubPresenter<BenchmarkOuterEvent, BenchmarkSubState> {
@@ -186,26 +186,10 @@ class BenchmarkSubPresenter(
             },
         )
     }
-}
 
-@ContributesIntoSet(AppScope::class)
-@Inject
-class BenchmarkSubPresenterFactory(
-    private val llmEngine: LlmEngine,
-    private val configStore: ModelConfigStore,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is BenchmarkSubScreen -> {
-                BenchmarkSubPresenter(
-                    screen = screen,
-                    llmEngine = llmEngine,
-                    configStore = configStore,
-                )
-            }
-
-            else -> {
-                null
-            }
-        }
+    @SubCircuitInject(BenchmarkSubScreen::class, AppScope::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(screen: BenchmarkSubScreen): BenchmarkSubPresenter
+    }
 }

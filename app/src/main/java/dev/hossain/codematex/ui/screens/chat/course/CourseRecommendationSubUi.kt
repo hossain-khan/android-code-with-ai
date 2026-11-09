@@ -25,21 +25,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering a contextual course suggestion card above topic starters in empty chat state.
  */
+@SubCircuitInject(CourseRecommendationSubScreen::class, AppScope::class)
 @Composable
 fun CourseRecommendationSubUi(
     state: CourseRecommendationSubState,
@@ -122,26 +119,6 @@ fun CourseRecommendationSubUi(
             )
         }
     }
-}
-
-/**
- * SubUi factory contributing [CourseRecommendationSubUi] into Metro DI [AppScope].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class CourseRecommendationSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is CourseRecommendationSubScreen -> {
-                SubUi<CourseRecommendationSubState> { state, modifier ->
-                    CourseRecommendationSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 // region Previews

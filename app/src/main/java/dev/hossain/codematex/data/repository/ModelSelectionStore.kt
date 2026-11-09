@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
-import javax.inject.Inject
 
 /**
  * Abstraction over persistent storage for the currently selected model id.
@@ -41,36 +40,34 @@ interface ModelSelectionStore {
 
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
-class ModelSelectionStoreImpl
-    @Inject
-    constructor(
-        private val dataStore: DataStore<Preferences>,
-    ) : ModelSelectionStore {
-        override val selectedModelIdFlow: Flow<String?> =
-            dataStore.data
-                .catch { exception ->
-                    if (exception is IOException) {
-                        Timber.e(exception, "ModelSelectionStoreImpl: Error reading preferences, emitting empty preferences")
-                        emit(emptyPreferences())
-                    } else {
-                        throw exception
-                    }
-                }.map { prefs -> prefs[KEY_SELECTED_MODEL_ID] }
-                .distinctUntilChanged()
-
-        override suspend fun getSelectedModelId(): String? = selectedModelIdFlow.first()
-
-        override suspend fun setSelectedModelId(modelId: String?) {
-            dataStore.edit { prefs ->
-                if (modelId != null) {
-                    prefs[KEY_SELECTED_MODEL_ID] = modelId
+class ModelSelectionStoreImpl(
+    private val dataStore: DataStore<Preferences>,
+) : ModelSelectionStore {
+    override val selectedModelIdFlow: Flow<String?> =
+        dataStore.data
+            .catch { exception ->
+                if (exception is IOException) {
+                    Timber.e(exception, "ModelSelectionStoreImpl: Error reading preferences, emitting empty preferences")
+                    emit(emptyPreferences())
                 } else {
-                    prefs.remove(KEY_SELECTED_MODEL_ID)
+                    throw exception
                 }
+            }.map { prefs -> prefs[KEY_SELECTED_MODEL_ID] }
+            .distinctUntilChanged()
+
+    override suspend fun getSelectedModelId(): String? = selectedModelIdFlow.first()
+
+    override suspend fun setSelectedModelId(modelId: String?) {
+        dataStore.edit { prefs ->
+            if (modelId != null) {
+                prefs[KEY_SELECTED_MODEL_ID] = modelId
+            } else {
+                prefs.remove(KEY_SELECTED_MODEL_ID)
             }
         }
-
-        companion object {
-            private val KEY_SELECTED_MODEL_ID = stringPreferencesKey("selected_model_id")
-        }
     }
+
+    companion object {
+        private val KEY_SELECTED_MODEL_ID = stringPreferencesKey("selected_model_id")
+    }
+}

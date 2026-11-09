@@ -48,9 +48,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
@@ -65,12 +63,11 @@ import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.SyntaxHighlightedCode
 import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering an interactive, runnable code snippet with integrated playground execution controls.
  */
+@SubCircuitInject(InteractiveSnippetSubScreen::class, AppScope::class)
 @OptIn(ExperimentalHighlightApi::class)
 @Composable
 fun InteractiveSnippetSubUi(
@@ -426,26 +423,6 @@ internal fun getPlaygroundTitle(language: String): String =
         "python", "py", "python3", "cpython" -> "Python Playground"
         else -> "${language.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }} Playground"
     }
-
-/**
- * Factory creating [SubUi] instances for [InteractiveSnippetSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class InteractiveSnippetSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is InteractiveSnippetSubScreen -> {
-                SubUi<InteractiveSnippetSubState> { state, modifier ->
-                    InteractiveSnippetSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
-}
 
 @ThemePreviews
 @Composable

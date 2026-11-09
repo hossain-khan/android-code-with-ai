@@ -5,8 +5,8 @@ import dev.hossain.codematex.di.ApplicationContext
 import dev.hossain.codematex.util.DeviceMemory
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import javax.inject.Inject
 
 /**
  * Abstraction over device memory and process CPU stats.
@@ -36,13 +36,22 @@ interface DeviceMemoryProvider {
 @SingleIn(AppScope::class)
 @ContributesBinding(AppScope::class)
 class DeviceMemoryProviderImpl
-    @Inject
-    constructor(
-        @param:ApplicationContext private val context: Context,
+    internal constructor(
+        private val context: Context,
         private val memoryStatsProvider: (Context) -> DeviceMemory.MemoryStats = DeviceMemory::getMemoryStats,
         private val totalMemoryBytesProvider: (Context) -> Long = DeviceMemory::getTotalMemoryBytes,
         private val cpuTicksProvider: () -> Long = DeviceMemory::getProcessCpuTicks,
     ) : DeviceMemoryProvider {
+        @Inject
+        constructor(
+            @ApplicationContext context: Context,
+        ) : this(
+            context = context,
+            memoryStatsProvider = DeviceMemory::getMemoryStats,
+            totalMemoryBytesProvider = DeviceMemory::getTotalMemoryBytes,
+            cpuTicksProvider = DeviceMemory::getProcessCpuTicks,
+        )
+
         override fun getMemoryStats(): DeviceMemory.MemoryStats = memoryStatsProvider(context)
 
         override fun getTotalMemoryBytes(): Long = totalMemoryBytesProvider(context)

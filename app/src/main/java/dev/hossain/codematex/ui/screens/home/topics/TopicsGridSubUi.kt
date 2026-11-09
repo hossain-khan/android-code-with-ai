@@ -33,9 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.animation.TopicCardSharedKey
 import dev.hossain.codematex.ui.animation.TopicGlyphSharedKey
@@ -43,21 +41,19 @@ import dev.hossain.codematex.ui.animation.TopicTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
 import dev.hossain.codematex.ui.component.accessibleFocusOutline
-import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering selectable coding topics on the home dashboard.
  * Switches between a horizontal scrollable row in compact phone layouts
  * and an adaptive multi-column grid in medium/expanded tablet layouts.
  */
+@SubCircuitInject(TopicsGridSubScreen::class, AppScope::class)
 @Composable
 fun TopicsGridSubUi(
     state: TopicsGridSubState,
@@ -378,26 +374,6 @@ fun TopicCompactCard(
             )
         }
     }
-}
-
-/**
- * Factory creating [SubUi] instances for [TopicsGridSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class TopicsGridSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is TopicsGridSubScreen -> {
-                SubUi<TopicsGridSubState> { state, modifier ->
-                    TopicsGridSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 @ThemePreviews

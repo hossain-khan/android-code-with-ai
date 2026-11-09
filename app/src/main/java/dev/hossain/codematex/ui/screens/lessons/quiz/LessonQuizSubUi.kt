@@ -26,24 +26,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.slack.circuit.subcircuit.SubScreen
-import com.slack.circuit.subcircuit.SubUi
-import com.slack.circuit.subcircuit.SubUiFactory
+import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
-import dev.hossain.codematex.ui.theme.TopicVisualInfo
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
-import dev.zacsweers.metro.Inject
 
 /**
  * Composable rendering an interactive quiz block with multiple-choice options,
  * selection feedback, and instant explanation disclosure.
  */
+@SubCircuitInject(LessonQuizSubScreen::class, AppScope::class)
 @Composable
 fun LessonQuizSubUi(
     state: LessonQuizSubState,
@@ -227,26 +223,6 @@ fun LessonQuizSubUi(
             }
         }
     }
-}
-
-/**
- * SubUi factory contributing [LessonQuizSubUi] into Metro DI [AppScope].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class LessonQuizSubUiFactory : SubUiFactory {
-    override fun create(screen: SubScreen<*>): SubUi<*>? =
-        when (screen) {
-            is LessonQuizSubScreen -> {
-                SubUi<LessonQuizSubState> { state, modifier ->
-                    LessonQuizSubUi(state = state, modifier = modifier)
-                }
-            }
-
-            else -> {
-                null
-            }
-        }
 }
 
 // region Previews

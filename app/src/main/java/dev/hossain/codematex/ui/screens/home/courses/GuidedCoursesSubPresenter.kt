@@ -6,18 +6,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.slack.circuit.retained.rememberRetained
+import com.slack.circuit.subcircuit.SubCircuitInject
 import com.slack.circuit.subcircuit.SubPresenter
-import com.slack.circuit.subcircuit.SubPresenterFactory
-import com.slack.circuit.subcircuit.SubScreen
 import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.repository.course.LearningRepository
 import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.ContributesIntoSet
 import dev.zacsweers.metro.Inject
 
 /**
  * SubPresenter that loads available interactive courses for the guided courses section on the home screen.
  */
+@SubCircuitInject(GuidedCoursesSubScreen::class, AppScope::class)
+@Inject
 class GuidedCoursesSubPresenter(
     private val learningRepository: LearningRepository,
 ) : SubPresenter<GuidedCoursesOuterEvent, GuidedCoursesSubState> {
@@ -46,19 +46,4 @@ class GuidedCoursesSubPresenter(
             },
         )
     }
-}
-
-/**
- * Factory providing [GuidedCoursesSubPresenter] for [GuidedCoursesSubScreen].
- */
-@ContributesIntoSet(AppScope::class)
-@Inject
-class GuidedCoursesSubPresenterFactory(
-    private val learningRepository: LearningRepository,
-) : SubPresenterFactory {
-    override fun create(screen: SubScreen<*>): SubPresenter<*, *>? =
-        when (screen) {
-            is GuidedCoursesSubScreen -> GuidedCoursesSubPresenter(learningRepository)
-            else -> null
-        }
 }
