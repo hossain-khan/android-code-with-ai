@@ -257,6 +257,7 @@ private fun SessionHistoryLayout(
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
     val coroutineScope = rememberCoroutineScope()
     val filterListState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
     val screenFocusRequester = remember { FocusRequester() }
     val filterChipFocusRequester = remember { FocusRequester() }
 
@@ -421,7 +422,6 @@ private fun SessionHistoryLayout(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                 )
             } else {
-                val gridState = rememberLazyGridState()
                 LazyVerticalGrid(
                     columns = if (isExpanded) GridCells.Adaptive(minSize = 340.dp) else GridCells.Fixed(1),
                     state = gridState,

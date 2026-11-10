@@ -33,13 +33,14 @@ class LessonPresenter(
 ) : Presenter<LessonScreen.State> {
     @Composable
     override fun present(): LessonScreen.State {
-        var lesson by rememberRetained { mutableStateOf<LearningLesson?>(null) }
-        var course by rememberRetained { mutableStateOf<LearningCourse?>(null) }
-        var isCompleted by rememberRetained { mutableStateOf(false) }
-        var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var lesson by rememberRetained(screen.lessonId) { mutableStateOf<LearningLesson?>(null) }
+        var course by rememberRetained(screen.lessonId) { mutableStateOf<LearningCourse?>(null) }
+        var isCompleted by rememberRetained(screen.lessonId) { mutableStateOf(false) }
+        var errorMessage by rememberRetained(screen.lessonId) { mutableStateOf<String?>(null) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.lessonId) {
+            errorMessage = null
             try {
                 val loadedLesson = learningRepository.getLesson(screen.lessonId)
                 lesson = loadedLesson

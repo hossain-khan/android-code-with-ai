@@ -124,6 +124,7 @@ private fun HomeLayout(
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
+    val feedListState = rememberLazyListState()
 
     Scaffold(
         modifier =
@@ -181,14 +182,13 @@ private fun HomeLayout(
                 horizontalArrangement = Arrangement.spacedBy(24.dp),
             ) {
                 // Left Column: Active Model Banner + Guided Courses + Topics Grid in a unified scrolling feed
-                val leftListState = rememberLazyListState()
                 LazyColumn(
-                    state = leftListState,
+                    state = feedListState,
                     modifier =
                         Modifier
                             .weight(1.3f)
                             .fillMaxHeight()
-                            .adaptiveScrollbar(leftListState),
+                            .adaptiveScrollbar(feedListState),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     item {
@@ -260,10 +260,9 @@ private fun HomeLayout(
             }
         } else {
             // Compact Single Column Layout
-            val listState = rememberLazyListState()
             LazyColumn(
-                state = listState,
-                modifier = Modifier.padding(innerPadding).adaptiveScrollbar(listState),
+                state = feedListState,
+                modifier = Modifier.padding(innerPadding).adaptiveScrollbar(feedListState),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
