@@ -1,12 +1,13 @@
 package dev.hossain.codematex.ui.screens.chat.benchmark
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -33,7 +34,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.system.ContextUsageStats
@@ -192,26 +193,35 @@ internal fun ModelTechnicalInfoPanel(
     modifier: Modifier = Modifier,
 ) {
     var isExpanded by rememberSaveable { mutableStateOf(false) }
+    val panelTransition = updateTransition(targetState = isExpanded, label = "TechnicalPanelTransition")
 
-    val chevronRotation by animateFloatAsState(
-        targetValue = if (isExpanded) 180f else 0f,
-        animationSpec =
+    val chevronRotation by panelTransition.animateFloat(
+        transitionSpec = {
             spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
                 stiffness = Spring.StiffnessMediumLow,
-            ),
+            )
+        },
         label = "ChevronRotation",
-    )
+    ) { expanded ->
+        if (expanded) 180f else 0f
+    }
 
-    val surfaceColor by animateColorAsState(
-        targetValue =
-            if (isExpanded) {
-                MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            },
+    val surfaceColor by panelTransition.animateColor(
         label = "PanelSurfaceColor",
-    )
+    ) { expanded ->
+        if (expanded) {
+            MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.85f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        }
+    }
+
+    val tonalElevation by panelTransition.animateDp(
+        label = "PanelTonalElevation",
+    ) { expanded ->
+        if (expanded) 2.dp else 1.dp
+    }
 
     Surface(
         modifier =
@@ -220,18 +230,10 @@ internal fun ModelTechnicalInfoPanel(
                 .handHoverIcon()
                 .clickable { isExpanded = !isExpanded },
         color = surfaceColor,
-        tonalElevation = if (isExpanded) 2.dp else 1.dp,
+        tonalElevation = tonalElevation,
     ) {
         Column(
-            modifier =
-                Modifier
-                    .animateContentSize(
-                        animationSpec =
-                            spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessMediumLow,
-                            ),
-                    ).padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Row(
@@ -284,6 +286,7 @@ internal fun ModelTechnicalInfoPanel(
                         visible = !isExpanded,
                         enter = fadeIn(animationSpec = tween(150)),
                         exit = fadeOut(animationSpec = tween(100)),
+                        label = "CollapsedThroughputVisibility",
                     ) {
                         if (state.isGenerating) {
                             Text(
@@ -305,15 +308,32 @@ internal fun ModelTechnicalInfoPanel(
                 Icon(
                     imageVector = Icons.Default.ExpandMore,
                     contentDescription = if (isExpanded) "Collapse info" else "Expand info",
-                    modifier = Modifier.rotate(chevronRotation),
+                    modifier = Modifier.graphicsLayer { rotationZ = chevronRotation },
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
             AnimatedVisibility(
                 visible = isExpanded,
-                enter = fadeIn(animationSpec = tween(150)) + expandVertically(),
-                exit = fadeOut(animationSpec = tween(100)) + shrinkVertically(),
+                enter =
+                    fadeIn(animationSpec = tween(150)) +
+                        expandVertically(
+                            animationSpec =
+                                spring(
+                                    dampingRatio = Spring.DampingRatioLowBouncy,
+                                    stiffness = Spring.StiffnessMediumLow,
+                                ),
+                        ),
+                exit =
+                    fadeOut(animationSpec = tween(100)) +
+                        shrinkVertically(
+                            animationSpec =
+                                spring(
+                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                    stiffness = Spring.StiffnessMediumLow,
+                                ),
+                        ),
+                label = "ExpandedSpecsVisibility",
             ) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),

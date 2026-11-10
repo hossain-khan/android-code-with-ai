@@ -1,10 +1,21 @@
 package dev.hossain.codematex.ui.screens.lessons.quiz
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -22,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -97,21 +109,55 @@ fun LessonQuizSubUi(
                     val isCorrectAnswer = index == state.answerIndex
                     val isRevealed = state.selectedOptionIndex != null
 
-                    val containerColor =
+                    val optionVisualState =
                         when {
-                            !isRevealed -> MaterialTheme.colorScheme.surfaceContainerHigh
-                            isCorrectAnswer -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-                            isChosen -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
-                            else -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
+                            !isRevealed -> QuizOptionVisualState.UNREVEALED
+                            isCorrectAnswer -> QuizOptionVisualState.CORRECT
+                            isChosen -> QuizOptionVisualState.INCORRECT_CHOSEN
+                            else -> QuizOptionVisualState.REVEALED_OTHER
                         }
 
-                    val borderColor =
-                        when {
-                            !isRevealed -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
-                            isCorrectAnswer -> MaterialTheme.colorScheme.primary
-                            isChosen -> MaterialTheme.colorScheme.error
-                            else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                    val optionTransition =
+                        updateTransition(
+                            targetState = optionVisualState,
+                            label = "QuizOptionTransition_$index",
+                        )
+
+                    val containerColor by optionTransition.animateColor(
+                        transitionSpec = { tween(200) },
+                        label = "OptionContainerColor",
+                    ) { target ->
+                        when (target) {
+                            QuizOptionVisualState.UNREVEALED -> MaterialTheme.colorScheme.surfaceContainerHigh
+                            QuizOptionVisualState.CORRECT -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                            QuizOptionVisualState.INCORRECT_CHOSEN -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                            QuizOptionVisualState.REVEALED_OTHER -> MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)
                         }
+                    }
+
+                    val borderColor by optionTransition.animateColor(
+                        transitionSpec = { tween(200) },
+                        label = "OptionBorderColor",
+                    ) { target ->
+                        when (target) {
+                            QuizOptionVisualState.UNREVEALED -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                            QuizOptionVisualState.CORRECT -> MaterialTheme.colorScheme.primary
+                            QuizOptionVisualState.INCORRECT_CHOSEN -> MaterialTheme.colorScheme.error
+                            QuizOptionVisualState.REVEALED_OTHER -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                        }
+                    }
+
+                    val badgeColor by optionTransition.animateColor(
+                        transitionSpec = { tween(200) },
+                        label = "OptionBadgeColor",
+                    ) { target ->
+                        when (target) {
+                            QuizOptionVisualState.UNREVEALED -> visualInfo.accentColor.copy(alpha = 0.15f)
+                            QuizOptionVisualState.CORRECT -> MaterialTheme.colorScheme.primary
+                            QuizOptionVisualState.INCORRECT_CHOSEN -> MaterialTheme.colorScheme.error
+                            QuizOptionVisualState.REVEALED_OTHER -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    }
 
                     Surface(
                         onClick = { state.eventSink(LessonQuizUiEvent.SelectOption(index)) },
@@ -131,13 +177,7 @@ fun LessonQuizSubUi(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color =
-                                    when {
-                                        !isRevealed -> visualInfo.accentColor.copy(alpha = 0.15f)
-                                        isCorrectAnswer -> MaterialTheme.colorScheme.primary
-                                        isChosen -> MaterialTheme.colorScheme.error
-                                        else -> MaterialTheme.colorScheme.surfaceVariant
-                                    },
+                                color = badgeColor,
                                 modifier = Modifier.size(24.dp),
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
@@ -175,54 +215,83 @@ fun LessonQuizSubUi(
                 }
             }
 
-            state.selectedOptionIndex?.let { answer ->
-                val isCorrect = answer == state.answerIndex
-                val resultContainerColor =
-                    if (isCorrect) {
-                        visualInfo.accentColor.copy(alpha = 0.12f)
-                    } else {
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                    }
-                val resultBorderColor =
-                    if (isCorrect) {
-                        visualInfo.accentColor.copy(alpha = 0.4f)
-                    } else {
-                        MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
-                    }
-                Surface(
-                    shape = MaterialTheme.shapes.medium,
-                    color = resultContainerColor,
-                    border = BorderStroke(1.dp, resultBorderColor),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(12.dp),
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+            AnimatedContent(
+                targetState = state.selectedOptionIndex,
+                transitionSpec = {
+                    (
+                        fadeIn(animationSpec = tween(durationMillis = 200)) +
+                            expandVertically(
+                                expandFrom = Alignment.Top,
+                                animationSpec = tween(durationMillis = 250),
+                            )
+                    ).togetherWith(
+                        fadeOut(animationSpec = tween(durationMillis = 150)) +
+                            shrinkVertically(
+                                shrinkTowards = Alignment.Top,
+                                animationSpec = tween(durationMillis = 200),
+                            ),
+                    ).using(SizeTransform(clip = true))
+                },
+                label = "QuizExplanationTransition",
+            ) { selectedAnswer ->
+                if (selectedAnswer == null) {
+                    Spacer(modifier = Modifier.fillMaxWidth())
+                } else {
+                    val isCorrect = selectedAnswer == state.answerIndex
+                    val resultContainerColor =
+                        if (isCorrect) {
+                            visualInfo.accentColor.copy(alpha = 0.12f)
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+                        }
+                    val resultBorderColor =
+                        if (isCorrect) {
+                            visualInfo.accentColor.copy(alpha = 0.4f)
+                        } else {
+                            MaterialTheme.colorScheme.error.copy(alpha = 0.4f)
+                        }
+                    Surface(
+                        shape = MaterialTheme.shapes.medium,
+                        color = resultContainerColor,
+                        border = BorderStroke(1.dp, resultBorderColor),
                     ) {
-                        Icon(
-                            imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Info,
-                            contentDescription = null,
-                            tint = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(20.dp).padding(top = 2.dp),
-                        )
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                            Text(
-                                text = if (isCorrect) "Correct!" else "Explanation",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(12.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            Icon(
+                                imageVector = if (isCorrect) Icons.Default.CheckCircle else Icons.Default.Info,
+                                contentDescription = null,
+                                tint = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp).padding(top = 2.dp),
                             )
-                            Text(
-                                text = state.explanation,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface,
-                            )
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Text(
+                                    text = if (isCorrect) "Correct!" else "Explanation",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCorrect) visualInfo.accentColor else MaterialTheme.colorScheme.error,
+                                )
+                                Text(
+                                    text = state.explanation,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+}
+
+private enum class QuizOptionVisualState {
+    UNREVEALED,
+    CORRECT,
+    INCORRECT_CHOSEN,
+    REVEALED_OTHER,
 }
 
 // region Previews

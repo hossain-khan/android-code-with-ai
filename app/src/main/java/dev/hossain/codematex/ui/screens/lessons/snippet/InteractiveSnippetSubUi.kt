@@ -1,6 +1,7 @@
 package dev.hossain.codematex.ui.screens.lessons.snippet
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -8,8 +9,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,10 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -149,16 +146,6 @@ internal fun PlaygroundSnippetControls(
 ) {
     val playgroundTitle = getPlaygroundTitle(language)
 
-    val isOutputVisible =
-        executionState is SnippetExecutionState.Success ||
-            executionState is SnippetExecutionState.CompilationError ||
-            executionState is SnippetExecutionState.Error
-
-    var lastOutputState by remember { mutableStateOf<SnippetExecutionState?>(null) }
-    if (isOutputVisible) {
-        lastOutputState = executionState
-    }
-
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -226,57 +213,53 @@ internal fun PlaygroundSnippetControls(
             }
         }
 
-        AnimatedVisibility(
-            visible = executionState is SnippetExecutionState.Compiling,
-            enter = fadeIn(animationSpec = tween(150)) + expandVertically(expandFrom = Alignment.Top),
-            exit = fadeOut(animationSpec = tween(150)) + shrinkVertically(shrinkTowards = Alignment.Top),
-        ) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                LinearWavyProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = visualInfo.accentColor,
-                )
-                Text(
-                    text = "Compiling & executing on $playgroundTitle...",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
+        AnimatedContent(
+            targetState = executionState,
+            contentKey = { it::class },
+            transitionSpec = {
+                (
+                    fadeIn(animationSpec = tween(durationMillis = 220)) +
+                        expandVertically(
+                            expandFrom = Alignment.Top,
+                            animationSpec = tween(durationMillis = 280, easing = FastOutSlowInEasing),
+                        )
+                ).togetherWith(
+                    fadeOut(animationSpec = tween(durationMillis = 150)) +
+                        shrinkVertically(
+                            shrinkTowards = Alignment.Top,
+                            animationSpec = tween(durationMillis = 200, easing = FastOutLinearInEasing),
+                        ),
+                ).using(SizeTransform(clip = true))
+            },
+            label = "SnippetExecutionStateTransition",
+        ) { targetState ->
+            when (targetState) {
+                SnippetExecutionState.Idle -> {
+                    Spacer(modifier = Modifier.fillMaxWidth())
+                }
 
-        AnimatedVisibility(
-            visible = isOutputVisible,
-            enter =
-                slideInVertically(
-                    initialOffsetY = { -it },
-                    animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
-                ) +
-                    expandVertically(
-                        expandFrom = Alignment.Top,
-                        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
-                    ) +
-                    fadeIn(animationSpec = tween(durationMillis = 250)),
-            exit =
-                slideOutVertically(
-                    targetOffsetY = { -it },
-                    animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing),
-                ) +
-                    shrinkVertically(
-                        shrinkTowards = Alignment.Top,
-                        animationSpec = tween(durationMillis = 250, easing = FastOutLinearInEasing),
-                    ) +
-                    fadeOut(animationSpec = tween(durationMillis = 200)),
-        ) {
-            val stateToRender = if (isOutputVisible) executionState else lastOutputState
-            when (stateToRender) {
+                SnippetExecutionState.Compiling -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        LinearWavyProgressIndicator(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = visualInfo.accentColor,
+                        )
+                        Text(
+                            text = "Compiling & executing on $playgroundTitle...",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
                 is SnippetExecutionState.Success -> {
                     TerminalOutputCard(
                         title = "OUTPUT",
                         isError = false,
-                        text = stateToRender.output,
+                        text = targetState.output,
                         visualInfo = visualInfo,
                         onDismiss = onDismiss,
                     )
@@ -286,7 +269,7 @@ internal fun PlaygroundSnippetControls(
                     TerminalOutputCard(
                         title = "COMPILER DIAGNOSTIC",
                         isError = true,
-                        text = stateToRender.diagnostic,
+                        text = targetState.diagnostic,
                         visualInfo = visualInfo,
                         onDismiss = onDismiss,
                     )
@@ -311,7 +294,7 @@ internal fun PlaygroundSnippetControls(
                                 modifier = Modifier.size(18.dp),
                             )
                             Text(
-                                text = stateToRender.message,
+                                text = targetState.message,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier.weight(1f),
@@ -329,9 +312,6 @@ internal fun PlaygroundSnippetControls(
                             }
                         }
                     }
-                }
-
-                else -> {
                 }
             }
         }

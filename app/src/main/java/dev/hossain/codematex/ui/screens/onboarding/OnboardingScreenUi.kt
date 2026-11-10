@@ -1,12 +1,16 @@
 package dev.hossain.codematex.ui.screens.onboarding
 
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -62,6 +66,8 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
@@ -142,7 +148,7 @@ private fun OnboardingContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .radialGradientScrim(animatedAccentColor.copy(alpha = 0.16f)),
+                .radialGradientScrim { animatedAccentColor.copy(alpha = 0.16f) },
         topBar = {
             TopAppBar(
                 title = {
@@ -436,80 +442,98 @@ private fun OnboardingBottomBar(
                 ) {
                     repeat(pageCount) { index ->
                         val isSelected = currentPage == index
-                        val width by animateDpAsState(
-                            targetValue = if (isSelected) 24.dp else 8.dp,
-                            animationSpec = tween(300),
+                        val dotTransition =
+                            updateTransition(
+                                targetState = isSelected,
+                                label = "onboarding_dot_$index",
+                            )
+                        val width by dotTransition.animateDp(
+                            transitionSpec = { tween(300) },
                             label = "dot_width",
-                        )
-                        val color by animateColorAsState(
-                            targetValue =
-                                if (isSelected) {
-                                    accentColor
-                                } else {
-                                    MaterialTheme.colorScheme.outlineVariant.copy(
-                                        alpha = 0.6f,
-                                    )
-                                },
-                            animationSpec = tween(300),
+                        ) { selected ->
+                            if (selected) 24.dp else 8.dp
+                        }
+                        val color by dotTransition.animateColor(
+                            transitionSpec = { tween(300) },
                             label = "dot_color",
-                        )
+                        ) { selected ->
+                            if (selected) {
+                                accentColor
+                            } else {
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                            }
+                        }
 
                         Box(
                             modifier =
                                 Modifier
                                     .height(8.dp)
                                     .width(width)
-                                    .clip(CircleShape)
-                                    .background(color),
+                                    .drawBehind {
+                                        val radius = size.height / 2f
+                                        drawRoundRect(
+                                            color = color,
+                                            cornerRadius = CornerRadius(radius, radius),
+                                        )
+                                    },
                         )
                     }
                 }
 
                 // Action Button (Next or Get Started)
-                if (currentPage < pageCount - 1) {
-                    FilledTonalButton(
-                        onClick = onNext,
-                        shape = MaterialTheme.shapes.large,
-                        colors =
-                            ButtonDefaults.filledTonalButtonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
-                            ),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
-                    ) {
-                        Text(
-                            text = "Next",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
-                    }
-                } else {
-                    Button(
-                        onClick = onGetStarted,
-                        shape = MaterialTheme.shapes.large,
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = accentColor,
-                                contentColor = Color.White,
-                            ),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
-                    ) {
-                        Text(
-                            text = "Get Started",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                        )
+                AnimatedContent(
+                    targetState = currentPage < pageCount - 1,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(200))
+                            .togetherWith(fadeOut(animationSpec = tween(150)))
+                    },
+                    label = "OnboardingCtaButton",
+                ) { showNextButton ->
+                    if (showNextButton) {
+                        FilledTonalButton(
+                            onClick = onNext,
+                            shape = MaterialTheme.shapes.large,
+                            colors =
+                                ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                ),
+                            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp),
+                        ) {
+                            Text(
+                                text = "Next",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    } else {
+                        Button(
+                            onClick = onGetStarted,
+                            shape = MaterialTheme.shapes.large,
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = accentColor,
+                                    contentColor = Color.White,
+                                ),
+                            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp),
+                        ) {
+                            Text(
+                                text = "Get Started",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.ExtraBold,
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
                     }
                 }
             }

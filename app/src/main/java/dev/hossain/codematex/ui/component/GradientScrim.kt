@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.component
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.background
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -40,6 +41,27 @@ fun Modifier.radialGradientScrim(color: Color): Modifier {
         }
     return this.background(radialGradient)
 }
+
+/**
+ * Applies a radial gradient scrim emanating from the top center quarter of the element,
+ * deferring [colorProducer] reads to the draw phase to avoid recomposition during color animations.
+ */
+fun Modifier.radialGradientScrim(colorProducer: () -> Color): Modifier =
+    this.drawBehind {
+        val color = colorProducer()
+        if (color.alpha > 0f) {
+            val largerDimension = max(size.height, size.width)
+            val radius = (largerDimension / 1.8f).coerceAtLeast(1f)
+            val shader =
+                RadialGradientShader(
+                    center = size.center.copy(y = size.height / 4),
+                    colors = listOf(color, Color.Transparent),
+                    radius = radius,
+                    colorStops = listOf(0f, 0.85f),
+                )
+            drawRect(brush = ShaderBrush(shader))
+        }
+    }
 
 /**
  * Draws a vertical gradient scrim in the foreground or background.

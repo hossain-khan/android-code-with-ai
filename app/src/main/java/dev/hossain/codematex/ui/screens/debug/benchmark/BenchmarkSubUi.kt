@@ -45,7 +45,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -232,7 +232,7 @@ internal fun InferenceBenchmarkCard(
                                     imageVector = Icons.Default.ExpandMore,
                                     contentDescription =
                                         if (isSamplerExpanded) "Collapse sampler settings" else "Expand sampler settings",
-                                    modifier = Modifier.rotate(rotationAngle).size(20.dp),
+                                    modifier = Modifier.graphicsLayer { rotationZ = rotationAngle }.size(20.dp),
                                 )
                             }
                         }
