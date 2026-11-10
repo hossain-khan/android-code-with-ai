@@ -130,7 +130,7 @@ private fun LessonCatalogInnerContent(
             modifier
                 .fillMaxSize()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .radialGradientScrim(animatedAccentColor.copy(alpha = 0.15f)),
+                .radialGradientScrim { animatedAccentColor.copy(alpha = 0.15f) },
         topBar = {
             Column(
                 modifier =
