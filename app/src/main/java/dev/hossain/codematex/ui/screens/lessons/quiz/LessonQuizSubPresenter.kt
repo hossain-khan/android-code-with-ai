@@ -21,7 +21,7 @@ class LessonQuizSubPresenter(
 ) : SubPresenter<LessonQuizOuterEvent, LessonQuizSubState> {
     @Composable
     override fun present(outerEventSink: (LessonQuizOuterEvent) -> Unit): LessonQuizSubState {
-        var selectedOptionIndex by rememberRetained { mutableStateOf<Int?>(null) }
+        var selectedOptionIndex by rememberRetained(screen.quizId) { mutableStateOf<Int?>(null) }
 
         return LessonQuizSubState(
             question = screen.question,

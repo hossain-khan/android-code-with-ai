@@ -30,7 +30,9 @@ class InteractiveSnippetSubPresenter(
 ) : SubPresenter<InteractiveSnippetOuterEvent, InteractiveSnippetSubState> {
     @Composable
     override fun present(outerEventSink: (InteractiveSnippetOuterEvent) -> Unit): InteractiveSnippetSubState {
-        var executionState by rememberRetained { mutableStateOf<SnippetExecutionState>(SnippetExecutionState.Idle) }
+        var executionState by rememberRetained(screen.snippetId) {
+            mutableStateOf<SnippetExecutionState>(SnippetExecutionState.Idle)
+        }
         val isOnline by networkMonitor.isOnline.collectAsState(initial = true)
         val scope = rememberCoroutineScope()
 
