@@ -195,7 +195,7 @@ internal fun ChatInputField(
                         .onPreviewKeyEvent { event ->
                             if (event.type == KeyEventType.KeyDown) {
                                 if (event.key == Key.Escape) {
-                                    focusManager.clearFocus()
+                                    focusManager.clearFocus(force = true)
                                     true
                                 } else if (event.key == Key.Enter || event.key == Key.NumPadEnter) {
                                     if (event.isShiftPressed) {

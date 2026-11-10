@@ -56,10 +56,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isCtrlPressed
@@ -286,12 +286,12 @@ private fun SessionHistoryLayout(
         modifier =
             modifier
                 .focusRequester(screenFocusRequester)
-                .focusProperties { canFocus = true }
                 .focusable()
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
                 .onKeyEvent { event ->
-                    if (event.type == KeyEventType.KeyDown &&
+                    if (state.availableTopics.size >= 2 &&
+                        event.type == KeyEventType.KeyDown &&
                         event.nativeKeyEvent.repeatCount == 0 &&
                         evaluateSessionHistoryShortcut(
                             keyCode = event.nativeKeyEvent.keyCode,
@@ -302,6 +302,7 @@ private fun SessionHistoryLayout(
                             // Ensure the first filter chip is scrolled into composition if user scrolled horizontally
                             if (filterListState.firstVisibleItemIndex > 0 || filterListState.firstVisibleItemScrollOffset > 0) {
                                 filterListState.scrollToItem(0)
+                                withFrameNanos { }
                             }
                             try {
                                 filterChipFocusRequester.requestFocus()

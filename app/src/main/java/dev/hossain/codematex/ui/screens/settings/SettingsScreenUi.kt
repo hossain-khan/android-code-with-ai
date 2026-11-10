@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -69,6 +71,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -77,6 +80,7 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dev.hossain.codematex.R
 import dev.hossain.codematex.data.model.TutorPersona
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -432,6 +436,7 @@ private fun SettingsClickableRow(
         modifier =
             modifier
                 .fillMaxWidth()
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
                 .clickable(onClick = onClick)
                 .handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -493,6 +498,7 @@ private fun SettingsClickableRowWithCustomIcon(
         modifier =
             modifier
                 .fillMaxWidth()
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
                 .clickable(onClick = onClick)
                 .handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 14.dp),
@@ -555,8 +561,12 @@ private fun SettingsSwitchRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable { onCheckedChange(!checked) }
-                .handHoverIcon()
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                .toggleable(
+                    value = checked,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
+                ).handHoverIcon()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -597,7 +607,7 @@ private fun SettingsSwitchRow(
 
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
         )
     }
 }
@@ -616,14 +626,19 @@ private fun PersonaSelectionDialog(
                 TutorPersona.entries.forEach { persona ->
                     val isSelected = persona == currentPersona
                     Surface(
-                        onClick = { onPersonaSelected(persona) },
                         shape = MaterialTheme.shapes.medium,
                         color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
-                                .handHoverIcon(),
+                                .clip(MaterialTheme.shapes.medium)
+                                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                                .selectable(
+                                    selected = isSelected,
+                                    role = Role.RadioButton,
+                                    onClick = { onPersonaSelected(persona) },
+                                ).handHoverIcon(),
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -631,7 +646,7 @@ private fun PersonaSelectionDialog(
                         ) {
                             RadioButton(
                                 selected = isSelected,
-                                onClick = { onPersonaSelected(persona) },
+                                onClick = null,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
@@ -696,14 +711,18 @@ private fun RamEvictionDialog(
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
                                 .clip(MaterialTheme.shapes.small)
-                                .clickable { onMinutesSelected(minutes) }
-                                .handHoverIcon()
-                                .padding(vertical = 6.dp),
+                                .accessibleFocusOutline(shape = MaterialTheme.shapes.small)
+                                .selectable(
+                                    selected = isSelected,
+                                    role = Role.RadioButton,
+                                    onClick = { onMinutesSelected(minutes) },
+                                ).handHoverIcon()
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = isSelected,
-                            onClick = { onMinutesSelected(minutes) },
+                            onClick = null,
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(

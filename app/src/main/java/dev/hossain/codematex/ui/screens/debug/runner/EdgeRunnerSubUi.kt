@@ -34,11 +34,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.domain.runner.PlaygroundExecutionResult
+import dev.hossain.codematex.ui.component.clearFocusOnEscape
 import dev.hossain.codematex.ui.screens.debug.RUNNER_SUPPORTED_LANGUAGES
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -61,6 +63,8 @@ internal fun EdgeRunnerDiagnosticsCard(
     state: EdgeRunnerSubState,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -248,7 +252,7 @@ internal fun EdgeRunnerDiagnosticsCard(
             OutlinedTextField(
                 value = state.snippetCode,
                 onValueChange = { state.eventSink(EdgeRunnerUiEvent.UpdateSnippet(it)) },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clearFocusOnEscape(focusManager),
                 minLines = 4,
                 maxLines = 10,
                 textStyle =

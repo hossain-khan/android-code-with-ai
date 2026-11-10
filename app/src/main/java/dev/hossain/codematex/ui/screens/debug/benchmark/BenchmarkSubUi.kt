@@ -46,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -53,6 +54,8 @@ import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
+import dev.hossain.codematex.ui.component.clearFocusOnEscape
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.screens.debug.DEFAULT_BENCHMARK_CONFIG
 import dev.hossain.codematex.ui.screens.debug.DebugScreen.BenchmarkSamplerPreset
@@ -78,6 +81,7 @@ internal fun InferenceBenchmarkCard(
     state: BenchmarkSubState,
     modifier: Modifier = Modifier,
 ) {
+    val focusManager = LocalFocusManager.current
     var isSamplerExpanded by rememberSaveable { mutableStateOf(false) }
     val rotationAngle by animateFloatAsState(
         targetValue = if (isSamplerExpanded) 180f else 0f,
@@ -157,7 +161,7 @@ internal fun InferenceBenchmarkCard(
                 value = state.benchmarkPrompt,
                 onValueChange = { state.eventSink(BenchmarkUiEvent.UpdatePrompt(it)) },
                 label = { Text("Prompt") },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().clearFocusOnEscape(focusManager),
                 minLines = 2,
                 maxLines = 4,
             )
@@ -177,6 +181,7 @@ internal fun InferenceBenchmarkCard(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
+                                .accessibleFocusOutline(shape = MaterialTheme.shapes.small)
                                 .handHoverIcon()
                                 .clickable { isSamplerExpanded = !isSamplerExpanded },
                         horizontalArrangement = Arrangement.SpaceBetween,

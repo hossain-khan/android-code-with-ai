@@ -34,6 +34,7 @@ import dev.hossain.codematex.ui.animation.ActiveModelCardSharedKey
 import dev.hossain.codematex.ui.animation.ActiveModelTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
 import dev.hossain.codematex.ui.animation.sharedElementNav
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.handHoverIcon
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
@@ -111,7 +112,8 @@ internal fun HeroBanner(
                             } else {
                                 Modifier
                             },
-                        ).clickable { state.eventSink(ActiveModelBannerUiEvent.ManageModels) }
+                        ).accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                        .clickable { state.eventSink(ActiveModelBannerUiEvent.ManageModels) }
                         .handHoverIcon(),
                 shape = MaterialTheme.shapes.medium,
                 color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.65f),
