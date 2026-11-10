@@ -2,7 +2,6 @@ package dev.hossain.codematex.ui.screens.settings.profile
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +19,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -58,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +69,7 @@ import dev.hossain.codematex.data.model.DeveloperExperienceLevel
 import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.DeveloperProfilePreset
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.clearFocusOnEscape
 import dev.hossain.codematex.ui.component.handHoverIcon
@@ -364,8 +367,12 @@ private fun MasterToggleCard(
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.dp)
-                    .clickable { onToggle(!enabled) }
-                    .handHoverIcon()
+                    .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
+                    .toggleable(
+                        value = enabled,
+                        role = Role.Switch,
+                        onValueChange = onToggle,
+                    ).handHoverIcon()
                     .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -386,7 +393,7 @@ private fun MasterToggleCard(
             Spacer(modifier = Modifier.width(12.dp))
             Switch(
                 checked = enabled,
-                onCheckedChange = onToggle,
+                onCheckedChange = null,
             )
         }
     }
@@ -447,14 +454,18 @@ private fun ExperienceLevelCard(
                         Modifier
                             .fillMaxWidth()
                             .heightIn(min = 48.dp)
-                            .clickable { onSelectLevel(level) }
-                            .handHoverIcon()
+                            .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                            .selectable(
+                                selected = isSelected,
+                                role = Role.RadioButton,
+                                onClick = { onSelectLevel(level) },
+                            ).handHoverIcon()
                             .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
                         selected = isSelected,
-                        onClick = { onSelectLevel(level) },
+                        onClick = null,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {

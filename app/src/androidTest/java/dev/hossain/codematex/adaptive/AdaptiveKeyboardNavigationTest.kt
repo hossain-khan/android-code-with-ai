@@ -4,8 +4,11 @@ import androidx.activity.ComponentActivity
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
@@ -13,6 +16,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -26,10 +30,10 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
-import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
@@ -72,8 +76,7 @@ class AdaptiveKeyboardNavigationTest {
                             modifier =
                                 Modifier
                                     .testTag(button1Tag)
-                                    .focusRequester(focusRequester)
-                                    .focusable(),
+                                    .focusRequester(focusRequester),
                         ) {
                             Text("First Button")
                         }
@@ -81,8 +84,7 @@ class AdaptiveKeyboardNavigationTest {
                             onClick = {},
                             modifier =
                                 Modifier
-                                    .testTag(button2Tag)
-                                    .focusable(),
+                                    .testTag(button2Tag),
                         ) {
                             Text("Second Button")
                         }
@@ -122,16 +124,7 @@ class AdaptiveKeyboardNavigationTest {
                             modifier =
                                 Modifier
                                     .testTag(buttonTag)
-                                    .focusRequester(focusRequester)
-                                    .focusable()
-                                    .onKeyEvent { event ->
-                                        if (event.type == KeyEventType.KeyUp && (event.key == Key.Enter || event.key == Key.NumPadEnter)) {
-                                            clickCount++
-                                            true
-                                        } else {
-                                            false
-                                        }
-                                    },
+                                    .focusRequester(focusRequester),
                         ) {
                             Text("Click count: $clickCount")
                         }
@@ -241,8 +234,7 @@ class AdaptiveKeyboardNavigationTest {
                                 modifier =
                                     Modifier
                                         .testTag(menuItemTag)
-                                        .focusRequester(focusRequester)
-                                        .focusable(),
+                                        .focusRequester(focusRequester),
                             )
                         }
                     }
@@ -302,5 +294,60 @@ class AdaptiveKeyboardNavigationTest {
         composeTestRule.waitForIdle()
 
         composeTestRule.onNodeWithTag(cardTag).assertIsFocused()
+    }
+
+    @Test
+    fun givenCompositeToggleableSwitchRow_whenTabKeyIsPressed_thenFocusMovesToNextElementInSingleStop() {
+        val switchRowTag = "composite_switch_row"
+        val nextButtonTag = "next_action_button"
+        val focusRequester = FocusRequester()
+
+        composeTestRule.setContent {
+            var checked by remember { mutableStateOf(false) }
+            MaterialTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .testTag(switchRowTag)
+                                    .focusRequester(focusRequester)
+                                    .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                                    .toggleable(
+                                        value = checked,
+                                        role = Role.Switch,
+                                        onValueChange = { checked = it },
+                                    ),
+                        ) {
+                            Text("Wi-Fi Only Downloads")
+                            Switch(
+                                checked = checked,
+                                onCheckedChange = null,
+                            )
+                        }
+                        Button(
+                            onClick = {},
+                            modifier = Modifier.testTag(nextButtonTag),
+                        ) {
+                            Text("Next Control")
+                        }
+                    }
+                }
+            }
+        }
+
+        composeTestRule.runOnIdle {
+            focusRequester.requestFocus()
+        }
+        composeTestRule.onNodeWithTag(switchRowTag).assertIsFocused()
+
+        // Single Tab press should advance directly to the next button without stopping a second time on Switch
+        composeTestRule.onRoot().performKeyInput {
+            pressKey(Key.Tab)
+        }
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag(nextButtonTag).assertIsFocused()
     }
 }

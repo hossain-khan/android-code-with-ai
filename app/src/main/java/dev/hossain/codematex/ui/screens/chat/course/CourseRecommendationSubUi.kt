@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.slack.circuit.subcircuit.SubCircuitInject
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.data.repository.course.KotlinCourseContent
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
@@ -49,6 +50,7 @@ fun CourseRecommendationSubUi(
         modifier =
             modifier
                 .fillMaxWidth()
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                 .clickable {
                     state.eventSink(CourseRecommendationUiEvent.StartCourse(course.id))
                 },

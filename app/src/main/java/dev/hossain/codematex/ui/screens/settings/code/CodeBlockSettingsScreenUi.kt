@@ -3,7 +3,6 @@ package dev.hossain.codematex.ui.screens.settings.code
 import android.content.res.Configuration
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -58,6 +59,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -68,6 +70,7 @@ import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.model.CodeFontSize
 import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.ui.component.TooltipIconButton
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
@@ -395,13 +398,17 @@ private fun ThemeSelectionCard(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .clickable { state.eventSink(CodeBlockSettingsScreen.Event.ThemeSelected(theme)) }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                            .selectable(
+                                selected = isSelected,
+                                role = Role.RadioButton,
+                                onClick = { state.eventSink(CodeBlockSettingsScreen.Event.ThemeSelected(theme)) },
+                            ).padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     RadioButton(
                         selected = isSelected,
-                        onClick = { state.eventSink(CodeBlockSettingsScreen.Event.ThemeSelected(theme)) },
+                        onClick = null,
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
@@ -668,8 +675,12 @@ private fun SwitchRow(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clickable { onCheckedChange(!checked) }
-                .padding(horizontal = 16.dp, vertical = 12.dp),
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                .toggleable(
+                    value = checked,
+                    role = Role.Switch,
+                    onValueChange = onCheckedChange,
+                ).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -707,7 +718,7 @@ private fun SwitchRow(
 
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = null,
         )
     }
 }

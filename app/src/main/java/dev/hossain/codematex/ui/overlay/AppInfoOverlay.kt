@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.BuildConfig
 import dev.hossain.codematex.R
+import dev.hossain.codematex.ui.component.accessibleFocusOutline
 import dev.hossain.codematex.ui.component.radialGradientScrim
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -169,6 +170,7 @@ private fun AppInfoSheetContent(
                 modifier =
                     Modifier
                         .fillMaxWidth()
+                        .accessibleFocusOutline(shape = MaterialTheme.shapes.large)
                         .clickable { onOpenDebugScreen() },
                 shape = MaterialTheme.shapes.large,
                 colors =
@@ -357,7 +359,11 @@ private fun LinkCard(
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainer,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f)),
-        modifier = modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .accessibleFocusOutline(shape = MaterialTheme.shapes.medium)
+                .clickable(onClick = onClick),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
