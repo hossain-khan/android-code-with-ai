@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.33.1:
+• Fluid Animations: Refined topic glow transitions, quiz and telemetry state animations, and playground snippet execution states (#508).
+• Adaptive Continuity: Preserved Home and Session History scroll positions across fold/resize transitions and keyed lesson state (#509).
+• Keyboard & Focus Navigation: Single-stop Tab traversal on settings switches/radios, Escape focus clearing, and focus outlines (#510).
