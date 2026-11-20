@@ -1,5 +1,6 @@
 package dev.hossain.codematex.runtime
 
+import com.google.ai.edge.litertlm.Conversation
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
 import com.google.ai.edge.litertlm.MessageCallback
@@ -102,7 +103,7 @@ class DefaultInferenceConversation internal constructor(
     private val stateLock = Any()
     private var isClosed = false
 
-    constructor(conversation: com.google.ai.edge.litertlm.Conversation) : this(
+    constructor(conversation: Conversation) : this(
         sendAction = { input, callback -> conversation.sendMessageAsync(input, callback) },
         cancelAction = { conversation.cancelProcess() },
         closeAction = { conversation.close() },

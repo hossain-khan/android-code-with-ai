@@ -6,7 +6,9 @@ import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
@@ -107,8 +109,8 @@ class ModelConfigStoreTest {
         runTest(testDispatcher) {
             val failingDataStore =
                 object : DataStore<Preferences> {
-                    override val data: kotlinx.coroutines.flow.Flow<Preferences> =
-                        kotlinx.coroutines.flow.flow { throw IOException("Disk read error") }
+                    override val data: Flow<Preferences> =
+                        flow { throw IOException("Disk read error") }
 
                     override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
                         throw IOException("Disk write error")

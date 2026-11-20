@@ -1,5 +1,6 @@
 package dev.hossain.codematex.data.repository
 
+import dev.hossain.codematex.data.model.LearningCourse
 import dev.hossain.codematex.data.model.LessonBlock
 import dev.hossain.codematex.data.remote.PlaygroundExecuteRequest
 import dev.hossain.codematex.data.remote.PlaygroundExecuteResponse
@@ -14,6 +15,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.junit.Assume
+import org.junit.Ignore
 import org.junit.Test
 import java.io.File
 import java.time.Duration
@@ -36,7 +38,7 @@ class VerifyCourseSnippetsLiveTest {
             .connectTimeout(Duration.ofSeconds(15))
             .build()
 
-    @org.junit.Ignore(
+    @Ignore(
         "Run explicitly when verifying course snippets: ./gradlew testDebugUnitTest --tests dev.hossain.codematex.data.repository.VerifyCourseSnippetsLiveTest",
     )
     @Test
@@ -60,7 +62,7 @@ class VerifyCourseSnippetsLiveTest {
         verifyCourses(courses, token!!)
     }
 
-    @org.junit.Ignore(
+    @Ignore(
         "Run explicitly when verifying TypeScript course snippets: ./gradlew testDebugUnitTest --tests \"dev.hossain.codematex.data.repository.VerifyCourseSnippetsLiveTest.verify typescript course snippets on live edge playground\"",
     )
     @Test
@@ -76,7 +78,7 @@ class VerifyCourseSnippetsLiveTest {
     }
 
     private fun verifyCourses(
-        courses: List<dev.hossain.codematex.data.model.LearningCourse>,
+        courses: List<LearningCourse>,
         token: String,
     ) {
         val results = mutableListOf<SnippetVerificationResult>()

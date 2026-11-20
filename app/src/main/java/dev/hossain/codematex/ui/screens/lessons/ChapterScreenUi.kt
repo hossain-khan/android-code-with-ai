@@ -190,7 +190,7 @@ internal fun ChapterScreenInnerContent(
     ) { padding ->
         when (state) {
             ChapterScreen.State.Loading -> {
-                androidx.compose.foundation.layout.Box(
+                Box(
                     Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) { CircularWavyProgressIndicator() }
@@ -302,7 +302,7 @@ private fun EmptyChapterState() {
 private fun ChapterCard(
     chapter: LearningChapter,
     progress: CourseProgress,
-    visualAccent: androidx.compose.ui.graphics.Color,
+    visualAccent: Color,
     modifier: Modifier = Modifier,
     transitionScope: SharedElementTransitionScope? = null,
     onLessonClick: (LearningLesson) -> Unit,

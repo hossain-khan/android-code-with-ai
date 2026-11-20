@@ -10,6 +10,7 @@ import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
 
 /**
  * Unit tests for [SessionDetailPresenter].
@@ -58,7 +59,7 @@ class SessionDetailPresenterTest {
                 FakeChatSessionRepository(
                     sessions = listOf(session),
                     messages = testMessages,
-                    getSessionException = java.io.IOException("Database unavailable"),
+                    getSessionException = IOException("Database unavailable"),
                 )
             val navigator = FakeNavigator(SessionDetailScreen("s1"))
             val presenter = SessionDetailPresenter(navigator, SessionDetailScreen("s1"), fakeRepo)

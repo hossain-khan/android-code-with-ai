@@ -69,6 +69,9 @@ import dev.hossain.codematex.ui.screens.chat.benchmark.ChatBenchmarkSubScreen
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.DevicePreviews
 import dev.hossain.codematex.ui.theme.visualInfo
+import dev.hossain.highlight.ui.HighlightThemeProvider
+import dev.hossain.highlight.ui.rememberTomorrowLightTheme
+import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalSharedTransitionApi::class)
@@ -502,13 +505,9 @@ private fun ChatScreenActivePreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
         PreviewSharedElementTransitionLayout {
             SharedElementTransitionScope {
-                dev.hossain.highlight.ui.HighlightThemeProvider(
-                    lightHighlightTheme =
-                        dev.hossain.highlight.ui
-                            .rememberTomorrowLightTheme(),
-                    darkHighlightTheme =
-                        dev.hossain.highlight.ui
-                            .rememberTomorrowNightTheme(),
+                HighlightThemeProvider(
+                    lightHighlightTheme = rememberTomorrowLightTheme(),
+                    darkHighlightTheme = rememberTomorrowNightTheme(),
                 ) {
                     ChatLayout(state = sampleActiveChatState, transitionScope = this@SharedElementTransitionScope)
                 }

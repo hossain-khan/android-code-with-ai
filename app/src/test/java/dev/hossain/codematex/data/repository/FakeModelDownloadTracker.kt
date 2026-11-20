@@ -2,8 +2,10 @@ package dev.hossain.codematex.data.repository
 
 import androidx.work.Data
 import androidx.work.WorkInfo
+import dev.hossain.codematex.work.ModelDownloadWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import java.util.UUID
 
 /**
  * In-memory fake of [ModelDownloadTracker] for unit tests.
@@ -69,10 +71,10 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
         modelId: String,
         progress: Int,
     ) {
-        val data = Data.Builder().putInt(dev.hossain.codematex.work.ModelDownloadWorker.KEY_PROGRESS, progress).build()
+        val data = Data.Builder().putInt(ModelDownloadWorker.KEY_PROGRESS, progress).build()
         val workInfo =
             WorkInfo(
-                java.util.UUID.randomUUID(),
+                UUID.randomUUID(),
                 WorkInfo.State.RUNNING,
                 emptySet<String>(),
                 Data.EMPTY,
@@ -92,13 +94,13 @@ class FakeModelDownloadTracker : ModelDownloadTracker {
     ) {
         val outputData =
             if (errorMessage != null) {
-                Data.Builder().putString(dev.hossain.codematex.work.ModelDownloadWorker.KEY_ERROR_MESSAGE, errorMessage).build()
+                Data.Builder().putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, errorMessage).build()
             } else {
                 Data.EMPTY
             }
         val workInfo =
             WorkInfo(
-                java.util.UUID.randomUUID(),
+                UUID.randomUUID(),
                 WorkInfo.State.FAILED,
                 emptySet<String>(),
                 outputData,

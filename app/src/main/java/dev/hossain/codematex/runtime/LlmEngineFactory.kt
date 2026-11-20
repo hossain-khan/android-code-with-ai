@@ -2,6 +2,7 @@ package dev.hossain.codematex.runtime
 
 import android.content.Context
 import com.google.ai.edge.litertlm.Backend
+import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
 import com.google.ai.edge.litertlm.Engine
@@ -176,7 +177,7 @@ class DefaultLlmEngineFactory(
                             ConversationConfig(
                                 systemInstruction =
                                     systemInstruction?.let {
-                                        com.google.ai.edge.litertlm.Content
+                                        Content
                                             .Text(it)
                                             .let { content -> Contents.of(content) }
                                     },
@@ -247,7 +248,7 @@ class DefaultLlmEngineFactory(
         }
     }
 
-    private fun LlmEngine.Backend.toLiteRtBackend(): com.google.ai.edge.litertlm.Backend =
+    private fun LlmEngine.Backend.toLiteRtBackend(): Backend =
         when (this) {
             LlmEngine.Backend.CPU -> Backend.CPU()
             LlmEngine.Backend.GPU -> Backend.GPU()

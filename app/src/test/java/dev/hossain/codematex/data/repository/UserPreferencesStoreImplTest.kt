@@ -6,10 +6,17 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.common.truth.Truth.assertThat
+import dev.hossain.codematex.data.model.CodeBlockPreset
+import dev.hossain.codematex.data.model.CodeFontSize
+import dev.hossain.codematex.data.model.CodeTheme
 import dev.hossain.codematex.data.model.CodingTopic
+import dev.hossain.codematex.data.model.DeveloperExperienceLevel
+import dev.hossain.codematex.data.model.DeveloperProfile
 import dev.hossain.codematex.data.model.TutorPersona
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -20,6 +27,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserPreferencesStoreImplTest {
@@ -91,19 +99,19 @@ class UserPreferencesStoreImplTest {
                 ).inOrder()
         }
 
-    @Test(expected = java.io.IOException::class)
+    @Test(expected = IOException::class)
     fun `given failing datastore write - setSelectedPersona propagates exception to caller`() =
         runTest(testDispatcher) {
             val failingDataStore =
                 object : DataStore<Preferences> {
-                    override val data: kotlinx.coroutines.flow.Flow<Preferences> =
-                        kotlinx.coroutines.flow.flowOf(
+                    override val data: Flow<Preferences> =
+                        flowOf(
                             androidx.datastore.preferences.core
                                 .emptyPreferences(),
                         )
 
                     override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
-                        throw java.io.IOException("Disk write failure")
+                        throw IOException("Disk write failure")
                 }
             val failingStore = UserPreferencesStoreImpl(failingDataStore)
             failingStore.setSelectedPersona(TutorPersona.BEGINNER_FRIENDLY)
@@ -205,16 +213,16 @@ class UserPreferencesStoreImplTest {
     @Test
     fun `given uninitialized store - getCodeTheme returns default TOMORROW`() =
         runTest(testDispatcher) {
-            assertThat(store.getCodeTheme()).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.TOMORROW)
-            assertThat(store.codeThemeFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.TOMORROW)
+            assertThat(store.getCodeTheme()).isEqualTo(CodeTheme.TOMORROW)
+            assertThat(store.codeThemeFlow.first()).isEqualTo(CodeTheme.TOMORROW)
         }
 
     @Test
     fun `given setCodeTheme write - state is immediately observable`() =
         runTest(testDispatcher) {
-            store.setCodeTheme(dev.hossain.codematex.data.model.CodeTheme.DRACULA)
-            assertThat(store.getCodeTheme()).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.DRACULA)
-            assertThat(store.codeThemeFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.DRACULA)
+            store.setCodeTheme(CodeTheme.DRACULA)
+            assertThat(store.getCodeTheme()).isEqualTo(CodeTheme.DRACULA)
+            assertThat(store.codeThemeFlow.first()).isEqualTo(CodeTheme.DRACULA)
         }
 
     @Test
@@ -223,7 +231,7 @@ class UserPreferencesStoreImplTest {
             dataStore.edit { prefs ->
                 prefs[stringPreferencesKey("code_block_theme")] = "INVALID_THEME"
             }
-            assertThat(store.getCodeTheme()).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.TOMORROW)
+            assertThat(store.getCodeTheme()).isEqualTo(CodeTheme.TOMORROW)
         }
 
     @Test
@@ -259,16 +267,16 @@ class UserPreferencesStoreImplTest {
     @Test
     fun `given uninitialized store - getCodeBlockPreset returns default COMPACT`() =
         runTest(testDispatcher) {
-            assertThat(store.getCodeBlockPreset()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMPACT)
-            assertThat(store.codeBlockPresetFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMPACT)
+            assertThat(store.getCodeBlockPreset()).isEqualTo(CodeBlockPreset.COMPACT)
+            assertThat(store.codeBlockPresetFlow.first()).isEqualTo(CodeBlockPreset.COMPACT)
         }
 
     @Test
     fun `given setCodeBlockPreset write - state is immediately observable`() =
         runTest(testDispatcher) {
-            store.setCodeBlockPreset(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
-            assertThat(store.getCodeBlockPreset()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
-            assertThat(store.codeBlockPresetFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
+            store.setCodeBlockPreset(CodeBlockPreset.COMFORTABLE)
+            assertThat(store.getCodeBlockPreset()).isEqualTo(CodeBlockPreset.COMFORTABLE)
+            assertThat(store.codeBlockPresetFlow.first()).isEqualTo(CodeBlockPreset.COMFORTABLE)
         }
 
     @Test
@@ -277,22 +285,22 @@ class UserPreferencesStoreImplTest {
             dataStore.edit { prefs ->
                 prefs[stringPreferencesKey("code_block_preset")] = "INVALID_PRESET"
             }
-            assertThat(store.getCodeBlockPreset()).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMPACT)
+            assertThat(store.getCodeBlockPreset()).isEqualTo(CodeBlockPreset.COMPACT)
         }
 
     @Test
     fun `given uninitialized store - getCodeFontSize returns default MEDIUM`() =
         runTest(testDispatcher) {
-            assertThat(store.getCodeFontSize()).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.MEDIUM)
-            assertThat(store.codeFontSizeFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.MEDIUM)
+            assertThat(store.getCodeFontSize()).isEqualTo(CodeFontSize.MEDIUM)
+            assertThat(store.codeFontSizeFlow.first()).isEqualTo(CodeFontSize.MEDIUM)
         }
 
     @Test
     fun `given setCodeFontSize write - state is immediately observable`() =
         runTest(testDispatcher) {
-            store.setCodeFontSize(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
-            assertThat(store.getCodeFontSize()).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
-            assertThat(store.codeFontSizeFlow.first()).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
+            store.setCodeFontSize(CodeFontSize.LARGE)
+            assertThat(store.getCodeFontSize()).isEqualTo(CodeFontSize.LARGE)
+            assertThat(store.codeFontSizeFlow.first()).isEqualTo(CodeFontSize.LARGE)
         }
 
     @Test
@@ -301,26 +309,26 @@ class UserPreferencesStoreImplTest {
             dataStore.edit { prefs ->
                 prefs[stringPreferencesKey("code_font_size")] = "INVALID_SIZE"
             }
-            assertThat(store.getCodeFontSize()).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.MEDIUM)
+            assertThat(store.getCodeFontSize()).isEqualTo(CodeFontSize.MEDIUM)
         }
 
     @Test
     fun `given settings updates - codeBlockSettingsFlow reflects composite snapshot`() =
         runTest(testDispatcher) {
-            store.setCodeTheme(dev.hossain.codematex.data.model.CodeTheme.DRACULA)
+            store.setCodeTheme(CodeTheme.DRACULA)
             store.setShowLineNumbers(true)
             store.setShowLanguageLabel(false)
             store.setShowCopyButton(false)
-            store.setCodeBlockPreset(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
-            store.setCodeFontSize(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
+            store.setCodeBlockPreset(CodeBlockPreset.COMFORTABLE)
+            store.setCodeFontSize(CodeFontSize.LARGE)
 
             val snapshot = store.codeBlockSettingsFlow.first()
-            assertThat(snapshot.theme).isEqualTo(dev.hossain.codematex.data.model.CodeTheme.DRACULA)
+            assertThat(snapshot.theme).isEqualTo(CodeTheme.DRACULA)
             assertThat(snapshot.showLineNumbers).isTrue()
             assertThat(snapshot.showLanguageLabel).isFalse()
             assertThat(snapshot.showCopyButton).isFalse()
-            assertThat(snapshot.preset).isEqualTo(dev.hossain.codematex.data.model.CodeBlockPreset.COMFORTABLE)
-            assertThat(snapshot.fontSize).isEqualTo(dev.hossain.codematex.data.model.CodeFontSize.LARGE)
+            assertThat(snapshot.preset).isEqualTo(CodeBlockPreset.COMFORTABLE)
+            assertThat(snapshot.fontSize).isEqualTo(CodeFontSize.LARGE)
         }
 
     @Test
@@ -328,7 +336,7 @@ class UserPreferencesStoreImplTest {
         runTest(testDispatcher) {
             val profile = store.getDeveloperProfile()
             assertThat(profile.enabled).isFalse()
-            assertThat(profile.experienceLevel).isEqualTo(dev.hossain.codematex.data.model.DeveloperExperienceLevel.INTERMEDIATE)
+            assertThat(profile.experienceLevel).isEqualTo(DeveloperExperienceLevel.INTERMEDIATE)
             assertThat(profile.primaryStack).isEmpty()
             assertThat(profile.customDirectives).isEmpty()
         }
@@ -337,9 +345,9 @@ class UserPreferencesStoreImplTest {
     fun `given setDeveloperProfile write - state is immediately observable`() =
         runTest(testDispatcher) {
             val customProfile =
-                dev.hossain.codematex.data.model.DeveloperProfile(
+                DeveloperProfile(
                     enabled = true,
-                    experienceLevel = dev.hossain.codematex.data.model.DeveloperExperienceLevel.STAFF_LEAD,
+                    experienceLevel = DeveloperExperienceLevel.STAFF_LEAD,
                     primaryStack = "Kotlin, Android",
                     customDirectives = "Always use coroutines",
                 )
@@ -347,7 +355,7 @@ class UserPreferencesStoreImplTest {
 
             val updated = store.getDeveloperProfile()
             assertThat(updated.enabled).isTrue()
-            assertThat(updated.experienceLevel).isEqualTo(dev.hossain.codematex.data.model.DeveloperExperienceLevel.STAFF_LEAD)
+            assertThat(updated.experienceLevel).isEqualTo(DeveloperExperienceLevel.STAFF_LEAD)
             assertThat(updated.primaryStack).isEqualTo("Kotlin, Android")
             assertThat(updated.customDirectives).isEqualTo("Always use coroutines")
         }
@@ -359,6 +367,6 @@ class UserPreferencesStoreImplTest {
                 prefs[stringPreferencesKey("dev_profile_experience")] = "INVALID_LEVEL"
             }
             val profile = store.getDeveloperProfile()
-            assertThat(profile.experienceLevel).isEqualTo(dev.hossain.codematex.data.model.DeveloperExperienceLevel.INTERMEDIATE)
+            assertThat(profile.experienceLevel).isEqualTo(DeveloperExperienceLevel.INTERMEDIATE)
         }
 }

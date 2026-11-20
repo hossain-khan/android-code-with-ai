@@ -8,6 +8,7 @@ import dev.hossain.codematex.data.model.CodeBlockPreset
 import dev.hossain.codematex.data.model.CodeBlockSettings
 import dev.hossain.codematex.data.model.CodeFontSize
 import dev.hossain.codematex.data.model.CodeTheme
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlinx.serialization.Serializable
 
@@ -58,7 +59,7 @@ data object CodeBlockSettingsScreen : ParcelableScreen {
         data object BackClicked : Event
     }
 
-    @kotlinx.parcelize.IgnoredOnParcel
+    @IgnoredOnParcel
     const val SAMPLE_CODE: String = """interface TokenStream<T> {
   id: string;
   readonly latencyMs: number;
@@ -71,7 +72,7 @@ async function generateResponse(prompt: string): Promise<TokenStream<string>> {
   return session.streamTokens(`Query: ${"$"}{prompt}`);
 }"""
 
-    @kotlinx.parcelize.IgnoredOnParcel
+    @IgnoredOnParcel
     const val EXPANDED_SAMPLE_CODE: String = """interface TokenStream<T> {
   id: string;
   readonly latencyMs: number;

@@ -1,7 +1,10 @@
 package dev.hossain.codematex.runtime
 
+import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Contents
 import com.google.ai.edge.litertlm.ConversationConfig
+import com.google.ai.edge.litertlm.LiteRtLmJniException
+import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.ai.edge.litertlm.SamplerConfig
 import dev.hossain.codematex.data.model.ChatMessage
@@ -166,7 +169,7 @@ class LlmEngineImpl(
 
         try {
             executeInference(input, onToken)
-        } catch (e: kotlinx.coroutines.CancellationException) {
+        } catch (e: CancellationException) {
             isConversationCancelled = true
             Timber.d("LlmEngineImpl: Inference was cancelled by user")
             throw e
@@ -348,7 +351,7 @@ class LlmEngineImpl(
                 systemInstruction =
                     systemInstruction?.let {
                         Contents.of(
-                            com.google.ai.edge.litertlm.Content
+                            Content
                                 .Text(it),
                         )
                     },
@@ -376,7 +379,7 @@ class LlmEngineImpl(
                 try {
                     executeRestoreHistory(priorMessages)
                     return@withLock
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
                 } catch (e: java.util.concurrent.CancellationException) {
                     throw e
@@ -538,13 +541,13 @@ class LlmEngineImpl(
         private val resumed = AtomicBoolean(false)
         private val terminal = AtomicBoolean(false)
 
-        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {
+        override fun onMessage(message: Message) {
             if (terminal.get()) return
             try {
                 val text =
                     message.contents.contents.joinToString("") { content ->
                         when (content) {
-                            is com.google.ai.edge.litertlm.Content.Text -> content.text
+                            is Content.Text -> content.text
                             else -> ""
                         }
                     }
@@ -576,7 +579,7 @@ class LlmEngineImpl(
                 completeSuccessfully()
             } else {
                 val exceptionToResume =
-                    if (throwable is com.google.ai.edge.litertlm.LiteRtLmJniException) {
+                    if (throwable is LiteRtLmJniException) {
                         BackendFailureException(backend, throwable)
                     } else {
                         throwable
@@ -625,7 +628,7 @@ class LlmEngineImpl(
 
 private fun isCancellation(throwable: Throwable): Boolean =
     throwable is java.util.concurrent.CancellationException ||
-        throwable is kotlinx.coroutines.CancellationException ||
+        throwable is CancellationException ||
         throwable.message?.contains("cancel", ignoreCase = true) == true
 
 private fun logCallbackFailure(

@@ -3,6 +3,7 @@ package dev.hossain.codematex.system
 import android.app.Activity
 import android.app.ActivityManager
 import android.app.Application
+import android.app.ApplicationExitInfo
 import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.res.Configuration
@@ -392,7 +393,7 @@ class SystemMemoryManagerImpl
                     val exitReasons = activityManager?.getHistoricalProcessExitReasons(context.packageName, 0, 3)
                     exitReasons?.firstOrNull()?.let { lastExit ->
                         when (lastExit.reason) {
-                            android.app.ApplicationExitInfo.REASON_LOW_MEMORY -> {
+                            ApplicationExitInfo.REASON_LOW_MEMORY -> {
                                 Timber.w(
                                     "SystemMemoryManager [LMK_DIAGNOSTIC]: Previous process run was killed by Low Memory Killer (LMK). " +
                                         "PSS: %.1f MB, RSS: %.1f MB, Description: %s",
@@ -402,7 +403,7 @@ class SystemMemoryManagerImpl
                                 )
                             }
 
-                            android.app.ApplicationExitInfo.REASON_CRASH_NATIVE -> {
+                            ApplicationExitInfo.REASON_CRASH_NATIVE -> {
                                 Timber.w(
                                     "SystemMemoryManager [CRASH_DIAGNOSTIC]: Previous process run had native crash. Description: %s",
                                     lastExit.description ?: "None",

@@ -5,7 +5,9 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -16,6 +18,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ModelSelectionStoreImplTest {
@@ -82,19 +85,19 @@ class ModelSelectionStoreImplTest {
             assertThat(collected).containsExactly(null, "model-1", "model-2").inOrder()
         }
 
-    @Test(expected = java.io.IOException::class)
+    @Test(expected = IOException::class)
     fun `given failing datastore write - setSelectedModelId propagates exception to caller`() =
         runTest(testDispatcher) {
             val failingDataStore =
                 object : DataStore<Preferences> {
-                    override val data: kotlinx.coroutines.flow.Flow<Preferences> =
-                        kotlinx.coroutines.flow.flowOf(
+                    override val data: Flow<Preferences> =
+                        flowOf(
                             androidx.datastore.preferences.core
                                 .emptyPreferences(),
                         )
 
                     override suspend fun updateData(transform: suspend (t: Preferences) -> Preferences): Preferences =
-                        throw java.io.IOException("Disk write failure")
+                        throw IOException("Disk write failure")
                 }
             val failingStore = ModelSelectionStoreImpl(failingDataStore)
             failingStore.setSelectedModelId("model-1")

@@ -17,6 +17,7 @@ import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.system.ModelCompatibilityChecker
+import dev.hossain.codematex.ui.screens.debug.DebugScreen
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -124,7 +125,7 @@ class ModelPickerPresenter(
                 }
 
                 ModelPickerScreen.Event.OpenDebugScreen -> {
-                    navigator.goTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+                    navigator.goTo(DebugScreen)
                 }
             }
         }

@@ -174,7 +174,7 @@ internal fun LessonScreenInnerContent(
     ) { padding ->
         when (state) {
             LessonScreen.State.Loading -> {
-                androidx.compose.foundation.layout.Box(
+                Box(
                     Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center,
                 ) { CircularWavyProgressIndicator() }
