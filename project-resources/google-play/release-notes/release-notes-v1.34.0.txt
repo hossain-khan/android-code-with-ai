@@ -1,0 +1,3 @@
+What's New in CodeMateX 1.34.0:
+• Expanded AI Model Catalog: Added 6 new on-device LiteRT-LM models across Entry, Mid, and High tiers (#516): Qwen 3 1.7B, DeepSeek-R1 Distill Qwen 1.5B, SmolLM3 3B, Qwen 3 4B, Qwen 2.5 Coder 3B, and DeepSeek-R1 Distill Qwen 7B.
+• Verified Downloads: All new models use pinned immutable Hugging Face revisions with SHA-256 integrity checks.
