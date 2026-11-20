@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.33.2:
+• On-Device AI Runtime: Upgraded LiteRT-LM to 0.19.1 for improved local inference stability and performance.
+• Code & Markdown Rendering: Updated compose-highlight (0.41.1) and multiplatform-markdown-renderer (0.46.0) for smoother syntax highlighting.
+• Platform & Stability: Upgraded Material 3 (1.5.0), WorkManager (2.12.0), Metro DI (1.6.0), and DataStore (1.3.0), plus code quality and formatting improvements.
