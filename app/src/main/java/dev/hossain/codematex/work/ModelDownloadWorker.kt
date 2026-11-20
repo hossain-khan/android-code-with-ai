@@ -172,7 +172,7 @@ class ModelDownloadWorker(
 
     override suspend fun doWork(): Result {
         val urls =
-            inputData.getStringArray(KEY_URLS)?.toList()
+            inputData.getNullableStringArray(KEY_URLS)?.filterNotNull()
                 ?: listOfNotNull(inputData.getString(KEY_URL))
         if (urls.isEmpty()) {
             return Result.failure(
