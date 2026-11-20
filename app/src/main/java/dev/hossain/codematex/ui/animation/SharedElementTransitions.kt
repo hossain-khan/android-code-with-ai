@@ -3,6 +3,7 @@ package dev.hossain.codematex.ui.animation
 import androidx.compose.animation.BoundsTransform
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import com.slack.circuit.sharedelements.SharedElementTransitionScope
 import com.slack.circuit.sharedelements.SharedTransitionKey
@@ -110,7 +111,7 @@ data class SessionTitleSharedKey(
  * CompositionLocal providing the current [SharedElementTransitionScope] across
  * subcircuits and nested composables in the UI hierarchy.
  */
-val LocalSharedElementTransitionScope = androidx.compose.runtime.compositionLocalOf<SharedElementTransitionScope?> { null }
+val LocalSharedElementTransitionScope = compositionLocalOf<SharedElementTransitionScope?> { null }
 
 /**
  * Applies a shared element transition using the [SharedElementTransitionScope.AnimatedScope.Navigation]

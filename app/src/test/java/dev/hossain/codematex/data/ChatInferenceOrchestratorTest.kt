@@ -17,6 +17,7 @@ import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.runtime.LowMemoryException
 import dev.hossain.codematex.system.FakeSystemMemoryManager
 import dev.hossain.codematex.system.MemoryHeadroomResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -195,10 +196,10 @@ class ChatInferenceOrchestratorTest {
             assertThat(fakeEngine.resetCalls).isEqualTo(1)
         }
 
-    @Test(expected = kotlinx.coroutines.CancellationException::class)
+    @Test(expected = CancellationException::class)
     fun `initialize rethrows CancellationException when coroutine cancelled`() =
         runTest {
-            fakeEngine.shouldThrow = kotlinx.coroutines.CancellationException("The coroutine scope left the composition")
+            fakeEngine.shouldThrow = CancellationException("The coroutine scope left the composition")
 
             createOrchestrator().initialize(
                 model = testModel(),

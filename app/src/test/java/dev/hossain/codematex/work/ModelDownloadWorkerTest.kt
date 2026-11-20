@@ -1,5 +1,6 @@
 package dev.hossain.codematex.work
 
+import androidx.work.Data
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
@@ -59,7 +60,7 @@ class ModelDownloadWorkerTest {
                 )
 
             val expectedErrorData =
-                androidx.work.Data
+                Data
                     .Builder()
                     .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "SHA-256 checksum mismatch: expected expected, calculated actual")
                     .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, false)
@@ -83,7 +84,7 @@ class ModelDownloadWorkerTest {
                 )
 
             val expectedErrorData =
-                androidx.work.Data
+                Data
                     .Builder()
                     .putString(ModelDownloadWorker.KEY_ERROR_MESSAGE, "Network failure: timeout")
                     .putBoolean(ModelDownloadWorker.KEY_ERROR_RETRYABLE, true)

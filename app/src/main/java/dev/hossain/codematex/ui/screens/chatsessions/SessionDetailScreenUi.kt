@@ -69,6 +69,9 @@ import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.ui.theme.TopicVisualInfo
 import dev.hossain.codematex.ui.theme.visualInfo
 import dev.hossain.codematex.util.formatShortModelName
+import dev.hossain.highlight.ui.HighlightThemeProvider
+import dev.hossain.highlight.ui.rememberTomorrowLightTheme
+import dev.hossain.highlight.ui.rememberTomorrowNightTheme
 import dev.zacsweers.metro.AppScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
@@ -646,13 +649,9 @@ private val sampleDetailMessages =
 @Composable
 private fun SessionDetailScreenPreview() {
     CodeWithAIAppTheme(dynamicColor = false) {
-        dev.hossain.highlight.ui.HighlightThemeProvider(
-            lightHighlightTheme =
-                dev.hossain.highlight.ui
-                    .rememberTomorrowLightTheme(),
-            darkHighlightTheme =
-                dev.hossain.highlight.ui
-                    .rememberTomorrowNightTheme(),
+        HighlightThemeProvider(
+            lightHighlightTheme = rememberTomorrowLightTheme(),
+            darkHighlightTheme = rememberTomorrowNightTheme(),
         ) {
             SessionDetailLayout(
                 state =

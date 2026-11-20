@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.util.formatShortModelName
 import dev.hossain.codematex.util.formatStorageSize
+import kotlin.math.round
 
 @Immutable
 data class AiModel(
@@ -98,7 +99,7 @@ val AiModel.formattedContextWindow: String?
                 }
 
                 else -> {
-                    kotlin.math.round(contextWindow / 1000.0).toInt()
+                    round(contextWindow / 1000.0).toInt()
                 }
             }
         return "${kCount}k Context"

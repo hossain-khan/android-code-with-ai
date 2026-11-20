@@ -1,10 +1,13 @@
 package dev.hossain.codematex.runtime
 
 import com.google.ai.edge.litertlm.ConversationConfig
+import com.google.ai.edge.litertlm.Message
 import com.google.ai.edge.litertlm.MessageCallback
 import com.google.common.truth.Truth.assertThat
 import org.junit.Assert.assertThrows
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Unit tests for [DefaultInferenceEngine] and [DefaultInferenceConversation].
@@ -30,7 +33,7 @@ class InferenceEngineTest {
 
         val callback =
             object : MessageCallback {
-                override fun onMessage(message: com.google.ai.edge.litertlm.Message) {}
+                override fun onMessage(message: Message) {}
 
                 override fun onDone() {}
 
@@ -59,7 +62,7 @@ class InferenceEngineTest {
                 conversation.sendMessageAsync(
                     "Hello",
                     object : MessageCallback {
-                        override fun onMessage(message: com.google.ai.edge.litertlm.Message) {}
+                        override fun onMessage(message: Message) {}
 
                         override fun onDone() {}
 
@@ -206,8 +209,8 @@ class InferenceEngineTest {
 
     @Test
     fun `DefaultInferenceConversation cancelProcess and close are strictly serialized`() {
-        val cancelStarted = java.util.concurrent.CountDownLatch(1)
-        val canCompleteCancel = java.util.concurrent.CountDownLatch(1)
+        val cancelStarted = CountDownLatch(1)
+        val canCompleteCancel = CountDownLatch(1)
         var closeExecuted = false
         var cancelExecuted = false
 
@@ -216,7 +219,7 @@ class InferenceEngineTest {
                 sendAction = { _, _ -> },
                 cancelAction = {
                     cancelStarted.countDown()
-                    canCompleteCancel.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                    canCompleteCancel.await(2, TimeUnit.SECONDS)
                     cancelExecuted = true
                 },
                 closeAction = {
@@ -227,7 +230,7 @@ class InferenceEngineTest {
         val cancelThread = Thread { conversation.cancelProcess() }
         cancelThread.start()
 
-        assertThat(cancelStarted.await(2, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+        assertThat(cancelStarted.await(2, TimeUnit.SECONDS)).isTrue()
 
         val closeThread = Thread { conversation.close() }
         closeThread.start()
@@ -245,8 +248,8 @@ class InferenceEngineTest {
 
     @Test
     fun `DefaultInferenceConversation cancelProcess never runs after close starts`() {
-        val closeStarted = java.util.concurrent.CountDownLatch(1)
-        val canCompleteClose = java.util.concurrent.CountDownLatch(1)
+        val closeStarted = CountDownLatch(1)
+        val canCompleteClose = CountDownLatch(1)
         var cancelExecuted = false
         var closeExecuted = false
 
@@ -258,7 +261,7 @@ class InferenceEngineTest {
                 },
                 closeAction = {
                     closeStarted.countDown()
-                    canCompleteClose.await(2, java.util.concurrent.TimeUnit.SECONDS)
+                    canCompleteClose.await(2, TimeUnit.SECONDS)
                     closeExecuted = true
                 },
             )
@@ -266,7 +269,7 @@ class InferenceEngineTest {
         val closeThread = Thread { conversation.close() }
         closeThread.start()
 
-        assertThat(closeStarted.await(2, java.util.concurrent.TimeUnit.SECONDS)).isTrue()
+        assertThat(closeStarted.await(2, TimeUnit.SECONDS)).isTrue()
 
         val cancelThread = Thread { conversation.cancelProcess() }
         cancelThread.start()

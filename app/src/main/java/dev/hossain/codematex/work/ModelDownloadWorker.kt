@@ -5,11 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ForegroundInfo
 import androidx.work.ListenableWorker
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dev.hossain.codematex.MainActivity
 import dev.hossain.codematex.di.AppWorkerFactory
@@ -25,6 +28,7 @@ import dev.zacsweers.metro.binding
 import kotlinx.coroutines.CancellationException
 import timber.log.Timber
 import java.io.IOException
+import java.util.Locale
 
 @AssistedInject
 class ModelDownloadWorker(
@@ -69,7 +73,7 @@ class ModelDownloadWorker(
                         outputPath = outputPath,
                         expectedSha256 = expectedSha256,
                         onProgress = { progress, bytesDownloaded, totalBytes ->
-                            if (isStopped()) throw kotlinx.coroutines.CancellationException("Worker stopped")
+                            if (isStopped()) throw CancellationException("Worker stopped")
                             onProgress(progress, bytesDownloaded, totalBytes)
                         },
                         shouldCancel = isStopped,
@@ -88,7 +92,7 @@ class ModelDownloadWorker(
                     val error = result.exceptionOrNull() ?: IllegalStateException("Download failed")
                     Result.failure(createErrorData(error))
                 }
-            } catch (e: kotlinx.coroutines.CancellationException) {
+            } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 Timber.e(e, "ModelDownloadWorker: Error during download work")
@@ -235,12 +239,12 @@ class ModelDownloadWorker(
             )
 
         val notification =
-            androidx.core.app.NotificationCompat
+            NotificationCompat
                 .Builder(applicationContext, CHANNEL_ID_DOWNLOAD_COMPLETE)
                 .setContentTitle("$modelName is ready!")
                 .setContentText("Download complete. Tap to explore coding topics with your on-device AI tutor!")
                 .setStyle(
-                    androidx.core.app.NotificationCompat
+                    NotificationCompat
                         .BigTextStyle()
                         .setBigContentTitle("$modelName is ready!")
                         .bigText(
@@ -249,11 +253,11 @@ class ModelDownloadWorker(
                 ).setSmallIcon(android.R.drawable.stat_sys_download_done)
                 .setContentIntent(contentPendingIntent)
                 .setAutoCancel(true)
-                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_STATUS)
+                .setCategory(NotificationCompat.CATEGORY_STATUS)
                 .build()
 
         val notificationManager =
-            androidx.core.app.NotificationManagerCompat
+            NotificationManagerCompat
                 .from(applicationContext)
 
         try {
@@ -286,10 +290,10 @@ class ModelDownloadWorker(
                 if (totalBytes > 0) {
                     val downloadedMb = bytesDownloaded / 1_000_000L
                     val totalMb = totalBytes / 1_000_000L
-                    String.format(java.util.Locale.US, "%d%% • %,d MB / %,d MB", progress, downloadedMb, totalMb)
+                    String.format(Locale.US, "%d%% • %,d MB / %,d MB", progress, downloadedMb, totalMb)
                 } else if (bytesDownloaded > 0) {
                     val downloadedMb = bytesDownloaded / 1_000_000L
-                    String.format(java.util.Locale.US, "%d%% • %,d MB", progress, downloadedMb)
+                    String.format(Locale.US, "%d%% • %,d MB", progress, downloadedMb)
                 } else {
                     "$progress%"
                 }
@@ -310,7 +314,7 @@ class ModelDownloadWorker(
                 ?: "AI Model"
 
         val cancelIntent =
-            androidx.work.WorkManager
+            WorkManager
                 .getInstance(applicationContext)
                 .createCancelPendingIntent(id)
 
@@ -334,7 +338,7 @@ class ModelDownloadWorker(
             )
 
         val notification =
-            androidx.core.app.NotificationCompat
+            NotificationCompat
                 .Builder(applicationContext, CHANNEL_ID_DOWNLOAD_PROGRESS)
                 .setContentTitle("Downloading $modelName")
                 .setContentText(content)
@@ -343,7 +347,7 @@ class ModelDownloadWorker(
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
-                .setCategory(androidx.core.app.NotificationCompat.CATEGORY_PROGRESS)
+                .setCategory(NotificationCompat.CATEGORY_PROGRESS)
                 .setProgress(maxProgress, progress, progress <= 0)
                 .addAction(
                     android.R.drawable.ic_menu_close_clear_cancel,

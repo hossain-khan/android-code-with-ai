@@ -9,6 +9,7 @@ import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.chat.ChatScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
 
 /**
  * Unit tests for [SessionHistoryPresenter].
@@ -101,7 +102,7 @@ class SessionHistoryPresenterTest {
             val fakeRepo =
                 FakeChatSessionRepository(
                     sessions = sessions,
-                    getException = java.io.IOException("Database read failed"),
+                    getException = IOException("Database read failed"),
                 )
             val navigator = FakeNavigator(SessionHistoryScreen)
             val presenter =

@@ -1,10 +1,14 @@
-@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package dev.hossain.codematex.runtime
 
+import com.google.ai.edge.litertlm.Content
+import com.google.ai.edge.litertlm.Contents
+import com.google.ai.edge.litertlm.Message
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ModelConfig
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
@@ -13,6 +17,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CancellationException
 
 class LlmEngineImplTest {
     private lateinit var factory: FakeLlmEngineFactory
@@ -103,7 +108,7 @@ class LlmEngineImplTest {
                     ?.systemInstruction
                     ?.contents
                     ?.first()
-                    as? com.google.ai.edge.litertlm.Content.Text
+                    as? Content.Text
             assertThat(systemContent?.text).isEqualTo("Second prompt")
         }
 
@@ -476,7 +481,7 @@ class LlmEngineImplTest {
 
             val gpuMessage = gpuConversation.sentMessages.single()
             gpuMessage.callback.onMessage(textMessage("Hello"))
-            gpuMessage.callback.onError(java.util.concurrent.CancellationException("Task cancelled"))
+            gpuMessage.callback.onError(CancellationException("Task cancelled"))
             job.join()
 
             assertThat(factory.createSessionRequests).hasSize(1)
@@ -575,7 +580,7 @@ class LlmEngineImplTest {
                     ?.systemInstruction
                     ?.contents
                     ?.first()
-                    as? com.google.ai.edge.litertlm.Content.Text
+                    as? Content.Text
             assertThat(newSystemContent?.text).isEqualTo("New system prompt")
             assertThat(newConversation.config?.samplerConfig?.temperature ?: 0.0).isWithin(0.001).of(0.5)
             assertThat(newConversation.config?.samplerConfig?.topK).isEqualTo(20)
@@ -958,7 +963,7 @@ class LlmEngineImplTest {
 
             // Simulate the native runtime delivering the terminal cancellation callback, which
             // unwinds the in-flight inference and releases engineMutex.
-            message.callback.onError(java.util.concurrent.CancellationException("Task cancelled"))
+            message.callback.onError(CancellationException("Task cancelled"))
             inferenceJob.join()
             cleanupJob.join()
 
@@ -1486,7 +1491,7 @@ class LlmEngineImplTest {
                 }
 
             fakeConversation.sentMessages.single().callback.onError(
-                java.util.concurrent.CancellationException("Task cancelled"),
+                CancellationException("Task cancelled"),
             )
             job1.join()
 
@@ -1597,14 +1602,14 @@ class LlmEngineImplTest {
             assertThat(newConversation.sentMessages).hasSize(1)
         }
 
-    private fun textMessage(text: String): com.google.ai.edge.litertlm.Message {
+    private fun textMessage(text: String): Message {
         val content =
-            com.google.ai.edge.litertlm.Content
+            Content
                 .Text(text)
         val contents =
-            com.google.ai.edge.litertlm.Contents
+            Contents
                 .of(content)
-        return com.google.ai.edge.litertlm.Message
+        return Message
             .model(contents)
     }
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.retained.rememberRetained
@@ -31,7 +32,7 @@ class ChapterPresenter(
         var course by rememberRetained { mutableStateOf<LearningCourse?>(null) }
         var progress by rememberRetained { mutableStateOf<CourseProgress?>(null) }
         var errorMessage by rememberRetained { mutableStateOf<String?>(null) }
-        val scope = androidx.compose.runtime.rememberCoroutineScope()
+        val scope = rememberCoroutineScope()
 
         LaunchedEffect(screen.courseId) {
             try {

@@ -1,5 +1,6 @@
 package dev.hossain.codematex.work
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlin.coroutines.coroutineContext
 
@@ -53,7 +54,7 @@ class FakeModelDownloader : ModelDownloader {
             detailedProgressToReport.forEach { (progress, bytes, total) ->
                 coroutineContext.ensureActive()
                 if (shouldCancel()) {
-                    throw kotlinx.coroutines.CancellationException("Download cancelled")
+                    throw CancellationException("Download cancelled")
                 }
                 progressReports += progress
                 detailedProgressReports += Triple(progress, bytes, total)
@@ -63,7 +64,7 @@ class FakeModelDownloader : ModelDownloader {
             progressToReport.forEach { progress ->
                 coroutineContext.ensureActive()
                 if (shouldCancel()) {
-                    throw kotlinx.coroutines.CancellationException("Download cancelled")
+                    throw CancellationException("Download cancelled")
                 }
                 progressReports += progress
                 onProgress(progress, progress * 10_000_000L, 100_000_000L)
@@ -71,7 +72,7 @@ class FakeModelDownloader : ModelDownloader {
         }
 
         if (shouldFailWithCancellation) {
-            throw kotlinx.coroutines.CancellationException("Simulated cancellation")
+            throw CancellationException("Simulated cancellation")
         }
 
         return nextResult

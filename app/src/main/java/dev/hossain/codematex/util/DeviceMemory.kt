@@ -2,6 +2,7 @@ package dev.hossain.codematex.util
 
 import android.app.ActivityManager
 import android.content.Context
+import dev.hossain.codematex.system.MemoryCompatibilityPolicy
 import java.io.File
 
 object DeviceMemory {
@@ -32,7 +33,7 @@ object DeviceMemory {
         val memoryInfo = ActivityManager.MemoryInfo()
         getMemoryInfo(memoryInfo)
         val bytesPerGb =
-            dev.hossain.codematex.system.MemoryCompatibilityPolicy.BYTES_PER_GB
+            MemoryCompatibilityPolicy.BYTES_PER_GB
                 .toFloat()
         val totalGb = memoryInfo.totalMem / bytesPerGb
         val availGb = memoryInfo.availMem / bytesPerGb

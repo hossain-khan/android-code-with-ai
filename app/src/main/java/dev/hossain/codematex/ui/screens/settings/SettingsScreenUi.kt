@@ -1,5 +1,6 @@
 package dev.hossain.codematex.ui.screens.settings
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -488,7 +489,7 @@ private fun SettingsClickableRow(
 
 @Composable
 private fun SettingsClickableRowWithCustomIcon(
-    @androidx.annotation.DrawableRes iconRes: Int,
+    @DrawableRes iconRes: Int,
     title: String,
     subtitle: String,
     onClick: () -> Unit,

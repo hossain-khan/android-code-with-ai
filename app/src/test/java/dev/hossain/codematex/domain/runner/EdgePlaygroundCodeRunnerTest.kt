@@ -1,11 +1,13 @@
 package dev.hossain.codematex.domain.runner
 
 import android.content.Context
+import android.content.ContextWrapper
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.remote.PlaygroundExecuteRequest
 import dev.hossain.codematex.data.remote.PlaygroundExecuteResponse
 import dev.hossain.codematex.data.remote.PlaygroundProxyApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Test
@@ -310,7 +312,7 @@ class EdgePlaygroundCodeRunnerTest {
     @Test
     fun `PlaygroundExecuteRequest serializes default values properly`() {
         val json =
-            kotlinx.serialization.json.Json {
+            Json {
                 ignoreUnknownKeys = true
                 isLenient = true
                 encodeDefaults = true
@@ -340,7 +342,7 @@ class EdgePlaygroundCodeRunnerTest {
     }
 
     @Suppress("DEPRECATION")
-    private class FakeTestContext : android.content.ContextWrapper(null) {
+    private class FakeTestContext : ContextWrapper(null) {
         override fun getApplicationContext(): Context = this
 
         override fun getSystemService(name: String): Any? = null

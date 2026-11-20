@@ -11,8 +11,10 @@ import dev.hossain.codematex.data.repository.FakeUserPreferencesStore
 import dev.hossain.codematex.data.repository.testModel
 import dev.hossain.codematex.data.repository.testSession
 import dev.hossain.codematex.ui.screens.aimodels.ModelPickerScreen
+import dev.hossain.codematex.ui.screens.debug.DebugScreen
 import dev.hossain.codematex.ui.screens.onboarding.OnboardingScreen
 import dev.hossain.codematex.ui.screens.settings.code.CodeBlockSettingsScreen
+import dev.hossain.codematex.ui.screens.settings.profile.DeveloperProfileSettingsScreen
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -150,7 +152,7 @@ class SettingsPresenterTest {
 
                 assertThat(
                     fakeNavigator.awaitNextScreen(),
-                ).isEqualTo(dev.hossain.codematex.ui.screens.settings.profile.DeveloperProfileSettingsScreen)
+                ).isEqualTo(DeveloperProfileSettingsScreen)
             }
         }
 
@@ -176,7 +178,7 @@ class SettingsPresenterTest {
                 val state = expectMostRecentItem() as SettingsScreen.State.Content
                 state.eventSink(SettingsScreen.Event.OpenDebugScreen)
 
-                assertThat(fakeNavigator.awaitNextScreen()).isEqualTo(dev.hossain.codematex.ui.screens.debug.DebugScreen)
+                assertThat(fakeNavigator.awaitNextScreen()).isEqualTo(DebugScreen)
             }
         }
 

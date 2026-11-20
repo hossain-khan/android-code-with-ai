@@ -1,16 +1,45 @@
-@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@file:OptIn(ExperimentalCoroutinesApi::class)
 
 package dev.hossain.codematex.runtime
 
+import android.content.BroadcastReceiver
+import android.content.ComponentName
+import android.content.ContentResolver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.IntentSender
+import android.content.ServiceConnection
+import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.content.res.AssetManager
+import android.content.res.Configuration
+import android.content.res.Resources
+import android.database.DatabaseErrorHandler
+import android.database.sqlite.SQLiteDatabase
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import android.net.Uri
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.UserHandle
+import android.view.Display
 import com.google.ai.edge.litertlm.EngineConfig
 import com.google.common.truth.Truth.assertThat
 import dev.hossain.codematex.data.model.ModelConfig
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.io.InputStream
 
 class LlmEngineFactoryTest {
     private val config = ModelConfig(maxTokens = 128)
@@ -185,31 +214,31 @@ class LlmEngineFactoryTest {
         }
 
     /**
-     * Minimal [android.content.Context] stand-in. The GPU backend path does not read from it.
+     * Minimal [Context] stand-in. The GPU backend path does not read from it.
      */
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
-    private class FakeContext : android.content.Context() {
-        override fun getAssets(): android.content.res.AssetManager = throw NotImplementedError()
+    private class FakeContext : Context() {
+        override fun getAssets(): AssetManager = throw NotImplementedError()
 
-        override fun getResources(): android.content.res.Resources = throw NotImplementedError()
+        override fun getResources(): Resources = throw NotImplementedError()
 
-        override fun getPackageManager(): android.content.pm.PackageManager = throw NotImplementedError()
+        override fun getPackageManager(): PackageManager = throw NotImplementedError()
 
-        override fun getContentResolver(): android.content.ContentResolver = throw NotImplementedError()
+        override fun getContentResolver(): ContentResolver = throw NotImplementedError()
 
-        override fun getMainLooper(): android.os.Looper = throw NotImplementedError()
+        override fun getMainLooper(): Looper = throw NotImplementedError()
 
-        override fun getApplicationContext(): android.content.Context = this
+        override fun getApplicationContext(): Context = this
 
         override fun setTheme(resid: Int) = throw NotImplementedError()
 
-        override fun getTheme(): android.content.res.Resources.Theme = throw NotImplementedError()
+        override fun getTheme(): Resources.Theme = throw NotImplementedError()
 
         override fun getClassLoader(): ClassLoader = this.javaClass.classLoader!!
 
         override fun getPackageName(): String = "dev.hossain.codematex.test"
 
-        override fun getApplicationInfo(): android.content.pm.ApplicationInfo = android.content.pm.ApplicationInfo()
+        override fun getApplicationInfo(): ApplicationInfo = ApplicationInfo()
 
         override fun getPackageResourcePath(): String = throw NotImplementedError()
 
@@ -218,74 +247,74 @@ class LlmEngineFactoryTest {
         override fun getSharedPreferences(
             name: String,
             mode: Int,
-        ): android.content.SharedPreferences = throw NotImplementedError()
+        ): SharedPreferences = throw NotImplementedError()
 
         override fun moveSharedPreferencesFrom(
-            sourceContext: android.content.Context,
+            sourceContext: Context,
             name: String,
         ): Boolean = throw NotImplementedError()
 
         override fun deleteSharedPreferences(name: String): Boolean = throw NotImplementedError()
 
-        override fun openFileInput(name: String): java.io.FileInputStream = throw NotImplementedError()
+        override fun openFileInput(name: String): FileInputStream = throw NotImplementedError()
 
         override fun openFileOutput(
             name: String,
             mode: Int,
-        ): java.io.FileOutputStream = throw NotImplementedError()
+        ): FileOutputStream = throw NotImplementedError()
 
         override fun deleteFile(name: String): Boolean = throw NotImplementedError()
 
-        override fun getFileStreamPath(name: String): java.io.File = throw NotImplementedError()
+        override fun getFileStreamPath(name: String): File = throw NotImplementedError()
 
-        override fun getDataDir(): java.io.File = throw NotImplementedError()
+        override fun getDataDir(): File = throw NotImplementedError()
 
-        override fun getFilesDir(): java.io.File = throw NotImplementedError()
+        override fun getFilesDir(): File = throw NotImplementedError()
 
-        override fun getNoBackupFilesDir(): java.io.File = throw NotImplementedError()
+        override fun getNoBackupFilesDir(): File = throw NotImplementedError()
 
-        override fun getExternalFilesDir(type: String?): java.io.File? = throw NotImplementedError()
+        override fun getExternalFilesDir(type: String?): File? = throw NotImplementedError()
 
-        override fun getExternalFilesDirs(type: String?): Array<java.io.File> = throw NotImplementedError()
+        override fun getExternalFilesDirs(type: String?): Array<File> = throw NotImplementedError()
 
-        override fun getObbDir(): java.io.File = throw NotImplementedError()
+        override fun getObbDir(): File = throw NotImplementedError()
 
-        override fun getObbDirs(): Array<java.io.File> = throw NotImplementedError()
+        override fun getObbDirs(): Array<File> = throw NotImplementedError()
 
-        override fun getCacheDir(): java.io.File = throw NotImplementedError()
+        override fun getCacheDir(): File = throw NotImplementedError()
 
-        override fun getCodeCacheDir(): java.io.File = throw NotImplementedError()
+        override fun getCodeCacheDir(): File = throw NotImplementedError()
 
-        override fun getExternalCacheDir(): java.io.File = throw NotImplementedError()
+        override fun getExternalCacheDir(): File = throw NotImplementedError()
 
-        override fun getExternalCacheDirs(): Array<java.io.File> = throw NotImplementedError()
+        override fun getExternalCacheDirs(): Array<File> = throw NotImplementedError()
 
-        override fun getExternalMediaDirs(): Array<java.io.File> = throw NotImplementedError()
+        override fun getExternalMediaDirs(): Array<File> = throw NotImplementedError()
 
         override fun fileList(): Array<String> = throw NotImplementedError()
 
         override fun getDir(
             name: String,
             mode: Int,
-        ): java.io.File = throw NotImplementedError()
+        ): File = throw NotImplementedError()
 
-        override fun getDatabasePath(name: String): java.io.File = throw NotImplementedError()
-
-        override fun openOrCreateDatabase(
-            name: String,
-            mode: Int,
-            factory: android.database.sqlite.SQLiteDatabase.CursorFactory?,
-        ): android.database.sqlite.SQLiteDatabase = throw NotImplementedError()
+        override fun getDatabasePath(name: String): File = throw NotImplementedError()
 
         override fun openOrCreateDatabase(
             name: String,
             mode: Int,
-            factory: android.database.sqlite.SQLiteDatabase.CursorFactory?,
-            errorHandler: android.database.DatabaseErrorHandler?,
-        ): android.database.sqlite.SQLiteDatabase = throw NotImplementedError()
+            factory: SQLiteDatabase.CursorFactory?,
+        ): SQLiteDatabase = throw NotImplementedError()
+
+        override fun openOrCreateDatabase(
+            name: String,
+            mode: Int,
+            factory: SQLiteDatabase.CursorFactory?,
+            errorHandler: DatabaseErrorHandler?,
+        ): SQLiteDatabase = throw NotImplementedError()
 
         override fun moveDatabaseFrom(
-            sourceContext: android.content.Context,
+            sourceContext: Context,
             name: String,
         ): Boolean = throw NotImplementedError()
 
@@ -293,174 +322,174 @@ class LlmEngineFactoryTest {
 
         override fun databaseList(): Array<String> = throw NotImplementedError()
 
-        override fun getWallpaper(): android.graphics.drawable.Drawable = throw NotImplementedError()
+        override fun getWallpaper(): Drawable = throw NotImplementedError()
 
-        override fun peekWallpaper(): android.graphics.drawable.Drawable = throw NotImplementedError()
+        override fun peekWallpaper(): Drawable = throw NotImplementedError()
 
         override fun getWallpaperDesiredMinimumWidth(): Int = throw NotImplementedError()
 
         override fun getWallpaperDesiredMinimumHeight(): Int = throw NotImplementedError()
 
-        override fun setWallpaper(bitmap: android.graphics.Bitmap?) = throw NotImplementedError()
+        override fun setWallpaper(bitmap: Bitmap?) = throw NotImplementedError()
 
-        override fun setWallpaper(data: java.io.InputStream?) = throw NotImplementedError()
+        override fun setWallpaper(data: InputStream?) = throw NotImplementedError()
 
         override fun clearWallpaper() = throw NotImplementedError()
 
-        override fun startActivity(intent: android.content.Intent) = throw NotImplementedError()
+        override fun startActivity(intent: Intent) = throw NotImplementedError()
 
         override fun startActivity(
-            intent: android.content.Intent,
-            options: android.os.Bundle?,
+            intent: Intent,
+            options: Bundle?,
         ) = throw NotImplementedError()
 
-        override fun startActivities(intents: Array<android.content.Intent>) = throw NotImplementedError()
+        override fun startActivities(intents: Array<Intent>) = throw NotImplementedError()
 
         override fun startActivities(
-            intents: Array<android.content.Intent>,
-            options: android.os.Bundle?,
+            intents: Array<Intent>,
+            options: Bundle?,
         ) = throw NotImplementedError()
 
         override fun startIntentSender(
-            intent: android.content.IntentSender?,
-            fillInIntent: android.content.Intent?,
+            intent: IntentSender?,
+            fillInIntent: Intent?,
             flagsMask: Int,
             flagsValues: Int,
             extraFlags: Int,
         ) = throw NotImplementedError()
 
         override fun startIntentSender(
-            intent: android.content.IntentSender?,
-            fillInIntent: android.content.Intent?,
+            intent: IntentSender?,
+            fillInIntent: Intent?,
             flagsMask: Int,
             flagsValues: Int,
             extraFlags: Int,
-            options: android.os.Bundle?,
+            options: Bundle?,
         ) = throw NotImplementedError()
 
-        override fun sendBroadcast(intent: android.content.Intent) = throw NotImplementedError()
+        override fun sendBroadcast(intent: Intent) = throw NotImplementedError()
 
         override fun sendBroadcast(
-            intent: android.content.Intent,
+            intent: Intent,
             receiverPermission: String?,
         ) = throw NotImplementedError()
 
         override fun sendOrderedBroadcast(
-            intent: android.content.Intent,
+            intent: Intent,
             receiverPermission: String?,
         ) = throw NotImplementedError()
 
         override fun sendOrderedBroadcast(
-            intent: android.content.Intent,
+            intent: Intent,
             receiverPermission: String?,
-            resultReceiver: android.content.BroadcastReceiver?,
-            scheduler: android.os.Handler?,
+            resultReceiver: BroadcastReceiver?,
+            scheduler: Handler?,
             initialCode: Int,
             initialData: String?,
-            initialExtras: android.os.Bundle?,
+            initialExtras: Bundle?,
         ) = throw NotImplementedError()
 
         override fun sendBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
+            intent: Intent,
+            user: UserHandle,
         ) = throw NotImplementedError()
 
         override fun sendBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
+            intent: Intent,
+            user: UserHandle,
             receiverPermission: String?,
         ) = throw NotImplementedError()
 
         override fun sendOrderedBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
+            intent: Intent,
+            user: UserHandle,
             receiverPermission: String?,
-            resultReceiver: android.content.BroadcastReceiver?,
-            scheduler: android.os.Handler?,
+            resultReceiver: BroadcastReceiver?,
+            scheduler: Handler?,
             initialCode: Int,
             initialData: String?,
-            initialExtras: android.os.Bundle?,
+            initialExtras: Bundle?,
         ) = throw NotImplementedError()
 
-        override fun sendStickyBroadcast(intent: android.content.Intent) = throw NotImplementedError()
+        override fun sendStickyBroadcast(intent: Intent) = throw NotImplementedError()
 
         override fun sendStickyOrderedBroadcast(
-            intent: android.content.Intent,
-            resultReceiver: android.content.BroadcastReceiver?,
-            scheduler: android.os.Handler?,
+            intent: Intent,
+            resultReceiver: BroadcastReceiver?,
+            scheduler: Handler?,
             initialCode: Int,
             initialData: String?,
-            initialExtras: android.os.Bundle?,
+            initialExtras: Bundle?,
         ) = throw NotImplementedError()
 
-        override fun removeStickyBroadcast(intent: android.content.Intent) = throw NotImplementedError()
+        override fun removeStickyBroadcast(intent: Intent) = throw NotImplementedError()
 
         override fun sendStickyBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
+            intent: Intent,
+            user: UserHandle,
         ) = throw NotImplementedError()
 
         override fun sendStickyOrderedBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
-            resultReceiver: android.content.BroadcastReceiver?,
-            scheduler: android.os.Handler?,
+            intent: Intent,
+            user: UserHandle,
+            resultReceiver: BroadcastReceiver?,
+            scheduler: Handler?,
             initialCode: Int,
             initialData: String?,
-            initialExtras: android.os.Bundle?,
+            initialExtras: Bundle?,
         ) = throw NotImplementedError()
 
         override fun removeStickyBroadcastAsUser(
-            intent: android.content.Intent,
-            user: android.os.UserHandle,
+            intent: Intent,
+            user: UserHandle,
         ) = throw NotImplementedError()
 
         override fun registerReceiver(
-            receiver: android.content.BroadcastReceiver?,
-            filter: android.content.IntentFilter?,
-        ): android.content.Intent? = throw NotImplementedError()
+            receiver: BroadcastReceiver?,
+            filter: IntentFilter?,
+        ): Intent? = throw NotImplementedError()
 
         override fun registerReceiver(
-            receiver: android.content.BroadcastReceiver?,
-            filter: android.content.IntentFilter?,
+            receiver: BroadcastReceiver?,
+            filter: IntentFilter?,
             flags: Int,
-        ): android.content.Intent? = throw NotImplementedError()
+        ): Intent? = throw NotImplementedError()
 
         override fun registerReceiver(
-            receiver: android.content.BroadcastReceiver?,
-            filter: android.content.IntentFilter?,
+            receiver: BroadcastReceiver?,
+            filter: IntentFilter?,
             broadcastPermission: String?,
-            scheduler: android.os.Handler?,
-        ): android.content.Intent? = throw NotImplementedError()
+            scheduler: Handler?,
+        ): Intent? = throw NotImplementedError()
 
         override fun registerReceiver(
-            receiver: android.content.BroadcastReceiver?,
-            filter: android.content.IntentFilter?,
+            receiver: BroadcastReceiver?,
+            filter: IntentFilter?,
             broadcastPermission: String?,
-            scheduler: android.os.Handler?,
+            scheduler: Handler?,
             flags: Int,
-        ): android.content.Intent? = throw NotImplementedError()
+        ): Intent? = throw NotImplementedError()
 
-        override fun unregisterReceiver(receiver: android.content.BroadcastReceiver?) = throw NotImplementedError()
+        override fun unregisterReceiver(receiver: BroadcastReceiver?) = throw NotImplementedError()
 
-        override fun startService(service: android.content.Intent): android.content.ComponentName? = throw NotImplementedError()
+        override fun startService(service: Intent): ComponentName? = throw NotImplementedError()
 
-        override fun stopService(name: android.content.Intent): Boolean = throw NotImplementedError()
+        override fun stopService(name: Intent): Boolean = throw NotImplementedError()
 
-        override fun startForegroundService(service: android.content.Intent): android.content.ComponentName? = throw NotImplementedError()
+        override fun startForegroundService(service: Intent): ComponentName? = throw NotImplementedError()
 
         override fun bindService(
-            service: android.content.Intent,
-            conn: android.content.ServiceConnection,
+            service: Intent,
+            conn: ServiceConnection,
             flags: Int,
         ): Boolean = throw NotImplementedError()
 
-        override fun unbindService(conn: android.content.ServiceConnection) = throw NotImplementedError()
+        override fun unbindService(conn: ServiceConnection) = throw NotImplementedError()
 
         override fun startInstrumentation(
-            className: android.content.ComponentName,
+            className: ComponentName,
             profileFile: String?,
-            arguments: android.os.Bundle?,
+            arguments: Bundle?,
         ): Boolean = throw NotImplementedError()
 
         override fun getSystemService(name: String): Any? = throw NotImplementedError()
@@ -498,30 +527,30 @@ class LlmEngineFactoryTest {
 
         override fun grantUriPermission(
             toPackage: String?,
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
         ) = throw NotImplementedError()
 
         override fun revokeUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
         ) = throw NotImplementedError()
 
         override fun revokeUriPermission(
             toPackage: String?,
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
         ) = throw NotImplementedError()
 
         override fun checkUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             pid: Int,
             uid: Int,
             modeFlags: Int,
         ): Int = throw NotImplementedError()
 
         override fun checkUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             permission: String?,
             callingUid: String?,
             pid: Int,
@@ -530,17 +559,17 @@ class LlmEngineFactoryTest {
         ): Int = throw NotImplementedError()
 
         override fun checkCallingUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
         ): Int = throw NotImplementedError()
 
         override fun checkCallingOrSelfUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
         ): Int = throw NotImplementedError()
 
         override fun enforceUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             pid: Int,
             uid: Int,
             modeFlags: Int,
@@ -548,7 +577,7 @@ class LlmEngineFactoryTest {
         ) = throw NotImplementedError()
 
         override fun enforceUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             permission: String?,
             callingUid: String?,
             pid: Int,
@@ -558,13 +587,13 @@ class LlmEngineFactoryTest {
         ) = throw NotImplementedError()
 
         override fun enforceCallingUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
             message: String?,
         ) = throw NotImplementedError()
 
         override fun enforceCallingOrSelfUriPermission(
-            uri: android.net.Uri?,
+            uri: Uri?,
             modeFlags: Int,
             message: String?,
         ) = throw NotImplementedError()
@@ -572,16 +601,15 @@ class LlmEngineFactoryTest {
         override fun createPackageContext(
             packageName: String,
             flags: Int,
-        ): android.content.Context = throw NotImplementedError()
+        ): Context = throw NotImplementedError()
 
-        override fun createContextForSplit(splitName: String): android.content.Context = throw NotImplementedError()
+        override fun createContextForSplit(splitName: String): Context = throw NotImplementedError()
 
-        override fun createConfigurationContext(overrideConfiguration: android.content.res.Configuration): android.content.Context =
-            throw NotImplementedError()
+        override fun createConfigurationContext(overrideConfiguration: Configuration): Context = throw NotImplementedError()
 
-        override fun createDisplayContext(display: android.view.Display): android.content.Context = throw NotImplementedError()
+        override fun createDisplayContext(display: Display): Context = throw NotImplementedError()
 
-        override fun createDeviceProtectedStorageContext(): android.content.Context = throw NotImplementedError()
+        override fun createDeviceProtectedStorageContext(): Context = throw NotImplementedError()
 
         override fun isDeviceProtectedStorage(): Boolean = false
     }

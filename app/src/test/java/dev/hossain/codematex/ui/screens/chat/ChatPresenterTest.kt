@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.io.IOException
 
 /**
  * Unit tests for [ChatPresenter].
@@ -438,7 +439,7 @@ class ChatPresenterTest {
                     selectedModel = model,
                 )
             val sessionRepo = FakeChatSessionRepository()
-            sessionRepo.saveException = java.io.IOException("Disk full")
+            sessionRepo.saveException = IOException("Disk full")
 
             val fakeOrchestrator = FakeChatInferenceOrchestrator()
             fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Generated code answer"), ChatInferenceEvent.Done)
@@ -479,7 +480,7 @@ class ChatPresenterTest {
                     selectedModel = model,
                 )
             val sessionRepo = FakeChatSessionRepository()
-            sessionRepo.saveException = java.io.IOException("Temporary DB lock")
+            sessionRepo.saveException = IOException("Temporary DB lock")
 
             val fakeOrchestrator = FakeChatInferenceOrchestrator()
             fakeOrchestrator.messageEvents = listOf(ChatInferenceEvent.Token("Response"), ChatInferenceEvent.Done)
