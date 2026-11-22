@@ -6,6 +6,7 @@ import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.ParcelableScreen
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
 import dev.hossain.codematex.system.ModelCompatibility
 import kotlinx.parcelize.Parcelize
@@ -22,6 +23,10 @@ data object ModelPickerScreen : ParcelableScreen {
             val models: List<AiModel>,
             val deviceMemoryInfo: DeviceMemoryInfo,
             val modelCompatibility: Map<String, ModelCompatibility>,
+            val availableMemoryGb: Float = 0f,
+            val isModelLoadedInMemory: Boolean = false,
+            val activeBackend: LlmEngine.Backend? = null,
+            val isUnloadingModel: Boolean = false,
             val configuredModel: AiModel? = null,
             val configuredModelConfig: ModelConfig? = null,
             val statusMessage: String? = null,
@@ -72,6 +77,8 @@ data object ModelPickerScreen : ParcelableScreen {
         ) : Event
 
         data object OpenDebugScreen : Event
+
+        data object UnloadModel : Event
 
         data object ClearStatusMessage : Event
     }

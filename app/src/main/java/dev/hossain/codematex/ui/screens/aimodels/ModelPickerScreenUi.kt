@@ -368,7 +368,14 @@ private fun ModelPickerLayout(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                DeviceMemoryBanner(deviceMemoryInfo = state.deviceMemoryInfo)
+                DeviceMemoryBanner(
+                    deviceMemoryInfo = state.deviceMemoryInfo,
+                    availableMemoryGb = state.availableMemoryGb,
+                    isModelLoadedInMemory = state.isModelLoadedInMemory,
+                    activeBackend = state.activeBackend,
+                    isUnloadingModel = state.isUnloadingModel,
+                    onUnloadModel = { state.eventSink(ModelPickerScreen.Event.UnloadModel) },
+                )
             }
 
             if (state.models.isEmpty()) {
@@ -536,6 +543,9 @@ private fun ModelPickerScreenPreview() {
                             models = sampleModels,
                             deviceMemoryInfo = DeviceMemoryInfo(totalBytes = 12_000_000_000L, displayTotalGb = 12.0, displayLabel = "GB"),
                             modelCompatibility = sampleModels.associate { it.id to ModelCompatibility.Compatible },
+                            availableMemoryGb = 4.5f,
+                            isModelLoadedInMemory = true,
+                            activeBackend = LlmEngine.Backend.GPU,
                             eventSink = {},
                         ),
                     transitionScope = this,

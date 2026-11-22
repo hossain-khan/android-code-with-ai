@@ -8,7 +8,10 @@ import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.repository.FakeModelConfigStore
 import dev.hossain.codematex.data.repository.FakeModelRepository
 import dev.hossain.codematex.data.repository.testModel
+import dev.hossain.codematex.runtime.FakeLlmEngine
+import dev.hossain.codematex.runtime.LlmEngine
 import dev.hossain.codematex.system.DeviceMemoryInfo
+import dev.hossain.codematex.system.FakeDeviceMemoryProvider
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.system.ModelCompatibilityChecker
 import dev.hossain.codematex.ui.screens.debug.DebugScreen
@@ -36,6 +39,8 @@ class ModelPickerPresenterTest {
         navigator: FakeNavigator = FakeNavigator(ModelPickerScreen),
         modelRepository: FakeModelRepository = FakeModelRepository(),
         modelConfigStore: FakeModelConfigStore = FakeModelConfigStore(),
+        deviceMemoryProvider: FakeDeviceMemoryProvider = FakeDeviceMemoryProvider(),
+        llmEngine: FakeLlmEngine = FakeLlmEngine(),
     ): ModelPickerPresenter =
         ModelPickerPresenter(
             navigator = navigator,
@@ -43,6 +48,8 @@ class ModelPickerPresenterTest {
             modelRepository = modelRepository,
             modelCompatibilityChecker = fakeCompatibilityChecker,
             modelConfigStore = modelConfigStore,
+            deviceMemoryProvider = deviceMemoryProvider,
+            llmEngine = llmEngine,
         )
 
     @Test
@@ -145,6 +152,101 @@ class ModelPickerPresenterTest {
                 updatedState.eventSink(ModelPickerScreen.Event.ClearStatusMessage)
                 val clearedState = awaitItem() as ModelPickerScreen.State.Success
                 assertThat(clearedState.statusMessage).isNull()
+            }
+        }
+
+    @Test
+    fun `given unload model event when engine is loaded - cleans up engine and refreshes memory`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine = FakeLlmEngine()
+            fakeEngine.initialize(modelPath = "/models/gemma.litertlm", backend = LlmEngine.Backend.GPU)
+            val fakeMemory = FakeDeviceMemoryProvider()
+            val presenter =
+                createPresenter(
+                    modelRepository = fakeRepo,
+                    deviceMemoryProvider = fakeMemory,
+                    llmEngine = fakeEngine,
+                )
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(initialState.isModelLoadedInMemory).isTrue()
+                assertThat(initialState.activeBackend).isEqualTo(LlmEngine.Backend.GPU)
+                assertThat(initialState.availableMemoryGb).isGreaterThan(0f)
+
+                initialState.eventSink(ModelPickerScreen.Event.UnloadModel)
+
+                val unloadedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+                assertThat(unloadedState.isModelLoadedInMemory).isFalse()
+                assertThat(unloadedState.activeBackend).isNull()
+                assertThat(unloadedState.statusMessage).isEqualTo("Model unloaded from memory")
+            }
+        }
+
+    @Test
+    fun `given unload model event when engine is not initialized - does nothing`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine = FakeLlmEngine().apply { isInitializedValue = false }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(initialState.isModelLoadedInMemory).isFalse()
+
+                initialState.eventSink(ModelPickerScreen.Event.UnloadModel)
+
+                assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
+            }
+        }
+
+    @Test
+    fun `given unload model event when cleanup throws - emits error status and resets unloading flag`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine =
+                FakeLlmEngine().apply {
+                    initialize(modelPath = "/models/gemma.litertlm", backend = LlmEngine.Backend.GPU)
+                    cleanupThrows = IllegalStateException("Native cleanup failed")
+                }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                initialState.eventSink(ModelPickerScreen.Event.UnloadModel)
+
+                val errorState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(errorState.isUnloadingModel).isFalse()
+                assertThat(errorState.statusMessage).isEqualTo("Failed to unload model from memory")
+            }
+        }
+
+    @Test
+    fun `given delete event for currently loaded model - cleans up engine before deleting`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine =
+                FakeLlmEngine().apply {
+                    initialize(
+                        modelPath = downloadedModel.localPath!!,
+                        backend = LlmEngine.Backend.GPU,
+                    )
+                }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(initialState.isModelLoadedInMemory).isTrue()
+
+                initialState.eventSink(ModelPickerScreen.Event.Delete(downloadedModel))
+
+                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+                assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
+                assertThat(updatedState.isModelLoadedInMemory).isFalse()
+                assertThat(updatedState.activeBackend).isNull()
             }
         }
 

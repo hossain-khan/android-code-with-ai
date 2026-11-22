@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -16,6 +17,8 @@ import dev.hossain.codematex.data.model.ModelConfig
 import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
+import dev.hossain.codematex.runtime.LlmEngine
+import dev.hossain.codematex.system.DeviceMemoryProvider
 import dev.hossain.codematex.system.ModelCompatibility
 import dev.hossain.codematex.system.ModelCompatibilityChecker
 import dev.hossain.codematex.ui.screens.debug.DebugScreen
@@ -24,6 +27,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -35,6 +39,8 @@ class ModelPickerPresenter(
     private val modelRepository: ModelRepository,
     private val modelCompatibilityChecker: ModelCompatibilityChecker,
     private val modelConfigStore: ModelConfigStore,
+    private val deviceMemoryProvider: DeviceMemoryProvider,
+    private val llmEngine: LlmEngine,
 ) : Presenter<ModelPickerScreen.State> {
     @Composable
     override fun present(): ModelPickerScreen.State {
@@ -45,6 +51,20 @@ class ModelPickerPresenter(
         var configuredModel by rememberRetained { mutableStateOf<AiModel?>(null) }
         var configuredModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
         var statusMessage by rememberRetained { mutableStateOf<String?>(null) }
+        var memoryStats by remember { mutableStateOf(deviceMemoryProvider.getMemoryStats()) }
+        var isModelLoadedInMemory by remember { mutableStateOf(llmEngine.isInitialized()) }
+        var activeBackend by remember { mutableStateOf(if (isModelLoadedInMemory) llmEngine.getActiveBackend() else null) }
+        var isUnloadingModel by remember { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                memoryStats = deviceMemoryProvider.getMemoryStats()
+                val loaded = llmEngine.isInitialized()
+                isModelLoadedInMemory = loaded
+                activeBackend = if (loaded) llmEngine.getActiveBackend() else null
+                delay(2_000L)
+            }
+        }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(retryTrigger) {
@@ -88,7 +108,14 @@ class ModelPickerPresenter(
                 is ModelPickerScreen.Event.Delete -> {
                     scope.launch {
                         try {
+                            val localPath = event.model.localPath
+                            if (localPath != null && llmEngine.isModelLoaded(localPath)) {
+                                llmEngine.cleanup()
+                                isModelLoadedInMemory = llmEngine.isInitialized()
+                                activeBackend = if (isModelLoadedInMemory) llmEngine.getActiveBackend() else null
+                            }
                             modelRepository.deleteModel(event.model)
+                            memoryStats = deviceMemoryProvider.getMemoryStats()
                             statusMessage = "${event.model.displayName} deleted (${event.model.formattedSize} freed)"
                         } catch (e: CancellationException) {
                             throw e
@@ -138,6 +165,28 @@ class ModelPickerPresenter(
                     navigator.goTo(DebugScreen)
                 }
 
+                ModelPickerScreen.Event.UnloadModel -> {
+                    if (!isUnloadingModel && llmEngine.isInitialized()) {
+                        isUnloadingModel = true
+                        scope.launch {
+                            try {
+                                llmEngine.cleanup()
+                                isModelLoadedInMemory = llmEngine.isInitialized()
+                                activeBackend = if (isModelLoadedInMemory) llmEngine.getActiveBackend() else null
+                                memoryStats = deviceMemoryProvider.getMemoryStats()
+                                statusMessage = "Model unloaded from memory"
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (e: Exception) {
+                                Timber.e(e, "ModelPickerPresenter: Error unloading model from memory")
+                                statusMessage = "Failed to unload model from memory"
+                            } finally {
+                                isUnloadingModel = false
+                            }
+                        }
+                    }
+                }
+
                 ModelPickerScreen.Event.ClearStatusMessage -> {
                     statusMessage = null
                 }
@@ -161,6 +210,10 @@ class ModelPickerPresenter(
                         models.associate { model ->
                             model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
                         },
+                    availableMemoryGb = memoryStats.availGb,
+                    isModelLoadedInMemory = isModelLoadedInMemory,
+                    activeBackend = activeBackend,
+                    isUnloadingModel = isUnloadingModel,
                     configuredModel = configuredModel,
                     configuredModelConfig = configuredModelConfig,
                     statusMessage = statusMessage,
