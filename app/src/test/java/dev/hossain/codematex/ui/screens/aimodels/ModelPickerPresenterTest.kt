@@ -186,6 +186,71 @@ class ModelPickerPresenterTest {
         }
 
     @Test
+    fun `given unload model event when engine is not initialized - does nothing`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine = FakeLlmEngine().apply { isInitializedValue = false }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(initialState.isModelLoadedInMemory).isFalse()
+
+                initialState.eventSink(ModelPickerScreen.Event.UnloadModel)
+
+                assertThat(fakeEngine.cleanupCalls).isEqualTo(0)
+            }
+        }
+
+    @Test
+    fun `given unload model event when cleanup throws - emits error status and resets unloading flag`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine =
+                FakeLlmEngine().apply {
+                    initialize(modelPath = "/models/gemma.litertlm", backend = LlmEngine.Backend.GPU)
+                    cleanupThrows = IllegalStateException("Native cleanup failed")
+                }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                initialState.eventSink(ModelPickerScreen.Event.UnloadModel)
+
+                val errorState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(errorState.isUnloadingModel).isFalse()
+                assertThat(errorState.statusMessage).isEqualTo("Failed to unload model from memory")
+            }
+        }
+
+    @Test
+    fun `given delete event for currently loaded model - cleans up engine before deleting`() =
+        runTest {
+            val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
+            val fakeEngine =
+                FakeLlmEngine().apply {
+                    initialize(
+                        modelPath = downloadedModel.localPath!!,
+                        backend = LlmEngine.Backend.GPU,
+                    )
+                }
+            val presenter = createPresenter(modelRepository = fakeRepo, llmEngine = fakeEngine)
+
+            presenter.test {
+                val initialState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(initialState.isModelLoadedInMemory).isTrue()
+
+                initialState.eventSink(ModelPickerScreen.Event.Delete(downloadedModel))
+
+                val updatedState = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(fakeEngine.cleanupCalls).isEqualTo(1)
+                assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
+                assertThat(updatedState.isModelLoadedInMemory).isFalse()
+                assertThat(updatedState.activeBackend).isNull()
+            }
+        }
+
+    @Test
     fun `given select event - selects model and pops navigator`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))

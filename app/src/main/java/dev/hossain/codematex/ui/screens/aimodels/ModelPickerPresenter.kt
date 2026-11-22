@@ -27,6 +27,7 @@ import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -53,7 +54,17 @@ class ModelPickerPresenter(
         var memoryStats by remember { mutableStateOf(deviceMemoryProvider.getMemoryStats()) }
         var isModelLoadedInMemory by remember { mutableStateOf(llmEngine.isInitialized()) }
         var activeBackend by remember { mutableStateOf(if (isModelLoadedInMemory) llmEngine.getActiveBackend() else null) }
-        var isUnloadingModel by rememberRetained { mutableStateOf(false) }
+        var isUnloadingModel by remember { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                memoryStats = deviceMemoryProvider.getMemoryStats()
+                val loaded = llmEngine.isInitialized()
+                isModelLoadedInMemory = loaded
+                activeBackend = if (loaded) llmEngine.getActiveBackend() else null
+                delay(2_000L)
+            }
+        }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(retryTrigger) {
@@ -199,7 +210,7 @@ class ModelPickerPresenter(
                         models.associate { model ->
                             model.id to modelCompatibilityChecker.checkCompatibility(model.minDeviceMemoryInGb)
                         },
-                    availableMemoryGb = (memoryStats.totalGb - memoryStats.usedGb).coerceAtLeast(0f),
+                    availableMemoryGb = memoryStats.availGb,
                     isModelLoadedInMemory = isModelLoadedInMemory,
                     activeBackend = activeBackend,
                     isUnloadingModel = isUnloadingModel,

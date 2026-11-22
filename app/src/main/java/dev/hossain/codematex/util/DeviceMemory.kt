@@ -21,7 +21,10 @@ object DeviceMemory {
     data class MemoryStats(
         val usedGb: Float,
         val totalGb: Float,
-    )
+    ) {
+        val availGb: Float
+            get() = (totalGb - usedGb).coerceAtLeast(0f)
+    }
 
     fun getMemoryStats(context: Context): MemoryStats =
         getMemoryStats { memoryInfo ->
