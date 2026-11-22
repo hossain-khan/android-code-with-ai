@@ -11,8 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.DialogProperties
+import dev.hossain.codematex.ui.component.AppDialogProperties
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 import dev.hossain.codematex.util.formatShortModelName
@@ -69,7 +68,7 @@ fun DeleteModelDialog(
                 Text("Cancel")
             }
         },
-        properties = DialogProperties(blurBehindRadius = 12.dp),
+        properties = AppDialogProperties,
     )
 }
 

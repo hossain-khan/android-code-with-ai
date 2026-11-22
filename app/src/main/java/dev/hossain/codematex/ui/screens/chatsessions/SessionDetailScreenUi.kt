@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -62,6 +61,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
+import dev.hossain.codematex.ui.component.ContentListCacheWindow
 import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -334,7 +334,6 @@ private fun SessionDetailLayout(
         },
     ) { innerPadding ->
         val messagesListState = rememberLazyListState()
-        val cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f)
 
         if (isExpanded) {
             // Adaptive 2-Pane Multi-Column Layout for Tablets & Foldables
@@ -409,7 +408,7 @@ private fun SessionDetailLayout(
                             state = messagesListState,
                             modifier = Modifier.fillMaxSize().adaptiveScrollbar(messagesListState),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
-                            cacheWindow = cacheWindow,
+                            cacheWindow = ContentListCacheWindow,
                         ) {
                             items(state.messages, key = { it.id }) { message ->
                                 ChatMessageBubble(
@@ -444,7 +443,7 @@ private fun SessionDetailLayout(
                         modifier = Modifier.weight(1f).adaptiveScrollbar(messagesListState),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
-                        cacheWindow = cacheWindow,
+                        cacheWindow = ContentListCacheWindow,
                     ) {
                         items(state.messages, key = { it.id }) { message ->
                             ChatMessageBubble(

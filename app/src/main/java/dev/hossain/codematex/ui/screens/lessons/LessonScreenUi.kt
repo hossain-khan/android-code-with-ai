@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -66,6 +65,7 @@ import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.animation.LessonCardSharedKey
 import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.component.ContentListCacheWindow
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.TooltipIconButton
@@ -266,7 +266,7 @@ private fun LessonBody(
             modifier = Modifier.widthIn(max = 900.dp).adaptiveScrollbar(listState),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f),
+            cacheWindow = ContentListCacheWindow,
         ) {
             item {
                 Text(state.lesson.summary, style = MaterialTheme.typography.bodyLarge)
