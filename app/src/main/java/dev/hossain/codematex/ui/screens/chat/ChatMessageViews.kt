@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
+import dev.hossain.codematex.ui.component.ContentListCacheWindow
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
@@ -68,6 +70,7 @@ import kotlinx.coroutines.launch
  *    - The user taps the floating "Jump to Bottom ↓" / "New Response ↓" pill.
  *    - A new message is submitted / turn begins (detected via `state.messages.size` change).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ChatMessageList(
     state: ChatScreen.State.Active,
@@ -133,6 +136,7 @@ internal fun ChatMessageList(
             reverseLayout = true,
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
+            cacheWindow = ContentListCacheWindow,
         ) {
             if (state.isGenerating) {
                 item {

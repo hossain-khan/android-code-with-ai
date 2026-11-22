@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import dev.hossain.codematex.ui.component.AppDialogProperties
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 
@@ -70,6 +71,7 @@ fun DeleteSessionConfirmationDialog(
                 Text("Cancel")
             }
         },
+        properties = AppDialogProperties,
     )
 }
 

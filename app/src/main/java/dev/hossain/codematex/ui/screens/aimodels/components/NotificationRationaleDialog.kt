@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import dev.hossain.codematex.ui.component.AppDialogProperties
 import dev.hossain.codematex.ui.theme.CodeWithAIAppTheme
 import dev.hossain.codematex.ui.theme.ThemePreviews
 
@@ -81,6 +82,7 @@ fun NotificationRationaleDialog(
                 Text("Not Now")
             }
         },
+        properties = AppDialogProperties,
     )
 }
 

@@ -14,7 +14,12 @@ plugins {
 
 android {
     namespace = "dev.hossain.codematex"
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk {
+        version = release(libs.versions.compileSdk.get().toInt()) {
+            // Compose 1.13.0 (BOM 2026.11.01) requires compileSdk 37.1+
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "dev.hossain.codematex"

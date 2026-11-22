@@ -1,6 +1,7 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -60,6 +61,7 @@ import dev.hossain.codematex.data.model.ChatMessage
 import dev.hossain.codematex.data.model.ChatSession
 import dev.hossain.codematex.data.model.CodingTopic
 import dev.hossain.codematex.ui.component.ChatMessageBubble
+import dev.hossain.codematex.ui.component.ContentListCacheWindow
 import dev.hossain.codematex.ui.component.TooltipIconButton
 import dev.hossain.codematex.ui.component.adaptiveScrollbar
 import dev.hossain.codematex.ui.component.radialGradientScrim
@@ -288,7 +290,7 @@ private fun SessionDetailErrorLayout(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun SessionDetailLayout(
     state: SessionDetailScreen.State.Success,
@@ -406,6 +408,7 @@ private fun SessionDetailLayout(
                             state = messagesListState,
                             modifier = Modifier.fillMaxSize().adaptiveScrollbar(messagesListState),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
+                            cacheWindow = ContentListCacheWindow,
                         ) {
                             items(state.messages, key = { it.id }) { message ->
                                 ChatMessageBubble(
@@ -440,6 +443,7 @@ private fun SessionDetailLayout(
                         modifier = Modifier.weight(1f).adaptiveScrollbar(messagesListState),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
+                        cacheWindow = ContentListCacheWindow,
                     ) {
                         items(state.messages, key = { it.id }) { message ->
                             ChatMessageBubble(

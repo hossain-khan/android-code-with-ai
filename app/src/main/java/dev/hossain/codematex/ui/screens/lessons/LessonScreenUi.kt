@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.lessons
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,6 +65,7 @@ import dev.hossain.codematex.data.repository.course.KotlinCourseContent
 import dev.hossain.codematex.ui.animation.LessonCardSharedKey
 import dev.hossain.codematex.ui.animation.LessonTitleSharedKey
 import dev.hossain.codematex.ui.animation.sharedBoundsNav
+import dev.hossain.codematex.ui.component.ContentListCacheWindow
 import dev.hossain.codematex.ui.component.LocalCodeBlockSettings
 import dev.hossain.codematex.ui.component.MarkdownMessage
 import dev.hossain.codematex.ui.component.TooltipIconButton
@@ -251,6 +253,7 @@ private fun LessonOutline(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LessonBody(
     state: LessonScreen.State.Success,
@@ -263,6 +266,7 @@ private fun LessonBody(
             modifier = Modifier.widthIn(max = 900.dp).adaptiveScrollbar(listState),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
+            cacheWindow = ContentListCacheWindow,
         ) {
             item {
                 Text(state.lesson.summary, style = MaterialTheme.typography.bodyLarge)
