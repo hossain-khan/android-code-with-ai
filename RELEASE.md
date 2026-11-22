@@ -148,8 +148,8 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
    - Asserts `PLAYGROUND_AUTH_TOKEN` secret is configured (fails build immediately if missing, ensuring production binaries authenticate with the Cloudflare Workers playground proxy).
    - Decodes base64-encoded release keystore from repository secrets (`KEYSTORE_BASE64`).
 2. **Builds Release Binaries**:
-   - Compiles `assembleRelease` (producing `app-vX.Y.Z.apk`).
-   - Compiles `bundleRelease` (producing `app-vX.Y.Z.aab`).
+   - Compiles `assembleRelease` (producing `codematex-vX.Y.Z.apk`).
+   - Compiles `bundleRelease` (producing `codematex-vX.Y.Z.aab`).
 3. **Signs with Production Keystore**:
    - Signs release artifacts with the production key and credentials from repository secrets (`KEYSTORE_PASSWORD`, `KEY_ALIAS`).
 4. **Cryptographic Validation**:
@@ -160,7 +160,7 @@ When a GitHub Release is published, [`.github/workflows/android-release.yml`](.g
      ```
    - Automatically fails the build if signed with a debug certificate or mismatched key.
 5. **Artifact Publishing**:
-   - Uploads `app-vX.Y.Z.apk` and `app-vX.Y.Z.aab` directly to the GitHub Release.
+   - Uploads `codematex-vX.Y.Z.apk` and `codematex-vX.Y.Z.aab` directly to the GitHub Release.
 
 ---
 
