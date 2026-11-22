@@ -126,16 +126,25 @@ class ModelPickerPresenterTest {
         }
 
     @Test
-    fun `given delete event - delegates to repository`() =
+    fun `given delete event - delegates to repository and emits confirmation status`() =
         runTest {
             val fakeRepo = FakeModelRepository(availableModels = listOf(downloadedModel))
             val presenter = createPresenter(modelRepository = fakeRepo)
 
             presenter.test {
                 val state = expectMostRecentItem() as ModelPickerScreen.State.Success
+                assertThat(state.statusMessage).isNull()
+
                 state.eventSink(ModelPickerScreen.Event.Delete(downloadedModel))
 
                 assertThat(fakeRepo.deleteCalls).containsExactly(downloadedModel)
+                val updatedState = awaitItem() as ModelPickerScreen.State.Success
+                assertThat(updatedState.statusMessage).contains(downloadedModel.displayName)
+                assertThat(updatedState.statusMessage).contains("deleted")
+
+                updatedState.eventSink(ModelPickerScreen.Event.ClearStatusMessage)
+                val clearedState = awaitItem() as ModelPickerScreen.State.Success
+                assertThat(clearedState.statusMessage).isNull()
             }
         }
 

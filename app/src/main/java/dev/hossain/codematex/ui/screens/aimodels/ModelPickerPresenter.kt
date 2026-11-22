@@ -13,6 +13,7 @@ import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
 import dev.hossain.codematex.data.model.AiModel
 import dev.hossain.codematex.data.model.ModelConfig
+import dev.hossain.codematex.data.model.formattedSize
 import dev.hossain.codematex.data.repository.ModelConfigStore
 import dev.hossain.codematex.data.repository.ModelRepository
 import dev.hossain.codematex.system.ModelCompatibility
@@ -43,6 +44,7 @@ class ModelPickerPresenter(
         var retryTrigger by rememberRetained { mutableIntStateOf(0) }
         var configuredModel by rememberRetained { mutableStateOf<AiModel?>(null) }
         var configuredModelConfig by rememberRetained { mutableStateOf<ModelConfig?>(null) }
+        var statusMessage by rememberRetained { mutableStateOf<String?>(null) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(retryTrigger) {
@@ -85,7 +87,15 @@ class ModelPickerPresenter(
 
                 is ModelPickerScreen.Event.Delete -> {
                     scope.launch {
-                        modelRepository.deleteModel(event.model)
+                        try {
+                            modelRepository.deleteModel(event.model)
+                            statusMessage = "${event.model.displayName} deleted (${event.model.formattedSize} freed)"
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.e(e, "ModelPickerPresenter: Error deleting model ${event.model.id}")
+                            statusMessage = "Failed to delete ${event.model.displayName}"
+                        }
                     }
                 }
 
@@ -127,6 +137,10 @@ class ModelPickerPresenter(
                 ModelPickerScreen.Event.OpenDebugScreen -> {
                     navigator.goTo(DebugScreen)
                 }
+
+                ModelPickerScreen.Event.ClearStatusMessage -> {
+                    statusMessage = null
+                }
             }
         }
 
@@ -149,6 +163,7 @@ class ModelPickerPresenter(
                         },
                     configuredModel = configuredModel,
                     configuredModelConfig = configuredModelConfig,
+                    statusMessage = statusMessage,
                     eventSink = eventSink,
                 )
             }

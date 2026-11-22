@@ -34,12 +34,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -252,7 +255,15 @@ private fun ModelPickerLayout(
     onShowPermissionRationaleChange: (Boolean) -> Unit = {},
 ) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val snackbarHostState = remember { SnackbarHostState() }
     val windowSizeClass = currentWindowAdaptiveInfoV2().windowSizeClass
+
+    LaunchedEffect(state.statusMessage) {
+        state.statusMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            state.eventSink(ModelPickerScreen.Event.ClearStatusMessage)
+        }
+    }
     val isExpanded = windowSizeClass.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND)
 
     val context = LocalContext.current
@@ -313,6 +324,7 @@ private fun ModelPickerLayout(
             modifier
                 .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .radialGradientScrim(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
