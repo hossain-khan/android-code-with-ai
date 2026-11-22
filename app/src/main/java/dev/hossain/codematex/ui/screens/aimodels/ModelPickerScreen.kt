@@ -24,6 +24,7 @@ data object ModelPickerScreen : ParcelableScreen {
             val modelCompatibility: Map<String, ModelCompatibility>,
             val configuredModel: AiModel? = null,
             val configuredModelConfig: ModelConfig? = null,
+            val statusMessage: String? = null,
             val eventSink: (Event) -> Unit,
         ) : State
 
@@ -71,5 +72,7 @@ data object ModelPickerScreen : ParcelableScreen {
         ) : Event
 
         data object OpenDebugScreen : Event
+
+        data object ClearStatusMessage : Event
     }
 }
