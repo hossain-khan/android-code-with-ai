@@ -72,67 +72,71 @@ fun DeviceMemoryBanner(
         shape = MaterialTheme.shapes.extraLarge,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Surface(
-                shape = MaterialTheme.shapes.medium,
-                color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(44.dp),
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Memory,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(24.dp),
+                Surface(
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    modifier = Modifier.size(44.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.Memory,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Device Memory",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        memoryHeadline,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text =
+                            if (isModelLoadedInMemory) {
+                                "Model loaded in memory${activeBackend?.let { " (${it.name})" } ?: ""}. Unload to free up RAM."
+                            } else {
+                                "Models requiring more RAM than available may be disabled for stability."
+                            },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-            }
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    "Device Memory",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    memoryHeadline,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text =
-                        if (isModelLoadedInMemory) {
-                            "Model loaded in memory${activeBackend?.let { " (${it.name})" } ?: ""}. Unload to free up RAM."
-                        } else {
-                            "Models requiring more RAM than available may be disabled for stability."
-                        },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
 
             if (isModelLoadedInMemory) {
                 FilledTonalButton(
                     onClick = onUnloadModel,
                     enabled = !isUnloadingModel,
-                    modifier = Modifier.handHoverIcon(),
+                    modifier = Modifier.fillMaxWidth().handHoverIcon(),
                 ) {
                     if (isUnloadingModel) {
-                        CircularWavyProgressIndicator(modifier = Modifier.size(16.dp))
+                        CircularWavyProgressIndicator(modifier = Modifier.size(18.dp))
                     } else {
                         Icon(
                             imageVector = Icons.Default.CleaningServices,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(18.dp),
                         )
                     }
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(if (isUnloadingModel) "Unloading..." else "Unload")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(if (isUnloadingModel) "Unloading Model..." else "Unload Model from Memory")
                 }
             }
         }
