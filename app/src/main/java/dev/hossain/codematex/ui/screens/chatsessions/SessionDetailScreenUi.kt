@@ -1,6 +1,7 @@
 package dev.hossain.codematex.ui.screens.chatsessions
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -288,7 +290,7 @@ private fun SessionDetailErrorLayout(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun SessionDetailLayout(
     state: SessionDetailScreen.State.Success,
@@ -332,6 +334,7 @@ private fun SessionDetailLayout(
         },
     ) { innerPadding ->
         val messagesListState = rememberLazyListState()
+        val cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f)
 
         if (isExpanded) {
             // Adaptive 2-Pane Multi-Column Layout for Tablets & Foldables
@@ -406,6 +409,7 @@ private fun SessionDetailLayout(
                             state = messagesListState,
                             modifier = Modifier.fillMaxSize().adaptiveScrollbar(messagesListState),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
+                            cacheWindow = cacheWindow,
                         ) {
                             items(state.messages, key = { it.id }) { message ->
                                 ChatMessageBubble(
@@ -440,6 +444,7 @@ private fun SessionDetailLayout(
                         modifier = Modifier.weight(1f).adaptiveScrollbar(messagesListState),
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
+                        cacheWindow = cacheWindow,
                     ) {
                         items(state.messages, key = { it.id }) { message ->
                             ChatMessageBubble(

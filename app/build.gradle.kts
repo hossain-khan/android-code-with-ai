@@ -14,7 +14,11 @@ plugins {
 
 android {
     namespace = "dev.hossain.codematex"
-    compileSdk = libs.versions.compileSdk.get().toInt()
+    compileSdk {
+        version = release(libs.versions.compileSdk.get().toInt()) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
         applicationId = "dev.hossain.codematex"

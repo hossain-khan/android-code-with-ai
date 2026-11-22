@@ -2,6 +2,7 @@ package dev.hossain.codematex.ui.screens.lessons
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -251,6 +253,7 @@ private fun LessonOutline(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LessonBody(
     state: LessonScreen.State.Success,
@@ -263,6 +266,7 @@ private fun LessonBody(
             modifier = Modifier.widthIn(max = 900.dp).adaptiveScrollbar(listState),
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
+            cacheWindow = LazyLayoutCacheWindow(aheadFraction = 1f, behindFraction = 0.5f),
         ) {
             item {
                 Text(state.lesson.summary, style = MaterialTheme.typography.bodyLarge)
