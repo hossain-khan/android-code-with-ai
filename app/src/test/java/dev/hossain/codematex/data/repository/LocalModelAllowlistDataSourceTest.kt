@@ -10,7 +10,7 @@ class LocalModelAllowlistDataSourceTest {
 
         val allowlist = dataSource.loadAllowlist()
 
-        assertThat(allowlist).hasSize(11)
+        assertThat(allowlist).hasSize(7)
         assertThat(allowlist[0].modelId).isEqualTo("litert-community/gemma-4-E2B-it-litert-lm")
         assertThat(allowlist[0].modelFile).isEqualTo("gemma-4-E2B-it.litertlm")
         assertThat(allowlist[0].sizeInBytes).isEqualTo(2_588_147_712L)
@@ -55,20 +55,6 @@ class LocalModelAllowlistDataSourceTest {
         assertThat(allowlist[4].sha256).isEqualTo("555579ff2f4fd13379abe69c1c3ab5200f7338bc92471557f1d6614a6e5ab0b4")
         assertThat(allowlist[4].isGatedModel).isFalse()
 
-        val qwen3Small = allowlist.first { it.modelId == "litert-community/Qwen3-1.7B" }
-        assertThat(qwen3Small.modelFile).isEqualTo("Qwen3-1.7B_dynamic_wi4b32_afp32.litertlm")
-        assertThat(qwen3Small.commitHash).isEqualTo("c421cc3775575372ac2ca4aa1bebc97300ae36b6")
-        assertThat(qwen3Small.sizeInBytes).isEqualTo(977_184_032L)
-        assertThat(qwen3Small.minDeviceMemoryInGb).isEqualTo(4)
-        assertThat(qwen3Small.contextWindow).isEqualTo(4096)
-        assertThat(qwen3Small.quantization).isEqualTo("INT4")
-        assertThat(qwen3Small.promptFormat).isEqualTo("CHATML")
-        assertThat(qwen3Small.runtimeType).isEqualTo("LITERT_LM")
-        assertThat(qwen3Small.downloadUrl).contains(qwen3Small.commitHash)
-        assertThat(qwen3Small.fallbackDownloadUrls).isEmpty()
-        assertThat(qwen3Small.sha256).isEqualTo("2a72330b504a6596d53a2c00923c57173b10f1b83e6a541213ffec08d1fc5de8")
-        assertThat(qwen3Small.isGatedModel).isFalse()
-
         val deepSeekSmall = allowlist.first { it.modelId == "litert-community/DeepSeek-R1-Distill-Qwen-1.5B" }
         assertThat(deepSeekSmall.commitHash).isEqualTo("1e4af2ff557cbb7b7ff12ff4b0a7a1fac1f126a5")
         assertThat(deepSeekSmall.sizeInBytes).isEqualTo(1_833_451_520L)
@@ -95,46 +81,6 @@ class LocalModelAllowlistDataSourceTest {
         assertThat(smolLm3.fallbackDownloadUrls).isEmpty()
         assertThat(smolLm3.sha256).isEqualTo("7ff3bf595a29cc8784d0cb6f68325922e70c2e5f3ac2e0050eb6a0bd5290468c")
         assertThat(smolLm3.isGatedModel).isFalse()
-
-        val qwen3Medium = allowlist.first { it.modelId == "litert-community/Qwen3-4B" }
-        assertThat(qwen3Medium.commitHash).isEqualTo("17b6220abb4d3e9782d37c8844b18112222b77f6")
-        assertThat(qwen3Medium.sizeInBytes).isEqualTo(2_272_935_936L)
-        assertThat(qwen3Medium.minDeviceMemoryInGb).isEqualTo(8)
-        assertThat(qwen3Medium.contextWindow).isEqualTo(4096)
-        assertThat(qwen3Medium.quantization).isEqualTo("INT4")
-        assertThat(qwen3Medium.promptFormat).isEqualTo("CHATML")
-        assertThat(qwen3Medium.runtimeType).isEqualTo("LITERT_LM")
-        assertThat(qwen3Medium.downloadUrl).contains(qwen3Medium.commitHash)
-        assertThat(qwen3Medium.fallbackDownloadUrls).isEmpty()
-        assertThat(qwen3Medium.sha256).isEqualTo("4877b236f09c0b519958612afeb3c6fc6575c7ce56080d0d3a5406150e0ff9ce")
-        assertThat(qwen3Medium.isGatedModel).isFalse()
-
-        val qwen25Coder3b = allowlist.first { it.modelId == "litert-community/Qwen2.5-Coder-3B-Instruct" }
-        assertThat(qwen25Coder3b.commitHash).isEqualTo("5a5117fbb47498164eb1bc1b5d464a338ba1a0c6")
-        assertThat(qwen25Coder3b.sizeInBytes).isEqualTo(3_433_083_824L)
-        assertThat(qwen25Coder3b.minDeviceMemoryInGb).isEqualTo(10)
-        assertThat(qwen25Coder3b.contextWindow).isEqualTo(4096)
-        assertThat(qwen25Coder3b.quantization).isEqualTo("INT8")
-        assertThat(qwen25Coder3b.promptFormat).isEqualTo("CHATML")
-        assertThat(qwen25Coder3b.runtimeType).isEqualTo("LITERT_LM")
-        assertThat(qwen25Coder3b.downloadUrl).contains(qwen25Coder3b.commitHash)
-        assertThat(qwen25Coder3b.fallbackDownloadUrls).isEmpty()
-        assertThat(qwen25Coder3b.sha256).isEqualTo("78d23da074383f52f852b945b8090870e6c9dded02a842f535ee3ccb9e2874f3")
-        assertThat(qwen25Coder3b.isGatedModel).isFalse()
-
-        val deepSeekLarge = allowlist.first { it.modelId == "litert-community/DeepSeek-R1-Distill-Qwen-7B" }
-        assertThat(deepSeekLarge.commitHash).isEqualTo("5729fc205e726768c1eb9c97308419bcbc85bd43")
-        assertThat(deepSeekLarge.sizeInBytes).isEqualTo(4_533_698_560L)
-        assertThat(deepSeekLarge.minDeviceMemoryInGb).isEqualTo(12)
-        assertThat(deepSeekLarge.contextWindow).isEqualTo(4096)
-        assertThat(deepSeekLarge.quantization).isEqualTo("INT4")
-        assertThat(deepSeekLarge.promptFormat).isEqualTo("CHATML")
-        assertThat(deepSeekLarge.runtimeType).isEqualTo("LITERT_LM")
-        assertThat(deepSeekLarge.license).isEqualTo("MIT")
-        assertThat(deepSeekLarge.downloadUrl).contains(deepSeekLarge.commitHash)
-        assertThat(deepSeekLarge.fallbackDownloadUrls).isEmpty()
-        assertThat(deepSeekLarge.sha256).isEqualTo("095880100e5af6261beab2f5d0ac8b79b48417714c862b0295e62f5da7a914ec")
-        assertThat(deepSeekLarge.isGatedModel).isFalse()
     }
 
     @Test
