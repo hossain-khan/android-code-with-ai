@@ -1,0 +1,5 @@
+What's New in CodeMateX 1.35.0:
+• Live RAM & Model Unload: See available RAM in AI Models and unload active models from memory anytime (#522).
+• Model Deletion Feedback: Added a confirmation snackbar showing freed storage when a model is deleted (#521).
+• Refined Model Catalog: Kept verified models (DeepSeek-R1 1.5B, SmolLM3 3B) and removed incompatible ones (#520).
+• Smoother UI: Upgraded to Jetpack Compose 1.13.0 with list preloading and dialog blur (#519).
