@@ -1,0 +1,4 @@
+What's New in CodeMateX 1.36.0:
+• Scroll-to-Complete Lessons: Reading to the end of a lesson now automatically marks it complete with a spring animation (#526).
+• Fixed Kotlin Tour Formatting: Resolved inverted code blocks and leaked markers across Beginner and Intermediate Kotlin Tour chapters (#525).
+• Balanced Markdown Headings: Scaled down heading font sizes for cleaner reading across lessons and AI chat (#527).
