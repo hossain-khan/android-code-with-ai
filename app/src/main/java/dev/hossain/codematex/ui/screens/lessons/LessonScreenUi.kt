@@ -1,6 +1,16 @@
 package dev.hossain.codematex.ui.screens.lessons
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -44,9 +54,15 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -84,6 +100,9 @@ import dev.hossain.highlight.ui.ExperimentalHighlightApi
 import dev.hossain.highlight.ui.SyntaxHighlightedCode
 import dev.hossain.highlight.ui.SyntaxHighlightedCodeDefaults
 import dev.zacsweers.metro.AppScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 
 @OptIn(
     ExperimentalMaterial3Api::class,
@@ -260,6 +279,44 @@ private fun LessonBody(
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
+    var hasUserScrolled by remember(state.lesson.id) { mutableStateOf(false) }
+
+    LaunchedEffect(listState, state.lesson.id) {
+        snapshotFlow { listState.isScrollInProgress }
+            .filter { it }
+            .collect { hasUserScrolled = true }
+    }
+
+    LaunchedEffect(listState, state.lesson.id, state.isCompleted, state.lesson.blocks.isNotEmpty()) {
+        if (!state.isCompleted && state.lesson.blocks.isNotEmpty()) {
+            snapshotFlow {
+                shouldAutoCompleteLessonOnScrollEnd(
+                    isCompleted = state.isCompleted,
+                    hasLessonBlocks = state.lesson.blocks.isNotEmpty(),
+                    hasUserScrolled = hasUserScrolled,
+                    canScrollBackward = listState.canScrollBackward,
+                    canScrollForward = listState.canScrollForward,
+                )
+            }.distinctUntilChanged()
+                .filter { it }
+                .collect {
+                    // Pause briefly at the bottom so the user sees the button animate to Completed.
+                    delay(200)
+                    if (
+                        shouldAutoCompleteLessonOnScrollEnd(
+                            isCompleted = state.isCompleted,
+                            hasLessonBlocks = state.lesson.blocks.isNotEmpty(),
+                            hasUserScrolled = hasUserScrolled,
+                            canScrollBackward = listState.canScrollBackward,
+                            canScrollForward = listState.canScrollForward,
+                        )
+                    ) {
+                        state.eventSink(LessonScreen.Event.MarkCompleted)
+                    }
+                }
+        }
+    }
+
     SelectionContainer(modifier = modifier) {
         LazyColumn(
             state = listState,
@@ -374,43 +431,12 @@ private fun LessonBody(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (!state.isCompleted) {
-                            OutlinedButton(
-                                onClick = { state.eventSink(LessonScreen.Event.MarkCompleted) },
-                                modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
-                            ) {
-                                Icon(Icons.Default.Check, contentDescription = null)
-                                Spacer(Modifier.width(6.dp))
-                                Text("Mark complete")
-                            }
-                        } else {
-                            Surface(
-                                shape = MaterialTheme.shapes.medium,
-                                color = visualInfo.accentColor.copy(alpha = 0.15f),
-                                border = BorderStroke(1.dp, visualInfo.accentColor.copy(alpha = 0.35f)),
-                                modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                ) {
-                                    Icon(
-                                        Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = visualInfo.accentColor,
-                                        modifier = Modifier.size(18.dp),
-                                    )
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(
-                                        "Completed",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = visualInfo.accentColor,
-                                    )
-                                }
-                            }
-                        }
+                        LessonCompletionAction(
+                            isCompleted = state.isCompleted,
+                            accentColor = visualInfo.accentColor,
+                            onMarkCompleted = { state.eventSink(LessonScreen.Event.MarkCompleted) },
+                            modifier = if (state.nextLessonId == null) Modifier.fillMaxWidth() else Modifier.weight(1f),
+                        )
                         state.nextLessonId?.let {
                             Button(
                                 onClick = { state.eventSink(LessonScreen.Event.NextLesson) },
@@ -422,6 +448,90 @@ private fun LessonBody(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+internal fun shouldAutoCompleteLessonOnScrollEnd(
+    isCompleted: Boolean,
+    hasLessonBlocks: Boolean,
+    hasUserScrolled: Boolean,
+    canScrollBackward: Boolean,
+    canScrollForward: Boolean,
+): Boolean = !isCompleted && hasLessonBlocks && hasUserScrolled && canScrollBackward && !canScrollForward
+
+@Composable
+private fun LessonCompletionAction(
+    isCompleted: Boolean,
+    accentColor: Color,
+    onMarkCompleted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    AnimatedContent(
+        targetState = isCompleted,
+        modifier = modifier,
+        transitionSpec = {
+            if (targetState) {
+                (
+                    fadeIn(animationSpec = tween(durationMillis = 280)) +
+                        scaleIn(
+                            initialScale = 0.85f,
+                            animationSpec =
+                                spring(
+                                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                                    stiffness = Spring.StiffnessMedium,
+                                ),
+                        )
+                ).togetherWith(
+                    fadeOut(animationSpec = tween(durationMillis = 160)) +
+                        scaleOut(
+                            targetScale = 0.92f,
+                            animationSpec = tween(durationMillis = 160),
+                        ),
+                ).using(SizeTransform(clip = false))
+            } else {
+                fadeIn(animationSpec = tween(durationMillis = 200)) togetherWith
+                    fadeOut(animationSpec = tween(durationMillis = 150))
+            }
+        },
+        label = "lessonCompletionAction",
+    ) { completed ->
+        if (!completed) {
+            OutlinedButton(
+                onClick = onMarkCompleted,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Check, contentDescription = null)
+                Spacer(Modifier.width(6.dp))
+                Text("Mark complete")
+            }
+        } else {
+            Surface(
+                shape = MaterialTheme.shapes.medium,
+                color = accentColor.copy(alpha = 0.15f),
+                border = BorderStroke(1.dp, accentColor.copy(alpha = 0.35f)),
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Icon(
+                        Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = accentColor,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        "Completed",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = accentColor,
+                    )
                 }
             }
         }
@@ -561,6 +671,30 @@ private fun LessonCompletedPreview() {
                         nextLessonId = null,
                         eventSink = {},
                     ),
+                )
+            }
+        }
+    }
+}
+
+@ThemePreviews
+@Composable
+private fun LessonCompletionActionPreview() {
+    CodeWithAIAppTheme(dynamicColor = false) {
+        Surface {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                LessonCompletionAction(
+                    isCompleted = false,
+                    accentColor = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onMarkCompleted = {},
+                )
+                LessonCompletionAction(
+                    isCompleted = true,
+                    accentColor = CodingTopic.KOTLIN.visualInfo.accentColor,
+                    onMarkCompleted = {},
                 )
             }
         }
