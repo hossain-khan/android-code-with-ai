@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import textwrap
 
 
 BEGINNER_TOPICS = [
@@ -182,6 +183,7 @@ def clean_markdown_text(md_text):
         return f"\n> **{title}**: {body}\n"
     md_text = re.sub(r'<deflist[^>]*>\s*<def\s+title="([^"]+)">\s*(.*?)\s*</def>\s*</deflist>', replace_def, md_text, flags=re.DOTALL)
     # 4. Clean attribute blocks like {style="note"} or {style="tip"}
+    md_text = re.sub(r'^\s*\{\s*style\s*=\s*"[^"]*"\s*\}\s*$', '', md_text, flags=re.MULTILINE)
     md_text = re.sub(r'\{\s*style\s*=\s*"note"\s*\}', '', md_text)
     md_text = re.sub(r'\{\s*style\s*=\s*"tip"\s*\}', '', md_text)
     # 5. Clean heading attributes: ## Heading {completion-point="true"} -> ## Heading
@@ -193,24 +195,66 @@ def clean_markdown_text(md_text):
     return md_text.strip()
 
 
-def parse_topic_file(file_path):
-    raw_content = open(file_path, 'r', encoding='utf-8').read()
+OPEN_FENCE_RE = re.compile(r'^(\s*(?:>\s*)*)```(.*)$')
+CLOSE_FENCE_RE = re.compile(r'^\s*```\s*(?:\{([^}]*)\})?\s*$')
+ATTR_LINE_RE = re.compile(r'^\s*(?:>\s*)*\{([^}]*)\}\s*$')
 
-    # Pattern finding ```lang ... ``` and optional trailing attributes {kotlin-runnable="true" ...}
-    pattern = re.compile(r'```([^\n]*)\n(.*?)\n```(?:\s*\{([^}]*)\})?', re.MULTILINE | re.DOTALL)
+
+def strip_blockquote_prefix(line):
+    return re.sub(r'^(?:\s*>\s?)+', '', line)
+
+
+def parse_topic_content(raw_content):
+    lines = raw_content.splitlines()
     blocks = []
-    last_end = 0
+    md_lines = []
+    i = 0
+    n = len(lines)
 
-    for match in pattern.finditer(raw_content):
-        start, end = match.span()
-        md_text = raw_content[last_end:start]
-        cleaned_md = clean_markdown_text(md_text)
-        if cleaned_md:
-            blocks.append(('markdown', cleaned_md))
+    def flush_markdown():
+        if md_lines:
+            cleaned_md = clean_markdown_text('\n'.join(md_lines))
+            md_lines.clear()
+            if cleaned_md:
+                blocks.append(('markdown', cleaned_md))
 
-        fence_lang = match.group(1).strip().lower() or 'kotlin'
-        code_content = clean_code(match.group(2))
-        attrs = match.group(3) or ''
+    while i < n:
+        line = lines[i]
+        open_match = OPEN_FENCE_RE.match(line)
+        if not open_match:
+            md_lines.append(line)
+            i += 1
+            continue
+
+        flush_markdown()
+        fence_prefix = open_match.group(1)
+        has_blockquote_prefix = '>' in fence_prefix
+        fence_lang = open_match.group(2).strip().lower() or 'kotlin'
+        code_lines = []
+        attrs = ''
+        i += 1
+
+        while i < n:
+            cur_line = lines[i]
+            candidate = strip_blockquote_prefix(cur_line) if has_blockquote_prefix else cur_line
+            close_match = CLOSE_FENCE_RE.match(candidate)
+            if close_match:
+                attrs = close_match.group(1) or ''
+                i += 1
+                # Writerside often puts {kotlin-runnable="true" ...} on the line immediately after ```
+                if not attrs and i < n:
+                    attr_match = ATTR_LINE_RE.match(lines[i])
+                    if attr_match and 'style=' not in attr_match.group(1):
+                        attrs = attr_match.group(1)
+                        i += 1
+                break
+            code_lines.append(candidate)
+            i += 1
+
+        raw_code = '\n'.join(code_lines)
+        if has_blockquote_prefix:
+            raw_code = textwrap.dedent(raw_code)
+        code_content = clean_code(raw_code)
 
         # Determine runnability
         is_explicit_runnable = 'kotlin-runnable="true"' in attrs
@@ -223,13 +267,14 @@ def parse_topic_file(file_path):
         is_pg_runnable = is_runnable and (is_explicit_runnable or 'fun main()' in code_content)
 
         blocks.append(('code', fence_lang, code_content, is_runnable, is_pg_runnable))
-        last_end = end
 
-    trailing_md = clean_markdown_text(raw_content[last_end:])
-    if trailing_md:
-        blocks.append(('markdown', trailing_md))
-
+    flush_markdown()
     return blocks
+
+
+def parse_topic_file(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return parse_topic_content(f.read())
 
 
 def generate_course_content(

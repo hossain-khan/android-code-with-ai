@@ -433,8 +433,8 @@ class CourseContentTest {
                 .flatMap { it.lessons }
                 .flatMap { it.blocks }
                 .filterIsInstance<LessonBlock.Code>()
-        assertThat(ktBegBlocks).hasSize(105)
-        assertThat(ktBegBlocks.count { it.isPlaygroundRunnable }).isEqualTo(47)
+        assertThat(ktBegBlocks).hasSize(113)
+        assertThat(ktBegBlocks.count { it.isPlaygroundRunnable }).isEqualTo(85)
 
         val ktIntCourse = KotlinTourIntermediateCourseContent.course
         assertThat(ktIntCourse.chapters).hasSize(9)
@@ -444,8 +444,44 @@ class CourseContentTest {
                 .flatMap { it.lessons }
                 .flatMap { it.blocks }
                 .filterIsInstance<LessonBlock.Code>()
-        assertThat(ktIntBlocks).hasSize(152)
-        assertThat(ktIntBlocks.count { it.isPlaygroundRunnable }).isEqualTo(68)
+        assertThat(ktIntBlocks).hasSize(154)
+        assertThat(ktIntBlocks.count { it.isPlaygroundRunnable }).isEqualTo(80)
+    }
+
+    @Test
+    fun `kotlin tour courses contain no leaked writerside or fence markers`() {
+        val forbiddenMarkers =
+            listOf(
+                "//sampleStart",
+                "//sampleEnd",
+                "kotlin-runnable=",
+                "style=\"note\"",
+                "style=\"tip\"",
+                "```",
+            )
+        val tourCourses =
+            listOf(
+                KotlinTourBeginnerCourseContent.course,
+                KotlinTourIntermediateCourseContent.course,
+            )
+
+        tourCourses.forEach { course ->
+            course.chapters.forEach { chapter ->
+                chapter.lessons.forEach { lesson ->
+                    lesson.blocks.forEach { block ->
+                        val text =
+                            when (block) {
+                                is LessonBlock.Markdown -> block.content
+                                is LessonBlock.Code -> block.code
+                                else -> ""
+                            }
+                        forbiddenMarkers.forEach { marker ->
+                            assertThat(text).doesNotContain(marker)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun <T : Comparable<T>> isStrictlyIncreasing(values: List<T>): Boolean =

@@ -90,7 +90,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > You can't change a read-only variable once you have given it a value.
                                                 >
                                                 
-                                                
                                                 To assign a value, use the assignment operator `=`.
                                                 
                                                 For example:
@@ -120,13 +119,11 @@ object KotlinTourBeginnerCourseContent {
                                                 > are said to be declared at **top level**.
                                                 > 
                                                 
-                                                
                                                 As `customers` is a mutable variable, its value can be reassigned after declaration.
                                                 
                                                 > We recommend declaring all variables as read-only (`val`) by default. Only use mutable variables (`var`) if you really
                                                 > need to. That way, you're less likely to accidentally change something that wasn't meant to change.
                                                 > 
-                                                
                                                 
                                                 ## String templates
                                                 
@@ -256,7 +253,6 @@ object KotlinTourBeginnerCourseContent {
                                                 """
                                                 > `+=`, `-=`, `*=`, `/=`, and `%=` are augmented assignment operators. For more information, see [Augmented assignments](https://kotlinlang.org/docs/operator-overloading.html#augmented-assignments).
                                                 > 
-                                                
                                                 
                                                 In total, Kotlin has the following basic types:
                                                 
@@ -449,7 +445,6 @@ object KotlinTourBeginnerCourseContent {
                                             LessonBlock.Markdown(
                                                 """
                                                 > To prevent unwanted modifications, you can create a read-only view of a mutable list by assigning it to a `List`:
-                                                > 
                                                 >
                                                 """.trimIndent(),
                                             ),
@@ -457,693 +452,593 @@ object KotlinTourBeginnerCourseContent {
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    >     val shapes: MutableList<String> = mutableListOf("triangle", "square", "circle")
-                                                    >     val shapesLocked: List<String> = shapes
-                                                    > ```
-                                                    > This is also called **casting**.
-                                                    > 
-                                                    {style="tip"}
-                                                    
-                                                    Lists are ordered so to access an item in a list, use the [indexed access operator](operator-overloading.md#indexed-access-operator) `[]`:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
-                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
-                                                    println("The first item in the list is: ${'$'}{readOnlyShapes[0]}")
-                                                    // The first item in the list is: triangle
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-list-access"}
-                                                    
-                                                    To get the first or last item in a list, use [`.first()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/first.html)
-                                                    and [`.last()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/last.html) functions respectively:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
-                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
-                                                    println("The first item in the list is: ${'$'}{readOnlyShapes.first()}")
-                                                    // The first item in the list is: triangle
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-list-first"}
-                                                    
-                                                    > [`.first()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/first.html) and [`.last()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/last.html)
-                                                    > functions are examples of **extension** functions. To call an extension function on an object, write the function name 
-                                                    > after the object appended with a period `.` 
-                                                    > 
-                                                    > Extension functions are covered in detail [in the intermediate tour](kotlin-tour-intermediate-extension-functions.md#extension-functions).
-                                                    > For now, you only need to know how to call them. 
-                                                    > 
-                                                    {style="note"}
-                                                    
-                                                    To get the number of items in a list, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
-                                                    function:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
-                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
-                                                    println("This list has ${'$'}{readOnlyShapes.count()} items")
-                                                    // This list has 3 items
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-list-count"}
-                                                    
-                                                    To check that an item is in a list, use the [`in` operator](operator-overloading.md#in-operator):
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
-                                                    println("circle" in readOnlyShapes)
-                                                    // true
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-list-in"}
-                                                    
-                                                    To add or remove items from a mutable list, use [`.add()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/add.html)
-                                                    and [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) functions respectively:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
                                                     val shapes: MutableList<String> = mutableListOf("triangle", "square", "circle")
-                                                    // Add "pentagon" to the list
-                                                    shapes.add("pentagon") 
-                                                    println(shapes)  
-                                                    // [triangle, square, circle, pentagon]
+                                                    val shapesLocked: List<String> = shapes
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > This is also called **casting**.
+                                                > 
                                                 
-                                                    // Remove the first "pentagon" from the list
-                                                    shapes.remove("pentagon") 
-                                                    println(shapes)  
-                                                    // [triangle, square, circle]
-                                                //sampleEnd
-                                                }
+                                                Lists are ordered so to access an item in a list, use the [indexed access operator](https://kotlinlang.org/docs/operator-overloading.html#indexed-access-operator) `[]`:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-list-add-remove"}
-                                                    
-                                                    ## Set
-                                                    
-                                                    Whereas lists are ordered and allow duplicate items, sets are **unordered** and only store **unique** items.
-                                                    
-                                                    To create a read-only set ([`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/)), use the 
-                                                    [`setOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html) function.
-                                                    
-                                                    To create a mutable set ([`MutableSet`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-set/)),
-                                                    use the [`mutableSetOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/mutable-set-of.html) function.
-                                                    
-                                                    When creating sets, Kotlin can infer the type of items stored. To declare the type explicitly, add the type
-                                                    within angled brackets `<>` after the set declaration:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    // Read-only set
-                                                    val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
-                                                    // Mutable set with explicit type declaration
-                                                    val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
-                                                    
-                                                    println(readOnlyFruit)
-                                                    // [apple, banana, cherry]
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-sets-declaration"}
-                                                    
-                                                    You can see in the previous example that because sets only contain unique elements, the duplicate `"cherry"` item is dropped.
-                                                    
-                                                    > To prevent unwanted modifications, you can create a read-only view of a mutable set by assigning it to a `Set`:
-                                                    > 
-                                                    > ```kotlin
-                                                    >     val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
-                                                    >     val fruitLocked: Set<String> = fruit
-                                                    > ```
-                                                    >
-                                                    {style="tip"}
-                                                    
-                                                    > As sets are **unordered**, you can't access an item at a particular index.
-                                                    > 
-                                                    {style="note"}
-                                                    
-                                                    To get the number of items in a set, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
-                                                    function:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
-                                                    val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
-                                                    println("This set has ${'$'}{readOnlyFruit.count()} items")
-                                                    // This set has 3 items
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-set-count"}
-                                                    
-                                                    To check that an item is in a set, use the [`in` operator](operator-overloading.md#in-operator):
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
-                                                    println("banana" in readOnlyFruit)
-                                                    // true
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-set-in"}
-                                                    
-                                                    To add or remove items from a mutable set, use [`.add()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-set/add.html)
-                                                    and [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) functions respectively:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() { 
-                                                //sampleStart
-                                                    val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
-                                                    fruit.add("dragonfruit")    // Add "dragonfruit" to the set
-                                                    println(fruit)              // [apple, banana, cherry, dragonfruit]
-                                                    
-                                                    fruit.remove("dragonfruit") // Remove "dragonfruit" from the set
-                                                    println(fruit)              // [apple, banana, cherry]
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-set-add-remove"}
-                                                    
-                                                    ## Map
-                                                    
-                                                    Maps store items as key-value pairs. You access the value by referencing the key. You can imagine a map like a food menu.
-                                                    You can find the price (value), by finding the food (key) you want to eat. Maps are useful if you want to look up a value
-                                                    without using a numbered index, like in a list.
-                                                    
-                                                    > * Every key in a map must be unique so that Kotlin can understand which value you want to get. 
-                                                    > * You can have duplicate values in a map.
-                                                    >
-                                                    {style="note"}
-                                                    
-                                                    To create a read-only map ([`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/)), use the 
-                                                    [`mapOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html) function.
-                                                    
-                                                    To create a mutable map ([`MutableMap`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-map/)),
-                                                    use the [`mutableMapOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/mutable-map-of.html) function.
-                                                    
-                                                    When creating maps, Kotlin can infer the type of items stored. To declare the type explicitly, add the types
-                                                    of the keys and values within angled brackets `<>` after the map declaration. For example: `MutableMap<String, Int>`.
-                                                    The keys have type `String` and the values have type `Int`.
-                                                    
-                                                    The easiest way to create maps is to use [`to`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/to.html) between each 
-                                                    key and its related value:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    // Read-only map
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println(readOnlyJuiceMenu)
-                                                    // {apple=100, kiwi=190, orange=100}
-                                                
-                                                    // Mutable map with explicit type declaration
-                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println(juiceMenu)
-                                                    // {apple=100, kiwi=190, orange=100}
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-maps-declaration"}
-                                                    
-                                                    > To prevent unwanted modifications, you can create a read-only view of a mutable map by assigning it to a `Map`:
-                                                    > 
-                                                    > ```kotlin
-                                                    >     val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    >     val juiceMenuLocked: Map<String, Int> = juiceMenu
-                                                    > ```
-                                                    >
-                                                    {style="tip"}
-                                                    
-                                                    To access a value in a map, use the [indexed access operator](operator-overloading.md#indexed-access-operator) `[]` with
-                                                    its key:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    // Read-only map
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println("The value of apple juice is: ${'$'}{readOnlyJuiceMenu["apple"]}")
-                                                    // The value of apple juice is: 100
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-access"}
-                                                    
-                                                    > If you try to access a key-value pair with a key that doesn't exist in a map, you see a `null` value:
-                                                    >
-                                                    > ```kotlin
-                                                    > fun main() {
-                                                    >     // Read-only map
-                                                    >     val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    >     println("The value of pineapple juice is: ${'$'}{readOnlyJuiceMenu["pineapple"]}")
-                                                    >     // The value of pineapple juice is: null
-                                                    > }
-                                                    > ```
-                                                    > {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-no-key" validate="false"}
-                                                    > 
-                                                    > This tour explains null values later in the [Null safety](kotlin-tour-null-safety.md) chapter.
-                                                    > 
-                                                    {style="note"}
-                                                    
-                                                    You can also use the [indexed access operator](operator-overloading.md#indexed-access-operator) `[]` to add items to a mutable map:
+                                                    fun main() { 
+                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
+                                                        println("The first item in the list is: ${'$'}{readOnlyShapes[0]}")
+                                                        // The first item in the list is: triangle
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    juiceMenu["coconut"] = 150 // Add key "coconut" with value 150 to the map
-                                                    println(juiceMenu)
-                                                    // {apple=100, kiwi=190, orange=100, coconut=150}
-                                                //sampleEnd
-                                                }
+                                                To get the first or last item in a list, use [`.first()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/first.html)
+                                                and [`.last()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/last.html) functions respectively:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-add-item"}
-                                                    
-                                                    To remove items from a mutable map, use the [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) 
-                                                    function:
+                                                    fun main() { 
+                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
+                                                        println("The first item in the list is: ${'$'}{readOnlyShapes.first()}")
+                                                        // The first item in the list is: triangle
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    juiceMenu.remove("orange")    // Remove key "orange" from the map
-                                                    println(juiceMenu)
-                                                    // {apple=100, kiwi=190}
-                                                //sampleEnd
-                                                }
+                                                > [`.first()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/first.html) and [`.last()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/last.html)
+                                                > functions are examples of **extension** functions. To call an extension function on an object, write the function name 
+                                                > after the object appended with a period `.` 
+                                                > 
+                                                > Extension functions are covered in detail [in the intermediate tour](https://kotlinlang.org/docs/kotlin-tour-intermediate-extension-functions.html#extension-functions).
+                                                > For now, you only need to know how to call them. 
+                                                > 
+                                                
+                                                To get the number of items in a list, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
+                                                function:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-put-remove"}
+                                                    fun main() { 
+                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
+                                                        println("This list has ${'$'}{readOnlyShapes.count()} items")
+                                                        // This list has 3 items
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To check that an item is in a list, use the [`in` operator](https://kotlinlang.org/docs/operator-overloading.html#in-operator):
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val readOnlyShapes = listOf("triangle", "square", "circle")
+                                                        println("circle" in readOnlyShapes)
+                                                        // true
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To add or remove items from a mutable list, use [`.add()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-list/add.html)
+                                                and [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) functions respectively:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() { 
+                                                    val shapes: MutableList<String> = mutableListOf("triangle", "square", "circle")
+                                                        // Add "pentagon" to the list
+                                                        shapes.add("pentagon") 
+                                                        println(shapes)  
+                                                        // [triangle, square, circle, pentagon]
                                                     
-                                                    To get the number of items in a map, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
-                                                    function:
+                                                        // Remove the first "pentagon" from the list
+                                                        shapes.remove("pentagon") 
+                                                        println(shapes)  
+                                                        // [triangle, square, circle]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ## Set
+                                                
+                                                Whereas lists are ordered and allow duplicate items, sets are **unordered** and only store **unique** items.
+                                                
+                                                To create a read-only set ([`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/)), use the 
+                                                [`setOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/set-of.html) function.
+                                                
+                                                To create a mutable set ([`MutableSet`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-set/)),
+                                                use the [`mutableSetOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/mutable-set-of.html) function.
+                                                
+                                                When creating sets, Kotlin can infer the type of items stored. To declare the type explicitly, add the type
+                                                within angled brackets `<>` after the set declaration:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    // Read-only set
+                                                        val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
+                                                        // Mutable set with explicit type declaration
+                                                        val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
+                                                        
+                                                        println(readOnlyFruit)
+                                                        // [apple, banana, cherry]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                You can see in the previous example that because sets only contain unique elements, the duplicate `"cherry"` item is dropped.
+                                                
+                                                > To prevent unwanted modifications, you can create a read-only view of a mutable set by assigning it to a `Set`:
+                                                >
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
+                                                    val fruitLocked: Set<String> = fruit
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
+                                                >
+                                                
+                                                > As sets are **unordered**, you can't access an item at a particular index.
+                                                > 
+                                                
+                                                To get the number of items in a set, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
+                                                function:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() { 
+                                                    val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
+                                                        println("This set has ${'$'}{readOnlyFruit.count()} items")
+                                                        // This set has 3 items
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To check that an item is in a set, use the [`in` operator](https://kotlinlang.org/docs/operator-overloading.html#in-operator):
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val readOnlyFruit = setOf("apple", "banana", "cherry", "cherry")
+                                                        println("banana" in readOnlyFruit)
+                                                        // true
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To add or remove items from a mutable set, use [`.add()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-set/add.html)
+                                                and [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) functions respectively:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() { 
+                                                    val fruit: MutableSet<String> = mutableSetOf("apple", "banana", "cherry", "cherry")
+                                                        fruit.add("dragonfruit")    // Add "dragonfruit" to the set
+                                                        println(fruit)              // [apple, banana, cherry, dragonfruit]
+                                                        
+                                                        fruit.remove("dragonfruit") // Remove "dragonfruit" from the set
+                                                        println(fruit)              // [apple, banana, cherry]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ## Map
+                                                
+                                                Maps store items as key-value pairs. You access the value by referencing the key. You can imagine a map like a food menu.
+                                                You can find the price (value), by finding the food (key) you want to eat. Maps are useful if you want to look up a value
+                                                without using a numbered index, like in a list.
+                                                
+                                                > * Every key in a map must be unique so that Kotlin can understand which value you want to get. 
+                                                > * You can have duplicate values in a map.
+                                                >
+                                                
+                                                To create a read-only map ([`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/)), use the 
+                                                [`mapOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map-of.html) function.
+                                                
+                                                To create a mutable map ([`MutableMap`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-mutable-map/)),
+                                                use the [`mutableMapOf()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/mutable-map-of.html) function.
+                                                
+                                                When creating maps, Kotlin can infer the type of items stored. To declare the type explicitly, add the types
+                                                of the keys and values within angled brackets `<>` after the map declaration. For example: `MutableMap<String, Int>`.
+                                                The keys have type `String` and the values have type `Int`.
+                                                
+                                                The easiest way to create maps is to use [`to`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/to.html) between each 
+                                                key and its related value:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
                                                     // Read-only map
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println("This map has ${'$'}{readOnlyJuiceMenu.count()} key-value pairs")
-                                                    // This map has 3 key-value pairs
-                                                //sampleEnd
-                                                }
+                                                        val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println(readOnlyJuiceMenu)
+                                                        // {apple=100, kiwi=190, orange=100}
+                                                    
+                                                        // Mutable map with explicit type declaration
+                                                        val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println(juiceMenu)
+                                                        // {apple=100, kiwi=190, orange=100}
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > To prevent unwanted modifications, you can create a read-only view of a mutable map by assigning it to a `Map`:
+                                                >
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-count"}
-                                                    
-                                                    To check if a specific key is already included in a map, use the [`.containsKey()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/contains-key.html)
-                                                    function:
+                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                    val juiceMenuLocked: Map<String, Int> = juiceMenu
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println(readOnlyJuiceMenu.containsKey("kiwi"))
-                                                    // true
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-contains-keys"}
-                                                    
-                                                    To obtain a collection of the keys or values of a map, use the [`keys`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/keys.html)
-                                                    and [`values`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/values.html) properties respectively:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println(readOnlyJuiceMenu.keys)
-                                                    // [apple, kiwi, orange]
-                                                    println(readOnlyJuiceMenu.values)
-                                                    // [100, 190, 100]
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-keys-values"}
-                                                    
-                                                    > [`keys`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/keys.html) and [`values`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/values.html)
-                                                    > are examples of **properties** of an object. To access the property of an object, write the property name
-                                                    > after the object appended with a period `.`
-                                                    >
-                                                    > Properties are discussed in more detail in the [Classes](kotlin-tour-classes.md) chapter.
-                                                    > At this point in the tour, you only need to know how to access them.
-                                                    >
-                                                    {style="note"}
-                                                    
-                                                    To check that a key or value is in a map, use the [`in` operator](operator-overloading.md#in-operator):
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                //sampleStart
-                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
-                                                    println("orange" in readOnlyJuiceMenu.keys)
-                                                    // true
-                                                    
-                                                    // Alternatively, you don't need to use the keys property
-                                                    println("orange" in readOnlyJuiceMenu)
-                                                    // true
-                                                    
-                                                    println(200 in readOnlyJuiceMenu.values)
-                                                    // false
-                                                //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-map-in"}
-                                                    
-                                                    For more information on what you can do with collections, see [Collections](collections-overview.md).
-                                                    
-                                                    Now that you know about basic types and how to manage collections, it's time to explore the [control flow](kotlin-tour-control-flow.md)
-                                                    that you can use in your programs.
-                                                    
-                                                    ## Practice {completion-point="true"}
-                                                    
-                                                    ### Exercise 1 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    You have a list of “green” numbers and a list of “red” numbers. Complete the code to print how many numbers there
-                                                    are in total.
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val greenNumbers = listOf(1, 4, 23)
-                                                    val redNumbers = listOf(17, 2)
-                                                    // Write your code here
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-collections-exercise-1"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val greenNumbers = listOf(1, 4, 23)
-                                                    val redNumbers = listOf(17, 2)
-                                                    val totalCount = greenNumbers.count() + redNumbers.count()
-                                                    println(totalCount)
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-collections-solution-1"}
-                                                    
-                                                    ### Exercise 2 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    You have a set of protocols supported by your server. A user requests to use a particular protocol. Complete the program
-                                                    to check whether the requested protocol is supported or not (`isSupported` must be a Boolean value).
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val SUPPORTED = setOf("HTTP", "HTTPS", "FTP")
-                                                    val requested = "smtp"
-                                                    val isSupported = // Write your code here 
-                                                    println("Support for ${'$'}requested: ${'$'}isSupported")
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-collections-exercise-2"}
-                                                    
-                                                    <deflist collapsible="true" id="kotlin-tour-collections-exercise-2-hint">
-                                                        <def title="Hint">
-                                                            Make sure that you check the requested protocol in upper case. You can use the <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/uppercase.html"><code>.uppercase()</code></a>
-                                                    function to help you with this.
-                                                        </def>
-                                                    </deflist>
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val SUPPORTED = setOf("HTTP", "HTTPS", "FTP")
-                                                    val requested = "smtp"
-                                                    val isSupported = requested.uppercase() in SUPPORTED
-                                                    println("Support for ${'$'}requested: ${'$'}isSupported")
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-collections-solution-2"}
-                                                    
-                                                    ### Exercise 3 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    Define a map that relates integer numbers from 1 to 3 to their corresponding spelling. Use this map to spell the given 
-                                                    number.
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val number2word = // Write your code here
-                                                    val n = 2
-                                                    println("${'$'}n is spelled as '${'$'}{<Write your code here >}'")
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-collections-exercise-3"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val number2word = mapOf(1 to "one", 2 to "two", 3 to "three")
-                                                    val n = 2
-                                                    println("${'$'}n is spelled as '${'$'}{number2word[n]}'")
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-collections-solution-3"}
+                                                >
                                                 
+                                                To access a value in a map, use the [indexed access operator](https://kotlinlang.org/docs/operator-overloading.html#indexed-access-operator) `[]` with
+                                                its key:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    // Read-only map
+                                                        val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println("The value of apple juice is: ${'$'}{readOnlyJuiceMenu["apple"]}")
+                                                        // The value of apple juice is: 100
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > If you try to access a key-value pair with a key that doesn't exist in a map, you see a `null` value:
+                                                >
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    // Read-only map
+                                                        val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println("The value of pineapple juice is: ${'$'}{readOnlyJuiceMenu["pineapple"]}")
+                                                        // The value of pineapple juice is: null
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > 
+                                                > This tour explains null values later in the [Null safety](https://kotlinlang.org/docs/kotlin-tour-null-safety.html) chapter.
+                                                > 
                                                 
+                                                You can also use the [indexed access operator](https://kotlinlang.org/docs/operator-overloading.html#indexed-access-operator) `[]` to add items to a mutable map:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        juiceMenu["coconut"] = 150 // Add key "coconut" with value 150 to the map
+                                                        println(juiceMenu)
+                                                        // {apple=100, kiwi=190, orange=100, coconut=150}
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To remove items from a mutable map, use the [`.remove()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/remove.html) 
+                                                function:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val juiceMenu: MutableMap<String, Int> = mutableMapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        juiceMenu.remove("orange")    // Remove key "orange" from the map
+                                                        println(juiceMenu)
+                                                        // {apple=100, kiwi=190}
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To get the number of items in a map, use the [`.count()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/count.html)
+                                                function:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    // Read-only map
+                                                        val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println("This map has ${'$'}{readOnlyJuiceMenu.count()} key-value pairs")
+                                                        // This map has 3 key-value pairs
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To check if a specific key is already included in a map, use the [`.containsKey()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/contains-key.html)
+                                                function:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println(readOnlyJuiceMenu.containsKey("kiwi"))
+                                                        // true
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                To obtain a collection of the keys or values of a map, use the [`keys`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/keys.html)
+                                                and [`values`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/values.html) properties respectively:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println(readOnlyJuiceMenu.keys)
+                                                        // [apple, kiwi, orange]
+                                                        println(readOnlyJuiceMenu.values)
+                                                        // [100, 190, 100]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > [`keys`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/keys.html) and [`values`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/values.html)
+                                                > are examples of **properties** of an object. To access the property of an object, write the property name
+                                                > after the object appended with a period `.`
+                                                >
+                                                > Properties are discussed in more detail in the [Classes](https://kotlinlang.org/docs/kotlin-tour-classes.html) chapter.
+                                                > At this point in the tour, you only need to know how to access them.
+                                                >
                                                 
+                                                To check that a key or value is in a map, use the [`in` operator](https://kotlinlang.org/docs/operator-overloading.html#in-operator):
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val readOnlyJuiceMenu = mapOf("apple" to 100, "kiwi" to 190, "orange" to 100)
+                                                        println("orange" in readOnlyJuiceMenu.keys)
+                                                        // true
+                                                        
+                                                        // Alternatively, you don't need to use the keys property
+                                                        println("orange" in readOnlyJuiceMenu)
+                                                        // true
+                                                        
+                                                        println(200 in readOnlyJuiceMenu.values)
+                                                        // false
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                For more information on what you can do with collections, see [Collections](https://kotlinlang.org/docs/collections-overview.html).
+                                                
+                                                Now that you know about basic types and how to manage collections, it's time to explore the [control flow](https://kotlinlang.org/docs/kotlin-tour-control-flow.html)
+                                                that you can use in your programs.
+                                                
+                                                ## Practice
+                                                ### Exercise 1
+                                                You have a list of “green” numbers and a list of “red” numbers. Complete the code to print how many numbers there
+                                                are in total.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val greenNumbers = listOf(1, 4, 23)
+                                                        val redNumbers = listOf(17, 2)
+                                                        // Write your code here
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val greenNumbers = listOf(1, 4, 23)
+                                                        val redNumbers = listOf(17, 2)
+                                                        val totalCount = greenNumbers.count() + redNumbers.count()
+                                                        println(totalCount)
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 2
+                                                You have a set of protocols supported by your server. A user requests to use a particular protocol. Complete the program
+                                                to check whether the requested protocol is supported or not (`isSupported` must be a Boolean value).
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val SUPPORTED = setOf("HTTP", "HTTPS", "FTP")
+                                                        val requested = "smtp"
+                                                        val isSupported = // Write your code here 
+                                                        println("Support for ${'$'}requested: ${'$'}isSupported")
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                > **Hint**: Make sure that you check the requested protocol in upper case. You can use the <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/uppercase.html"><code>.uppercase()</code></a>
+                                                function to help you with this.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val SUPPORTED = setOf("HTTP", "HTTPS", "FTP")
+                                                        val requested = "smtp"
+                                                        val isSupported = requested.uppercase() in SUPPORTED
+                                                        println("Support for ${'$'}requested: ${'$'}isSupported")
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 3
+                                                Define a map that relates integer numbers from 1 to 3 to their corresponding spelling. Use this map to spell the given 
+                                                number.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val number2word = // Write your code here
+                                                        val n = 2
+                                                        println("${'$'}n is spelled as '${'$'}{<Write your code here >}'")
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val number2word = mapOf(1 to "one", 2 to "two", 3 to "three")
+                                                        val n = 2
+                                                        println("${'$'}n is spelled as '${'$'}{number2word[n]}'")
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
                                                 <list columns="2" id="tour-nav">
                                                   <li>
                                                     <a as="button" href="kotlin-tour-basic-types.md" mode="outline" icon="arrow-left" icon-position="left">Previous step</a>
@@ -1196,7 +1091,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > * Makes it easier to add another branch.
                                                 > * Leads to fewer mistakes in your code.
                                                 > 
-                                                
                                                 
                                                 ### If
                                                 
@@ -1289,7 +1183,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > Note that all branch conditions are checked sequentially until one of them is satisfied. So only the first suitable 
                                                 > branch is executed.
                                                 >
-                                                
                                                 
                                                 An **expression** returns a value that can be used later in your code.
                                                 
@@ -1388,8 +1281,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > In this exercise, you import a package so that you can use the `Random.nextInt()` function to give you a random `Int`.
                                                 > For more information about importing packages, see [Packages and imports](https://kotlinlang.org/docs/packages.html).
                                                 >
-                                                
-                                                
                                                 
                                                 > **Hint**: Use the <a href="operator-overloading.md#equality-and-inequality-operators">equality operator</a> (<code>==</code>) to compare the dice results.
                                                 """.trimIndent(),
@@ -1856,7 +1747,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > this in [Functions without return](#functions-without-return).
                                                 >
                                                 
-                                                
                                                 In the following example:
                                                 
                                                 * `x` and `y` are function parameters.
@@ -1886,7 +1776,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > We recommend in our [coding conventions](https://kotlinlang.org/docs/coding-conventions.html#function-names) that you name functions starting with 
                                                 > a lowercase letter and use camel case with no underscores.
                                                 > 
-                                                
                                                 
                                                 ## Named arguments
                                                 
@@ -1953,7 +1842,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > You can skip specific parameters with default values, rather than omitting them all. However, after the 
                                                 > first skipped parameter, you must name all subsequent parameters.
                                                 >
-                                                
                                                 
                                                 ## Functions without return
                                                 
@@ -2030,7 +1918,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > If you use `{}` curly braces to declare your function body, you must declare the return type unless it is the `Unit` type.
                                                 > 
                                                 
-                                                
                                                 ## Early returns in functions
                                                 
                                                 To stop the code in your function from being processed further than a certain point, use the `return` keyword. This example
@@ -2086,8 +1973,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > In this exercise, you import a package so that you can access the value of <math>π</math> via `PI`. For more information about
                                                 > importing packages, see [Packages and imports](https://kotlinlang.org/docs/packages.html).
                                                 >
-                                                
-                                                
                                                 
                                                 > **Hint**: The formula for calculating the area of a circle is <math>πr^2</math>, where <math>r</math> is the radius.
                                                 """.trimIndent(),
@@ -2267,6 +2152,69 @@ object KotlinTourBeginnerCourseContent {
                                                 * The `println()` function prints the result.
                                                 
                                                 > If you declare a lambda without parameters, then there is no need to use `->`. For example:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    { println("Log message") }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                >
+                                                
+                                                Lambda expressions can be used in a number of ways. You can:
+                                                
+                                                * [Pass a lambda expression as a parameter to another function](#pass-to-another-function)
+                                                * [Return a lambda expression from a function](#return-from-a-function)
+                                                * [Invoke a lambda expression on its own](#invoke-separately)
+                                                
+                                                ### Pass to another function
+                                                
+                                                A great example of when it is useful to pass a lambda expression to a function, is using the [`.filter()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/filter.html)
+                                                function on collections:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                    val numbers = listOf(1, -2, 3, -4, 5, -6)
+                                                        
+                                                        val positives = numbers.filter ({ x -> x > 0 })
+                                                        
+                                                        val isNegative = { x: Int -> x < 0 }
+                                                        val negatives = numbers.filter(isNegative)
+                                                        
+                                                        println(positives)
+                                                        // [1, 3, 5]
+                                                        println(negatives)
+                                                        // [-2, -4, -6]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                The `.filter()` function accepts a lambda expression as a predicate and applies it to each element of the list. The function keeps an element only if the predicate returns `true`:
+                                                
+                                                * `{ x -> x > 0 }` returns `true` if the element is positive.
+                                                * `{ x -> x < 0 }` returns `true` if the element is negative.
+                                                
+                                                This example demonstrates two ways of passing a lambda expression to a function:
+                                                
+                                                * For positive numbers, the example adds the lambda expression directly in the `.filter()` function.
+                                                * For negative numbers, the example assigns the lambda expression to the `isNegative` variable. Then
+                                                the `isNegative` variable is used as a function parameter in the `.filter()` function. In this case, you have to specify
+                                                the type of function parameters (`x`) in the lambda expression.
+                                                
+                                                > If a lambda expression is the only function parameter, you can drop the function parentheses `()`:
                                                 >
                                                 """.trimIndent(),
                                             ),
@@ -2274,366 +2222,262 @@ object KotlinTourBeginnerCourseContent {
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    > { println("Log message") }
-                                                    > ```
-                                                    >
-                                                    {style="note"}
-                                                    
-                                                    Lambda expressions can be used in a number of ways. You can:
-                                                    
-                                                    * [Pass a lambda expression as a parameter to another function](#pass-to-another-function)
-                                                    * [Return a lambda expression from a function](#return-from-a-function)
-                                                    * [Invoke a lambda expression on its own](#invoke-separately)
-                                                    
-                                                    ### Pass to another function
-                                                    
-                                                    A great example of when it is useful to pass a lambda expression to a function, is using the [`.filter()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/filter.html)
-                                                    function on collections:
+                                                    val positives = numbers.filter { x -> x > 0 }
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                    //sampleStart
-                                                    val numbers = listOf(1, -2, 3, -4, 5, -6)
-                                                    
-                                                    val positives = numbers.filter ({ x -> x > 0 })
-                                                    
-                                                    val isNegative = { x: Int -> x < 0 }
-                                                    val negatives = numbers.filter(isNegative)
-                                                    
-                                                    println(positives)
-                                                    // [1, 3, 5]
-                                                    println(negatives)
-                                                    // [-2, -4, -6]
-                                                    //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambda-filter"}
-                                                    
-                                                    The `.filter()` function accepts a lambda expression as a predicate and applies it to each element of the list. The function keeps an element only if the predicate returns `true`:
-                                                    
-                                                    * `{ x -> x > 0 }` returns `true` if the element is positive.
-                                                    * `{ x -> x < 0 }` returns `true` if the element is negative.
-                                                    
-                                                    This example demonstrates two ways of passing a lambda expression to a function:
-                                                    
-                                                    * For positive numbers, the example adds the lambda expression directly in the `.filter()` function.
-                                                    * For negative numbers, the example assigns the lambda expression to the `isNegative` variable. Then
-                                                    the `isNegative` variable is used as a function parameter in the `.filter()` function. In this case, you have to specify
-                                                    the type of function parameters (`x`) in the lambda expression.
-                                                    
-                                                    > If a lambda expression is the only function parameter, you can drop the function parentheses `()`:
-                                                    > 
-                                                    > ```kotlin
-                                                    > val positives = numbers.filter { x -> x > 0 }
-                                                    > ```
-                                                    > 
-                                                    > This is an example of a [trailing lambda](#trailing-lambdas), which is discussed in more detail at the end of this
-                                                    > chapter.
-                                                    >
-                                                    {style="note"}
-                                                    
-                                                    Another good example is using the [`.map()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map.html) 
-                                                    function to transform items in a collection:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    //sampleStart
-                                                    val numbers = listOf(1, -2, 3, -4, 5, -6)
-                                                    val doubled = numbers.map { x -> x * 2 }
-                                                    
-                                                    val isTripled = { x: Int -> x * 3 }
-                                                    val tripled = numbers.map(isTripled)
-                                                    
-                                                    println(doubled)
-                                                    // [2, -4, 6, -8, 10, -12]
-                                                    println(tripled)
-                                                    // [3, -6, 9, -12, 15, -18]
-                                                    //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambda-map"}
-                                                    
-                                                    The `.map()` function accepts a lambda expression as a transform function:
-                                                    
-                                                    * `{ x -> x * 2 }` takes each element of the list and returns that element multiplied by 2.
-                                                    * `{ x -> x * 3 }` takes each element of the list and returns that element multiplied by 3.
-                                                    
-                                                    ### Function types
-                                                    
-                                                    Before you can return a lambda expression from a function, you first need to understand **function
-                                                    types**.
-                                                    
-                                                    You have already learned about basic types but functions themselves also have a type. Kotlin's type inference 
-                                                    can infer a function's type from the parameter type. But there may be times when you need to explicitly
-                                                    specify the function type. The compiler needs the function type so that it knows what is and isn't 
-                                                    allowed for that function.
-                                                    
-                                                    The syntax for a function type has:
-                                                    
-                                                    * Each parameter's type written within parentheses `()` and separated by commas `,`.
-                                                    * The return type written after `->`.
-                                                    
-                                                    For example: `(String) -> String` or `(Int, Int) -> Int`.
-                                                    
-                                                    This is what a lambda expression looks like if a function type for `upperCaseString()` is defined:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                val upperCaseString: (String) -> String = { text -> text.uppercase() }
+                                                > 
+                                                > This is an example of a [trailing lambda](#trailing-lambdas), which is discussed in more detail at the end of this
+                                                > chapter.
+                                                >
                                                 
-                                                fun main() {
-                                                    println(upperCaseString("hello"))
-                                                    // HELLO
-                                                }
+                                                Another good example is using the [`.map()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/map.html) 
+                                                function to transform items in a collection:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambda-function-type"}
-                                                    
-                                                    If your lambda expression has no parameters, then the parentheses `()` are left empty. For example: `() -> Unit`
-                                                    
-                                                    > You must declare parameter and return types either in the lambda expression or as a function type. Otherwise, the
-                                                    > compiler won't be able to know what type your lambda expression is.
-                                                    > 
-                                                    > For example, the following won't work:
-                                                    > 
-                                                    > `val upperCaseString = { str -> str.uppercase() }`
-                                                    >
-                                                    {style="note"}
-                                                    
-                                                    ### Return from a function
-                                                    
-                                                    Lambda expressions can be returned from a function. So that the compiler understands what type the lambda
-                                                    expression returned is, you must declare a function type.
-                                                    
-                                                    In the following example, the `toSeconds()` function has function type `(Int) -> Int` because it always returns a lambda
-                                                    expression that takes a parameter of type `Int` and returns an `Int` value.
-                                                    
-                                                    This example uses a `when` expression to determine which lambda expression is returned when `toSeconds()` is called:
+                                                    fun main() {
+                                                    val numbers = listOf(1, -2, 3, -4, 5, -6)
+                                                        val doubled = numbers.map { x -> x * 2 }
+                                                        
+                                                        val isTripled = { x: Int -> x * 3 }
+                                                        val tripled = numbers.map(isTripled)
+                                                        
+                                                        println(doubled)
+                                                        // [2, -4, 6, -8, 10, -12]
+                                                        println(tripled)
+                                                        // [3, -6, 9, -12, 15, -18]
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun toSeconds(time: String): (Int) -> Int = when (time) {
-                                                    "hour" -> { value -> value * 60 * 60 }
-                                                    "minute" -> { value -> value * 60 }
-                                                    "second" -> { value -> value }
-                                                    else -> { value -> value }
-                                                }
+                                                The `.map()` function accepts a lambda expression as a transform function:
                                                 
-                                                fun main() {
-                                                    val timesInMinutes = listOf(2, 10, 15, 1)
-                                                    val min2sec = toSeconds("minute")
-                                                    val totalTimeInSeconds = timesInMinutes.map(min2sec).sum()
-                                                    println("Total time is ${'$'}totalTimeInSeconds secs")
-                                                    // Total time is 1680 secs
-                                                }
+                                                * `{ x -> x * 2 }` takes each element of the list and returns that element multiplied by 2.
+                                                * `{ x -> x * 3 }` takes each element of the list and returns that element multiplied by 3.
+                                                
+                                                ### Function types
+                                                
+                                                Before you can return a lambda expression from a function, you first need to understand **function
+                                                types**.
+                                                
+                                                You have already learned about basic types but functions themselves also have a type. Kotlin's type inference 
+                                                can infer a function's type from the parameter type. But there may be times when you need to explicitly
+                                                specify the function type. The compiler needs the function type so that it knows what is and isn't 
+                                                allowed for that function.
+                                                
+                                                The syntax for a function type has:
+                                                
+                                                * Each parameter's type written within parentheses `()` and separated by commas `,`.
+                                                * The return type written after `->`.
+                                                
+                                                For example: `(String) -> String` or `(Int, Int) -> Int`.
+                                                
+                                                This is what a lambda expression looks like if a function type for `upperCaseString()` is defined:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambda-return-from-function"}
+                                                    val upperCaseString: (String) -> String = { text -> text.uppercase() }
                                                     
-                                                    ### Invoke separately
-                                                    
-                                                    Lambda expressions can be invoked on their own by adding parentheses `()` after the curly braces `{}` and including
-                                                    any parameters within the parentheses:
+                                                    fun main() {
+                                                        println(upperCaseString("hello"))
+                                                        // HELLO
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                    //sampleStart
+                                                If your lambda expression has no parameters, then the parentheses `()` are left empty. For example: `() -> Unit`
+                                                
+                                                > You must declare parameter and return types either in the lambda expression or as a function type. Otherwise, the
+                                                > compiler won't be able to know what type your lambda expression is.
+                                                > 
+                                                > For example, the following won't work:
+                                                > 
+                                                > `val upperCaseString = { str -> str.uppercase() }`
+                                                >
+                                                
+                                                ### Return from a function
+                                                
+                                                Lambda expressions can be returned from a function. So that the compiler understands what type the lambda
+                                                expression returned is, you must declare a function type.
+                                                
+                                                In the following example, the `toSeconds()` function has function type `(Int) -> Int` because it always returns a lambda
+                                                expression that takes a parameter of type `Int` and returns an `Int` value.
+                                                
+                                                This example uses a `when` expression to determine which lambda expression is returned when `toSeconds()` is called:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun toSeconds(time: String): (Int) -> Int = when (time) {
+                                                        "hour" -> { value -> value * 60 * 60 }
+                                                        "minute" -> { value -> value * 60 }
+                                                        "second" -> { value -> value }
+                                                        else -> { value -> value }
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val timesInMinutes = listOf(2, 10, 15, 1)
+                                                        val min2sec = toSeconds("minute")
+                                                        val totalTimeInSeconds = timesInMinutes.map(min2sec).sum()
+                                                        println("Total time is ${'$'}totalTimeInSeconds secs")
+                                                        // Total time is 1680 secs
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Invoke separately
+                                                
+                                                Lambda expressions can be invoked on their own by adding parentheses `()` after the curly braces `{}` and including
+                                                any parameters within the parentheses:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
                                                     println({ text: String -> text.uppercase() }("hello"))
-                                                    // HELLO
-                                                    //sampleEnd
-                                                }
+                                                        // HELLO
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Trailing lambdas
+                                                
+                                                As you have already seen, if a lambda expression is the only function parameter, you can drop the function parentheses `()`.
+                                                If a lambda expression is passed as the last parameter of a function, then the expression can be written outside the
+                                                function parentheses `()`. In both cases, this syntax is called a **trailing lambda**.
+                                                
+                                                For example, the [`.fold()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/fold.html) function accepts an 
+                                                initial value and an operation:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambda-standalone"}
-                                                    
-                                                    ### Trailing lambdas
-                                                    
-                                                    As you have already seen, if a lambda expression is the only function parameter, you can drop the function parentheses `()`.
-                                                    If a lambda expression is passed as the last parameter of a function, then the expression can be written outside the
-                                                    function parentheses `()`. In both cases, this syntax is called a **trailing lambda**.
-                                                    
-                                                    For example, the [`.fold()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.sequences/fold.html) function accepts an 
-                                                    initial value and an operation:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    //sampleStart
+                                                    fun main() {
                                                     // The initial value is zero. 
-                                                    // The operation sums the initial value with every item in the list cumulatively.
-                                                    println(listOf(1, 2, 3).fold(0, { x, item -> x + item })) // 6
-                                                
-                                                    // Alternatively, in the form of a trailing lambda
-                                                    println(listOf(1, 2, 3).fold(0) { x, item -> x + item })  // 6
-                                                    //sampleEnd
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-trailing-lambda"}
+                                                        // The operation sums the initial value with every item in the list cumulatively.
+                                                        println(listOf(1, 2, 3).fold(0, { x, item -> x + item })) // 6
                                                     
-                                                    For more information on lambda expressions, see [Lambda expressions and anonymous functions](lambdas.md#lambda-expressions-and-anonymous-functions).
-                                                    
-                                                    The next step in our tour is to learn about [classes](kotlin-tour-classes.md) in Kotlin.
-                                                    
-                                                    ## Lambda expressions practice {completion-point="true"}
-                                                    
-                                                    ### Exercise 1 {initial-collapse-state="collapsed" collapsible="true" id="lambdas-exercise-1"}
-                                                    
-                                                    You have a list of actions supported by a web service, a common prefix for all requests, and an ID of a particular resource.
-                                                    To request an action `title` over the resource with ID: 5, you need to create the following URL: `https://example.com/book-info/5/title`.
-                                                    Use a lambda expression to create a list of URLs from the list of actions.
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val actions = listOf("title", "year", "author")
-                                                    val prefix = "https://example.com/book-info"
-                                                    val id = 5
-                                                    val urls = // Write your code here
-                                                    println(urls)
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambdas-exercise-1"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun main() {
-                                                    val actions = listOf("title", "year", "author")
-                                                    val prefix = "https://example.com/book-info"
-                                                    val id = 5
-                                                    val urls = actions.map { action -> "${'$'}prefix/${'$'}id/${'$'}action" }
-                                                    println(urls)
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-lambdas-solution-1"}
-                                                    
-                                                    ### Exercise 2 {initial-collapse-state="collapsed" collapsible="true" id="lambdas-exercise-2"}
-                                                    
-                                                    Write a function that takes an `Int` value and an action (a function with type `() -> Unit`) which then repeats the 
-                                                    action the given number of times. Then use this function to print “Hello” 5 times.
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun repeatN(n: Int, action: () -> Unit) {
-                                                    // Write your code here
-                                                }
-                                                
-                                                fun main() {
-                                                    // Write your code here
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-lambdas-exercise-2"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                fun repeatN(n: Int, action: () -> Unit) {
-                                                    for (i in 1..n) {
-                                                        action()
+                                                        // Alternatively, in the form of a trailing lambda
+                                                        println(listOf(1, 2, 3).fold(0) { x, item -> x + item })  // 6
                                                     }
-                                                }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                For more information on lambda expressions, see [Lambda expressions and anonymous functions](https://kotlinlang.org/docs/lambdas.html#lambda-expressions-and-anonymous-functions).
                                                 
-                                                fun main() {
-                                                    repeatN(5) {
-                                                        println("Hello")
+                                                The next step in our tour is to learn about [classes](https://kotlinlang.org/docs/kotlin-tour-classes.html) in Kotlin.
+                                                
+                                                ## Lambda expressions practice
+                                                ### Exercise 1
+                                                You have a list of actions supported by a web service, a common prefix for all requests, and an ID of a particular resource.
+                                                To request an action `title` over the resource with ID: 5, you need to create the following URL: `https://example.com/book-info/5/title`.
+                                                Use a lambda expression to create a list of URLs from the list of actions.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val actions = listOf("title", "year", "author")
+                                                        val prefix = "https://example.com/book-info"
+                                                        val id = 5
+                                                        val urls = // Write your code here
+                                                        println(urls)
                                                     }
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-lambdas-solution-2"}
-                                                
-                                                
-                                                
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun main() {
+                                                        val actions = listOf("title", "year", "author")
+                                                        val prefix = "https://example.com/book-info"
+                                                        val id = 5
+                                                        val urls = actions.map { action -> "${'$'}prefix/${'$'}id/${'$'}action" }
+                                                        println(urls)
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 2
+                                                Write a function that takes an `Int` value and an action (a function with type `() -> Unit`) which then repeats the 
+                                                action the given number of times. Then use this function to print “Hello” 5 times.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun repeatN(n: Int, action: () -> Unit) {
+                                                        // Write your code here
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        // Write your code here
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun repeatN(n: Int, action: () -> Unit) {
+                                                        for (i in 1..n) {
+                                                            action()
+                                                        }
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        repeatN(5) {
+                                                            println("Hello")
+                                                        }
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
                                                 <list columns="2" id="tour-nav">
                                                   <li>
                                                     <a as="button" href="kotlin-tour-control-flow.md" mode="outline" icon="arrow-left" icon-position="left">Previous step</a>
@@ -2734,7 +2578,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > * You can use a [trailing comma](https://kotlinlang.org/docs/coding-conventions.html#trailing-commas) when declaring class properties.
                                                 >
                                                 
-                                                
                                                 Just like with function parameters, class properties can have default values:
                                                 """.trimIndent(),
                                             ),
@@ -2818,412 +2661,349 @@ object KotlinTourBeginnerCourseContent {
                                                 """
                                                 > To concatenate the value of a property as part of a string, you can use string templates (`${'$'}`).
                                                 > For example:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    println("Their email address is: ${'$'}{contact.email}")
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
                                                 >
+                                                
+                                                ## Member functions
+                                                
+                                                In addition to declaring properties as part of an object's characteristics, you can also define an object's behavior 
+                                                with member functions.
+                                                
+                                                In Kotlin, member functions must be declared within the class body. To call a member function on an instance, write the 
+                                                function name after the instance name appended with a period `.`. For example:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    > println("Their email address is: ${'$'}{contact.email}")
-                                                    > ```
-                                                    >
-                                                    {style="tip"}
-                                                    
-                                                    ## Member functions
-                                                    
-                                                    In addition to declaring properties as part of an object's characteristics, you can also define an object's behavior 
-                                                    with member functions.
-                                                    
-                                                    In Kotlin, member functions must be declared within the class body. To call a member function on an instance, write the 
-                                                    function name after the instance name appended with a period `.`. For example:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                class Contact(val id: Int, var email: String) {
-                                                    fun printId() {
-                                                        println(id)
+                                                    class Contact(val id: Int, var email: String) {
+                                                        fun printId() {
+                                                            println(id)
+                                                        }
                                                     }
-                                                }
+                                                    
+                                                    fun main() {
+                                                        val contact = Contact(1, "mary@gmail.com")
+                                                        // Calls member function printId()
+                                                        contact.printId()           
+                                                        // 1
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ## Data classes
                                                 
-                                                fun main() {
-                                                    val contact = Contact(1, "mary@gmail.com")
-                                                    // Calls member function printId()
-                                                    contact.printId()           
-                                                    // 1
-                                                }
+                                                Kotlin has **data classes** which are particularly useful for storing data. Data classes have the same functionality as 
+                                                classes, but they come automatically with additional member functions. These member functions allow you to easily print 
+                                                the instance to readable output, compare instances of a class, copy instances, and more. As these functions are
+                                                automatically available, you don't have to spend time writing the same boilerplate code for each of your classes.
+                                                
+                                                To declare a data class, use the keyword `data`:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-member-function"}
-                                                    
-                                                    ## Data classes
-                                                    
-                                                    Kotlin has **data classes** which are particularly useful for storing data. Data classes have the same functionality as 
-                                                    classes, but they come automatically with additional member functions. These member functions allow you to easily print 
-                                                    the instance to readable output, compare instances of a class, copy instances, and more. As these functions are
-                                                    automatically available, you don't have to spend time writing the same boilerplate code for each of your classes.
-                                                    
-                                                    To declare a data class, use the keyword `data`:
+                                                    data class User(val name: String, val id: Int)
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String, val id: Int)
+                                                The Kotlin compiler only uses the properties defined inside the [primary constructor](https://kotlinlang.org/docs/classes.html#primary-constructor)
+                                                when generating member functions. If you declare properties in the data class body, they aren't included in the output
+                                                of the generated functions.
+                                                
+                                                The most useful predefined member functions of data classes are:
+                                                
+                                                | **Function**       | **Description**                                                                          |
+                                                |--------------------|------------------------------------------------------------------------------------------|
+                                                | `toString()`       | Prints a readable string of the class instance and its properties.                       |
+                                                | `equals()` or `==` | Compares instances of a class.                                                           |
+                                                | `copy()`           | Creates a class instance by copying another, potentially with some different properties. |
+                                                
+                                                See the following sections for examples of how to use each function:
+                                                
+                                                * [Print as string](#print-as-string)
+                                                * [Compare instances](#compare-instances)
+                                                * [Copy instance](#copy-instance)
+                                                
+                                                ### Print as string
+                                                
+                                                To print a readable string of a class instance, you can explicitly call the `toString()` function, or use print functions 
+                                                (`println()` and `print()`) which automatically call `toString()` for you:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    The Kotlin compiler only uses the properties defined inside the [primary constructor](classes.md#primary-constructor)
-                                                    when generating member functions. If you declare properties in the data class body, they aren't included in the output
-                                                    of the generated functions.
+                                                    data class User(val name: String, val id: Int)
                                                     
-                                                    The most useful predefined member functions of data classes are:
-                                                    
-                                                    | **Function**       | **Description**                                                                          |
-                                                    |--------------------|------------------------------------------------------------------------------------------|
-                                                    | `toString()`       | Prints a readable string of the class instance and its properties.                       |
-                                                    | `equals()` or `==` | Compares instances of a class.                                                           |
-                                                    | `copy()`           | Creates a class instance by copying another, potentially with some different properties. |
-                                                    
-                                                    See the following sections for examples of how to use each function:
-                                                    
-                                                    * [Print as string](#print-as-string)
-                                                    * [Compare instances](#compare-instances)
-                                                    * [Copy instance](#copy-instance)
-                                                    
-                                                    ### Print as string
-                                                    
-                                                    To print a readable string of a class instance, you can explicitly call the `toString()` function, or use print functions 
-                                                    (`println()` and `print()`) which automatically call `toString()` for you:
+                                                    fun main() {
+                                                    val user = User("Alex", 1)
+                                                        
+                                                        // Automatically uses toString() function so that output is easy to read
+                                                        println(user)            
+                                                        // User(name=Alex, id=1)
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String, val id: Int)
+                                                This is particularly useful when debugging or creating logs.
                                                 
-                                                fun main() {
-                                                    //sampleStart
+                                                ### Compare instances
+                                                
+                                                To compare data class instances, use the equality operator `==`:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val name: String, val id: Int)
+                                                    
+                                                    fun main() {
+                                                    val user = User("Alex", 1)
+                                                        val secondUser = User("Alex", 1)
+                                                        val thirdUser = User("Max", 2)
+                                                    
+                                                        // Compares user to second user
+                                                        println("user == secondUser: ${'$'}{user == secondUser}") 
+                                                        // user == secondUser: true
+                                                        
+                                                        // Compares user to third user
+                                                        println("user == thirdUser: ${'$'}{user == thirdUser}")   
+                                                        // user == thirdUser: false
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Copy instance
+                                                
+                                                To create an exact copy of a data class instance, call the `copy()` function on the instance.
+                                                
+                                                To create a copy of a data class instance **and** change some properties, call the `copy()` function on the instance 
+                                                **and** add replacement values for properties as function parameters.
+                                                
+                                                For example:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val name: String, val id: Int)
+                                                    
+                                                    fun main() {
                                                     val user = User("Alex", 1)
                                                     
-                                                    // Automatically uses toString() function so that output is easy to read
-                                                    println(user)            
-                                                    // User(name=Alex, id=1)
-                                                    //sampleEnd
-                                                }
+                                                        // Creates an exact copy of user
+                                                        println(user.copy())       
+                                                        // User(name=Alex, id=1)
+                                                    
+                                                        // Creates a copy of user with name: "Max"
+                                                        println(user.copy("Max"))  
+                                                        // User(name=Max, id=1)
+                                                    
+                                                        // Creates a copy of user with id: 3
+                                                        println(user.copy(id = 3)) 
+                                                        // User(name=Alex, id=3)
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                Creating a copy of an instance is safer than modifying the original instance because any code that relies on the
+                                                original instance isn't affected by the copy and what you do with it.
+                                                
+                                                For more information about data classes, see [Data classes](https://kotlinlang.org/docs/data-classes.html).
+                                                
+                                                The last chapter of this tour is about Kotlin's [null safety](https://kotlinlang.org/docs/kotlin-tour-null-safety.html).
+                                                
+                                                ## Practice
+                                                ### Exercise 1
+                                                Define a data class `Employee` with two properties: one for a name, and another for a salary. Make sure that the property
+                                                for salary is mutable, otherwise you won't get a salary boost at the end of the year! The main function demonstrates how
+                                                you can use this data class.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-data-classes-print-string"}
+                                                    // Write your code here
                                                     
-                                                    This is particularly useful when debugging or creating logs.
+                                                    fun main() {
+                                                        val emp = Employee("Mary", 20)
+                                                        println(emp)
+                                                        emp.salary += 10
+                                                        println(emp)
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class Employee(val name: String, var salary: Int)
                                                     
-                                                    ### Compare instances
-                                                    
-                                                    To compare data class instances, use the equality operator `==`:
+                                                    fun main() {
+                                                        val emp = Employee("Mary", 20)
+                                                        println(emp)
+                                                        emp.salary += 10
+                                                        println(emp)
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String, val id: Int)
-                                                
-                                                fun main() {
-                                                    //sampleStart
-                                                    val user = User("Alex", 1)
-                                                    val secondUser = User("Alex", 1)
-                                                    val thirdUser = User("Max", 2)
-                                                
-                                                    // Compares user to second user
-                                                    println("user == secondUser: ${'$'}{user == secondUser}") 
-                                                    // user == secondUser: true
-                                                    
-                                                    // Compares user to third user
-                                                    println("user == thirdUser: ${'$'}{user == thirdUser}")   
-                                                    // user == thirdUser: false
-                                                    //sampleEnd
-                                                }
+                                                ### Exercise 2
+                                                Declare the additional data classes that are needed for this code to compile.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-data-classes-compare-instances"}
+                                                    data class Person(val name: Name, val address: Address, val ownsAPet: Boolean = true)
+                                                    // Write your code here
+                                                    // data class Name(...)
                                                     
-                                                    ### Copy instance
+                                                    fun main() {
+                                                        val person = Person(
+                                                            Name("John", "Smith"),
+                                                            Address("123 Fake Street", City("Springfield", "US")),
+                                                            ownsAPet = false
+                                                        )
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class Person(val name: Name, val address: Address, val ownsAPet: Boolean = true)
+                                                    data class Name(val first: String, val last: String)
+                                                    data class Address(val street: String, val city: City)
+                                                    data class City(val name: String, val countryCode: String)
                                                     
-                                                    To create an exact copy of a data class instance, call the `copy()` function on the instance.
-                                                    
-                                                    To create a copy of a data class instance **and** change some properties, call the `copy()` function on the instance 
-                                                    **and** add replacement values for properties as function parameters.
-                                                    
-                                                    For example:
+                                                    fun main() {
+                                                        val person = Person(
+                                                            Name("John", "Smith"),
+                                                            Address("123 Fake Street", City("Springfield", "US")),
+                                                            ownsAPet = false
+                                                        )
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String, val id: Int)
+                                                ### Exercise 3
+                                                To test your code, you need a generator that can create random employees. Define a `RandomEmployeeGenerator` class with 
+                                                a fixed list of potential names (inside the class body). Configure the class with a minimum and maximum salary (inside 
+                                                the class header). In the class body, define the `generateEmployee()` function. Once again, the main function demonstrates
+                                                how you can use this class.
                                                 
-                                                fun main() {
-                                                    //sampleStart
-                                                    val user = User("Alex", 1)
+                                                > In this exercise, you import a package so that you can use the [`Random.nextInt()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.random/-random/next-int.html) function.
+                                                > For more information about importing packages, see [Packages and imports](https://kotlinlang.org/docs/packages.html).
+                                                >
                                                 
-                                                    // Creates an exact copy of user
-                                                    println(user.copy())       
-                                                    // User(name=Alex, id=1)
+                                                > **Hint 1**: Lists have an extension function called <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/random.html"><code>.random()</code></a>
+                                                        that returns a random item within a list.
                                                 
-                                                    // Creates a copy of user with name: "Max"
-                                                    println(user.copy("Max"))  
-                                                    // User(name=Max, id=1)
                                                 
-                                                    // Creates a copy of user with id: 3
-                                                    println(user.copy(id = 3)) 
-                                                    // User(name=Alex, id=3)
-                                                    //sampleEnd
-                                                }
+                                                
+                                                > **Hint 2**: <code>Random.nextInt(from = ..., until = ...)</code> gives you a random <code>Int</code> number within specified limits.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-data-classes-copy-instance"}
+                                                    import kotlin.random.Random
                                                     
-                                                    Creating a copy of an instance is safer than modifying the original instance because any code that relies on the
-                                                    original instance isn't affected by the copy and what you do with it.
+                                                    data class Employee(val name: String, var salary: Int)
                                                     
-                                                    For more information about data classes, see [Data classes](data-classes.md).
+                                                    // Write your code here
                                                     
-                                                    The last chapter of this tour is about Kotlin's [null safety](kotlin-tour-null-safety.md).
-                                                    
-                                                    ## Practice {completion-point="true"}
-                                                    
-                                                    ### Exercise 1 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    Define a data class `Employee` with two properties: one for a name, and another for a salary. Make sure that the property
-                                                    for salary is mutable, otherwise you won't get a salary boost at the end of the year! The main function demonstrates how
-                                                    you can use this data class.
-                                                    
-                                                    |---|---|
+                                                    fun main() {
+                                                        val empGen = RandomEmployeeGenerator(10, 30)
+                                                        println(empGen.generateEmployee())
+                                                        println(empGen.generateEmployee())
+                                                        println(empGen.generateEmployee())
+                                                        empGen.minSalary = 50
+                                                        empGen.maxSalary = 100
+                                                        println(empGen.generateEmployee())
+                                                    }
                                                     """.trimIndent(),
-                                                runnable = true,
+                                                runnable = false,
                                                 isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                // Write your code here
-                                                
-                                                fun main() {
-                                                    val emp = Employee("Mary", 20)
-                                                    println(emp)
-                                                    emp.salary += 10
-                                                    println(emp)
-                                                }
-                                                """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-classes-exercise-1"}
+                                                    import kotlin.random.Random
                                                     
-                                                    |---|---|
+                                                    data class Employee(val name: String, var salary: Int)
+                                                    
+                                                    class RandomEmployeeGenerator(var minSalary: Int, var maxSalary: Int) {
+                                                        val names = listOf("John", "Mary", "Ann", "Paul", "Jack", "Elizabeth")
+                                                        fun generateEmployee() =
+                                                            Employee(names.random(),
+                                                                Random.nextInt(from = minSalary, until = maxSalary))
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val empGen = RandomEmployeeGenerator(10, 30)
+                                                        println(empGen.generateEmployee())
+                                                        println(empGen.generateEmployee())
+                                                        println(empGen.generateEmployee())
+                                                        empGen.minSalary = 50
+                                                        empGen.maxSalary = 100
+                                                        println(empGen.generateEmployee())
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class Employee(val name: String, var salary: Int)
-                                                
-                                                fun main() {
-                                                    val emp = Employee("Mary", 20)
-                                                    println(emp)
-                                                    emp.salary += 10
-                                                    println(emp)
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-classes-solution-1"}
-                                                    
-                                                    ### Exercise 2 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    Declare the additional data classes that are needed for this code to compile.
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class Person(val name: Name, val address: Address, val ownsAPet: Boolean = true)
-                                                // Write your code here
-                                                // data class Name(...)
-                                                
-                                                fun main() {
-                                                    val person = Person(
-                                                        Name("John", "Smith"),
-                                                        Address("123 Fake Street", City("Springfield", "US")),
-                                                        ownsAPet = false
-                                                    )
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-classes-exercise-2"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class Person(val name: Name, val address: Address, val ownsAPet: Boolean = true)
-                                                data class Name(val first: String, val last: String)
-                                                data class Address(val street: String, val city: City)
-                                                data class City(val name: String, val countryCode: String)
-                                                
-                                                fun main() {
-                                                    val person = Person(
-                                                        Name("John", "Smith"),
-                                                        Address("123 Fake Street", City("Springfield", "US")),
-                                                        ownsAPet = false
-                                                    )
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-classes-solution-2"}
-                                                    
-                                                    ### Exercise 3 {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    To test your code, you need a generator that can create random employees. Define a `RandomEmployeeGenerator` class with 
-                                                    a fixed list of potential names (inside the class body). Configure the class with a minimum and maximum salary (inside 
-                                                    the class header). In the class body, define the `generateEmployee()` function. Once again, the main function demonstrates
-                                                    how you can use this class.
-                                                    
-                                                    > In this exercise, you import a package so that you can use the [`Random.nextInt()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.random/-random/next-int.html) function.
-                                                    > For more information about importing packages, see [Packages and imports](packages.md).
-                                                    >
-                                                    {style="tip"}
-                                                    
-                                                    <deflist collapsible="true" id="kotlin-tour-classes-exercise-3-hint-1">
-                                                        <def title="Hint 1">
-                                                            Lists have an extension function called <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/random.html"><code>.random()</code></a>
-                                                            that returns a random item within a list.
-                                                        </def>
-                                                    </deflist>
-                                                    
-                                                    <deflist collapsible="true" id="kotlin-tour-classes-exercise-3-hint-2">
-                                                        <def title="Hint 2">
-                                                            <code>Random.nextInt(from = ..., until = ...)</code> gives you a random <code>Int</code> number within specified limits.
-                                                        </def>
-                                                    </deflist>
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                import kotlin.random.Random
-                                                
-                                                data class Employee(val name: String, var salary: Int)
-                                                
-                                                // Write your code here
-                                                
-                                                fun main() {
-                                                    val empGen = RandomEmployeeGenerator(10, 30)
-                                                    println(empGen.generateEmployee())
-                                                    println(empGen.generateEmployee())
-                                                    println(empGen.generateEmployee())
-                                                    empGen.minSalary = 50
-                                                    empGen.maxSalary = 100
-                                                    println(empGen.generateEmployee())
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-classes-exercise-3"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                import kotlin.random.Random
-                                                
-                                                data class Employee(val name: String, var salary: Int)
-                                                
-                                                class RandomEmployeeGenerator(var minSalary: Int, var maxSalary: Int) {
-                                                    val names = listOf("John", "Mary", "Ann", "Paul", "Jack", "Elizabeth")
-                                                    fun generateEmployee() =
-                                                        Employee(names.random(),
-                                                            Random.nextInt(from = minSalary, until = maxSalary))
-                                                }
-                                                
-                                                fun main() {
-                                                    val empGen = RandomEmployeeGenerator(10, 30)
-                                                    println(empGen.generateEmployee())
-                                                    println(empGen.generateEmployee())
-                                                    println(empGen.generateEmployee())
-                                                    empGen.minSalary = 50
-                                                    empGen.maxSalary = 100
-                                                    println(empGen.generateEmployee())
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-classes-solution-3"}
-                                                
-                                                
-                                                
                                                 <list columns="2" id="tour-nav">
                                                   <li>
                                                     <a as="button" href="kotlin-tour-functions.md" mode="outline" icon="arrow-left" icon-position="left">Previous step</a>
@@ -3326,7 +3106,6 @@ object KotlinTourBeginnerCourseContent {
                                                 > contains the number of characters within a string.
                                                 >
                                                 
-                                                
                                                 ## Check for null values
                                                 
                                                 You can check for the presence of `null` values within conditional expressions. In the following example, the `describeString()`
@@ -3384,7 +3163,6 @@ object KotlinTourBeginnerCourseContent {
                                                 """
                                                 > Safe calls can be chained so that if any property of an object contains a `null` value, then `null` is returned without 
                                                 > an error being thrown. For example:
-                                                > 
                                                 >
                                                 """.trimIndent(),
                                             ),
@@ -3392,132 +3170,120 @@ object KotlinTourBeginnerCourseContent {
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    >   person.company?.address?.country
-                                                    > ```
-                                                    >
-                                                    {style="tip"}
-                                                    
-                                                    The safe call operator can also be used to safely call an extension or member function. In this case, a null check is 
-                                                    performed before the function is called. If the check detects a `null` value, then the call is skipped and `null` is returned.
-                                                    
-                                                    In the following example, `nullString` is `null` so the invocation of [`.uppercase()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/uppercase.html)
-                                                    is skipped and `null` is returned:
+                                                    person.company?.address?.country
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                    val nullString: String? = null
-                                                    println(nullString?.uppercase())
-                                                    // null
-                                                }
+                                                >
+                                                
+                                                The safe call operator can also be used to safely call an extension or member function. In this case, a null check is 
+                                                performed before the function is called. If the check detects a `null` value, then the call is skipped and `null` is returned.
+                                                
+                                                In the following example, `nullString` is `null` so the invocation of [`.uppercase()`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/uppercase.html)
+                                                is skipped and `null` is returned:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-safe-call-function"}
-                                                    
-                                                    ## Use Elvis operator
-                                                    
-                                                    You can provide a default value to return if a `null` value is detected by using the **Elvis operator** `?:`.
-                                                    
-                                                    Write on the left-hand side of the Elvis operator what should be checked for a `null` value.
-                                                    Write on the right-hand side of the Elvis operator what should be returned if a `null` value is detected.
-                                                    
-                                                    In the following example, `nullString` is `null` so the safe call to access the `length` property returns a `null` value.
-                                                    As a result, the Elvis operator returns `0`:
+                                                    fun main() {
+                                                        val nullString: String? = null
+                                                        println(nullString?.uppercase())
+                                                        // null
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun main() {
-                                                    val nullString: String? = null
-                                                    println(nullString?.length ?: 0)
-                                                    // 0
-                                                }
+                                                ## Use Elvis operator
+                                                
+                                                You can provide a default value to return if a `null` value is detected by using the **Elvis operator** `?:`.
+                                                
+                                                Write on the left-hand side of the Elvis operator what should be checked for a `null` value.
+                                                Write on the right-hand side of the Elvis operator what should be returned if a `null` value is detected.
+                                                
+                                                In the following example, `nullString` is `null` so the safe call to access the `length` property returns a `null` value.
+                                                As a result, the Elvis operator returns `0`:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-elvis-operator"}
-                                                    
-                                                    For more information about null safety in Kotlin, see [Null safety](null-safety.md).
-                                                    
-                                                    ## Practice {completion-point="true"}
-                                                    
-                                                    ### Exercise {initial-collapse-state="collapsed" collapsible="true"}
-                                                    
-                                                    You have the `employeeById` function that gives you access to a database of employees of a company. Unfortunately, this 
-                                                    function returns a value of the `Employee?` type, so the result can be `null`. Your goal is to write a function that 
-                                                    returns the salary of an employee when their `id` is provided, or `0` if the employee is missing from the database.
-                                                    
-                                                    |---|---|
+                                                    fun main() {
+                                                        val nullString: String? = null
+                                                        println(nullString?.length ?: 0)
+                                                        // 0
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class Employee (val name: String, var salary: Int)
+                                                For more information about null safety in Kotlin, see [Null safety](https://kotlinlang.org/docs/null-safety.html).
                                                 
-                                                fun employeeById(id: Int) = when(id) {
-                                                    1 -> Employee("Mary", 20)
-                                                    2 -> null
-                                                    3 -> Employee("John", 21)
-                                                    4 -> Employee("Ann", 23)
-                                                    else -> null
-                                                }
-                                                
-                                                fun salaryById(id: Int) = // Write your code here
-                                                
-                                                fun main() {
-                                                    println((1..5).sumOf { id -> salaryById(id) })
-                                                }
+                                                ## Practice
+                                                ### Exercise
+                                                You have the `employeeById` function that gives you access to a database of employees of a company. Unfortunately, this 
+                                                function returns a value of the `Employee?` type, so the result can be `null`. Your goal is to write a function that 
+                                                returns the salary of an employee when their `id` is provided, or `0` if the employee is missing from the database.
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-null-safety-exercise"}
+                                                    data class Employee (val name: String, var salary: Int)
                                                     
-                                                    |---|---|
+                                                    fun employeeById(id: Int) = when(id) {
+                                                        1 -> Employee("Mary", 20)
+                                                        2 -> null
+                                                        3 -> Employee("John", 21)
+                                                        4 -> Employee("Ann", 23)
+                                                        else -> null
+                                                    }
+                                                    
+                                                    fun salaryById(id: Int) = // Write your code here
+                                                    
+                                                    fun main() {
+                                                        println((1..5).sumOf { id -> salaryById(id) })
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class Employee (val name: String, var salary: Int)
+                                                    
+                                                    fun employeeById(id: Int) = when(id) {
+                                                        1 -> Employee("Mary", 20)
+                                                        2 -> null
+                                                        3 -> Employee("John", 21)
+                                                        4 -> Employee("Ann", 23)
+                                                        else -> null
+                                                    }
+                                                    
+                                                    fun salaryById(id: Int) = employeeById(id)?.salary ?: 0
+                                                    
+                                                    fun main() {
+                                                        println((1..5).sumOf { id -> salaryById(id) })
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class Employee (val name: String, var salary: Int)
-                                                
-                                                fun employeeById(id: Int) = when(id) {
-                                                    1 -> Employee("Mary", 20)
-                                                    2 -> null
-                                                    3 -> Employee("John", 21)
-                                                    4 -> Employee("Ann", 23)
-                                                    else -> null
-                                                }
-                                                
-                                                fun salaryById(id: Int) = employeeById(id)?.salary ?: 0
-                                                
-                                                fun main() {
-                                                    println((1..5).sumOf { id -> salaryById(id) })
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-null-safety-solution"}
-                                                
                                                 ## What's next?
                                                 
                                                 Congratulations! Now that you have completed the beginner tour, take your understanding of Kotlin to the next level with
