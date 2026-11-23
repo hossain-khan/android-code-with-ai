@@ -322,7 +322,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > talk on scope functions by Sebastian Aigner, Kotlin developer advocate.
                                                 > 
                                                 
-                                                
                                                 ### Let
                                                 
                                                 Use the `let` scope function when you want to perform null checks in your code and later perform further actions
@@ -958,7 +957,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > Lambda expressions with receiver are also known as function literals with receiver.
                                                 >
                                                 
-                                                
                                                 The syntax for a lambda expression with receiver is different when you define the function type. First, write the receiver
                                                 that you want to extend. Next, put a `.` and then complete the rest of your function type definition. For example:
                                                 """.trimIndent(),
@@ -1136,7 +1134,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > Lambda expressions with receivers can be combined with **type-safe builders** in Kotlin to make DSLs that detect any problems
                                                 > with types at compile time rather than at runtime. To learn more, see [Type-safe builders](https://kotlinlang.org/docs/type-safe-builders.html).
                                                 >
-                                                
                                                 
                                                 ## Practice
                                                 ### Exercise 1
@@ -1406,7 +1403,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > When you define the behavior of an inherited function or property, we call that an **implementation**.
                                                 > 
-                                                
                                                 
                                                 Abstract classes can contain both functions and properties **with** implementation as well as functions and properties 
                                                 **without** implementation, known as abstract functions and properties.
@@ -1690,7 +1686,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > Boilerplate code is a chunk of code that is reused with little or no alteration in multiple parts of a software project.
                                                 > 
-                                                
                                                 
                                                 For example, let's say that you have an interface called `DrawingTool` that contains a number of functions and one property
                                                 called `color`:
@@ -2184,7 +2179,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > You don't need to rewrite the `receiveMessage()` function in the `SmartMessenger` class.
                                                 > 
                                                 
-                                                
                                                 |--|--|
                                                 """.trimIndent(),
                                             ),
@@ -2319,7 +2313,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > A class that has only one instance that is easily accessible is called a **singleton**.
                                                 >
                                                 
-                                                
                                                 Objects in Kotlin are **lazy**, meaning they are created only when accessed. Kotlin also ensures that all
                                                 objects are created in a thread-safe manner so that you don't have to check this manually.
                                                 
@@ -2341,7 +2334,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > Objects can't have constructors, so they don't have headers like classes.
                                                 >
-                                                
                                                 
                                                 For example, let's say that you wanted to create an object called `DoAuth` that is responsible for authentication:
                                                 """.trimIndent(),
@@ -2371,7 +2363,6 @@ object KotlinTourIntermediateCourseContent {
                                                 and prints a string to the console. The `DoAuth` object is only created when the function is called for the first time.
                                                 
                                                 > Objects can inherit from classes and interfaces. For example:
-                                                > 
                                                 >
                                                 """.trimIndent(),
                                             ),
@@ -2379,415 +2370,366 @@ object KotlinTourIntermediateCourseContent {
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    > interface Auth {
-                                                    >     fun takeParams(username: String, password: String)
-                                                    > }
-                                                    >
-                                                    > object DoAuth : Auth {
-                                                    >     override fun takeParams(username: String, password: String) {
-                                                    >         println("input Auth parameters = ${'$'}username:${'$'}password")
-                                                    >     }
-                                                    > }
-                                                    > ```
-                                                    >
-                                                    {style="note"}
+                                                    interface Auth {
+                                                        fun takeParams(username: String, password: String)
+                                                    }
                                                     
-                                                    #### Data objects
-                                                    
-                                                    To make it easier to print the contents of an object declaration, Kotlin has **data** objects. Similar to data classes,
-                                                    which you learned about in the beginner tour, data objects automatically come with additional member functions: 
-                                                    `toString()` and `equals()`.
-                                                    
-                                                    > Unlike data classes, data objects do not come automatically with the `copy()` member function because they only have
-                                                    > a single instance that can't be copied.
-                                                    >
-                                                    {type ="note"}
-                                                    
-                                                    To create a data object, use the same syntax as for object declarations but prefix it with the `data` keyword:
+                                                    object DoAuth : Auth {
+                                                        override fun takeParams(username: String, password: String) {
+                                                            println("input Auth parameters = ${'$'}username:${'$'}password")
+                                                        }
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data object AppConfig {}
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    For example:
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data object AppConfig {
-                                                    var appName: String = "My Application"
-                                                    var version: String = "1.0.0"
-                                                }
+                                                >
                                                 
-                                                fun main() {
-                                                    println(AppConfig)
-                                                    // AppConfig
-                                                    
-                                                    println(AppConfig.appName)
-                                                    // My Application
-                                                }
+                                                #### Data objects
+                                                
+                                                To make it easier to print the contents of an object declaration, Kotlin has **data** objects. Similar to data classes,
+                                                which you learned about in the beginner tour, data objects automatically come with additional member functions: 
+                                                `toString()` and `equals()`.
+                                                
+                                                > Unlike data classes, data objects do not come automatically with the `copy()` member function because they only have
+                                                > a single instance that can't be copied.
+                                                >
+                                                {type ="note"}
+                                                
+                                                To create a data object, use the same syntax as for object declarations but prefix it with the `data` keyword:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" id="kotlin-tour-data-objects"}
-                                                    
-                                                    For more information about data objects, see [](object-declarations.md#data-objects).
-                                                    
-                                                    #### Companion objects
-                                                    
-                                                    In Kotlin, a class can have an object: a **companion** object. You can only have **one** companion object per class.
-                                                    A companion object is created only when its class is referenced for the first time.
-                                                    
-                                                    Any properties or functions declared inside a companion object are shared across all class instances.
-                                                    
-                                                    To create a companion object within a class, use the same syntax for an object declaration but prefix it with the `companion`
-                                                    keyword:
+                                                    data object AppConfig {}
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                companion object Bonger {}
+                                                For example:
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    > A companion object doesn't have to have a name. If you don't define one, the default is `Companion`.
-                                                    > 
-                                                    {style="note"}
+                                                    data object AppConfig {
+                                                        var appName: String = "My Application"
+                                                        var version: String = "1.0.0"
+                                                    }
                                                     
-                                                    To access any properties or functions of the companion object, reference the class name. For example:
+                                                    fun main() {
+                                                        println(AppConfig)
+                                                        // AppConfig
+                                                        
+                                                        println(AppConfig.appName)
+                                                        // My Application
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                For more information about data objects, see [](object-declarations.md#data-objects).
+                                                
+                                                #### Companion objects
+                                                
+                                                In Kotlin, a class can have an object: a **companion** object. You can only have **one** companion object per class.
+                                                A companion object is created only when its class is referenced for the first time.
+                                                
+                                                Any properties or functions declared inside a companion object are shared across all class instances.
+                                                
+                                                To create a companion object within a class, use the same syntax for an object declaration but prefix it with the `companion`
+                                                keyword:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    companion object Bonger {}
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                class BigBen {
-                                                    companion object Bonger {
-                                                        fun getBongs(nTimes: Int) {
-                                                            repeat(nTimes) { print("BONG ") }
+                                                > A companion object doesn't have to have a name. If you don't define one, the default is `Companion`.
+                                                > 
+                                                
+                                                To access any properties or functions of the companion object, reference the class name. For example:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    class BigBen {
+                                                        companion object Bonger {
+                                                            fun getBongs(nTimes: Int) {
+                                                                repeat(nTimes) { print("BONG ") }
+                                                                }
+                                                            }
+                                                        }
+                                                    
+                                                    fun main() {
+                                                        // Companion object is created when the class is referenced for the
+                                                        // first time.
+                                                        BigBen.getBongs(12)
+                                                        // BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG 
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                This example creates a class called `BigBen` that contains a companion object called `Bonger`. The companion object
+                                                has a member function called `getBongs()` that accepts an integer and prints `"BONG"` to the console the same number of times
+                                                as the integer.
+                                                
+                                                In the `main()` function, the `getBongs()` function is called by referring to the class name. The companion object is created
+                                                at this point. The `getBongs()` function is called with parameter `12`.
+                                                
+                                                For more information, see [](object-declarations.md#companion-objects).
+                                                
+                                                ## Practice
+                                                ### Exercise 1
+                                                You run a coffee shop and have a system for tracking customer orders. Consider the code below and complete the declaration
+                                                of the second data object so that the following code in the `main()` function runs successfully:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    interface Order {
+                                                        val orderId: String
+                                                        val customerName: String
+                                                        val orderTotal: Double
+                                                    }
+                                                    
+                                                    data object OrderOne: Order {
+                                                        override val orderId = "001"
+                                                        override val customerName = "Alice"
+                                                        override val orderTotal = 15.50
+                                                    }
+                                                    
+                                                    data object // Write your code here
+                                                    
+                                                    fun main() {
+                                                        // Print the name of each data object
+                                                        println("Order name: ${'$'}OrderOne")
+                                                        // Order name: OrderOne
+                                                        println("Order name: ${'$'}OrderTwo")
+                                                        // Order name: OrderTwo
+                                                    
+                                                        // Check if the orders are identical
+                                                        println("Are the two orders identical? ${'$'}{OrderOne == OrderTwo}")
+                                                        // Are the two orders identical? false
+                                                    
+                                                        if (OrderOne == OrderTwo) {
+                                                            println("The orders are identical.")
+                                                        } else {
+                                                            println("The orders are unique.")
+                                                            // The orders are unique.
+                                                        }
+                                                    
+                                                        println("Do the orders have the same customer name? ${'$'}{OrderOne.customerName == OrderTwo.customerName}")
+                                                        // Do the orders have the same customer name? false
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    interface Order {
+                                                        val orderId: String
+                                                        val customerName: String
+                                                        val orderTotal: Double
+                                                    }
+                                                    
+                                                    data object OrderOne: Order {
+                                                        override val orderId = "001"
+                                                        override val customerName = "Alice"
+                                                        override val orderTotal = 15.50
+                                                    }
+                                                    
+                                                    data object OrderTwo: Order {
+                                                        override val orderId = "002"
+                                                        override val customerName = "Bob"
+                                                        override val orderTotal = 12.75
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        // Print the name of each data object
+                                                        println("Order name: ${'$'}OrderOne")
+                                                        // Order name: OrderOne
+                                                        println("Order name: ${'$'}OrderTwo")
+                                                        // Order name: OrderTwo
+                                                    
+                                                        // Check if the orders are identical
+                                                        println("Are the two orders identical? ${'$'}{OrderOne == OrderTwo}")
+                                                        // Are the two orders identical? false
+                                                    
+                                                        if (OrderOne == OrderTwo) {
+                                                            println("The orders are identical.")
+                                                        } else {
+                                                            println("The orders are unique.")
+                                                            // The orders are unique.
+                                                        }
+                                                    
+                                                        println("Do the orders have the same customer name? ${'$'}{OrderOne.customerName == OrderTwo.customerName}")
+                                                        // Do the orders have the same customer name? false
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 2
+                                                Create an object declaration that inherits from the `Vehicle` interface to create a unique vehicle type: `FlyingSkateboard`.
+                                                Implement the `name` property and the `move()` function in your object so that the following code in the `main()` function runs 
+                                                successfully:
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    interface Vehicle {
+                                                        val name: String
+                                                        fun move(): String
+                                                    }
+                                                    
+                                                    object // Write your code here
+                                                    
+                                                    fun main() {
+                                                        println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.move()}")
+                                                        // Flying Skateboard: Glides through the air with a hover engine
+                                                        println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.fly()}")
+                                                        // Flying Skateboard: Woooooooo
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    interface Vehicle {
+                                                        val name: String
+                                                        fun move(): String
+                                                    }
+                                                    
+                                                    object FlyingSkateboard : Vehicle {
+                                                        override val name = "Flying Skateboard"
+                                                        override fun move() = "Glides through the air with a hover engine"
+                                                    
+                                                       fun fly(): String = "Woooooooo"
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.move()}")
+                                                        // Flying Skateboard: Glides through the air with a hover engine
+                                                        println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.fly()}")
+                                                        // Flying Skateboard: Woooooooo
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 3
+                                                You are building a user registration module for an app. You want to keep email validation associated with the `User`
+                                                class but don't want to create an unnecessary `User` instance if the email address is invalid.
+                                                
+                                                For this exercise, consider an email address valid if it contains both `@` and `.`. Complete the data class so that the
+                                                following code in the `main()` function runs successfully:
+                                                
+                                                
+                                                > **Hint**: Add an email validation function in a companion object for the `User` class so that you can call the function directly on `User`.
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val name: String, val email: String) {
+                                                        // Write your code here
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val candidates = listOf(
+                                                            Pair("Alice", "alice@example.com"),
+                                                            Pair("Bob", "bob2example-com")
+                                                        )
+                                                    
+                                                        for ((name, email) in candidates) {
+                                                            if (User.isValidEmail(email)) {
+                                                                val user = User(name, email)
+                                                                println("Registered: ${'$'}{user.name}, ${'$'}{user.email}")
+                                                                // Registered: Alice, alice@example.com
+                                                            } else {
+                                                                println("Error: '${'$'}{email}' is not valid. The email should contain '@' and '.'")
+                                                                // Error: 'bob2example-com' is not valid. The email should contain '@' and '.'
                                                             }
                                                         }
                                                     }
-                                                
-                                                fun main() {
-                                                    // Companion object is created when the class is referenced for the
-                                                    // first time.
-                                                    BigBen.getBongs(12)
-                                                    // BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG BONG 
-                                                }
-                                                """.trimIndent(),
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-classes-companion-object"}
-                                                    
-                                                    This example creates a class called `BigBen` that contains a companion object called `Bonger`. The companion object
-                                                    has a member function called `getBongs()` that accepts an integer and prints `"BONG"` to the console the same number of times
-                                                    as the integer.
-                                                    
-                                                    In the `main()` function, the `getBongs()` function is called by referring to the class name. The companion object is created
-                                                    at this point. The `getBongs()` function is called with parameter `12`.
-                                                    
-                                                    For more information, see [](object-declarations.md#companion-objects).
-                                                    
-                                                    ## Practice {completion-point="true"}
-                                                    
-                                                    ### Exercise 1 {initial-collapse-state="collapsed" collapsible="true" id="objects-exercise-1"}
-                                                    
-                                                    You run a coffee shop and have a system for tracking customer orders. Consider the code below and complete the declaration
-                                                    of the second data object so that the following code in the `main()` function runs successfully:
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                interface Order {
-                                                    val orderId: String
-                                                    val customerName: String
-                                                    val orderTotal: Double
-                                                }
-                                                
-                                                data object OrderOne: Order {
-                                                    override val orderId = "001"
-                                                    override val customerName = "Alice"
-                                                    override val orderTotal = 15.50
-                                                }
-                                                
-                                                data object // Write your code here
-                                                
-                                                fun main() {
-                                                    // Print the name of each data object
-                                                    println("Order name: ${'$'}OrderOne")
-                                                    // Order name: OrderOne
-                                                    println("Order name: ${'$'}OrderTwo")
-                                                    // Order name: OrderTwo
-                                                
-                                                    // Check if the orders are identical
-                                                    println("Are the two orders identical? ${'$'}{OrderOne == OrderTwo}")
-                                                    // Are the two orders identical? false
-                                                
-                                                    if (OrderOne == OrderTwo) {
-                                                        println("The orders are identical.")
-                                                    } else {
-                                                        println("The orders are unique.")
-                                                        // The orders are unique.
-                                                    }
-                                                
-                                                    println("Do the orders have the same customer name? ${'$'}{OrderOne.customerName == OrderTwo.customerName}")
-                                                    // Do the orders have the same customer name? false
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-objects-exercise-1"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                interface Order {
-                                                    val orderId: String
-                                                    val customerName: String
-                                                    val orderTotal: Double
-                                                }
-                                                
-                                                data object OrderOne: Order {
-                                                    override val orderId = "001"
-                                                    override val customerName = "Alice"
-                                                    override val orderTotal = 15.50
-                                                }
-                                                
-                                                data object OrderTwo: Order {
-                                                    override val orderId = "002"
-                                                    override val customerName = "Bob"
-                                                    override val orderTotal = 12.75
-                                                }
-                                                
-                                                fun main() {
-                                                    // Print the name of each data object
-                                                    println("Order name: ${'$'}OrderOne")
-                                                    // Order name: OrderOne
-                                                    println("Order name: ${'$'}OrderTwo")
-                                                    // Order name: OrderTwo
-                                                
-                                                    // Check if the orders are identical
-                                                    println("Are the two orders identical? ${'$'}{OrderOne == OrderTwo}")
-                                                    // Are the two orders identical? false
-                                                
-                                                    if (OrderOne == OrderTwo) {
-                                                        println("The orders are identical.")
-                                                    } else {
-                                                        println("The orders are unique.")
-                                                        // The orders are unique.
-                                                    }
-                                                
-                                                    println("Do the orders have the same customer name? ${'$'}{OrderOne.customerName == OrderTwo.customerName}")
-                                                    // Do the orders have the same customer name? false
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-objects-solution-1"}
-                                                    
-                                                    ### Exercise 2 {initial-collapse-state="collapsed" collapsible="true" id="objects-exercise-2"}
-                                                    
-                                                    Create an object declaration that inherits from the `Vehicle` interface to create a unique vehicle type: `FlyingSkateboard`.
-                                                    Implement the `name` property and the `move()` function in your object so that the following code in the `main()` function runs 
-                                                    successfully:
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                interface Vehicle {
-                                                    val name: String
-                                                    fun move(): String
-                                                }
-                                                
-                                                object // Write your code here
-                                                
-                                                fun main() {
-                                                    println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.move()}")
-                                                    // Flying Skateboard: Glides through the air with a hover engine
-                                                    println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.fly()}")
-                                                    // Flying Skateboard: Woooooooo
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-objects-exercise-2"}
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                interface Vehicle {
-                                                    val name: String
-                                                    fun move(): String
-                                                }
-                                                
-                                                object FlyingSkateboard : Vehicle {
-                                                    override val name = "Flying Skateboard"
-                                                    override fun move() = "Glides through the air with a hover engine"
-                                                
-                                                   fun fly(): String = "Woooooooo"
-                                                }
-                                                
-                                                fun main() {
-                                                    println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.move()}")
-                                                    // Flying Skateboard: Glides through the air with a hover engine
-                                                    println("${'$'}{FlyingSkateboard.name}: ${'$'}{FlyingSkateboard.fly()}")
-                                                    // Flying Skateboard: Woooooooo
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-objects-solution-2"}
-                                                    
-                                                    ### Exercise 3 {initial-collapse-state="collapsed" collapsible="true" id="objects-exercise-3"}
-                                                    
-                                                    You are building a user registration module for an app. You want to keep email validation associated with the `User`
-                                                    class but don't want to create an unnecessary `User` instance if the email address is invalid.
-                                                    
-                                                    For this exercise, consider an email address valid if it contains both `@` and `.`. Complete the data class so that the
-                                                    following code in the `main()` function runs successfully:
-                                                    
-                                                    <deflist collapsible="true">
-                                                        <def title="Hint">
-                                                            Add an email validation function in a companion object for the `User` class so that you can call the function directly on `User`.
-                                                        </def>
-                                                    </deflist>
-                                                    
-                                                    |---|---|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class User(val name: String, val email: String) {
-                                                    // Write your code here
-                                                }
-                                                
-                                                fun main() {
-                                                    val candidates = listOf(
-                                                        Pair("Alice", "alice@example.com"),
-                                                        Pair("Bob", "bob2example-com")
-                                                    )
-                                                
-                                                    for ((name, email) in candidates) {
-                                                        if (User.isValidEmail(email)) {
-                                                            val user = User(name, email)
-                                                            println("Registered: ${'$'}{user.name}, ${'$'}{user.email}")
-                                                            // Registered: Alice, alice@example.com
-                                                        } else {
-                                                            println("Error: '${'$'}{email}' is not valid. The email should contain '@' and '.'")
-                                                            // Error: 'bob2example-com' is not valid. The email should contain '@' and '.'
+                                                    data class User(val name: String, val email: String) {
+                                                        companion object {
+                                                            fun isValidEmail(email: String): Boolean =
+                                                                email.contains('@') && email.contains('.')
                                                         }
                                                     }
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-objects-exercise-3"}
                                                     
-                                                    |---|---|
+                                                    fun main() {
+                                                        val candidates = listOf(
+                                                            Pair("Alice", "alice@example.com"),
+                                                            Pair("Bob", "bob2example-com")
+                                                        )
+                                                    
+                                                        for ((name, email) in candidates) {
+                                                            if (User.isValidEmail(email)) {
+                                                                val user = User(name, email)
+                                                                println("Registered: ${'$'}{user.name}, ${'$'}{user.email}")
+                                                                // Registered: Alice, alice@example.com
+                                                            } else {
+                                                                println("Error: '${'$'}{email}' is not valid. The email should contain '@' and '.'")
+                                                                // Error: 'bob2example-com' is not valid. The email should contain '@' and '.'
+                                                            }
+                                                        }
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String, val email: String) {
-                                                    companion object {
-                                                        fun isValidEmail(email: String): Boolean =
-                                                            email.contains('@') && email.contains('.')
-                                                    }
-                                                }
-                                                
-                                                fun main() {
-                                                    val candidates = listOf(
-                                                        Pair("Alice", "alice@example.com"),
-                                                        Pair("Bob", "bob2example-com")
-                                                    )
-                                                
-                                                    for ((name, email) in candidates) {
-                                                        if (User.isValidEmail(email)) {
-                                                            val user = User(name, email)
-                                                            println("Registered: ${'$'}{user.name}, ${'$'}{user.email}")
-                                                            // Registered: Alice, alice@example.com
-                                                        } else {
-                                                            println("Error: '${'$'}{email}' is not valid. The email should contain '@' and '.'")
-                                                            // Error: 'bob2example-com' is not valid. The email should contain '@' and '.'
-                                                        }
-                                                    }
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-objects-solution-3"}
-                                                
                                                 > As an extension of this exercise, try using functions in companion objects as factory methods to construct
                                                 > instances of a class. For an example and more information about this pattern, see [](object-declarations.md#companion-objects).
                                                 >
-                                                
-                                                
-                                                
                                                 
                                                 <list columns="2" id="tour-nav">
                                                   <li>
@@ -3064,7 +3006,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > packages in Kotlin, see [Packages and imports](https://kotlinlang.org/docs/packages.html).
                                                 > 
                                                 
-                                                
                                                 To create a sealed class, use the `sealed` keyword:
                                                 """.trimIndent(),
                                             ),
@@ -3122,7 +3063,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > This tour discusses the `is` operator in more detail in the [Null safety](https://kotlinlang.org/docs/kotlin-tour-intermediate-null-safety.html) chapter.
                                                 > 
-                                                
                                                 
                                                 For more information about sealed classes and their recommended use cases, see [Sealed classes and interfaces](https://kotlinlang.org/docs/sealed-classes.html).
                                                 
@@ -3230,7 +3170,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > Kotlin stores hexadecimals as integers, so the `rgb` property has the `Int` type, not the `String` type.
                                                 >
                                                 
-                                                
                                                 To add a member function to this class, separate it from the enum constants with a semicolon `;`:
                                                 """.trimIndent(),
                                             ),
@@ -3296,7 +3235,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > The `@JvmInline` annotation instructs Kotlin to optimize the code when it is compiled. To learn more,
                                                 > see [Annotations](https://kotlinlang.org/docs/annotations.html).
                                                 > 
-                                                
                                                 
                                                 An inline value class **must** have a single property initialized in the class header.
                                                 
@@ -3581,7 +3519,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > `get()` and `set()` functions are also called getters and setters.
                                                 >
                                                 
-                                                
                                                 For example, this code has the `category` property that has no custom `get()` or `set()` functions and therefore uses the
                                                 default implementations:
                                                 """.trimIndent(),
@@ -3772,7 +3709,6 @@ object KotlinTourIntermediateCourseContent {
                                                 """
                                                 > Extension properties can't override existing properties of a class.
                                                 > 
-                                                
                                                 
                                                 Just like with extension functions, the Kotlin standard library uses extension properties widely. For example,
                                                 see the [`lastIndex` property](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/last-index.html) for a `CharSequence`.
@@ -4174,8 +4110,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > The formula to convert kilometers to miles is `miles = kilometers * 0.621371`.
                                                 >
                                                 
-                                                
-                                                
                                                 > **Hint**: Remember that extension properties need a custom <code>get()</code> function.
                                                 """.trimIndent(),
                                             ),
@@ -4448,7 +4382,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > You've already seen an example of how to use a `when` conditional expression with the `is` and `!is` operators in the [Open and other special classes](https://kotlinlang.org/docs/kotlin-tour-intermediate-open-special-classes.html#sealed-classes) chapter.
                                                 > 
                                                 
-                                                
                                                 ### as and as? operators
                                                 
                                                 To explicitly _cast_ an object to any other type, use the `as` operator. This includes casting from a nullable 
@@ -4647,7 +4580,6 @@ object KotlinTourIntermediateCourseContent {
                                                 > found a `null` value.
                                                 >
                                                 
-                                                
                                                 You can use the [`singleOrNull()`](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/single-or-null.html) function with a lambda expression to find a single item that matches a condition.
                                                 If one doesn't exist or there are multiple items that match, the function returns a `null` value:
                                                 """.trimIndent(),
@@ -4673,7 +4605,6 @@ object KotlinTourIntermediateCourseContent {
                                                 """
                                                 > The `singleOrNull()` function is designed to be used with collections that **don't** contain `null` values.
                                                 >
-                                                
                                                 
                                                 Some functions use a lambda expression to transform a collection and return `null` values if they can't
                                                 fulfill their purpose.
@@ -4737,7 +4668,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > The `reduceOrNull()` function is designed to be used with collections that **don't** contain `null` values.
                                                 >
-                                                
                                                 
                                                 Explore Kotlin's [standard library](https://kotlinlang.org/api/core/kotlin-stdlib/) to find more functions that you can 
                                                 use to make your code safer.
@@ -4843,410 +4773,382 @@ object KotlinTourIntermediateCourseContent {
                                                 > The [`takeIf()` function](https://kotlinlang.org/docs/scope-functions.html#takeif-and-takeunless) returns the original value if the given condition is true,
                                                 > otherwise it returns `null`. For example:
                                                 >
-                                                >
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    > fun main() {
-                                                    >     // The user is logged in
-                                                    >     val userIsLoggedIn = true
-                                                    >     // The user has an active session
-                                                    >     val hasSession = true
-                                                    > 
-                                                    >     // Gives access to the dashboard if the user is logged in
-                                                    >     // and has an active session
-                                                    >     val canAccessDashboard = userIsLoggedIn.takeIf { hasSession }
-                                                    > 
-                                                    >     println(canAccessDashboard ?: "Access denied")
-                                                    >     // true
-                                                    > }
-                                                    > ```
-                                                    >
-                                                    {style = "tip"}
+                                                    fun main() {
+                                                        // The user is logged in
+                                                        val userIsLoggedIn = true
+                                                        // The user has an active session
+                                                        val hasSession = true
                                                     
-                                                    |--|--|
+                                                        // Gives access to the dashboard if the user is logged in
+                                                        // and has an active session
+                                                        val canAccessDashboard = userIsLoggedIn.takeIf { hasSession }
+                                                    
+                                                        println(canAccessDashboard ?: "Access denied")
+                                                        // true
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
                                                 isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val name: String?)
+                                                >
                                                 
-                                                fun getNotificationPreferences(user: Any, emailEnabled: Boolean, smsEnabled: Boolean): List<String> {
-                                                    val validUser = // Write your code here
-                                                    val userName = // Write your code here
-                                                
-                                                    return listOfNotNull( /* Write your code here */)
-                                                }
-                                                
-                                                fun main() {
-                                                    val user1 = User("Alice")
-                                                    val user2 = User(null)
-                                                    val invalidUser = "NotAUser"
-                                                
-                                                    println(getNotificationPreferences(user1, emailEnabled = true, smsEnabled = false))
-                                                    // [Email Notifications enabled for Alice]
-                                                    println(getNotificationPreferences(user2, emailEnabled = false, smsEnabled = true))
-                                                    // [SMS Notifications enabled for Guest]
-                                                    println(getNotificationPreferences(invalidUser, emailEnabled = true, smsEnabled = true))
-                                                    // []
-                                                }
+                                                |--|--|
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-null-safety-exercise-1"}
+                                                    data class User(val name: String?)
                                                     
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class User(val name: String?)
-                                                
-                                                fun getNotificationPreferences(user: Any, emailEnabled: Boolean, smsEnabled: Boolean): List<String> {
-                                                    val validUser = user as? User ?: return emptyList()
-                                                    val userName = validUser.name ?: "Guest"
-                                                
-                                                    return listOfNotNull(
-                                                        "Email Notifications enabled for ${'$'}userName".takeIf { emailEnabled },
-                                                        "SMS Notifications enabled for ${'$'}userName".takeIf { smsEnabled }
-                                                    )
-                                                }
-                                                
-                                                fun main() {
-                                                    val user1 = User("Alice")
-                                                    val user2 = User(null)
-                                                    val invalidUser = "NotAUser"
-                                                
-                                                    println(getNotificationPreferences(user1, emailEnabled = true, smsEnabled = false))
-                                                    // [Email Notifications enabled for Alice]
-                                                    println(getNotificationPreferences(user2, emailEnabled = false, smsEnabled = true))
-                                                    // [SMS Notifications enabled for Guest]
-                                                    println(getNotificationPreferences(invalidUser, emailEnabled = true, smsEnabled = true))
-                                                    // []
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-null-safety-solution-1"}
+                                                    fun getNotificationPreferences(user: Any, emailEnabled: Boolean, smsEnabled: Boolean): List<String> {
+                                                        val validUser = // Write your code here
+                                                        val userName = // Write your code here
                                                     
-                                                    ### Exercise 2 {initial-collapse-state="collapsed" collapsible="true" id="null-safety-exercise-2"}
-                                                    
-                                                    You are working on a subscription-based streaming service where users can have multiple subscriptions, but **only one 
-                                                    can be active at a time**. Complete the `getActiveSubscription()` function so that it uses the `singleOrNull()` function
-                                                    with a predicate to return a `null` value if there is more than one active subscription:
-                                                    
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class Subscription(val name: String, val isActive: Boolean)
-                                                
-                                                fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? // Write your code here
-                                                
-                                                fun main() {
-                                                    val userWithPremiumPlan = listOf(
-                                                        Subscription("Basic Plan", false),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    val userWithConflictingPlans = listOf(
-                                                        Subscription("Basic Plan", true),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    println(getActiveSubscription(userWithPremiumPlan))
-                                                    // Subscription(name=Premium Plan, isActive=true)
-                                                
-                                                    println(getActiveSubscription(userWithConflictingPlans))
-                                                    // null
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-null-safety-exercise-2"}
-                                                    
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class Subscription(val name: String, val isActive: Boolean)
-                                                
-                                                fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? {
-                                                    return subscriptions.singleOrNull { subscription -> subscription.isActive }
-                                                }
-                                                
-                                                fun main() {
-                                                    val userWithPremiumPlan = listOf(
-                                                        Subscription("Basic Plan", false),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    val userWithConflictingPlans = listOf(
-                                                        Subscription("Basic Plan", true),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    println(getActiveSubscription(userWithPremiumPlan))
-                                                    // Subscription(name=Premium Plan, isActive=true)
-                                                
-                                                    println(getActiveSubscription(userWithConflictingPlans))
-                                                    // null
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution 1" id="kotlin-tour-null-safety-solution-2-1"}
-                                                    
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class Subscription(val name: String, val isActive: Boolean)
-                                                
-                                                fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? =
-                                                    subscriptions.singleOrNull { it.isActive }
-                                                
-                                                fun main() {
-                                                    val userWithPremiumPlan = listOf(
-                                                        Subscription("Basic Plan", false),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    val userWithConflictingPlans = listOf(
-                                                        Subscription("Basic Plan", true),
-                                                        Subscription("Premium Plan", true)
-                                                    )
-                                                
-                                                    println(getActiveSubscription(userWithPremiumPlan))
-                                                    // Subscription(name=Premium Plan, isActive=true)
-                                                
-                                                    println(getActiveSubscription(userWithConflictingPlans))
-                                                    // null
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution 2" id="kotlin-tour-null-safety-solution-2-2"}
-                                                    
-                                                    ### Exercise 3 {initial-collapse-state="collapsed" collapsible="true" id="null-safety-exercise-3"}
-                                                    
-                                                    You are working on a social media platform where users have usernames and account statuses. You want to see the list of 
-                                                    currently active usernames. Complete the `getActiveUsernames()` function so that the [`mapNotNull()` function](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/map-not-null.html)
-                                                    has a predicate that returns the username if it is active or a `null` value if it isn't:
-                                                    
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class User(val username: String, val isActive: Boolean)
-                                                
-                                                fun getActiveUsernames(users: List<User>): List<String> {
-                                                    return users.mapNotNull { /* Write your code here */ }
-                                                }
-                                                
-                                                fun main() {
-                                                    val allUsers = listOf(
-                                                        User("alice123", true),
-                                                        User("bob_the_builder", false),
-                                                        User("charlie99", true)
-                                                    )
-                                                
-                                                    println(getActiveUsernames(allUsers))
-                                                    // [alice123, charlie99]
-                                                }
-                                                """.trimIndent(),
-                                            ),
-                                            LessonBlock.Code(
-                                                language = "kotlin",
-                                                code =
-                                                    """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-null-safety-exercise-3"}
-                                                    
-                                                    |--|--|
-                                                    
-                                                    > Just like in Exercise 1, you can use the [`takeIf()` function](scope-functions.md#takeif-and-takeunless) when you check
-                                                    > if the user is active.
-                                                    >
-                                                    { style = "tip" }
-                                                    
-                                                    |--|--|
-                                                    """.trimIndent(),
-                                                runnable = true,
-                                                isPlaygroundRunnable = false,
-                                            ),
-                                            LessonBlock.Markdown(
-                                                """
-                                                kotlin
-                                                data class User(val username: String, val isActive: Boolean)
-                                                
-                                                fun getActiveUsernames(users: List<User>): List<String> {
-                                                    return users.mapNotNull { user ->
-                                                        if (user.isActive) user.username else null
+                                                        return listOfNotNull( /* Write your code here */)
                                                     }
-                                                }
-                                                
-                                                fun main() {
-                                                    val allUsers = listOf(
-                                                        User("alice123", true),
-                                                        User("bob_the_builder", false),
-                                                        User("charlie99", true)
-                                                    )
-                                                
-                                                    println(getActiveUsernames(allUsers))
-                                                    // [alice123, charlie99]
-                                                }
+                                                    
+                                                    fun main() {
+                                                        val user1 = User("Alice")
+                                                        val user2 = User(null)
+                                                        val invalidUser = "NotAUser"
+                                                    
+                                                        println(getNotificationPreferences(user1, emailEnabled = true, smsEnabled = false))
+                                                        // [Email Notifications enabled for Alice]
+                                                        println(getNotificationPreferences(user2, emailEnabled = false, smsEnabled = true))
+                                                        // [SMS Notifications enabled for Guest]
+                                                        println(getNotificationPreferences(invalidUser, emailEnabled = true, smsEnabled = true))
+                                                        // []
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
+                                                isPlaygroundRunnable = false,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                |--|--|
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution 1" id="kotlin-tour-null-safety-solution-3-1"}
+                                                    data class User(val name: String?)
                                                     
-                                                    |--|--|
+                                                    fun getNotificationPreferences(user: Any, emailEnabled: Boolean, smsEnabled: Boolean): List<String> {
+                                                        val validUser = user as? User ?: return emptyList()
+                                                        val userName = validUser.name ?: "Guest"
+                                                    
+                                                        return listOfNotNull(
+                                                            "Email Notifications enabled for ${'$'}userName".takeIf { emailEnabled },
+                                                            "SMS Notifications enabled for ${'$'}userName".takeIf { smsEnabled }
+                                                        )
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val user1 = User("Alice")
+                                                        val user2 = User(null)
+                                                        val invalidUser = "NotAUser"
+                                                    
+                                                        println(getNotificationPreferences(user1, emailEnabled = true, smsEnabled = false))
+                                                        // [Email Notifications enabled for Alice]
+                                                        println(getNotificationPreferences(user2, emailEnabled = false, smsEnabled = true))
+                                                        // [SMS Notifications enabled for Guest]
+                                                        println(getNotificationPreferences(invalidUser, emailEnabled = true, smsEnabled = true))
+                                                        // []
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
-                                                isPlaygroundRunnable = false,
+                                                isPlaygroundRunnable = true,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                data class User(val username: String, val isActive: Boolean)
+                                                ### Exercise 2
+                                                You are working on a subscription-based streaming service where users can have multiple subscriptions, but **only one 
+                                                can be active at a time**. Complete the `getActiveSubscription()` function so that it uses the `singleOrNull()` function
+                                                with a predicate to return a `null` value if there is more than one active subscription:
                                                 
-                                                fun getActiveUsernames(users: List<User>): List<String> =
-                                                    users.mapNotNull { user -> user.username.takeIf { user.isActive } }
-                                                
-                                                fun main() {
-                                                    val allUsers = listOf(
-                                                        User("alice123", true),
-                                                        User("bob_the_builder", false),
-                                                        User("charlie99", true)
-                                                    )
-                                                
-                                                    println(getActiveUsernames(allUsers))
-                                                    // [alice123, charlie99]
-                                                }
+                                                |--|--|
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution 2" id="kotlin-tour-null-safety-solution-3-2"}
+                                                    data class Subscription(val name: String, val isActive: Boolean)
                                                     
-                                                    ### Exercise 4 {initial-collapse-state="collapsed" collapsible="true" id="null-safety-exercise-4"}
+                                                    fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? // Write your code here
                                                     
-                                                    You are working on an inventory management system for an e-commerce platform. Before processing a sale, you need to check
-                                                    if the requested quantity of a product is valid based on the available stock.
+                                                    fun main() {
+                                                        val userWithPremiumPlan = listOf(
+                                                            Subscription("Basic Plan", false),
+                                                            Subscription("Premium Plan", true)
+                                                        )
                                                     
-                                                    Complete the `validateStock()` function so that it uses early returns and the Elvis operator (where applicable) to check if:
+                                                        val userWithConflictingPlans = listOf(
+                                                            Subscription("Basic Plan", true),
+                                                            Subscription("Premium Plan", true)
+                                                        )
                                                     
-                                                    * The `requested` variable is `null`.
-                                                    * The `available` variable is `null`.
-                                                    * The `requested` variable is a negative value.
-                                                    * The amount in the `requested` variable is higher than in the `available` variable.
+                                                        println(getActiveSubscription(userWithPremiumPlan))
+                                                        // Subscription(name=Premium Plan, isActive=true)
                                                     
-                                                    In all of the above cases, the function must return early with the value of `-1`.
-                                                    
-                                                    |--|--|
+                                                        println(getActiveSubscription(userWithConflictingPlans))
+                                                        // null
+                                                    }
                                                     """.trimIndent(),
-                                                runnable = true,
+                                                runnable = false,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun validateStock(requested: Int?, available: Int?): Int {
-                                                    // Write your code here
-                                                }
-                                                
-                                                fun main() {
-                                                    println(validateStock(5,10))
-                                                    // 5
-                                                    println(validateStock(null,10))
-                                                    // -1
-                                                    println(validateStock(-2,10))
-                                                    // -1
-                                                }
+                                                |--|--|
                                                 """.trimIndent(),
                                             ),
                                             LessonBlock.Code(
                                                 language = "kotlin",
                                                 code =
                                                     """
-                                                    {validate="false" kotlin-runnable="true" kotlin-min-compiler-version="1.3" id="kotlin-tour-null-safety-exercise-4"}
+                                                    data class Subscription(val name: String, val isActive: Boolean)
                                                     
-                                                    |--|--|
+                                                    fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? {
+                                                        return subscriptions.singleOrNull { subscription -> subscription.isActive }
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val userWithPremiumPlan = listOf(
+                                                            Subscription("Basic Plan", false),
+                                                            Subscription("Premium Plan", true)
+                                                        )
+                                                    
+                                                        val userWithConflictingPlans = listOf(
+                                                            Subscription("Basic Plan", true),
+                                                            Subscription("Premium Plan", true)
+                                                        )
+                                                    
+                                                        println(getActiveSubscription(userWithPremiumPlan))
+                                                        // Subscription(name=Premium Plan, isActive=true)
+                                                    
+                                                        println(getActiveSubscription(userWithConflictingPlans))
+                                                        // null
+                                                    }
                                                     """.trimIndent(),
                                                 runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class Subscription(val name: String, val isActive: Boolean)
+                                                    
+                                                    fun getActiveSubscription(subscriptions: List<Subscription>): Subscription? =
+                                                        subscriptions.singleOrNull { it.isActive }
+                                                    
+                                                    fun main() {
+                                                        val userWithPremiumPlan = listOf(
+                                                            Subscription("Basic Plan", false),
+                                                            Subscription("Premium Plan", true)
+                                                        )
+                                                    
+                                                        val userWithConflictingPlans = listOf(
+                                                            Subscription("Basic Plan", true),
+                                                            Subscription("Premium Plan", true)
+                                                        )
+                                                    
+                                                        println(getActiveSubscription(userWithPremiumPlan))
+                                                        // Subscription(name=Premium Plan, isActive=true)
+                                                    
+                                                        println(getActiveSubscription(userWithConflictingPlans))
+                                                        // null
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 3
+                                                You are working on a social media platform where users have usernames and account statuses. You want to see the list of 
+                                                currently active usernames. Complete the `getActiveUsernames()` function so that the [`mapNotNull()` function](https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/map-not-null.html)
+                                                has a predicate that returns the username if it is active or a `null` value if it isn't:
+                                                
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val username: String, val isActive: Boolean)
+                                                    
+                                                    fun getActiveUsernames(users: List<User>): List<String> {
+                                                        return users.mapNotNull { /* Write your code here */ }
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val allUsers = listOf(
+                                                            User("alice123", true),
+                                                            User("bob_the_builder", false),
+                                                            User("charlie99", true)
+                                                        )
+                                                    
+                                                        println(getActiveUsernames(allUsers))
+                                                        // [alice123, charlie99]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                |--|--|
+                                                
+                                                > Just like in Exercise 1, you can use the [`takeIf()` function](https://kotlinlang.org/docs/scope-functions.html#takeif-and-takeunless) when you check
+                                                > if the user is active.
+                                                >
+                                                
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val username: String, val isActive: Boolean)
+                                                    
+                                                    fun getActiveUsernames(users: List<User>): List<String> {
+                                                        return users.mapNotNull { user ->
+                                                            if (user.isActive) user.username else null
+                                                        }
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        val allUsers = listOf(
+                                                            User("alice123", true),
+                                                            User("bob_the_builder", false),
+                                                            User("charlie99", true)
+                                                        )
+                                                    
+                                                        println(getActiveUsernames(allUsers))
+                                                        // [alice123, charlie99]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    data class User(val username: String, val isActive: Boolean)
+                                                    
+                                                    fun getActiveUsernames(users: List<User>): List<String> =
+                                                        users.mapNotNull { user -> user.username.takeIf { user.isActive } }
+                                                    
+                                                    fun main() {
+                                                        val allUsers = listOf(
+                                                            User("alice123", true),
+                                                            User("bob_the_builder", false),
+                                                            User("charlie99", true)
+                                                        )
+                                                    
+                                                        println(getActiveUsernames(allUsers))
+                                                        // [alice123, charlie99]
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
+                                                ### Exercise 4
+                                                You are working on an inventory management system for an e-commerce platform. Before processing a sale, you need to check
+                                                if the requested quantity of a product is valid based on the available stock.
+                                                
+                                                Complete the `validateStock()` function so that it uses early returns and the Elvis operator (where applicable) to check if:
+                                                
+                                                * The `requested` variable is `null`.
+                                                * The `available` variable is `null`.
+                                                * The `requested` variable is a negative value.
+                                                * The amount in the `requested` variable is higher than in the `available` variable.
+                                                
+                                                In all of the above cases, the function must return early with the value of `-1`.
+                                                
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun validateStock(requested: Int?, available: Int?): Int {
+                                                        // Write your code here
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        println(validateStock(5,10))
+                                                        // 5
+                                                        println(validateStock(null,10))
+                                                        // -1
+                                                        println(validateStock(-2,10))
+                                                        // -1
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = false,
                                                 isPlaygroundRunnable = false,
                                             ),
                                             LessonBlock.Markdown(
                                                 """
-                                                kotlin
-                                                fun validateStock(requested: Int?, available: Int?): Int {
-                                                    val validRequested = requested ?: return -1
-                                                    val validAvailable = available ?: return -1
-                                                
-                                                    if (validRequested < 0) return -1
-                                                    if (validRequested > validAvailable) return -1
-                                                
-                                                    return validRequested
-                                                }
-                                                
-                                                fun main() {
-                                                    println(validateStock(5,10))
-                                                    // 5
-                                                    println(validateStock(null,10))
-                                                    // -1
-                                                    println(validateStock(-2,10))
-                                                    // -1
-                                                }
-                                                ```
-                                                {initial-collapse-state="collapsed" collapsible="true" collapsed-title="Example solution" id="kotlin-tour-null-safety-solution-4"}
-                                                
-                                                
-                                                
+                                                |--|--|
+                                                """.trimIndent(),
+                                            ),
+                                            LessonBlock.Code(
+                                                language = "kotlin",
+                                                code =
+                                                    """
+                                                    fun validateStock(requested: Int?, available: Int?): Int {
+                                                        val validRequested = requested ?: return -1
+                                                        val validAvailable = available ?: return -1
+                                                    
+                                                        if (validRequested < 0) return -1
+                                                        if (validRequested > validAvailable) return -1
+                                                    
+                                                        return validRequested
+                                                    }
+                                                    
+                                                    fun main() {
+                                                        println(validateStock(5,10))
+                                                        // 5
+                                                        println(validateStock(null,10))
+                                                        // -1
+                                                        println(validateStock(-2,10))
+                                                        // -1
+                                                    }
+                                                    """.trimIndent(),
+                                                runnable = true,
+                                                isPlaygroundRunnable = true,
+                                            ),
+                                            LessonBlock.Markdown(
+                                                """
                                                 <list columns="2" id="tour-nav">
                                                   <li>
                                                     <a as="button" href="kotlin-tour-intermediate-properties.md" mode="outline" icon="arrow-left" icon-position="left">Previous step</a>
@@ -5431,7 +5333,6 @@ object KotlinTourIntermediateCourseContent {
                                                 
                                                 > To explore the functions and classes that this example uses in more detail, see the [API reference](https://kotlinlang.org/api/kotlinx-datetime/kotlinx-datetime/kotlinx.datetime/).
                                                 >
-                                                
                                                 
                                                 ## Opt in to APIs
                                                 
