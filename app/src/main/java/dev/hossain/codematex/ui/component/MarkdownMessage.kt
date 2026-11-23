@@ -9,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.mikepenz.markdown.compose.components.markdownComponents
@@ -61,12 +62,12 @@ fun MarkdownMessage(
         modifier = modifier,
         typography =
             markdownTypography(
-                h1 = MaterialTheme.typography.displaySmallEmphasized,
-                h2 = MaterialTheme.typography.displaySmall,
-                h3 = MaterialTheme.typography.displaySmall,
-                h4 = MaterialTheme.typography.headlineMedium,
-                h5 = MaterialTheme.typography.headlineSmall,
-                h6 = MaterialTheme.typography.titleMedium,
+                h1 = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                h2 = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.SemiBold),
+                h3 = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.SemiBold),
+                h4 = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold),
+                h5 = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
+                h6 = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
                 text = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                 paragraph = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
                 code =
@@ -258,6 +259,10 @@ private fun MarkdownMessagePreview() {
                     content =
                         """
                         |# Sample Response
+                        |
+                        |## Section Heading
+                        |
+                        |### Subsection Heading
                         |
                         |Here is some **bold** text, *italic* text, and `inline code`.
                         |
